@@ -68,11 +68,7 @@ const fallbackPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1
             <IconCheck :size="12" />
           </span>
         </div>
-        <StatusBadge
-          v-if="(book.status && book.status !== 'Прочесть') || book.book_status"
-          :status="book.status"
-          :book-status="book.book_status"
-        />
+        <StatusBadge v-if="book.book_status" :book-status="book.book_status" />
       </div>
     </div>
 

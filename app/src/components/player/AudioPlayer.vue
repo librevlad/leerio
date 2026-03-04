@@ -101,7 +101,7 @@ const showSpeedPicker = ref(false)
 
 function cycleSpeed() {
   const idx = SPEEDS.indexOf(playbackRate.value)
-  const next = SPEEDS[(idx + 1) % SPEEDS.length]
+  const next = SPEEDS[(idx + 1) % SPEEDS.length] ?? 1
   setPlaybackRate(next)
 }
 

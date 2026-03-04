@@ -65,7 +65,7 @@ const fallbackPattern = 'radial-gradient(circle at 50% 30%, rgba(255,255,255,0.1
       <!-- Badges on banner -->
       <div class="absolute top-4 right-5 left-5 flex items-start justify-between gap-2">
         <CategoryBadge :category="book.category" />
-        <StatusBadge v-if="book.status" :status="book.status" />
+        <StatusBadge v-if="book.book_status" :book-status="book.book_status" />
       </div>
 
       <!-- Progress ring on banner (if progress > 0) -->
