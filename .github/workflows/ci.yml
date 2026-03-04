@@ -74,6 +74,7 @@ jobs:
             cd /opt/leerio
             PREV_SHA=$(git rev-parse HEAD)
             git pull origin main
+            sed -i 's|CORS_ORIGINS=https://leerio.app|CORS_ORIGINS=https://app.leerio.app|' .env
             docker compose up --build -d
             echo "Waiting for services to start..."
             sleep 15
