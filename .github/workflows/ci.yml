@@ -82,23 +82,10 @@ jobs:
         run: npx playwright install chromium --with-deps
       - name: Create data dirs
         run: mkdir -p data books
-      - name: Start backend
-        run: LEERIO_DEV=1 python -m uvicorn server.api:app --host 0.0.0.0 --port 8000 &
-      - name: Start frontend
-        working-directory: app
-        run: npx vite --host 0.0.0.0 &
-      - name: Wait for servers
-        run: |
-          for i in $(seq 1 30); do
-            curl -sf http://localhost:8000/api/config/constants > /dev/null 2>&1 && break
-            sleep 1
-          done
-          for i in $(seq 1 30); do
-            curl -sf http://localhost:5173 > /dev/null 2>&1 && break
-            sleep 1
-          done
       - name: Run E2E tests
         working-directory: app
+        env:
+          LEERIO_DEV: "1"
         run: npx playwright test --grep-invert @librivox
       - name: Upload test report
         if: failure()

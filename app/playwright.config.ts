@@ -47,13 +47,13 @@ export default defineConfig({
           {
             command: 'cd .. && python -m uvicorn server.api:app --host 0.0.0.0 --port 8000',
             port: 8000,
-            reuseExistingServer: !isCI,
+            reuseExistingServer: true,
             timeout: 30_000,
           },
           {
             command: 'npm run dev',
             port: 5173,
-            reuseExistingServer: !isCI,
+            reuseExistingServer: true,
             timeout: 30_000,
           },
         ],
