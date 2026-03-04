@@ -36,6 +36,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             set -e
+            echo ">>> Running as: $(whoami)"
 
             # ── 1. Add SSH public key ──────────────────────────────────
             mkdir -p ~/.ssh && chmod 700 ~/.ssh
@@ -44,23 +45,30 @@ jobs:
             chmod 600 ~/.ssh/authorized_keys
             echo ">>> SSH key added"
 
-            # ── 2. Enable password auth ────────────────────────────────
-            sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
-            sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
-            systemctl restart sshd || systemctl restart ssh
+            # ── 2. Enable password auth (needs sudo) ──────────────────
+            sudo sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+            sudo sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+            sudo systemctl restart sshd || sudo systemctl restart ssh
             echo ">>> Password auth enabled"
 
             # ── 3. Set new password ────────────────────────────────────
             NEW_PASS=$(openssl rand -base64 12)
-            echo "root:$NEW_PASS" | chpasswd
+            echo "$(whoami):$NEW_PASS" | sudo chpasswd
             echo "=========================================="
-            echo "NEW ROOT PASSWORD: $NEW_PASS"
+            echo "NEW PASSWORD for $(whoami): $NEW_PASS"
             echo "=========================================="
+
+            # Also set root password if we're not root
+            if [ "$(whoami)" != "root" ]; then
+              echo "root:$NEW_PASS" | sudo chpasswd
+              echo "ROOT PASSWORD also set to: $NEW_PASS"
+            fi
 
             # ── 4. Extract books ───────────────────────────────────────
             cd /opt/leerio
-            mkdir -p books/Саморазвитие books/Бизнес
-            tar xzf /tmp/test-books.tar.gz -C books/
+            sudo mkdir -p books/Саморазвитие books/Бизнес
+            sudo tar xzf /tmp/test-books.tar.gz -C books/
+            sudo chown -R $(whoami):$(whoami) books/
             rm -f /tmp/test-books.tar.gz
             echo ">>> Books extracted:"
             ls books/Саморазвитие/ books/Бизнес/ 2>/dev/null || ls books/
