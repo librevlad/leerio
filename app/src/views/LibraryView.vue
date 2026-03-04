@@ -50,6 +50,12 @@ const catColors: Record<string, { bg: string; border: string; text: string }> = 
 }
 const catFallback = { bg: 'bg-slate-500/8', border: 'border-slate-500/20', text: 'text-slate-400' }
 
+function resetFilters() {
+  search.value = ''
+  category.value = ''
+  sort.value = 'title'
+}
+
 const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
 </script>
 
@@ -133,11 +139,7 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
       title="Книги не найдены"
       description="Попробуйте изменить фильтры"
       action-label="Сбросить фильтры"
-      @action="
-        search = ''
-        category = ''
-        sort = 'title'
-      "
+      @action="resetFilters"
     />
   </div>
 </template>
