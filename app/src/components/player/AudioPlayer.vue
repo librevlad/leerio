@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { usePlayer } from '../../composables/usePlayer'
 import { api } from '../../api'
 import type { Bookmark } from '../../types'
@@ -41,6 +41,8 @@ const {
   setPlaybackRate,
   setSleepTimer,
 } = usePlayer()
+
+const seekPercent = computed(() => (duration.value > 0 ? (currentTime.value / duration.value) * 100 : 0))
 
 function onSeekInput() {
   startSeek()
@@ -181,16 +183,19 @@ const SLEEP_OPTIONS = [
 
     <!-- Seek bar -->
     <div class="mb-4">
-      <input
-        type="range"
-        :min="0"
-        :max="duration || 0"
-        :value="currentTime"
-        step="0.1"
-        class="w-full"
-        @input="onSeekInput"
-        @change="onSeekChange"
-      />
+      <div class="seek-bar-container">
+        <div class="seek-bar-fill" :style="{ width: seekPercent + '%' }" />
+        <input
+          type="range"
+          :min="0"
+          :max="duration || 0"
+          :value="currentTime"
+          step="0.1"
+          class="seek-bar-input"
+          @input="onSeekInput"
+          @change="onSeekChange"
+        />
+      </div>
       <div class="mt-1 flex justify-between text-[11px] text-[--t3]">
         <span>{{ formatTime(currentTime) }}</span>
         <span>{{ formatTime(duration) }}</span>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ActiveBook } from '../../types'
+import { coverUrl } from '../../api'
 import ProgressRing from '../shared/ProgressRing.vue'
 import StatusBadge from '../shared/StatusBadge.vue'
 
@@ -25,10 +26,21 @@ defineProps<{ books: ActiveBook[] }>()
             <StatusBadge :status="book.list" />
             <ProgressRing :percent="book.progress" :size="36" :stroke="2.5" />
           </div>
-          <h4 class="line-clamp-2 text-[13px] leading-snug font-semibold text-[--t1]" :title="book.title">
-            {{ book.title }}
-          </h4>
-          <p class="mt-1.5 line-clamp-1 text-[12px] text-[--t3]">{{ book.author }}</p>
+          <div class="flex items-start gap-3">
+            <img
+              :src="coverUrl(book.id)"
+              :alt="book.title"
+              class="h-12 w-12 shrink-0 rounded-lg object-cover"
+              loading="lazy"
+              @error="($event.target as HTMLImageElement).style.display = 'none'"
+            />
+            <div class="min-w-0">
+              <h4 class="line-clamp-2 text-[13px] leading-snug font-semibold text-[--t1]" :title="book.title">
+                {{ book.title }}
+              </h4>
+              <p class="mt-1.5 line-clamp-1 text-[12px] text-[--t3]">{{ book.author }}</p>
+            </div>
+          </div>
         </router-link>
       </div>
     </div>

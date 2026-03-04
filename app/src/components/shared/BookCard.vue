@@ -37,7 +37,7 @@ const fallbackPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1
   <router-link :to="`/book/${book.id}`" class="card card-hover group relative block overflow-hidden no-underline">
     <!-- Cover gradient banner -->
     <div
-      class="relative h-16 overflow-hidden"
+      class="relative h-44 overflow-hidden"
       :style="{ background: coverGradient[book.category] || fallbackGradient }"
     >
       <img
@@ -55,9 +55,9 @@ const fallbackPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1
       />
       <div
         class="absolute inset-0"
-        style="background: linear-gradient(to bottom, transparent 40%, rgba(0, 0, 0, 0.3) 100%)"
+        style="background: linear-gradient(to bottom, transparent 30%, rgba(0, 0, 0, 0.6) 100%)"
       />
-      <div class="absolute top-2.5 right-3 left-3 flex items-start justify-between gap-2">
+      <div class="absolute right-3 bottom-2.5 left-3 flex items-end justify-between gap-2">
         <div class="flex items-center gap-1.5">
           <CategoryBadge :category="book.category" />
           <span

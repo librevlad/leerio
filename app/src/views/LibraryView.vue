@@ -116,7 +116,7 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
 
     <div v-if="loading" class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <div v-for="i in 8" :key="i">
-        <div class="skeleton h-16 rounded-t-[20px] rounded-b-none" />
+        <div class="skeleton h-44 rounded-t-[20px] rounded-b-none" />
         <div class="skeleton h-36 rounded-t-none rounded-b-[20px] border-t-0" />
       </div>
     </div>
