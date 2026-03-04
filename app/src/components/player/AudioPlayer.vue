@@ -105,8 +105,18 @@ function cycleSpeed() {
   setPlaybackRate(next)
 }
 
+function pickSpeed(s: number) {
+  setPlaybackRate(s)
+  showSpeedPicker.value = false
+}
+
 // ── Sleep timer ──
 const showSleepMenu = ref(false)
+
+function pickSleep(v: number | null) {
+  setSleepTimer(v)
+  showSleepMenu.value = false
+}
 const SLEEP_OPTIONS = [
   { label: '15 мин', value: 15 },
   { label: '30 мин', value: 30 },
@@ -230,10 +240,7 @@ const SLEEP_OPTIONS = [
             :key="s"
             class="block w-full cursor-pointer border-0 bg-transparent px-4 py-1.5 text-left text-[12px] transition-colors hover:bg-white/5"
             :class="s === playbackRate ? 'font-semibold text-[--accent]' : 'text-[--t2]'"
-            @click="
-              setPlaybackRate(s)
-              showSpeedPicker = false
-            "
+            @click="pickSpeed(s)"
           >
             {{ s }}x
           </button>
@@ -265,20 +272,14 @@ const SLEEP_OPTIONS = [
             v-for="opt in SLEEP_OPTIONS"
             :key="opt.value"
             class="block w-full cursor-pointer border-0 bg-transparent px-4 py-1.5 text-left text-[12px] text-[--t2] transition-colors hover:bg-white/5"
-            @click="
-              setSleepTimer(opt.value)
-              showSleepMenu = false
-            "
+            @click="pickSleep(opt.value)"
           >
             {{ opt.label }}
           </button>
           <button
             v-if="sleepTimer !== null"
             class="block w-full cursor-pointer border-0 bg-transparent px-4 py-1.5 text-left text-[12px] text-red-400 transition-colors hover:bg-white/5"
-            @click="
-              setSleepTimer(null)
-              showSleepMenu = false
-            "
+            @click="pickSleep(null)"
           >
             Отменить
           </button>
