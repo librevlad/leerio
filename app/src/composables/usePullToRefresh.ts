@@ -14,8 +14,9 @@ export function usePullToRefresh(onRefresh: () => Promise<void>) {
   }
 
   function onTouchStart(e: TouchEvent) {
-    if (getScrollTop() <= 0 && !refreshing.value) {
-      startY = e.touches[0].clientY
+    const touch = e.touches[0]
+    if (touch && getScrollTop() <= 0 && !refreshing.value) {
+      startY = touch.clientY
       pulling = true
       pullProgress.value = 0
     }
@@ -23,7 +24,9 @@ export function usePullToRefresh(onRefresh: () => Promise<void>) {
 
   function onTouchMove(e: TouchEvent) {
     if (!pulling || refreshing.value) return
-    const delta = e.touches[0].clientY - startY
+    const touch = e.touches[0]
+    if (!touch) return
+    const delta = touch.clientY - startY
     if (delta > 0) {
       pullProgress.value = Math.min(delta / threshold, 1)
     } else {
