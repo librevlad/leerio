@@ -1,6 +1,6 @@
 import { test, expect } from '../fixtures'
 
-test.describe('Book detail', () => {
+test.describe('Book detail', { tag: '@needs-books' }, () => {
   let bookUrl: string
 
   test.beforeEach(async ({ page }) => {

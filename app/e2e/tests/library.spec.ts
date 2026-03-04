@@ -15,7 +15,7 @@ test.describe('Library', () => {
     await takeScreenshot('library-page')
   })
 
-  test('displays book grid with cards', async ({ page }) => {
+  test('displays book grid with cards', { tag: '@needs-books' }, async ({ page }) => {
     const cards = page.locator('a.card.card-hover')
     await expect(cards.first()).toBeVisible()
 
@@ -41,7 +41,7 @@ test.describe('Library', () => {
     await takeScreenshot('library-search')
   })
 
-  test('category pills are displayed', async ({ page }) => {
+  test('category pills are displayed', { tag: '@needs-books' }, async ({ page }) => {
     await expect(page.locator('button:has-text("Все")')).toBeVisible()
     // Check for at least one category
     const categories = ['Бизнес', 'Отношения', 'Саморазвитие', 'Художественная', 'Языки']
@@ -80,7 +80,7 @@ test.describe('Library', () => {
     }
   })
 
-  test('clicking a book card navigates to detail', async ({ page }) => {
+  test('clicking a book card navigates to detail', { tag: '@needs-books' }, async ({ page }) => {
     const firstCard = page.locator('a.card.card-hover').first()
     await expect(firstCard).toBeVisible()
     await firstCard.click()

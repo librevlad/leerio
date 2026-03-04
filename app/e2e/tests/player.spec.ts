@@ -1,6 +1,6 @@
 import { test, expect } from '../fixtures'
 
-test.describe('Audio player', () => {
+test.describe('Audio player', { tag: '@needs-books' }, () => {
   async function navigateToBookAndListen(page: import('@playwright/test').Page) {
     await page.goto('/library')
     await expect(page.locator('a.card.card-hover').first()).toBeVisible({ timeout: 15_000 })

@@ -86,7 +86,7 @@ jobs:
         working-directory: app
         env:
           LEERIO_DEV: "1"
-        run: npx playwright test --grep-invert @librivox
+        run: npx playwright test --grep-invert "@librivox|@needs-books"
       - name: Upload test report
         if: failure()
         uses: actions/upload-artifact@v4
