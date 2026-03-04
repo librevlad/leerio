@@ -96,7 +96,7 @@ onMounted(loadBook)
       </div>
     </div>
 
-    <div v-else-if="book">
+    <div v-else-if="book" class="fade-in">
       <!-- Hero card spans full width -->
       <BookInfo :book="book" class="mb-5" />
 

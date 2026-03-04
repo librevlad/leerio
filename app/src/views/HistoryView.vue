@@ -4,8 +4,10 @@ import { api } from '../api'
 import type { HistoryEntry } from '../types'
 import SearchInput from '../components/shared/SearchInput.vue'
 import EmptyState from '../components/shared/EmptyState.vue'
+import PullIndicator from '../components/shared/PullIndicator.vue'
 import { IconStar } from '../components/shared/icons'
 import { dotColor } from '../composables/useStatusColors'
+import { usePullToRefresh } from '../composables/usePullToRefresh'
 
 const entries = ref<HistoryEntry[]>([])
 const loading = ref(true)
@@ -37,6 +39,8 @@ async function loadHistory() {
   }
 }
 
+const { refreshing, pullProgress } = usePullToRefresh(loadHistory)
+
 onMounted(loadHistory)
 watch([actionFilter, search], loadHistory)
 
@@ -53,6 +57,7 @@ function formatDate(ts: string): string {
 
 <template>
   <div>
+    <PullIndicator :progress="pullProgress" :refreshing="refreshing" />
     <h1 class="page-title mb-8">История</h1>
 
     <div class="mb-6 flex flex-wrap items-center gap-3">
@@ -66,7 +71,7 @@ function formatDate(ts: string): string {
       <div v-for="i in 6" :key="i" class="skeleton h-16" />
     </div>
 
-    <div v-else-if="entries.length" class="space-y-2">
+    <div v-else-if="entries.length" class="fade-in space-y-2">
       <div v-for="(e, i) in entries" :key="i" class="card flex items-center gap-4 px-5 py-3.5">
         <span class="h-2 w-2 flex-shrink-0 rounded-full opacity-60" :class="dotColor[e.action] || 'bg-slate-500'" />
         <div class="min-w-0 flex-1">
@@ -85,6 +90,6 @@ function formatDate(ts: string): string {
       </div>
     </div>
 
-    <EmptyState v-else title="История пуста" />
+    <EmptyState v-else title="История пуста" description="Начните слушать книги, и они появятся здесь" />
   </div>
 </template>

@@ -28,7 +28,7 @@ onMounted(load)
       </div>
     </div>
 
-    <div v-else-if="data" class="space-y-6">
+    <div v-else-if="data" class="fade-in space-y-6">
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <VelocityStats :velocity="data.velocity" />
         <CategoryChart :data="data.category_counts" />

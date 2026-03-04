@@ -4,6 +4,8 @@ import { useBooks } from '../composables/useBooks'
 import SearchInput from '../components/shared/SearchInput.vue'
 import BookCard from '../components/shared/BookCard.vue'
 import EmptyState from '../components/shared/EmptyState.vue'
+import PullIndicator from '../components/shared/PullIndicator.vue'
+import { usePullToRefresh } from '../composables/usePullToRefresh'
 
 const { books, loading, load, categories } = useBooks()
 
@@ -47,20 +49,23 @@ const catColors: Record<string, { bg: string; border: string; text: string }> = 
   Языки: { bg: 'bg-emerald-500/8', border: 'border-emerald-500/20', text: 'text-emerald-400' },
 }
 const catFallback = { bg: 'bg-slate-500/8', border: 'border-slate-500/20', text: 'text-slate-400' }
+
+const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
 </script>
 
 <template>
   <div>
-    <div class="mb-6 flex items-end justify-between gap-4">
+    <PullIndicator :progress="pullProgress" :refreshing="refreshing" />
+    <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
       <div>
         <h1 class="page-title">Библиотека</h1>
         <p class="mt-1 text-[13px] text-[--t3]">{{ filtered.length }} книг</p>
       </div>
-      <SearchInput v-model="search" placeholder="Поиск..." class="w-64" />
+      <SearchInput v-model="search" placeholder="Поиск..." class="w-full sm:w-64" />
     </div>
 
     <!-- Category filter pills -->
-    <div class="mb-4 flex gap-2 overflow-x-auto pb-1">
+    <div class="scrollbar-hide fade-mask-r mb-4 flex gap-2 overflow-x-auto pb-1">
       <button
         class="flex-shrink-0 cursor-pointer rounded-full border px-4 py-2 text-[12px] font-semibold transition-all duration-200"
         :class="
@@ -92,7 +97,7 @@ const catFallback = { bg: 'bg-slate-500/8', border: 'border-slate-500/20', text:
     </div>
 
     <!-- Sort chips -->
-    <div class="mb-8 flex items-center gap-1.5">
+    <div class="scrollbar-hide mb-8 flex items-center gap-1.5 overflow-x-auto">
       <span class="mr-1 text-[11px] text-[--t3]">Сортировка:</span>
       <button
         v-for="s in sortOptions"
@@ -116,10 +121,23 @@ const catFallback = { bg: 'bg-slate-500/8', border: 'border-slate-500/20', text:
       </div>
     </div>
 
-    <div v-else-if="filtered.length" class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div
+      v-else-if="filtered.length"
+      class="fade-in grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+    >
       <BookCard v-for="book in filtered" :key="book.id" :book="book" />
     </div>
 
-    <EmptyState v-else title="Книги не найдены" description="Попробуйте изменить фильтры" />
+    <EmptyState
+      v-else
+      title="Книги не найдены"
+      description="Попробуйте изменить фильтры"
+      action-label="Сбросить фильтры"
+      @action="
+        search = ''
+        category = ''
+        sort = 'title'
+      "
+    />
   </div>
 </template>
