@@ -74,9 +74,9 @@ jobs:
       - name: Build web
         working-directory: app
         run: npm run build
-      - name: Cap copy
+      - name: Cap sync
         working-directory: app
-        run: npx cap copy android
+        run: npx cap sync android
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
