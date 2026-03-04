@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
 import type { User } from '../types'
+import { apiUrl } from '../api'
 
 const user = ref<User | null>(null)
 const loading = ref(true)
@@ -13,7 +14,7 @@ export function useAuth() {
     if (checked.value) return !!user.value
     loading.value = true
     try {
-      const res = await fetch('/api/auth/me', { credentials: 'include' })
+      const res = await fetch(apiUrl('/auth/me'), { credentials: 'include' })
       if (res.ok) {
         user.value = await res.json()
         return true
@@ -30,7 +31,7 @@ export function useAuth() {
   }
 
   async function loginWithGoogle(idToken: string): Promise<User> {
-    const res = await fetch('/api/auth/google', {
+    const res = await fetch(apiUrl('/auth/google'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -54,7 +55,7 @@ export function useAuth() {
   }
 
   async function loginWithPassword(email: string, password: string): Promise<User> {
-    const res = await fetch('/api/auth/login', {
+    const res = await fetch(apiUrl('/auth/login'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -78,7 +79,7 @@ export function useAuth() {
   }
 
   async function logout() {
-    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+    await fetch(apiUrl('/auth/logout'), { method: 'POST', credentials: 'include' })
     user.value = null
     checked.value = false
   }

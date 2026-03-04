@@ -1,7 +1,14 @@
+import { Capacitor } from '@capacitor/core'
 import router from './router'
 
+const API_BASE = Capacitor.isNativePlatform() ? 'https://app.leerio.app/api' : '/api'
+
+export function apiUrl(path: string): string {
+  return `${API_BASE}${path}`
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`/api${path}`, {
+  const res = await fetch(apiUrl(path), {
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
     ...options,
@@ -34,11 +41,11 @@ function del<T>(path: string): Promise<T> {
 }
 
 export function audioUrl(bookId: string, trackIndex: number): string {
-  return `/api/audio/${bookId}/${trackIndex}`
+  return apiUrl(`/audio/${bookId}/${trackIndex}`)
 }
 
 export function coverUrl(bookId: string): string {
-  return `/api/books/${bookId}/cover`
+  return apiUrl(`/books/${bookId}/cover`)
 }
 
 import type {
