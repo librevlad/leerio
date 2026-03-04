@@ -26,13 +26,11 @@ const loading = ref(true)
 const player = usePlayer()
 const dl = useDownloads()
 
-const isCurrentBook = computed(() =>
-  player.currentBook.value?.id === book.value?.id
-)
+const isCurrentBook = computed(() => player.currentBook.value?.id === book.value?.id)
 
-const isDownloaded = computed(() => book.value ? dl.isBookDownloaded(book.value.id) : false)
-const isDownloading = computed(() => book.value ? dl.isBookDownloading(book.value.id) : false)
-const dlProgress = computed(() => book.value ? dl.bookDownloadProgress(book.value.id) : null)
+const isDownloaded = computed(() => (book.value ? dl.isBookDownloaded(book.value.id) : false))
+const isDownloading = computed(() => (book.value ? dl.isBookDownloading(book.value.id) : false))
+const dlProgress = computed(() => (book.value ? dl.bookDownloadProgress(book.value.id) : null))
 const dlPercent = computed(() => {
   const p = dlProgress.value
   if (!p || p.bytesTotal === 0) return 0
@@ -74,7 +72,7 @@ onMounted(loadBook)
 <template>
   <div>
     <button
-      class="flex items-center gap-2 text-[13px] mb-4 md:mb-6 text-[--t3] hover:text-[--t1] transition-all cursor-pointer bg-transparent border-0 px-3 py-2.5 -ml-3 rounded-xl hover:bg-white/5 active:bg-white/8 min-h-[44px]"
+      class="mb-4 -ml-3 flex min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border-0 bg-transparent px-3 py-2.5 text-[13px] text-[--t3] transition-all hover:bg-white/5 hover:text-[--t1] active:bg-white/8 md:mb-6"
       @click="router.back()"
     >
       <IconArrowLeft :size="15" />
@@ -83,10 +81,10 @@ onMounted(loadBook)
 
     <!-- Skeleton -->
     <div v-if="loading">
-      <div class="skeleton h-48 rounded-t-[20px] rounded-b-none mb-0" />
-      <div class="skeleton h-16 rounded-t-none rounded-b-[20px] border-t-0 mb-5" />
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div class="lg:col-span-2 space-y-5">
+      <div class="skeleton mb-0 h-48 rounded-t-[20px] rounded-b-none" />
+      <div class="skeleton mb-5 h-16 rounded-t-none rounded-b-[20px] border-t-0" />
+      <div class="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <div class="space-y-5 lg:col-span-2">
           <div class="skeleton h-14" />
           <div class="skeleton h-24" />
           <div class="skeleton h-28" />
@@ -103,11 +101,8 @@ onMounted(loadBook)
       <BookInfo :book="book" class="mb-5" />
 
       <!-- Listen button + Download -->
-      <div v-if="book.mp3_count && book.mp3_count > 0" class="flex flex-wrap items-center gap-3 mb-5">
-        <button
-          class="btn btn-primary"
-          @click="startListening"
-        >
+      <div v-if="book.mp3_count && book.mp3_count > 0" class="mb-5 flex flex-wrap items-center gap-3">
+        <button class="btn btn-primary" @click="startListening">
           <IconPlay :size="16" />
           {{ isCurrentBook ? 'Продолжить' : 'Слушать' }}
         </button>
@@ -115,19 +110,15 @@ onMounted(loadBook)
         <!-- Download button (native only) -->
         <template v-if="dl.isNative.value">
           <!-- Not downloaded -->
-          <button
-            v-if="!isDownloaded && !isDownloading"
-            class="btn btn-ghost"
-            @click="startDownload"
-          >
+          <button v-if="!isDownloaded && !isDownloading" class="btn btn-ghost" @click="startDownload">
             <IconDownload :size="16" />
             Скачать
           </button>
 
           <!-- Downloading -->
-          <div v-else-if="isDownloading" class="flex items-center gap-3 flex-1 min-w-[200px]">
+          <div v-else-if="isDownloading" class="flex min-w-[200px] flex-1 items-center gap-3">
             <div class="flex-1">
-              <div class="flex items-center justify-between mb-1">
+              <div class="mb-1 flex items-center justify-between">
                 <span class="text-[11px] text-[--t3]">
                   Трек {{ (dlProgress?.currentTrack ?? 0) + 1 }} из {{ dlProgress?.totalTracks ?? 0 }}
                 </span>
@@ -136,9 +127,9 @@ onMounted(loadBook)
               <ProgressBar :percent="dlPercent" height="h-1.5" />
             </div>
             <button
-              class="p-1.5 bg-transparent border-0 text-[--t3] hover:text-red-400 transition-colors cursor-pointer shrink-0"
-              @click="cancelDl"
+              class="shrink-0 cursor-pointer border-0 bg-transparent p-1.5 text-[--t3] transition-colors hover:text-red-400"
               title="Отменить"
+              @click="cancelDl"
             >
               <IconX :size="16" />
             </button>
@@ -151,9 +142,9 @@ onMounted(loadBook)
               Загружено
             </span>
             <button
-              class="p-1.5 bg-transparent border-0 text-[--t3] hover:text-red-400 transition-colors cursor-pointer shrink-0"
-              @click="removeDl"
+              class="shrink-0 cursor-pointer border-0 bg-transparent p-1.5 text-[--t3] transition-colors hover:text-red-400"
               title="Удалить загрузку"
+              @click="removeDl"
             >
               <IconTrash :size="15" />
             </button>
@@ -165,8 +156,8 @@ onMounted(loadBook)
       <AudioPlayer v-if="isCurrentBook" class="mb-5" />
 
       <!-- Two-column layout -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div class="lg:col-span-2 space-y-5">
+      <div class="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <div class="space-y-5 lg:col-span-2">
           <BookActions
             :card-id="book.card_id"
             :status="book.status"
@@ -174,12 +165,17 @@ onMounted(loadBook)
             :author="book.author"
             :category="book.category"
             @moved="loadBook"
-            @card-created="(id: string) => { book!.card_id = id; book!.status = 'Прочесть' }"
+            @card-created="
+              (id: string) => {
+                book!.card_id = id
+                book!.status = 'Прочесть'
+              }
+            "
           />
-          <BookProgress :title="book.title" :progress="book.progress" @updated="(p) => book!.progress = p" />
+          <BookProgress :title="book.title" :progress="book.progress" @updated="(p) => (book!.progress = p)" />
           <BookNotes :title="book.title" :note="book.note" />
           <BookQuotes :book-title="book.title" :book-author="book.author" />
-          <BookTags :title="book.title" :tags="book.tags" @updated="(t) => book!.tags = t" />
+          <BookTags :title="book.title" :tags="book.tags" @updated="(t) => (book!.tags = t)" />
         </div>
         <div class="space-y-5">
           <BookTimeline :entries="book.timeline || []" />

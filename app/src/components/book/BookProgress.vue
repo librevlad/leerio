@@ -11,7 +11,12 @@ const emit = defineEmits<{ updated: [pct: number] }>()
 const toast = useToast()
 const pct = ref(props.progress)
 
-watch(() => props.progress, (v) => { pct.value = v })
+watch(
+  () => props.progress,
+  (v) => {
+    pct.value = v
+  },
+)
 
 const save = useDebounceFn(async (val: number) => {
   try {
@@ -33,23 +38,15 @@ const save = useDebounceFn(async (val: number) => {
       </div>
 
       <!-- Slider area -->
-      <div class="flex-1 min-w-0">
-        <div class="flex items-center justify-between mb-1">
+      <div class="min-w-0 flex-1">
+        <div class="mb-1 flex items-center justify-between">
           <h3 class="section-label">Прогресс</h3>
-          <span class="text-[15px] font-bold gradient-text">{{ pct }}%</span>
+          <span class="gradient-text text-[15px] font-bold">{{ pct }}%</span>
         </div>
         <div class="mt-2">
-          <input
-            v-model.number="pct"
-            type="range"
-            min="0"
-            max="100"
-            step="5"
-            class="w-full"
-            @input="save(pct)"
-          />
+          <input v-model.number="pct" type="range" min="0" max="100" step="5" class="w-full" @input="save(pct)" />
         </div>
-        <div class="flex justify-between mt-1.5 text-[10px] text-[--t3]">
+        <div class="mt-1.5 flex justify-between text-[10px] text-[--t3]">
           <span>0%</span>
           <span>50%</span>
           <span>100%</span>

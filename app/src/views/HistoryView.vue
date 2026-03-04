@@ -42,7 +42,11 @@ watch([actionFilter, search], loadHistory)
 
 function formatDate(ts: string): string {
   return new Date(ts).toLocaleString('ru', {
-    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   })
 }
 </script>
@@ -51,12 +55,9 @@ function formatDate(ts: string): string {
   <div>
     <h1 class="page-title mb-8">История</h1>
 
-    <div class="flex flex-wrap items-center gap-3 mb-6">
-      <SearchInput v-model="search" placeholder="Поиск по книге..." class="flex-1 min-w-[200px]" />
-      <select
-        v-model="actionFilter"
-        class="input-field px-3 py-2.5 text-[13px] cursor-pointer"
-      >
+    <div class="mb-6 flex flex-wrap items-center gap-3">
+      <SearchInput v-model="search" placeholder="Поиск по книге..." class="min-w-[200px] flex-1" />
+      <select v-model="actionFilter" class="input-field cursor-pointer px-3 py-2.5 text-[13px]">
         <option v-for="a in actions" :key="a.value" :value="a.value">{{ a.label }}</option>
       </select>
     </div>
@@ -66,23 +67,19 @@ function formatDate(ts: string): string {
     </div>
 
     <div v-else-if="entries.length" class="space-y-2">
-      <div
-        v-for="(e, i) in entries"
-        :key="i"
-        class="card px-5 py-3.5 flex items-center gap-4"
-      >
-        <span class="w-2 h-2 rounded-full flex-shrink-0 opacity-60" :class="dotColor[e.action] || 'bg-slate-500'" />
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-2 mb-0.5">
+      <div v-for="(e, i) in entries" :key="i" class="card flex items-center gap-4 px-5 py-3.5">
+        <span class="h-2 w-2 flex-shrink-0 rounded-full opacity-60" :class="dotColor[e.action] || 'bg-slate-500'" />
+        <div class="min-w-0 flex-1">
+          <div class="mb-0.5 flex items-center gap-2">
             <span class="text-[12px] font-medium text-[--t2]">{{ e.action_label }}</span>
             <span v-if="e.rating" class="flex gap-0.5 text-amber-500/50">
               <IconStar v-for="s in e.rating" :key="s" :size="11" />
             </span>
           </div>
-          <p class="text-[13px] truncate text-[--t1]">{{ e.book }}</p>
-          <p v-if="e.detail" class="text-[11px] text-[--t3] truncate">{{ e.detail }}</p>
+          <p class="truncate text-[13px] text-[--t1]">{{ e.book }}</p>
+          <p v-if="e.detail" class="truncate text-[11px] text-[--t3]">{{ e.detail }}</p>
         </div>
-        <span class="text-[11px] flex-shrink-0 text-[--t3] whitespace-nowrap">
+        <span class="flex-shrink-0 text-[11px] whitespace-nowrap text-[--t3]">
           {{ formatDate(e.ts) }}
         </span>
       </div>

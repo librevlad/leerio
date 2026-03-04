@@ -10,7 +10,12 @@ const toast = useToast()
 const text = ref(props.note)
 const saving = ref(false)
 
-watch(() => props.note, (v) => { text.value = v })
+watch(
+  () => props.note,
+  (v) => {
+    text.value = v
+  },
+)
 
 const save = useDebounceFn(async (val: string) => {
   saving.value = true
@@ -26,19 +31,17 @@ const save = useDebounceFn(async (val: string) => {
 
 <template>
   <div class="card p-5">
-    <div class="flex items-center justify-between mb-3">
+    <div class="mb-3 flex items-center justify-between">
       <h3 class="section-label">Заметки</h3>
       <Transition name="toast">
-        <span v-if="saving" class="text-[11px] text-[--accent] font-medium opacity-70">
-          Сохранение...
-        </span>
+        <span v-if="saving" class="text-[11px] font-medium text-[--accent] opacity-70"> Сохранение... </span>
       </Transition>
     </div>
     <textarea
       v-model="text"
       rows="4"
       placeholder="Добавить заметку..."
-      class="input-field w-full p-3.5 text-[13px] resize-y leading-relaxed"
+      class="input-field w-full resize-y p-3.5 text-[13px] leading-relaxed"
       @input="save(text)"
     />
   </div>

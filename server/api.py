@@ -9,6 +9,8 @@ Run:
 
 import base64
 import json
+import logging
+import os
 import random
 import re
 from collections import Counter
@@ -18,7 +20,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from starlette.requests import Request
@@ -69,6 +71,13 @@ from .core import (
     tags_load,
     tags_set,
 )
+
+logging.basicConfig(
+    level=getattr(logging, os.environ.get("LEERIO_LOG_LEVEL", "INFO").upper(), logging.INFO),
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger("leerio")
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -228,21 +237,21 @@ async def lifespan(app: FastAPI):
             t.get_labels()
             t.save_cache()
             trello = t
-            print("[OK] Trello connected")
+            logger.info("Trello connected")
         except Exception as e:
-            print(f"[WARN] Trello API error: {e}")
+            logger.warning("Trello API error: %s", e)
             if t.load_from_cache():
                 trello = t
-                print("[OK] Trello loaded from cache")
+                logger.info("Trello loaded from cache")
             else:
-                print("[WARN] No Trello cache available")
+                logger.warning("No Trello cache available")
     else:
         t = TrelloClient("", "", bid)
         if t.load_from_cache():
             trello = t
-            print("[OK] Trello loaded from cache (no API keys)")
+            logger.info("Trello loaded from cache (no API keys)")
         else:
-            print("[INFO] Trello not configured")
+            logger.info("Trello not configured")
 
     yield
 
@@ -251,13 +260,20 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Audiobook Library", lifespan=lifespan)
 
+_cors_origins = os.environ.get("CORS_ORIGINS", "http://localhost:5173,http://localhost:80").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[o.strip() for o in _cors_origins],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    logger.error("Unhandled error on %s %s: %s", request.method, request.url.path, exc, exc_info=True)
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 
 # ── Helper to get trello data ──────────────────────────────────────────────

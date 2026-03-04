@@ -17,16 +17,14 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex min-h-screen min-h-dvh">
+  <div class="flex min-h-dvh min-h-screen">
     <AppSidebar v-model:collapsed="sidebarCollapsed" class="hidden md:flex" />
     <main
-      class="flex-1 transition-all duration-300 overflow-y-auto scroll-smooth"
-      :class="[
-        sidebarCollapsed ? 'md:ml-16' : 'md:ml-56',
-      ]"
+      class="flex-1 overflow-y-auto scroll-smooth transition-all duration-300"
+      :class="[sidebarCollapsed ? 'md:ml-16' : 'md:ml-56']"
     >
       <div
-        class="max-w-7xl mx-auto px-4 py-5 md:px-8 md:py-8 md:pb-8"
+        class="mx-auto max-w-7xl px-4 py-5 md:px-8 md:py-8 md:pb-8"
         :class="isPlayerVisible ? 'mobile-bottom-pad-player' : 'mobile-bottom-pad'"
       >
         <router-view v-slot="{ Component }">

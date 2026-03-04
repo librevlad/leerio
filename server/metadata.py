@@ -8,6 +8,7 @@ For each book:
 """
 
 import csv
+import logging
 import re
 import sys
 import time
@@ -21,6 +22,8 @@ from PIL import Image
 from .core import BOOKS_DIR, CATEGORIES, TRACKER_PATH
 
 # ── Settings ──────────────────────────────────────────────────────────────────
+
+logger = logging.getLogger("leerio.metadata")
 
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".gif"}
 API_DELAY = 0.5
@@ -155,7 +158,7 @@ def download_cover(author: str, title: str, book_dir: Path, is_english: bool = F
 
         return None
     except Exception as e:
-        print(f"    ! API error: {e}")
+        logger.warning("Cover API error for %s: %s", title, e)
         return None
 
 
@@ -203,8 +206,8 @@ def process_book(book_dir: Path, tracker: dict):
     if reader == "EN":
         reader = None
 
-    print(f"\n  {name}")
-    print(f"    Author: {author or '—'}  |  Reader: {reader or '—'}")
+    logger.info("Processing: %s", name)
+    logger.info("  Author: %s  |  Reader: %s", author or "—", reader or "—")
 
     cover = standardize_cover(book_dir)
     if cover:
@@ -215,7 +218,7 @@ def process_book(book_dir: Path, tracker: dict):
         cover = download_cover(author, title, book_dir, is_english)
         cover_status = "downloaded" if cover else "not found"
 
-    print(f"    Cover: {cover_status}")
+    logger.info("  Cover: %s", cover_status)
 
     cover_data = cover.read_bytes() if cover and cover.exists() else None
 
@@ -227,12 +230,12 @@ def process_book(book_dir: Path, tracker: dict):
         except Exception as e:
             errors += 1
             if errors <= 2:
-                print(f"    ! {mp3.name}: {e}")
+                logger.warning("  Tag error %s: %s", mp3.name, e)
 
     count_str = f"{len(mp3s)} files"
     if errors:
         count_str += f" ({errors} errors)"
-    print(f"    Tags: {count_str}")
+    logger.info("  Tags: %s", count_str)
 
     return cover_status, len(mp3s)
 
@@ -241,31 +244,36 @@ def process_book(book_dir: Path, tracker: dict):
 
 
 def main():
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
     sys.stdout.reconfigure(encoding="utf-8")
-    print("=" * 60)
-    print("  Covers and metadata for audiobook library")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("  Covers and metadata for audiobook library")
+    logger.info("=" * 60)
 
     tracker = load_tracker()
     books = find_books()
 
-    print(f"\nBooks: {len(books)}  |  CSV rows: {len(tracker)}")
+    logger.info("Books: %d  |  CSV rows: %d", len(books), len(tracker))
 
     stats = {"exists": 0, "downloaded": 0, "not found": 0, "mp3s": 0}
 
     for i, book in enumerate(books, 1):
-        print(f"\n[{i}/{len(books)}]", end="")
+        logger.info("[%d/%d]", i, len(books))
         cover_status, mp3_count = process_book(book, tracker)
         stats[cover_status] = stats.get(cover_status, 0) + 1
         stats["mp3s"] += mp3_count
 
-    print(f"\n\n{'=' * 60}")
-    print("  Summary:")
-    print(f"    Covers existed:     {stats.get('exists', 0)}")
-    print(f"    Covers downloaded:  {stats.get('downloaded', 0)}")
-    print(f"    No covers:          {stats.get('not found', 0)}")
-    print(f"    MP3s processed:     {stats['mp3s']}")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("  Summary:")
+    logger.info("    Covers existed:     %d", stats.get("exists", 0))
+    logger.info("    Covers downloaded:  %d", stats.get("downloaded", 0))
+    logger.info("    No covers:          %d", stats.get("not found", 0))
+    logger.info("    MP3s processed:     %d", stats["mp3s"])
+    logger.info("=" * 60)
 
 
 if __name__ == "__main__":

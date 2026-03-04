@@ -54,16 +54,10 @@ function intensity(count: number): string {
   <div class="card p-6">
     <h2 class="section-label mb-5">Активность</h2>
     <div class="overflow-x-auto">
-      <svg :width="Math.max(...cells.map(c => c.x), 0) + 20" :height="7 * 14 + 20" class="block">
-        <text
-          v-for="[label, x] in months"
-          :key="label"
-          :x="x"
-          y="10"
-          fill="var(--t3)"
-          font-size="9"
-          font-weight="500"
-        >{{ label }}</text>
+      <svg :width="Math.max(...cells.map((c) => c.x), 0) + 20" :height="7 * 14 + 20" class="block">
+        <text v-for="[label, x] in months" :key="label" :x="x" y="10" fill="var(--t3)" font-size="9" font-weight="500">
+          {{ label }}
+        </text>
         <rect
           v-for="c in cells"
           :key="c.date"

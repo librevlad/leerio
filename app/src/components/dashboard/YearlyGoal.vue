@@ -12,12 +12,12 @@ const percent = computed(() => Math.min(100, Math.round((props.done / Math.max(1
 
 <template>
   <div class="card p-5">
-    <div class="flex items-center justify-between mb-4">
+    <div class="mb-4 flex items-center justify-between">
       <span class="section-label">Годовая цель</span>
       <span class="text-[12px] font-medium text-[--t3]">{{ done }}/{{ goal }}</span>
     </div>
     <ProgressBar :percent="percent" height="h-1.5" />
-    <p class="text-[24px] font-bold mt-3 tracking-tight leading-none gradient-text">{{ percent }}%</p>
-    <p class="text-[12px] mt-1 text-[--t3]">осталось {{ Math.max(0, goal - done) }} книг</p>
+    <p class="gradient-text mt-3 text-[24px] leading-none font-bold tracking-tight">{{ percent }}%</p>
+    <p class="mt-1 text-[12px] text-[--t3]">осталось {{ Math.max(0, goal - done) }} книг</p>
   </div>
 </template>

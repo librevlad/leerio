@@ -26,13 +26,9 @@ let isSeeking = false
 
 // ── Computed ────────────────────────────────────────────────────────────────
 
-const currentTrack = computed(() =>
-  tracks.value[currentTrackIndex.value] ?? null
-)
+const currentTrack = computed(() => tracks.value[currentTrackIndex.value] ?? null)
 
-const totalDuration = computed(() =>
-  tracks.value.reduce((sum, t) => sum + t.duration, 0)
-)
+const totalDuration = computed(() => tracks.value.reduce((sum, t) => sum + t.duration, 0))
 
 const totalElapsed = computed(() => {
   let elapsed = 0
@@ -42,9 +38,7 @@ const totalElapsed = computed(() => {
   return elapsed + currentTime.value
 })
 
-const overallProgress = computed(() =>
-  totalDuration.value > 0 ? (totalElapsed.value / totalDuration.value) * 100 : 0
-)
+const overallProgress = computed(() => (totalDuration.value > 0 ? (totalElapsed.value / totalDuration.value) * 100 : 0))
 
 // ── Audio engine ────────────────────────────────────────────────────────────
 
@@ -99,12 +93,9 @@ function ensureAudio(): HTMLAudioElement {
 
 function savePosition() {
   if (!currentBook.value || !currentTrack.value) return
-  api.setPlaybackPosition(
-    currentBook.value.id,
-    currentTrackIndex.value,
-    currentTime.value,
-    currentTrack.value.filename,
-  ).catch((e) => console.warn('Не удалось сохранить позицию:', e))
+  api
+    .setPlaybackPosition(currentBook.value.id, currentTrackIndex.value, currentTime.value, currentTrack.value.filename)
+    .catch((e) => console.warn('Не удалось сохранить позицию:', e))
 
   // Auto-track book progress (0-100%)
   const pct = Math.round(overallProgress.value)

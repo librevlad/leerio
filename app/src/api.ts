@@ -58,10 +58,23 @@ export function coverUrl(bookId: string): string {
 }
 
 import type {
-  DashboardData, Book, SimilarBook, TrelloCard, TrelloList,
-  TrelloStatus, SyncResult, CreateCardResult,
-  HistoryEntry, AnalyticsData, Achievement, Quote, Collection,
-  SessionStats, Constants, TrackList, PlaybackPosition,
+  DashboardData,
+  Book,
+  SimilarBook,
+  TrelloCard,
+  TrelloList,
+  TrelloStatus,
+  SyncResult,
+  CreateCardResult,
+  HistoryEntry,
+  AnalyticsData,
+  Achievement,
+  Quote,
+  Collection,
+  SessionStats,
+  Constants,
+  TrackList,
+  PlaybackPosition,
 } from './types'
 
 export const api = {
@@ -116,13 +129,11 @@ export const api = {
 
   // Progress
   getAllProgress: () => get<Record<string, { pct: number }>>('/progress'),
-  setProgress: (title: string, pct: number) =>
-    put<{ ok: boolean }>(`/progress/${encodeURIComponent(title)}`, { pct }),
+  setProgress: (title: string, pct: number) => put<{ ok: boolean }>(`/progress/${encodeURIComponent(title)}`, { pct }),
 
   // Quotes
   getQuotes: () => get<Quote[]>('/quotes'),
-  addQuote: (text: string, book: string, author = '') =>
-    post<{ ok: boolean }>('/quotes', { text, book, author }),
+  addQuote: (text: string, book: string, author = '') => post<{ ok: boolean }>('/quotes', { text, book, author }),
   deleteQuote: (idx: number) => del<{ ok: boolean }>(`/quotes/${idx}`),
 
   // Collections

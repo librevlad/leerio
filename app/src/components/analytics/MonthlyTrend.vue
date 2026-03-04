@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Line } from 'vue-chartjs'
-import {
-  Chart as ChartJS, CategoryScale, LinearScale, PointElement,
-  LineElement, Tooltip, Filler,
-} from 'chart.js'
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler } from 'chart.js'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler)
 
@@ -12,17 +9,19 @@ const props = defineProps<{ data: [string, number][] }>()
 
 const chartData = computed(() => ({
   labels: props.data.map(([m]) => m),
-  datasets: [{
-    label: 'Прослушано',
-    data: props.data.map(([, c]) => c),
-    borderColor: '#7c5bf0',
-    backgroundColor: 'rgba(124, 91, 240, 0.06)',
-    fill: true,
-    tension: 0.4,
-    pointRadius: 2,
-    pointBackgroundColor: '#7c5bf0',
-    borderWidth: 2,
-  }],
+  datasets: [
+    {
+      label: 'Прослушано',
+      data: props.data.map(([, c]) => c),
+      borderColor: '#7c5bf0',
+      backgroundColor: 'rgba(124, 91, 240, 0.06)',
+      fill: true,
+      tension: 0.4,
+      pointRadius: 2,
+      pointBackgroundColor: '#7c5bf0',
+      borderWidth: 2,
+    },
+  ],
 }))
 
 const options = {

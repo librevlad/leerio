@@ -26,11 +26,11 @@ onMounted(async () => {
     <h1 class="page-title mb-10">Дашборд</h1>
 
     <div v-if="loading" class="space-y-6">
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <div v-for="i in 4" :key="i" class="skeleton h-28" />
       </div>
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 space-y-6">
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div class="space-y-6 lg:col-span-2">
           <div class="skeleton h-40" />
           <div class="skeleton h-36" />
         </div>
@@ -49,8 +49,8 @@ onMounted(async () => {
         :pace="data.velocity.avg_per_month || 0"
       />
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 space-y-6">
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div class="space-y-6 lg:col-span-2">
           <ActiveBooks :books="data.active_books" />
           <ActivityHeatmap :data="data.heatmap" />
         </div>

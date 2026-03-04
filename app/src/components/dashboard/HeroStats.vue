@@ -17,28 +17,24 @@ const stats = [
 </script>
 
 <template>
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-    <div
-      v-for="s in stats"
-      :key="s.key"
-      class="card px-5 py-5"
-    >
-      <div class="flex items-center justify-between mb-4">
+  <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div v-for="s in stats" :key="s.key" class="card px-5 py-5">
+      <div class="mb-4 flex items-center justify-between">
         <span class="text-[12px] font-medium text-[--t3]">{{ s.label }}</span>
-        <span
-          class="stat-icon"
-          :class="s.color"
-          :style="{ background: s.bg }"
-        >
+        <span class="stat-icon" :class="s.color" :style="{ background: s.bg }">
           <component :is="s.icon" :size="15" />
         </span>
       </div>
-      <p class="text-[32px] font-bold tracking-tight text-[--t1] leading-none">
-        {{ s.key === 'pace'
-          ? pace.toFixed(1)
-          : s.key === 'totalBooks' ? totalBooks
-          : s.key === 'totalDone' ? totalDone
-          : activeCount }}
+      <p class="text-[32px] leading-none font-bold tracking-tight text-[--t1]">
+        {{
+          s.key === 'pace'
+            ? pace.toFixed(1)
+            : s.key === 'totalBooks'
+              ? totalBooks
+              : s.key === 'totalDone'
+                ? totalDone
+                : activeCount
+        }}
       </p>
     </div>
   </div>

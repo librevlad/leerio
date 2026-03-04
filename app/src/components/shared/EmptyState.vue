@@ -12,7 +12,7 @@ defineProps<{
     <span class="mb-5 text-[--t3] opacity-30">
       <IconInbox :size="56" />
     </span>
-    <h3 class="text-[14px] font-medium mb-1 text-[--t2]">{{ title }}</h3>
-    <p v-if="description" class="text-[13px] max-w-xs text-[--t3]">{{ description }}</p>
+    <h3 class="mb-1 text-[14px] font-medium text-[--t2]">{{ title }}</h3>
+    <p v-if="description" class="max-w-xs text-[13px] text-[--t3]">{{ description }}</p>
   </div>
 </template>

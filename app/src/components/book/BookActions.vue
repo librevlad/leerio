@@ -37,8 +37,8 @@ async function move(target: string, rating = 0) {
     await api.moveCard(props.cardId, target, rating)
     toast.success(`→ ${target}`)
     emit('moved')
-  } catch (e: any) {
-    toast.error(e.message)
+  } catch (e: unknown) {
+    toast.error(e instanceof Error ? e.message : 'Ошибка')
   } finally {
     loading.value = false
   }
@@ -53,9 +53,10 @@ async function handleCreateCard() {
   creating.value = true
   try {
     const name = props.author ? `${props.author} - ${props.title}` : props.title
-    const label = props.category && constants.value?.folder_to_label
-      ? constants.value.folder_to_label[props.category] ?? undefined
-      : undefined
+    const label =
+      props.category && constants.value?.folder_to_label
+        ? (constants.value.folder_to_label[props.category] ?? undefined)
+        : undefined
     const cardId = await createCard(name, 'Прочесть', label)
     if (cardId) {
       emit('cardCreated', cardId)
@@ -66,9 +67,9 @@ async function handleCreateCard() {
 }
 
 const actions = [
-  { key: 'listen',  target: 'В процессе', label: 'Слушать',     hide: 'В процессе', style: 'ghost' },
-  { key: 'phone',   target: 'В телефоне',  label: 'На телефон',  hide: 'В телефоне',  style: 'ghost' },
-  { key: 'pause',   target: 'На Паузе',    label: 'Пауза',      hide: 'На Паузе',    style: 'ghost' },
+  { key: 'listen', target: 'В процессе', label: 'Слушать', hide: 'В процессе', style: 'ghost' },
+  { key: 'phone', target: 'В телефоне', label: 'На телефон', hide: 'В телефоне', style: 'ghost' },
+  { key: 'pause', target: 'На Паузе', label: 'Пауза', hide: 'На Паузе', style: 'ghost' },
 ]
 </script>
 
@@ -76,10 +77,25 @@ const actions = [
   <div class="card p-5">
     <h3 class="section-label mb-3">Действия</h3>
     <div v-if="!cardId" class="space-y-3">
-      <div class="flex items-center gap-3 px-3 py-2.5 rounded-xl" style="background: rgba(255,255,255,0.02)">
-        <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background: rgba(250,204,21,0.1)">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-yellow-400">
-            <path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+      <div class="flex items-center gap-3 rounded-xl px-3 py-2.5" style="background: rgba(255, 255, 255, 0.02)">
+        <div
+          class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg"
+          style="background: rgba(250, 204, 21, 0.1)"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="text-yellow-400"
+          >
+            <path
+              d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+            />
           </svg>
         </div>
         <div>
@@ -87,15 +103,11 @@ const actions = [
           <p class="text-[10px] text-[--t3]">Создайте карточку, чтобы управлять книгой</p>
         </div>
       </div>
-      <button
-        class="btn btn-ghost w-full"
-        :disabled="creating"
-        @click="handleCreateCard"
-      >
+      <button class="btn btn-ghost w-full" :disabled="creating" @click="handleCreateCard">
         {{ creating ? 'Создание...' : 'Создать карточку' }}
       </button>
     </div>
-    <div v-else class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
+    <div v-else class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
       <template v-for="a in actions" :key="a.key">
         <button
           v-if="status !== a.hide"
@@ -106,30 +118,26 @@ const actions = [
           {{ a.label }}
         </button>
       </template>
-      <button
-        class="btn btn-primary justify-center"
-        :disabled="loading"
-        @click="showDoneDialog = true"
-      >
+      <button class="btn btn-primary justify-center" :disabled="loading" @click="showDoneDialog = true">
         Прослушано
       </button>
-      <button
-        class="btn btn-danger justify-center"
-        :disabled="loading"
-        @click="showRejectDialog = true"
-      >
+      <button class="btn btn-danger justify-center" :disabled="loading" @click="showRejectDialog = true">
         Забраковать
       </button>
     </div>
 
     <Teleport to="body">
       <Transition name="dialog">
-        <div v-if="showDoneDialog" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showDoneDialog = false">
-          <div class="fixed inset-0 dialog-overlay" />
-          <div class="dialog-panel p-7 max-w-sm w-full relative z-10">
-            <h3 class="text-[16px] font-bold mb-1 text-[--t1]">Прослушано!</h3>
-            <p class="text-[13px] mb-5 text-[--t2]">Оцените книгу:</p>
-            <div class="flex justify-center mb-6">
+        <div
+          v-if="showDoneDialog"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4"
+          @click.self="showDoneDialog = false"
+        >
+          <div class="dialog-overlay fixed inset-0" />
+          <div class="dialog-panel relative z-10 w-full max-w-sm p-7">
+            <h3 class="mb-1 text-[16px] font-bold text-[--t1]">Прослушано!</h3>
+            <p class="mb-5 text-[13px] text-[--t2]">Оцените книгу:</p>
+            <div class="mb-6 flex justify-center">
               <StarRating v-model="doneRating" size="lg" />
             </div>
             <div class="flex justify-end gap-2">
@@ -147,7 +155,10 @@ const actions = [
       :message="`Отправить «${title}» в забракованные?`"
       confirm-text="Забраковать"
       confirm-class="!bg-red-600 hover:!bg-red-500 !text-white !shadow-none"
-      @confirm="move('Забраковано'); showRejectDialog = false"
+      @confirm="
+        move('Забраковано')
+        showRejectDialog = false
+      "
       @cancel="showRejectDialog = false"
     />
   </div>

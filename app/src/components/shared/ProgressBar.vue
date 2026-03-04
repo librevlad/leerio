@@ -1,14 +1,17 @@
 <script setup lang="ts">
-withDefaults(defineProps<{
-  percent: number
-  height?: string
-}>(), {
-  height: 'h-[3px]',
-})
+withDefaults(
+  defineProps<{
+    percent: number
+    height?: string
+  }>(),
+  {
+    height: 'h-[3px]',
+  },
+)
 </script>
 
 <template>
-  <div class="w-full rounded-full overflow-hidden" :class="height" style="background: rgba(255,255,255,0.04)">
+  <div class="w-full overflow-hidden rounded-full" :class="height" style="background: rgba(255, 255, 255, 0.04)">
     <div
       class="h-full rounded-full transition-all duration-700 ease-out"
       style="background: var(--gradient-bar)"

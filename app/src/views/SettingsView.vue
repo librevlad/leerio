@@ -17,18 +17,19 @@ const serverSaved = ref(false)
 function saveServerUrl() {
   setServerUrl(serverUrl.value)
   serverSaved.value = true
-  setTimeout(() => { serverSaved.value = false }, 2000)
+  setTimeout(() => {
+    serverSaved.value = false
+  }, 2000)
 }
 
 onMounted(async () => {
   try {
-    const [c, s] = await Promise.all([
-      api.getConstants(),
-      api.getSessionStats(30),
-    ])
+    const [c, s] = await Promise.all([api.getConstants(), api.getSessionStats(30)])
     constants.value = c
     sessionStats.value = s
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   loadStatus()
 })
 
@@ -62,13 +63,13 @@ function fmtSize(bytes: number): string {
   <div>
     <h1 class="page-title mb-8">Настройки</h1>
 
-    <div class="space-y-6 max-w-2xl">
+    <div class="max-w-2xl space-y-6">
       <!-- Server URL -->
       <div class="card p-6">
         <h3 class="section-label mb-4">Сервер</h3>
-        <p class="text-[12px] text-[--t3] mb-3">
-          URL сервера для доступа с другого устройства (например, телефона по Wi-Fi).
-          Оставьте пустым для локального режима.
+        <p class="mb-3 text-[12px] text-[--t3]">
+          URL сервера для доступа с другого устройства (например, телефона по Wi-Fi). Оставьте пустым для локального
+          режима.
         </p>
         <div class="flex gap-3">
           <input
@@ -86,21 +87,25 @@ function fmtSize(bytes: number): string {
 
       <div class="card p-6">
         <h3 class="section-label mb-4">Trello</h3>
-        <div class="flex items-center gap-3 mb-4">
+        <div class="mb-4 flex items-center gap-3">
           <span
-            class="w-2.5 h-2.5 rounded-full"
+            class="h-2.5 w-2.5 rounded-full"
             :class="constants?.trello_connected ? 'bg-emerald-400' : 'bg-red-400'"
-            :style="constants?.trello_connected ? 'box-shadow: 0 0 8px rgba(52,211,153,0.4)' : 'box-shadow: 0 0 8px rgba(248,113,113,0.4)'"
+            :style="
+              constants?.trello_connected
+                ? 'box-shadow: 0 0 8px rgba(52,211,153,0.4)'
+                : 'box-shadow: 0 0 8px rgba(248,113,113,0.4)'
+            "
           />
-          <span class="text-[13px] text-[--t2] font-medium">
+          <span class="text-[13px] font-medium text-[--t2]">
             {{ constants?.trello_connected ? 'Подключено' : 'Не подключено' }}
           </span>
         </div>
 
-        <div class="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
+        <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center">
           <button
             v-if="constants?.trello_connected"
-            class="btn btn-ghost w-full sm:w-auto justify-center"
+            class="btn btn-ghost w-full justify-center sm:w-auto"
             :disabled="syncing"
             @click="syncTrello"
           >
@@ -115,15 +120,15 @@ function fmtSize(bytes: number): string {
         </div>
 
         <!-- Mini stats -->
-        <div v-if="trelloStatus" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div v-if="trelloStatus" class="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <div
-            v-for="listName in LIST_ORDER.filter(l => (trelloStatus!.list_counts[l] ?? 0) > 0)"
+            v-for="listName in LIST_ORDER.filter((l) => (trelloStatus!.list_counts[l] ?? 0) > 0)"
             :key="listName"
-            class="px-3.5 py-3 rounded-xl"
-            style="background: rgba(255,255,255,0.03); border: 1px solid var(--border)"
+            class="rounded-xl px-3.5 py-3"
+            style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border)"
           >
-            <p class="text-[11px] text-[--t3] mb-1">{{ listName }}</p>
-            <p class="text-[18px] font-bold text-[--t1] tracking-tight leading-none">
+            <p class="mb-1 text-[11px] text-[--t3]">{{ listName }}</p>
+            <p class="text-[18px] leading-none font-bold tracking-tight text-[--t1]">
               {{ trelloStatus!.list_counts[listName] }}
             </p>
           </div>
@@ -134,20 +139,26 @@ function fmtSize(bytes: number): string {
         <h3 class="section-label mb-5">Сессии</h3>
         <div class="grid grid-cols-2 gap-6">
           <div>
-            <p class="text-[12px] text-[--t3] mb-1.5">Всего часов</p>
-            <p class="text-[24px] font-bold text-[--t1] tracking-tight leading-none">{{ sessionStats.total_hours.toFixed(1) }}</p>
+            <p class="mb-1.5 text-[12px] text-[--t3]">Всего часов</p>
+            <p class="text-[24px] leading-none font-bold tracking-tight text-[--t1]">
+              {{ sessionStats.total_hours.toFixed(1) }}
+            </p>
           </div>
           <div>
-            <p class="text-[12px] text-[--t3] mb-1.5">Сегодня (мин)</p>
-            <p class="text-[24px] font-bold text-[--t1] tracking-tight leading-none">{{ sessionStats.today_min }}</p>
+            <p class="mb-1.5 text-[12px] text-[--t3]">Сегодня (мин)</p>
+            <p class="text-[24px] leading-none font-bold tracking-tight text-[--t1]">{{ sessionStats.today_min }}</p>
           </div>
           <div>
-            <p class="text-[12px] text-[--t3] mb-1.5">За неделю (ч)</p>
-            <p class="text-[24px] font-bold text-[--t1] tracking-tight leading-none">{{ sessionStats.week_hours.toFixed(1) }}</p>
+            <p class="mb-1.5 text-[12px] text-[--t3]">За неделю (ч)</p>
+            <p class="text-[24px] leading-none font-bold tracking-tight text-[--t1]">
+              {{ sessionStats.week_hours.toFixed(1) }}
+            </p>
           </div>
           <div v-if="sessionStats.peak_hour !== null">
-            <p class="text-[12px] text-[--t3] mb-1.5">Пик</p>
-            <p class="text-[24px] font-bold gradient-text tracking-tight leading-none">{{ sessionStats.peak_hour }}:00</p>
+            <p class="mb-1.5 text-[12px] text-[--t3]">Пик</p>
+            <p class="gradient-text text-[24px] leading-none font-bold tracking-tight">
+              {{ sessionStats.peak_hour }}:00
+            </p>
           </div>
         </div>
       </div>
@@ -158,8 +169,8 @@ function fmtSize(bytes: number): string {
           <span
             v-for="cat in constants?.categories"
             :key="cat"
-            class="px-3.5 py-1.5 text-[13px] rounded-full text-[--t2] font-medium"
-            style="background: rgba(255,255,255,0.04); border: 1px solid var(--border)"
+            class="rounded-full px-3.5 py-1.5 text-[13px] font-medium text-[--t2]"
+            style="background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border)"
           >
             {{ cat }}
           </span>
@@ -176,36 +187,34 @@ function fmtSize(bytes: number): string {
         </h3>
 
         <div class="mb-4">
-          <p class="text-[12px] text-[--t3] mb-1">Общий объём</p>
-          <p class="text-[20px] font-bold text-[--t1] tracking-tight leading-none">
+          <p class="mb-1 text-[12px] text-[--t3]">Общий объём</p>
+          <p class="text-[20px] leading-none font-bold tracking-tight text-[--t1]">
             {{ fmtSize(dl.totalDownloadedSize.value) }}
           </p>
         </div>
 
-        <div v-if="dl.downloadedBooks.value.length" class="space-y-3 mb-4">
+        <div v-if="dl.downloadedBooks.value.length" class="mb-4 space-y-3">
           <div
             v-for="b in dl.downloadedBooks.value"
             :key="b.bookId"
-            class="flex items-center justify-between gap-3 px-3.5 py-3 rounded-xl"
-            style="background: rgba(255,255,255,0.03); border: 1px solid var(--border)"
+            class="flex items-center justify-between gap-3 rounded-xl px-3.5 py-3"
+            style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border)"
           >
             <div class="min-w-0 flex-1">
-              <p class="text-[13px] font-medium text-[--t1] truncate">{{ b.title }}</p>
-              <p class="text-[11px] text-[--t3]">
-                {{ b.tracks.length }} треков · {{ fmtSize(b.totalSize) }}
-              </p>
+              <p class="truncate text-[13px] font-medium text-[--t1]">{{ b.title }}</p>
+              <p class="text-[11px] text-[--t3]">{{ b.tracks.length }} треков · {{ fmtSize(b.totalSize) }}</p>
             </div>
             <button
-              class="p-2 bg-transparent border-0 text-[--t3] hover:text-red-400 transition-colors cursor-pointer shrink-0 rounded-lg hover:bg-white/5"
-              @click="dl.deleteBook(b.bookId)"
+              class="shrink-0 cursor-pointer rounded-lg border-0 bg-transparent p-2 text-[--t3] transition-colors hover:bg-white/5 hover:text-red-400"
               title="Удалить"
+              @click="dl.deleteBook(b.bookId)"
             >
               <IconTrash :size="15" />
             </button>
           </div>
         </div>
 
-        <p v-else class="text-[12px] text-[--t3] mb-4">
+        <p v-else class="mb-4 text-[12px] text-[--t3]">
           Нет скачанных книг. Скачайте книгу на странице книги для офлайн-прослушивания.
         </p>
 
@@ -222,8 +231,8 @@ function fmtSize(bytes: number): string {
       <div class="card p-6">
         <h3 class="section-label mb-3">О системе</h3>
         <p class="text-[12px] leading-relaxed text-[--t3]">
-          Веб-интерфейс аудиокниготеки v1.0<br>
-          Backend: FastAPI / Frontend: Vue 3 + Tailwind<br>
+          Веб-интерфейс аудиокниготеки v1.0<br />
+          Backend: FastAPI / Frontend: Vue 3 + Tailwind<br />
           Данные хранятся в JSON-файлах на диске.
         </p>
       </div>

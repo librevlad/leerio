@@ -4,10 +4,15 @@ __pycache__/
 *.pyo
 *.egg-info/
 .venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
 
 # Node
 app/node_modules/
 app/dist/
+app/coverage/
 
 # Runtime data (sensitive + generated)
 data/*.json

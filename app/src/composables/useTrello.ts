@@ -34,8 +34,8 @@ export function useTrello() {
       await api.moveCard(cardId, target, rating)
       toast.success(`Перемещено → ${target}`)
       await loadCards()
-    } catch (e: any) {
-      toast.error(`Ошибка: ${e.message}`)
+    } catch (e: unknown) {
+      toast.error(`Ошибка: ${e instanceof Error ? e.message : 'Неизвестная ошибка'}`)
     }
   }
 
@@ -44,8 +44,8 @@ export function useTrello() {
       const res = await api.createTrelloCard(name, listName, label, desc)
       toast.success('Карточка создана')
       return res.card_id
-    } catch (e: any) {
-      toast.error(`Ошибка: ${e.message}`)
+    } catch (e: unknown) {
+      toast.error(`Ошибка: ${e instanceof Error ? e.message : 'Неизвестная ошибка'}`)
       return null
     }
   }
@@ -55,8 +55,8 @@ export function useTrello() {
       const res = await api.syncTrello()
       toast.success(`Синхронизировано: ${res.cards} карточек`)
       await Promise.all([loadCards(), loadStatus()])
-    } catch (e: any) {
-      toast.error(`Ошибка синхронизации: ${e.message}`)
+    } catch (e: unknown) {
+      toast.error(`Ошибка синхронизации: ${e instanceof Error ? e.message : 'Неизвестная ошибка'}`)
     }
   }
 

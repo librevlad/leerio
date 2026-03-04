@@ -5,13 +5,13 @@ import { dotColor } from '../../composables/useStatusColors'
 defineProps<{ entries: HistoryEntry[] }>()
 
 const glowColor: Record<string, string> = {
-  'В телефоне':  'rgba(96,165,250,0.3)',
-  'В процессе':  'rgba(168,85,247,0.3)',
-  'На Паузе':    'rgba(250,204,21,0.3)',
-  'Прочитано':   'rgba(74,222,128,0.3)',
-  'Забраковано':  'rgba(248,113,113,0.3)',
-  'Прочесть':    'rgba(148,163,184,0.2)',
-  'Скачать':     'rgba(148,163,184,0.2)',
+  'В телефоне': 'rgba(96,165,250,0.3)',
+  'В процессе': 'rgba(168,85,247,0.3)',
+  'На Паузе': 'rgba(250,204,21,0.3)',
+  Прочитано: 'rgba(74,222,128,0.3)',
+  Забраковано: 'rgba(248,113,113,0.3)',
+  Прочесть: 'rgba(148,163,184,0.2)',
+  Скачать: 'rgba(148,163,184,0.2)',
 }
 
 function formatDate(ts: string): string {
@@ -26,11 +26,11 @@ function formatDate(ts: string): string {
       <div
         v-for="(e, i) in entries"
         :key="i"
-        class="flex items-start gap-3.5 relative"
+        class="relative flex items-start gap-3.5"
         :class="i < entries.length - 1 ? 'pb-5' : ''"
       >
         <!-- Dot column -->
-        <div class="flex flex-col items-center relative">
+        <div class="relative flex flex-col items-center">
           <!-- Vertical line -->
           <div
             v-if="i < entries.length - 1"
@@ -39,19 +39,19 @@ function formatDate(ts: string): string {
           />
           <!-- Dot with glow -->
           <span
-            class="w-3 h-3 rounded-full flex-shrink-0 relative z-[1]"
+            class="relative z-[1] h-3 w-3 flex-shrink-0 rounded-full"
             :class="dotColor[e.action] || 'bg-slate-500'"
             :style="{ boxShadow: `0 0 0 3px ${glowColor[e.action] || 'rgba(148,163,184,0.15)'}` }"
           />
         </div>
 
         <!-- Content -->
-        <div class="flex-1 min-w-0 -mt-0.5">
-          <div class="flex items-baseline gap-2 flex-wrap">
+        <div class="-mt-0.5 min-w-0 flex-1">
+          <div class="flex flex-wrap items-baseline gap-2">
             <span class="text-[12px] font-semibold text-[--t1]">{{ e.action_label }}</span>
             <span v-if="e.detail" class="text-[11px] text-[--t3]">{{ e.detail }}</span>
           </div>
-          <p class="text-[10px] mt-0.5 text-[--t3]">{{ formatDate(e.ts) }}</p>
+          <p class="mt-0.5 text-[10px] text-[--t3]">{{ formatDate(e.ts) }}</p>
         </div>
       </div>
     </div>

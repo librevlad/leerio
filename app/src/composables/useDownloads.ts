@@ -56,6 +56,7 @@ async function saveMeta(): Promise<void> {
     path: META_PATH,
     data: JSON.stringify(meta.value, null, 2),
     directory: Directory.Data,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     encoding: 'utf8' as any,
   })
 }
@@ -65,6 +66,7 @@ async function loadMeta(): Promise<void> {
     const result = await Filesystem.readFile({
       path: META_PATH,
       directory: Directory.Data,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       encoding: 'utf8' as any,
     })
     const data = typeof result.data === 'string' ? result.data : ''
@@ -93,7 +95,11 @@ async function downloadBook(book: Book, trackList: Track[]): Promise<void> {
   if (downloading.value[book.id]) return // already in progress
 
   let cancelled = false
-  abortControllers.set(book.id, { abort: () => { cancelled = true } } as any)
+  abortControllers.set(book.id, {
+    abort: () => {
+      cancelled = true
+    },
+  } as unknown as AbortController)
 
   const totalBytes = trackList.reduce((s, t) => s + (t.size_bytes || 0), 0)
   downloading.value[book.id] = {
@@ -169,7 +175,9 @@ async function downloadBook(book: Book, trackList: Track[]): Promise<void> {
           directory: Directory.Data,
           recursive: true,
         })
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
   } catch {
     // Download error — clean up partial files
@@ -179,7 +187,9 @@ async function downloadBook(book: Book, trackList: Track[]): Promise<void> {
         directory: Directory.Data,
         recursive: true,
       })
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   } finally {
     delete downloading.value[book.id]
     abortControllers.delete(book.id)
@@ -202,7 +212,9 @@ async function deleteBook(bookId: string): Promise<void> {
       directory: Directory.Data,
       recursive: true,
     })
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   delete meta.value.books[bookId]
   await saveMeta()
 }
@@ -215,7 +227,9 @@ async function deleteAllBooks(): Promise<void> {
         directory: Directory.Data,
         recursive: true,
       })
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
   meta.value = { books: {} }
   await saveMeta()
@@ -255,16 +269,14 @@ function bookDownloadProgress(bookId: string): DownloadProgress | null {
 function isTrackDownloaded(bookId: string, trackIndex: number): boolean {
   const book = meta.value.books[bookId]
   if (!book) return false
-  return book.tracks.some(t => t.index === trackIndex)
+  return book.tracks.some((t) => t.index === trackIndex)
 }
 
 // ── Computed ───────────────────────────────────────────────────────────────
 
 const downloadedBooks = computed(() => Object.values(meta.value.books))
 
-const totalDownloadedSize = computed(() =>
-  downloadedBooks.value.reduce((sum, b) => sum + b.totalSize, 0)
-)
+const totalDownloadedSize = computed(() => downloadedBooks.value.reduce((sum, b) => sum + b.totalSize, 0))
 
 // ── Export ──────────────────────────────────────────────────────────────────
 

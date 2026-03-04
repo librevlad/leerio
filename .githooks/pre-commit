@@ -3,13 +3,35 @@ set -e
 
 echo "==> Running pre-commit checks..."
 
-echo "--- ruff check server/"
-ruff check server/
+# Get staged files
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
 
-echo "--- ruff format --check server/"
-ruff format --check server/
+# ── Python checks (only if server/ files staged) ────────────────────────────
+PY_FILES=$(echo "$STAGED" | grep '^server/.*\.py$' || true)
+if [ -n "$PY_FILES" ]; then
+    echo "--- ruff check (staged Python files)"
+    echo "$PY_FILES" | xargs ruff check
 
-echo "--- vue-tsc type check"
-cd app && npx vue-tsc --noEmit
+    echo "--- ruff format --check (staged Python files)"
+    echo "$PY_FILES" | xargs ruff format --check
+else
+    echo "--- skipping Python checks (no staged .py files)"
+fi
+
+# ── Frontend checks (only if app/src/ files staged) ─────────────────────────
+APP_FILES=$(echo "$STAGED" | grep '^app/src/.*\.\(ts\|vue\|js\)$' || true)
+if [ -n "$APP_FILES" ]; then
+    echo "--- eslint (staged frontend files)"
+    cd app && echo "$APP_FILES" | sed 's|^app/||' | xargs npx eslint
+
+    echo "--- prettier --check (staged frontend files)"
+    echo "$APP_FILES" | sed 's|^app/||' | xargs npx prettier --check
+
+    echo "--- vue-tsc type check"
+    npx vue-tsc --noEmit
+    cd ..
+else
+    echo "--- skipping frontend checks (no staged app/src/ files)"
+fi
 
 echo "==> All checks passed."

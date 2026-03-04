@@ -10,14 +10,16 @@ const props = defineProps<{ data: Record<string, number> }>()
 const chartData = computed(() => {
   const labels = ['1', '2', '3', '4', '5']
   return {
-    labels: labels.map(l => l + ' '),
-    datasets: [{
-      label: 'Оценки',
-      data: labels.map(l => props.data[l] || 0),
-      backgroundColor: ['#3e3e50', '#3e3e50', '#5a4bb0', '#6d58d6', '#7c5bf0'],
-      borderRadius: 6,
-      barThickness: 24,
-    }],
+    labels: labels.map((l) => l + ' '),
+    datasets: [
+      {
+        label: 'Оценки',
+        data: labels.map((l) => props.data[l] || 0),
+        backgroundColor: ['#3e3e50', '#3e3e50', '#5a4bb0', '#6d58d6', '#7c5bf0'],
+        borderRadius: 6,
+        barThickness: 24,
+      },
+    ],
   }
 })
 

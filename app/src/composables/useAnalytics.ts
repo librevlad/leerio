@@ -10,10 +10,7 @@ export function useAnalytics() {
   async function load() {
     loading.value = true
     try {
-      const [analytics, badges] = await Promise.all([
-        api.getAnalytics(),
-        api.getAchievements(),
-      ])
+      const [analytics, badges] = await Promise.all([api.getAnalytics(), api.getAchievements()])
       data.value = analytics
       achievements.value = badges
     } catch {

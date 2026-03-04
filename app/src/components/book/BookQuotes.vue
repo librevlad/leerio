@@ -14,16 +14,17 @@ const newText = ref('')
 const adding = ref(false)
 
 const quotes = computed(() =>
-  allQuotes.value
-    .map((q, i) => ({ ...q, _idx: i }))
-    .filter(q => q.book === props.bookTitle)
+  allQuotes.value.map((q, i) => ({ ...q, _idx: i })).filter((q) => q.book === props.bookTitle),
 )
 
 onMounted(async () => {
   try {
     allQuotes.value = await api.getQuotes()
-  } catch { /* ignore */ }
-  finally { loading.value = false }
+  } catch {
+    /* ignore */
+  } finally {
+    loading.value = false
+  }
 })
 
 async function addQuote() {
@@ -62,21 +63,21 @@ async function removeQuote(idx: number) {
 
     <div v-else>
       <!-- Existing quotes -->
-      <div v-if="quotes.length" class="space-y-2 mb-3">
+      <div v-if="quotes.length" class="mb-3 space-y-2">
         <div
           v-for="q in quotes"
           :key="q._idx"
-          class="group relative px-4 py-3 rounded-xl text-[13px] leading-relaxed text-[--t2] italic"
-          style="background: rgba(232,146,58,0.05); border-left: 2px solid var(--accent)"
+          class="group relative rounded-xl px-4 py-3 text-[13px] leading-relaxed text-[--t2] italic"
+          style="background: rgba(232, 146, 58, 0.05); border-left: 2px solid var(--accent)"
         >
           <button
-            class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer bg-transparent border-0 p-0.5 text-[--t3] hover:text-red-400"
+            class="absolute top-2 right-2 cursor-pointer border-0 bg-transparent p-0.5 text-[--t3] opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
             @click="removeQuote(q._idx)"
           >
             <IconX :size="12" />
           </button>
           "{{ q.text }}"
-          <p v-if="q.ts" class="text-[10px] text-[--t3] mt-1 not-italic">
+          <p v-if="q.ts" class="mt-1 text-[10px] text-[--t3] not-italic">
             {{ new Date(q.ts).toLocaleDateString('ru', { day: 'numeric', month: 'short' }) }}
           </p>
         </div>
@@ -88,14 +89,10 @@ async function removeQuote(idx: number) {
           v-model="newText"
           rows="2"
           placeholder="Добавить цитату..."
-          class="input-field flex-1 px-3.5 py-2.5 text-[12px] resize-none"
+          class="input-field flex-1 resize-none px-3.5 py-2.5 text-[12px]"
           @keydown.ctrl.enter="addQuote"
         />
-        <button
-          class="btn btn-ghost self-end flex-shrink-0"
-          :disabled="adding || !newText.trim()"
-          @click="addQuote"
-        >
+        <button class="btn btn-ghost flex-shrink-0 self-end" :disabled="adding || !newText.trim()" @click="addQuote">
           {{ adding ? '...' : 'Добавить' }}
         </button>
       </div>

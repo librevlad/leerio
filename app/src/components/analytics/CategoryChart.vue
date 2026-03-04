@@ -8,21 +8,23 @@ ChartJS.register(ArcElement, Tooltip, Legend)
 const props = defineProps<{ data: Record<string, number> }>()
 
 const categoryColors: Record<string, string> = {
-  'Бизнес': '#d4940c',
-  'Отношения': '#c9366d',
-  'Саморазвитие': '#7c5bf0',
-  'Художественная': '#0e8a99',
-  'Языки': '#0f8660',
+  Бизнес: '#d4940c',
+  Отношения: '#c9366d',
+  Саморазвитие: '#7c5bf0',
+  Художественная: '#0e8a99',
+  Языки: '#0f8660',
 }
 
 const chartData = computed(() => ({
   labels: Object.keys(props.data),
-  datasets: [{
-    data: Object.values(props.data),
-    backgroundColor: Object.keys(props.data).map(k => categoryColors[k] || '#3e3e50'),
-    borderWidth: 0,
-    hoverOffset: 6,
-  }],
+  datasets: [
+    {
+      data: Object.values(props.data),
+      backgroundColor: Object.keys(props.data).map((k) => categoryColors[k] || '#3e3e50'),
+      borderWidth: 0,
+      hoverOffset: 6,
+    },
+  ],
 }))
 
 const options = {

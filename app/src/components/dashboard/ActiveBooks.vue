@@ -15,17 +15,20 @@ defineProps<{ books: TrelloCard[] }>()
           v-for="book in books"
           :key="book.id"
           :to="`/book/${book.id}`"
-          class="card card-hover p-5 min-w-[210px] max-w-[230px] flex-shrink-0 no-underline relative overflow-hidden"
+          class="card card-hover relative max-w-[230px] min-w-[210px] flex-shrink-0 overflow-hidden p-5 no-underline"
         >
-          <div class="absolute top-0 left-0 right-0 h-[2px] rounded-t-xl" style="background: var(--gradient-bar); opacity: 0.5" />
-          <div class="flex items-center justify-between mb-3">
+          <div
+            class="absolute top-0 right-0 left-0 h-[2px] rounded-t-xl"
+            style="background: var(--gradient-bar); opacity: 0.5"
+          />
+          <div class="mb-3 flex items-center justify-between">
             <StatusBadge :status="book.list" />
             <ProgressRing :percent="book.progress" :size="36" :stroke="2.5" />
           </div>
-          <h4 class="text-[13px] font-semibold line-clamp-2 text-[--t1] leading-snug" :title="book.title">
+          <h4 class="line-clamp-2 text-[13px] leading-snug font-semibold text-[--t1]" :title="book.title">
             {{ book.title }}
           </h4>
-          <p class="text-[12px] mt-1.5 line-clamp-1 text-[--t3]">{{ book.author }}</p>
+          <p class="mt-1.5 line-clamp-1 text-[12px] text-[--t3]">{{ book.author }}</p>
         </router-link>
       </div>
     </div>

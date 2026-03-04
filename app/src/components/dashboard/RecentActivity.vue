@@ -23,19 +23,19 @@ function timeAgo(ts: string): string {
       <div
         v-for="(e, i) in entries"
         :key="i"
-        class="flex items-center gap-3 px-4 py-2.5 rounded-2xl hover:bg-white/[0.03] transition-colors"
+        class="flex items-center gap-3 rounded-2xl px-4 py-2.5 transition-colors hover:bg-white/[0.03]"
       >
-        <span class="w-2 h-2 rounded-full flex-shrink-0" :class="dotColor[e.action] || 'bg-slate-500'" />
-        <span class="text-[12px] font-semibold flex-shrink-0 text-[--t3]">
+        <span class="h-2 w-2 flex-shrink-0 rounded-full" :class="dotColor[e.action] || 'bg-slate-500'" />
+        <span class="flex-shrink-0 text-[12px] font-semibold text-[--t3]">
           {{ e.action_label }}
         </span>
-        <span class="text-[12px] truncate flex-1 text-[--t2]">
+        <span class="flex-1 truncate text-[12px] text-[--t2]">
           {{ e.book }}
         </span>
-        <span v-if="e.rating" class="flex gap-0.5 text-amber-500/50 flex-shrink-0">
+        <span v-if="e.rating" class="flex flex-shrink-0 gap-0.5 text-amber-500/50">
           <IconStar v-for="s in e.rating" :key="s" :size="11" />
         </span>
-        <span class="text-[11px] flex-shrink-0 text-[--t3]">
+        <span class="flex-shrink-0 text-[11px] text-[--t3]">
           {{ timeAgo(e.ts) }}
         </span>
       </div>
