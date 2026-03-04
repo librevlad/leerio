@@ -4,9 +4,11 @@ import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 
 const router = useRouter()
-const { loginWithGoogle } = useAuth()
+const { loginWithGoogle, loginWithPassword } = useAuth()
 const error = ref('')
 const loading = ref(false)
+const email = ref('')
+const password = ref('')
 
 declare global {
   interface Window {
@@ -23,7 +25,6 @@ declare global {
 }
 
 onMounted(() => {
-  // Load Google Identity Services SDK
   const script = document.createElement('script')
   script.src = 'https://accounts.google.com/gsi/client'
   script.async = true
@@ -71,6 +72,25 @@ async function handleCredentialResponse(response: { credential: string }) {
     loading.value = false
   }
 }
+
+async function handlePasswordLogin() {
+  if (!email.value || !password.value) return
+  loading.value = true
+  error.value = ''
+  try {
+    await loginWithPassword(email.value, password.value)
+    router.push('/')
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : 'Login failed'
+    if (msg.includes('401')) {
+      error.value = 'Неверный email или пароль'
+    } else {
+      error.value = msg
+    }
+  } finally {
+    loading.value = false
+  }
+}
 </script>
 
 <template>
@@ -82,6 +102,37 @@ async function handleCredentialResponse(response: { credential: string }) {
       </div>
 
       <p class="mb-8 text-[14px] text-[--t2]">Войдите, чтобы продолжить</p>
+
+      <!-- Email/Password form -->
+      <form class="mb-6 space-y-3" @submit.prevent="handlePasswordLogin">
+        <input
+          v-model="email"
+          type="email"
+          placeholder="Email"
+          autocomplete="email"
+          class="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-[14px] text-[--t1] transition outline-none focus:border-[--accent]"
+        />
+        <input
+          v-model="password"
+          type="password"
+          placeholder="Пароль"
+          autocomplete="current-password"
+          class="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-[14px] text-[--t1] transition outline-none focus:border-[--accent]"
+        />
+        <button
+          type="submit"
+          :disabled="loading || !email || !password"
+          class="w-full rounded-lg bg-[--accent] px-4 py-2.5 text-[14px] font-semibold text-white transition hover:opacity-90 disabled:opacity-40"
+        >
+          Войти
+        </button>
+      </form>
+
+      <div class="mb-6 flex items-center gap-3">
+        <div class="h-px flex-1 bg-white/10" />
+        <span class="text-[11px] text-[--t3]">или</span>
+        <div class="h-px flex-1 bg-white/10" />
+      </div>
 
       <div class="flex justify-center">
         <div id="google-signin-btn" />

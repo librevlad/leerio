@@ -1,11 +1,13 @@
 """
 server/db.py — SQLite user database for authentication.
 
-Manages users table with Google OAuth identity.
+Manages users table with Google OAuth and email/password identity.
 """
 
+import hashlib
 import logging
 import os
+import secrets
 import sqlite3
 
 from .core import DATA_DIR
@@ -37,6 +39,7 @@ def init_db():
                 email TEXT UNIQUE NOT NULL,
                 name TEXT NOT NULL DEFAULT '',
                 picture TEXT NOT NULL DEFAULT '',
+                password_hash TEXT,
                 role TEXT NOT NULL DEFAULT 'user',
                 created_at TEXT NOT NULL DEFAULT (datetime('now')),
                 last_login TEXT
@@ -53,6 +56,7 @@ def init_db():
             """
         )
         conn.commit()
+        _migrate_password_column(conn)
         _ensure_seed_user(conn)
         _seed_allowed_emails(conn)
     finally:
@@ -60,19 +64,49 @@ def init_db():
     logger.info("Database initialized at %s", DB_PATH)
 
 
+def _migrate_password_column(conn: sqlite3.Connection):
+    """Add password_hash column if missing (existing DBs)."""
+    cols = [r[1] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
+    if "password_hash" not in cols:
+        conn.execute("ALTER TABLE users ADD COLUMN password_hash TEXT")
+        conn.commit()
+        logger.info("Added password_hash column to users table")
+
+
+def _hash_password(password: str) -> str:
+    """Hash a password with a random salt using PBKDF2."""
+    salt = secrets.token_hex(16)
+    h = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100_000).hex()
+    return f"{salt}:{h}"
+
+
+def _verify_password(password: str, stored: str) -> bool:
+    """Verify a password against a stored hash."""
+    salt, h = stored.split(":", 1)
+    check = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100_000).hex()
+    return secrets.compare_digest(h, check)
+
+
 def _ensure_seed_user(conn: sqlite3.Connection):
     """Create seed admin user if not exists."""
     row = conn.execute("SELECT user_id FROM users WHERE email = ?", (SEED_EMAIL,)).fetchone()
     if not row:
-        import hashlib
-
         user_id = hashlib.sha256(SEED_EMAIL.encode()).hexdigest()[:16]
+        pw_hash = _hash_password(SEED_EMAIL)
         conn.execute(
-            "INSERT INTO users (user_id, email, name, role) VALUES (?, ?, ?, ?)",
-            (user_id, SEED_EMAIL, "Vlad", SEED_ROLE),
+            "INSERT INTO users (user_id, email, name, password_hash, role) VALUES (?, ?, ?, ?, ?)",
+            (user_id, SEED_EMAIL, "Vlad", pw_hash, SEED_ROLE),
         )
         conn.commit()
         logger.info("Seed user created: %s (%s)", SEED_EMAIL, SEED_ROLE)
+    else:
+        # Ensure seed user has a password
+        full = conn.execute("SELECT password_hash FROM users WHERE email = ?", (SEED_EMAIL,)).fetchone()
+        if not full["password_hash"]:
+            pw_hash = _hash_password(SEED_EMAIL)
+            conn.execute("UPDATE users SET password_hash = ? WHERE email = ?", (pw_hash, SEED_EMAIL))
+            conn.commit()
+            logger.info("Seed user password set")
 
 
 def _seed_allowed_emails(conn: sqlite3.Connection):
@@ -143,6 +177,26 @@ def list_allowed_emails() -> list[dict]:
     try:
         rows = conn.execute("SELECT email, added_by, added_at FROM allowed_emails ORDER BY added_at").fetchall()
         return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+def verify_user_password(email: str, password: str) -> dict | None:
+    """Verify email/password and return user dict, or None if invalid."""
+    conn = _get_conn()
+    try:
+        row = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+        if not row:
+            return None
+        user = dict(row)
+        if not user.get("password_hash"):
+            return None
+        if not _verify_password(password, user["password_hash"]):
+            return None
+        # Update last_login
+        conn.execute("UPDATE users SET last_login = datetime('now') WHERE email = ?", (email,))
+        conn.commit()
+        return user
     finally:
         conn.close()
 

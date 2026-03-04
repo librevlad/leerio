@@ -65,6 +65,7 @@ from .db import (
     is_email_allowed,
     list_allowed_emails,
     remove_allowed_email,
+    verify_user_password,
 )
 
 logging.basicConfig(
@@ -221,6 +222,11 @@ class GoogleAuthRequest(BaseModel):
     id_token: str
 
 
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
 class BookStatusRequest(BaseModel):
     status: str
 
@@ -323,6 +329,24 @@ def auth_google(req: GoogleAuthRequest):
     if not is_email_allowed(info["email"]):
         raise HTTPException(403, "Registration is not allowed for this email")
     user = create_or_update_user(info["email"], info["name"], info["picture"])
+    response = JSONResponse(
+        content={
+            "user_id": user["user_id"],
+            "email": user["email"],
+            "name": user["name"],
+            "picture": user["picture"],
+            "role": user["role"],
+        }
+    )
+    set_auth_cookie(response, user["user_id"])
+    return response
+
+
+@app.post("/api/auth/login")
+def auth_login(req: LoginRequest):
+    user = verify_user_password(req.email, req.password)
+    if not user:
+        raise HTTPException(401, "Invalid email or password")
     response = JSONResponse(
         content={
             "user_id": user["user_id"],

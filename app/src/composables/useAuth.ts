@@ -53,6 +53,30 @@ export function useAuth() {
     return data
   }
 
+  async function loginWithPassword(email: string, password: string): Promise<User> {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email, password }),
+    })
+    if (!res.ok) {
+      const text = await res.text().catch(() => res.statusText)
+      let detail = text
+      try {
+        const json = JSON.parse(text)
+        if (json.detail) detail = json.detail
+      } catch {
+        /* not JSON */
+      }
+      throw new Error(`${res.status}: ${detail}`)
+    }
+    const data = await res.json()
+    user.value = data
+    checked.value = true
+    return data
+  }
+
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
     user.value = null
@@ -66,6 +90,7 @@ export function useAuth() {
     isAdmin,
     checkAuth,
     loginWithGoogle,
+    loginWithPassword,
     logout,
   }
 }
