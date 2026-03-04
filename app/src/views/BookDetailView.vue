@@ -160,20 +160,9 @@ onMounted(loadBook)
         <div class="space-y-5 lg:col-span-2">
           <BookActions
             :book-id="book.id"
-            :card-id="book.card_id"
-            :status="book.status"
             :book-status="book.book_status"
             :title="book.title"
-            :author="book.author"
-            :category="book.category"
-            @moved="loadBook"
             @status-changed="loadBook"
-            @card-created="
-              (id: string) => {
-                book!.card_id = id
-                book!.status = 'Прочесть'
-              }
-            "
           />
           <BookProgress :title="book.title" :progress="book.progress" @updated="(p) => (book!.progress = p)" />
           <BookNotes :title="book.title" :note="book.note" />

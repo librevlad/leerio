@@ -95,3 +95,17 @@ export const IconTrash = icon(
   '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>',
 )
 export const IconCheck = icon('<polyline points="20 6 9 17 4 12"/>')
+
+// Player feature icons
+export const IconRewind15 = icon(
+  '<path d="M12.066 11.2a1 1 0 113.268.377L13.95 18.03a1 1 0 01-1.98-.243l1.383-6.584zM8.468 18.19V11.2H7.282L5.5 12.68l.777.87.946-.796v5.436h1.245z"/><path d="M21 12a9 9 0 11-9-9M21 3v6h-6"/>',
+  { strokeWidth: '1.5' },
+)
+export const IconForward15 = icon(
+  '<path d="M12.066 11.2a1 1 0 113.268.377L13.95 18.03a1 1 0 01-1.98-.243l1.383-6.584zM8.468 18.19V11.2H7.282L5.5 12.68l.777.87.946-.796v5.436h1.245z"/><path d="M3 12a9 9 0 019-9M3 3v6h6"/>',
+  { strokeWidth: '1.5' },
+)
+export const IconSpeed = icon('<path d="M12 12l-3-7m0 0a9 9 0 110 14"/><circle cx="12" cy="12" r="2"/>')
+export const IconMoon = icon('<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>')
+export const IconBookmark = icon('<path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>')
+export const IconBookmarkFilled = icon('<path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>', { fill: true })

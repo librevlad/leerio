@@ -27,8 +27,7 @@ def tmp_data_dir(tmp_path, monkeypatch):
         (books_dir / cat).mkdir(parents=True)
 
     # Write minimal config so lifespan doesn't fail
-    config = {"trello_api_key": "", "trello_token": "", "board_id": "test"}
-    (data_dir / "config.json").write_text(json.dumps(config), encoding="utf-8")
+    (data_dir / "config.json").write_text(json.dumps({}), encoding="utf-8")
 
     # Create users dir for per-user data
     users_dir = data_dir / "users"
@@ -41,7 +40,6 @@ def tmp_data_dir(tmp_path, monkeypatch):
     monkeypatch.setattr(core, "CONFIG_PATH", data_dir / "config.json")
     monkeypatch.setattr(core, "TRACKER_PATH", data_dir / "tracker.csv")
     monkeypatch.setattr(core, "HISTORY_PATH", data_dir / "history.json")
-    monkeypatch.setattr(core, "CACHE_PATH", data_dir / "trello_cache.json")
     monkeypatch.setattr(core, "NOTES_PATH", data_dir / "notes.json")
     monkeypatch.setattr(core, "TAGS_PATH", data_dir / "tags.json")
     monkeypatch.setattr(core, "COLLECTIONS_PATH", data_dir / "collections.json")
@@ -66,7 +64,6 @@ def api_client(tmp_data_dir, monkeypatch):
 
     # Replace the Library instance so it uses patched BOOKS_DIR
     monkeypatch.setattr(api_mod, "lib", Library())
-    monkeypatch.setattr(api_mod, "trello", None)
 
     # Patch DB path so init_db doesn't touch real DB
     monkeypatch.setattr(db_mod, "DB_PATH", tmp_data_dir["data"] / "leerio.db")

@@ -15,7 +15,9 @@
     "format:check": "prettier --check src/",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "cap:sync": "npx cap sync android",
+    "build:android": "npm run build && npx cap sync android"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",

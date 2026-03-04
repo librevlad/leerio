@@ -1,28 +1,7 @@
 import router from './router'
 
-const STORAGE_KEY = 'leerio_server_url'
-
-export function getServerUrl(): string {
-  return localStorage.getItem(STORAGE_KEY) || ''
-}
-
-export function setServerUrl(url: string) {
-  const clean = url.replace(/\/+$/, '')
-  if (clean) {
-    localStorage.setItem(STORAGE_KEY, clean)
-  } else {
-    localStorage.removeItem(STORAGE_KEY)
-  }
-}
-
-function getBaseUrl(): string {
-  const server = getServerUrl()
-  return server ? `${server}/api` : '/api'
-}
-
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const base = getBaseUrl()
-  const res = await fetch(`${base}${path}`, {
+  const res = await fetch(`/api${path}`, {
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
     ...options,
@@ -55,24 +34,18 @@ function del<T>(path: string): Promise<T> {
 }
 
 export function audioUrl(bookId: string, trackIndex: number): string {
-  const base = getBaseUrl()
-  return `${base}/audio/${bookId}/${trackIndex}`
+  return `/api/audio/${bookId}/${trackIndex}`
 }
 
 export function coverUrl(bookId: string): string {
-  const base = getBaseUrl()
-  return `${base}/books/${bookId}/cover`
+  return `/api/books/${bookId}/cover`
 }
 
 import type {
   DashboardData,
   Book,
   SimilarBook,
-  TrelloCard,
-  TrelloList,
-  TrelloStatus,
-  SyncResult,
-  CreateCardResult,
+  Bookmark,
   HistoryEntry,
   AnalyticsData,
   Achievement,
@@ -106,19 +79,6 @@ export const api = {
   getPlaybackPosition: (bookId: string) => get<PlaybackPosition>(`/books/${bookId}/playback`),
   setPlaybackPosition: (bookId: string, trackIndex: number, position: number, filename = '') =>
     put<{ ok: boolean }>(`/books/${bookId}/playback`, { track_index: trackIndex, position, filename }),
-
-  // Trello (admin only)
-  getTrelloStatus: () => get<TrelloStatus>('/trello/status'),
-  getTrelloCards: (listName?: string) => {
-    const qs = listName ? `?list_name=${encodeURIComponent(listName)}` : ''
-    return get<TrelloCard[]>(`/trello/cards${qs}`)
-  },
-  getTrelloLists: () => get<TrelloList[]>('/trello/lists'),
-  moveCard: (cardId: string, target: string, rating = 0, detail = '') =>
-    post<{ ok: boolean }>(`/trello/cards/${cardId}/move`, { target, rating, detail }),
-  createTrelloCard: (name: string, listName: string, label?: string, desc?: string) =>
-    post<CreateCardResult>('/trello/cards', { name, list_name: listName, label, desc }),
-  syncTrello: () => post<SyncResult>('/trello/sync'),
 
   // History
   getHistory: (params?: Record<string, string>) => {
@@ -161,6 +121,12 @@ export const api = {
   // Analytics
   getAnalytics: () => get<AnalyticsData>('/analytics'),
   getAchievements: () => get<Achievement[]>('/analytics/achievements'),
+
+  // Bookmarks
+  getBookmarks: (bookId: string) => get<Bookmark[]>(`/user/bookmarks/${bookId}`),
+  addBookmark: (bookId: string, track: number, time: number, note = '') =>
+    post<Bookmark>(`/user/bookmarks/${bookId}`, { track, time, note }),
+  removeBookmark: (bookId: string, ts: string) => del<{ ok: boolean }>(`/user/bookmarks/${bookId}/${ts}`),
 
   // Book Status (per-user)
   getAllBookStatuses: () => get<BookStatusMap>('/user/book-status'),

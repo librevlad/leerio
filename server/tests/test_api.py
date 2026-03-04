@@ -11,7 +11,6 @@ class TestAuth:
         from server.core import Library
 
         monkeypatch.setattr(api_mod, "lib", Library())
-        monkeypatch.setattr(api_mod, "trello", None)
         monkeypatch.setattr(db_mod, "DB_PATH", tmp_data_dir["data"] / "leerio.db")
 
         # No dependency override — real auth check
@@ -43,7 +42,6 @@ class TestAccessControl:
         from server.core import Library
 
         monkeypatch.setattr(api_mod, "lib", Library())
-        monkeypatch.setattr(api_mod, "trello", None)
         monkeypatch.setattr(db_mod, "DB_PATH", tmp_data_dir["data"] / "leerio.db")
 
         # Initialize DB with allowlist containing only admin
@@ -68,7 +66,7 @@ class TestConstants:
         data = r.json()
         assert "categories" in data
         assert len(data["categories"]) == 5
-        assert data["trello_connected"] is False
+        assert "book_statuses" in data
 
 
 class TestDashboard:
@@ -78,7 +76,6 @@ class TestDashboard:
         data = r.json()
         assert "total_books" in data
         assert "total_done" in data
-        assert "velocity" in data
         assert "recent" in data
 
     def test_counts_books(self, api_client, sample_books):

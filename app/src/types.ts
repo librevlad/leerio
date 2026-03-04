@@ -32,8 +32,6 @@ export interface Book {
   note: string
   has_cover?: boolean
   rating?: number
-  status?: string
-  card_id?: string
   book_status?: BookStatusValue
   // Detail fields
   size_mb?: number
@@ -45,46 +43,6 @@ export interface Book {
 
 export interface SimilarBook extends Book {
   score: number
-}
-
-// ── Trello types ────────────────────────────────────────────────────────────
-
-export interface TrelloCard {
-  id: string
-  name: string
-  list: string
-  status: string
-  author: string
-  title: string
-  reader: string
-  category: string
-  labels: string[]
-  desc: string
-  progress: number
-}
-
-export interface TrelloList {
-  id: string
-  name: string
-}
-
-export interface TrelloStatus {
-  total_cards: number
-  list_counts: Record<string, number>
-  cache_ts: string | null
-  cache_age_min: number | null
-}
-
-export interface SyncResult {
-  ok: boolean
-  cards: number
-  list_counts: Record<string, number>
-  synced_at: string
-}
-
-export interface CreateCardResult {
-  ok: boolean
-  card_id: string
 }
 
 // ── History types ───────────────────────────────────────────────────────────
@@ -109,12 +67,22 @@ export interface ActiveBook {
   progress: number
 }
 
+export interface NowPlaying {
+  book_id: string
+  title: string
+  author: string
+  cover_id: string
+  progress: number
+  current_track: number
+  current_time: number
+}
+
 export interface DashboardData {
   total_books: number
   total_done: number
   active_count: number
-  velocity: Velocity
   active_books: ActiveBook[]
+  now_playing: NowPlaying | null
   recent: HistoryEntry[]
   heatmap: Record<string, number>
   quote: Quote | null
@@ -177,6 +145,15 @@ export interface PlaybackPosition {
   updated?: string | null
 }
 
+// ── Bookmark types ─────────────────────────────────────────────────────────
+
+export interface Bookmark {
+  track: number
+  time: number
+  note: string
+  ts: string
+}
+
 // ── Other types ─────────────────────────────────────────────────────────────
 
 export interface Quote {
@@ -208,5 +185,4 @@ export interface Constants {
   list_to_status: Record<string, string>
   label_to_folder: Record<string, string>
   folder_to_label: Record<string, string>
-  trello_connected: boolean
 }

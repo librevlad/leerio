@@ -1,12 +1,12 @@
 # Leerio — Audiobook Library Manager
 
-SaaS audiobook library with Google OAuth, per-user data, Trello integration (admin), web UI, and TUI.
+SaaS audiobook library with Google OAuth, per-user data, web UI, and TUI.
 
 ## Project Structure
 
 ```
 server/          Python backend (FastAPI)
-  core.py        Business logic, data persistence, Trello client, UserData class
+  core.py        Business logic, data persistence, UserData class
   api.py         REST API endpoints (auth-protected)
   auth.py        Google OAuth token verification, JWT cookie management
   db.py          SQLite users database (users table, seed admin)
@@ -22,19 +22,18 @@ app/             Vue 3 frontend (TypeScript + Tailwind)
   Dockerfile     Multi-stage build (node + nginx), accepts VITE_GOOGLE_CLIENT_ID build arg
   nginx.conf     SPA routing + API proxy + Google CSP
 
-landing/         Static coming-soon page (served by Caddy at leerio.app)
-  index.html     Landing page with email waitlist
+landing/         Static landing page (served by Caddy at leerio.app)
+  index.html     Landing page with APK download + web app links
   style.css      Dark theme styles
 
 data/            Runtime data files (gitignored, volume-mounted)
-  config.json    Trello API keys
+  config.json    App configuration
   leerio.db      SQLite users database
-  tracker.csv    Book catalog from Trello
   users/         Per-user data directories
     {user_id}/   Each user's JSON files
       history.json, notes.json, tags.json, collections.json,
       progress.json, playback.json, quotes.json, sessions.json,
-      book_status.json
+      book_status.json, bookmarks.json
 
 books/           Audiobook files (gitignored, volume-mounted, shared read-only)
   Бизнес/
@@ -110,11 +109,11 @@ Google Sign-In (frontend) → POST /api/auth/google { id_token }
 ```
 
 ### Roles
-- **admin** (`librevlad@gmail.com`): Full access including Trello integration, Queue view
+- **admin** (`librevlad@gmail.com`): Full access
 - **user**: Book library, personal book statuses, notes, tags, progress, analytics
 
 ### Data Isolation
-- **Shared**: `books/` (filesystem, read-only), `trello_cache.json`, `config.json`
+- **Shared**: `books/` (filesystem, read-only), `config.json`
 - **Per-user**: `data/users/{user_id}/*.json` — history, notes, tags, progress, playback, quotes, sessions, collections, book_status
 - **Users DB**: `data/leerio.db` (SQLite — users table only)
 
@@ -123,10 +122,9 @@ Google Sign-In (frontend) → POST /api/auth/google { id_token }
 - `GET /api/auth/me` — return current user from cookie (401 if not authenticated)
 - `POST /api/auth/logout` — clear cookie
 
-### Book Status System (regular users)
+### Book Status System
 - Statuses: `want_to_read`, `reading`, `paused`, `done`, `rejected`
 - Endpoints: `GET/PUT/DELETE /api/user/book-status/{book_id}`
-- Admin uses Trello card actions instead
 
 ### Public Endpoints (no auth)
 - `GET /api/config/constants` — healthcheck + app constants
@@ -135,8 +133,6 @@ Google Sign-In (frontend) → POST /api/auth/google { id_token }
 
 ### Protected Endpoints
 - All user-data endpoints require `Depends(get_current_user)` — returns per-user `UserData`
-- Trello endpoints additionally require `require_admin(user)` — returns 403 for non-admin
-- Queue view has `meta: { admin: true }` route guard in frontend
 
 ### Test Auth
 - `conftest.py` overrides `get_current_user` dependency with `TEST_USER` (admin role)
@@ -199,7 +195,8 @@ Runs automatically on `git commit` (after `make setup`):
 
 Push to `main` triggers GitHub Actions (single `ci.yml` workflow):
 1. CI: lint (ruff + eslint + prettier), test (pytest + vitest), type-check + build (vue-tsc + vite)
-2. Deploy: gated on CI success (`needs: [server-lint, app-build]`), SSH to VPS, git pull, docker compose up --build, health check via `https://app.leerio.app` with retry (3 attempts), auto-rollback on failure
+2. APK build: debug APK built on push to main (after app-build), uploaded as artifact + GitHub release
+3. Deploy: gated on CI success (`needs: [server-lint, app-build]`), SSH to VPS, git pull, docker compose up --build, health check via `https://app.leerio.app` with retry (3 attempts), auto-rollback on failure
 
 ### Production Architecture
 
@@ -211,12 +208,12 @@ Internet -> Caddy (:80/:443)
                                       SPA + /api/ proxy    Business logic
 ```
 
-- **Domain split**: `leerio.app` serves a static coming-soon landing page; `app.leerio.app` serves the Vue SPA + API
+- **Domain split**: `leerio.app` serves a static landing page (APK download + web app links); `app.leerio.app` serves the Vue SPA + API
 - **Caddy** handles HTTPS automatically (Let's Encrypt auto-cert/renew, HTTP->HTTPS redirect)
 - Only Caddy exposes host ports (80, 443); server/app are internal-only
 - `Caddyfile` at project root — two site blocks: `leerio.app` (file_server) + `app.leerio.app` (reverse_proxy)
 - `landing/` directory mounted read-only into Caddy container at `/srv/landing`
-- `env_file: .env` on server service loads Trello keys + `CORS_ORIGINS`
+- `env_file: .env` on server service loads `CORS_ORIGINS` and other config
 - Caddy data/config persisted via named Docker volumes (`caddy_data`, `caddy_config`)
 
 ### Dev vs Production

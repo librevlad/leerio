@@ -1,30 +1,17 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { api, getServerUrl, setServerUrl } from '../api'
-import { useTrello } from '../composables/useTrello'
+import { api } from '../api'
 import { useDownloads } from '../composables/useDownloads'
 import { useAuth } from '../composables/useAuth'
 import type { Constants, SessionStats } from '../types'
-import { IconSync, IconClock, IconTrash, IconDownload } from '../components/shared/icons'
+import { IconTrash, IconDownload } from '../components/shared/icons'
 
 const router = useRouter()
-const { status: trelloStatus, loadStatus, sync } = useTrello()
 const dl = useDownloads()
 const { user, isAdmin, logout } = useAuth()
 const constants = ref<Constants | null>(null)
 const sessionStats = ref<SessionStats | null>(null)
-const syncing = ref(false)
-const serverUrl = ref(getServerUrl())
-const serverSaved = ref(false)
-
-function saveServerUrl() {
-  setServerUrl(serverUrl.value)
-  serverSaved.value = true
-  setTimeout(() => {
-    serverSaved.value = false
-  }, 2000)
-}
 
 onMounted(async () => {
   try {
@@ -34,29 +21,7 @@ onMounted(async () => {
   } catch {
     /* ignore */
   }
-  if (isAdmin.value) {
-    loadStatus()
-  }
 })
-
-async function syncTrello() {
-  syncing.value = true
-  try {
-    await sync()
-  } finally {
-    syncing.value = false
-  }
-}
-
-const cacheLabel = computed(() => {
-  if (!trelloStatus.value?.cache_age_min) return null
-  const m = trelloStatus.value.cache_age_min
-  if (m < 60) return `${m} мин назад`
-  const h = Math.floor(m / 60)
-  return `${h} ч назад`
-})
-
-const LIST_ORDER = ['Прочесть', 'В процессе', 'В телефоне', 'На Паузе', 'Скачать', 'Прочитано', 'Забраковано']
 
 function fmtSize(bytes: number): string {
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' КБ'
@@ -116,78 +81,6 @@ async function handleLogout() {
           </svg>
           Выйти
         </button>
-      </div>
-
-      <!-- Server URL -->
-      <div class="card p-6">
-        <h3 class="section-label mb-4">Сервер</h3>
-        <p class="mb-3 text-[12px] text-[--t3]">
-          URL сервера для доступа с другого устройства (например, телефона по Wi-Fi). Оставьте пустым для локального
-          режима.
-        </p>
-        <div class="flex gap-3">
-          <input
-            v-model="serverUrl"
-            type="text"
-            class="input-field flex-1 px-4 py-2.5"
-            placeholder="http://192.168.1.100:8000"
-            @keyup.enter="saveServerUrl"
-          />
-          <button class="btn btn-primary shrink-0" @click="saveServerUrl">
-            {{ serverSaved ? 'Сохранено!' : 'Сохранить' }}
-          </button>
-        </div>
-      </div>
-
-      <!-- Trello (admin only) -->
-      <div v-if="isAdmin" class="card p-6">
-        <h3 class="section-label mb-4">Trello</h3>
-        <div class="mb-4 flex items-center gap-3">
-          <span
-            class="h-2.5 w-2.5 rounded-full"
-            :class="constants?.trello_connected ? 'bg-emerald-400' : 'bg-red-400'"
-            :style="
-              constants?.trello_connected
-                ? 'box-shadow: 0 0 8px rgba(52,211,153,0.4)'
-                : 'box-shadow: 0 0 8px rgba(248,113,113,0.4)'
-            "
-          />
-          <span class="text-[13px] font-medium text-[--t2]">
-            {{ constants?.trello_connected ? 'Подключено' : 'Не подключено' }}
-          </span>
-        </div>
-
-        <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <button
-            v-if="constants?.trello_connected"
-            class="btn btn-ghost w-full justify-center sm:w-auto"
-            :disabled="syncing"
-            @click="syncTrello"
-          >
-            <IconSync :size="14" :class="syncing ? 'animate-spin' : ''" />
-            {{ syncing ? 'Синхронизация...' : 'Синхронизировать' }}
-          </button>
-
-          <div v-if="cacheLabel" class="flex items-center gap-1.5 text-[12px] text-[--t3]">
-            <IconClock :size="13" />
-            <span>Кэш обновлён {{ cacheLabel }}</span>
-          </div>
-        </div>
-
-        <!-- Mini stats -->
-        <div v-if="trelloStatus" class="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <div
-            v-for="listName in LIST_ORDER.filter((l) => (trelloStatus!.list_counts[l] ?? 0) > 0)"
-            :key="listName"
-            class="rounded-xl px-3.5 py-3"
-            style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border)"
-          >
-            <p class="mb-1 text-[11px] text-[--t3]">{{ listName }}</p>
-            <p class="text-[18px] leading-none font-bold tracking-tight text-[--t1]">
-              {{ trelloStatus!.list_counts[listName] }}
-            </p>
-          </div>
-        </div>
       </div>
 
       <div v-if="sessionStats" class="card p-6">

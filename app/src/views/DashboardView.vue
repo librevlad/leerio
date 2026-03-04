@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { api } from '../api'
 import type { DashboardData } from '../types'
+import NowPlaying from '../components/dashboard/NowPlaying.vue'
 import HeroStats from '../components/dashboard/HeroStats.vue'
 import ActiveBooks from '../components/dashboard/ActiveBooks.vue'
 import ActivityHeatmap from '../components/dashboard/ActivityHeatmap.vue'
@@ -26,8 +27,9 @@ onMounted(async () => {
     <h1 class="page-title mb-10">Дашборд</h1>
 
     <div v-if="loading" class="space-y-6">
-      <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <div v-for="i in 4" :key="i" class="skeleton h-28" />
+      <div class="skeleton h-28" />
+      <div class="grid grid-cols-3 gap-4">
+        <div v-for="i in 3" :key="i" class="skeleton h-28" />
       </div>
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div class="space-y-6 lg:col-span-2">
@@ -42,16 +44,14 @@ onMounted(async () => {
     </div>
 
     <div v-else-if="data" class="space-y-8">
-      <HeroStats
-        :total-books="data.total_books"
-        :total-done="data.total_done"
-        :active-count="data.active_count"
-        :pace="data.velocity.avg_per_month || 0"
-      />
+      <NowPlaying v-if="data.now_playing" :data="data.now_playing" />
+
+      <HeroStats :total-books="data.total_books" :total-done="data.total_done" :active-count="data.active_count" />
+
+      <ActiveBooks :books="data.active_books" />
 
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div class="space-y-6 lg:col-span-2">
-          <ActiveBooks :books="data.active_books" />
           <ActivityHeatmap :data="data.heatmap" />
         </div>
         <div class="space-y-6">

@@ -21,7 +21,6 @@ export function useConstants() {
         list_to_status: {},
         label_to_folder: {},
         folder_to_label: {},
-        trello_connected: false,
       }
     } finally {
       loading.value = false

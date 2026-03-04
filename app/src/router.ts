@@ -36,12 +36,6 @@ const router = createRouter({
       component: () => import('./views/AnalyticsView.vue'),
     },
     {
-      path: '/queue',
-      name: 'queue',
-      component: () => import('./views/QueueView.vue'),
-      meta: { admin: true },
-    },
-    {
       path: '/settings',
       name: 'settings',
       component: () => import('./views/SettingsView.vue'),
@@ -52,15 +46,11 @@ const router = createRouter({
 router.beforeEach(async (to) => {
   if (to.meta.public) return true
 
-  const { isAdmin, checkAuth } = useAuth()
+  const { checkAuth } = useAuth()
   const authed = await checkAuth()
 
   if (!authed) {
     return { name: 'login' }
-  }
-
-  if (to.meta.admin && !isAdmin.value) {
-    return { name: 'dashboard' }
   }
 
   return true

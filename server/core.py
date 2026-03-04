@@ -16,8 +16,6 @@ from datetime import datetime
 from difflib import SequenceMatcher
 from pathlib import Path
 
-import requests
-
 # ── Path config (env-var based) ──────────────────────────────────────────────
 
 BASE = Path(os.environ.get("LEERIO_BASE", str(Path(__file__).resolve().parent.parent)))
@@ -28,7 +26,6 @@ CONFIG_PATH = DATA_DIR / "config.json"
 TRACKER_PATH = DATA_DIR / "tracker.csv"
 RECOMMENDATIONS_PATH = DATA_DIR / "recommendations.md"
 HISTORY_PATH = DATA_DIR / "history.json"
-CACHE_PATH = DATA_DIR / "trello_cache.json"
 NOTES_PATH = DATA_DIR / "notes.json"
 TAGS_PATH = DATA_DIR / "tags.json"
 COLLECTIONS_PATH = DATA_DIR / "collections.json"
@@ -210,20 +207,6 @@ def fuzzy_match(a: str, b: str) -> float:
     return SequenceMatcher(None, na, nb).ratio()
 
 
-def best_card_match(author: str, title: str, cards: list) -> tuple:
-    best_score, best_card = 0.0, None
-    full = f"{author} {title}".strip() if author else title
-    for card in cards:
-        cn = card["name"]
-        s = max(fuzzy_match(full, cn), fuzzy_match(title, cn))
-        if " - " in cn:
-            ct = re.sub(r"\s*[\[(].*$", "", cn.split(" - ", 1)[1]).strip()
-            s = max(s, fuzzy_match(title, ct))
-        if s > best_score:
-            best_score, best_card = s, card
-    return best_card, best_score
-
-
 def find_book_on_disk(card_name: str, all_books: list) -> dict | None:
     best, bs = None, 0.0
     ca, ct, _ = parse_folder_name(card_name)
@@ -321,28 +304,6 @@ def history_add(action: str, book: str, detail: str = "", rating: int = 0):
     if len(log) > HISTORY_LIMIT:
         log = log[-HISTORY_LIMIT:]
     _safe_json_write(HISTORY_PATH, log)
-
-
-# ── Trello cache ─────────────────────────────────────────────────────────────
-
-
-def cache_save(lists: list, cards: list, labels: list):
-    data = {"ts": datetime.now().isoformat(timespec="seconds"), "lists": lists, "cards": cards, "labels": labels}
-    _safe_json_write(CACHE_PATH, data, indent=None)
-
-
-def cache_load() -> dict | None:
-    if not CACHE_PATH.exists():
-        return None
-    try:
-        data = json.loads(CACHE_PATH.read_text(encoding="utf-8"))
-        # Cache valid for 24 hours
-        ts = datetime.fromisoformat(data["ts"])
-        if (datetime.now() - ts).total_seconds() < 86400:
-            return data
-    except Exception:
-        pass
-    return None
 
 
 # ── Notes ────────────────────────────────────────────────────────────────────
@@ -895,132 +856,6 @@ def parse_recommendations() -> list[dict]:
     return recs
 
 
-# ── TrelloClient ──────────────────────────────────────────────────────────────
-
-
-class TrelloClient:
-    API = "https://api.trello.com/1"
-
-    def __init__(self, api_key: str, token: str, board_id: str):
-        self.api_key, self.token, self.board_id = api_key, token, board_id
-        self._lists = self._labels = self._cards = None
-
-    def _p(self, extra=None):
-        p = {"key": self.api_key, "token": self.token}
-        if extra:
-            p.update(extra)
-        return p
-
-    def _get(self, path, params=None):
-        r = requests.get(f"{self.API}{path}", params=self._p(params), timeout=15)
-        r.raise_for_status()
-        return r.json()
-
-    def _post(self, path, params=None):
-        r = requests.post(f"{self.API}{path}", params=self._p(params), timeout=15)
-        r.raise_for_status()
-        return r.json()
-
-    def _put(self, path, params=None):
-        r = requests.put(f"{self.API}{path}", params=self._p(params), timeout=15)
-        r.raise_for_status()
-        return r.json()
-
-    def _delete(self, path, params=None):
-        r = requests.delete(f"{self.API}{path}", params=self._p(params), timeout=15)
-        r.raise_for_status()
-
-    def get_lists(self, force=False):
-        if self._lists is None or force:
-            self._lists = self._get(f"/boards/{self.board_id}/lists")
-        return self._lists
-
-    def get_labels(self, force=False):
-        if self._labels is None or force:
-            self._labels = self._get(f"/boards/{self.board_id}/labels")
-        return self._labels
-
-    def get_cards(self, force=False):
-        if self._cards is None or force:
-            self._cards = self._get(
-                f"/boards/{self.board_id}/cards", {"fields": "name,idList,idLabels,desc,closed", "filter": "open"}
-            )
-        return self._cards
-
-    def save_cache(self):
-        try:
-            cache_save(self.get_lists(), self.get_cards(), self.get_labels())
-        except Exception:
-            pass
-
-    def load_from_cache(self) -> bool:
-        data = cache_load()
-        if data:
-            self._lists = data["lists"]
-            self._cards = data["cards"]
-            self._labels = data["labels"]
-            return True
-        return False
-
-    def list_id(self, name):
-        return next((l["id"] for l in self.get_lists() if l["name"] == name), None)
-
-    def list_name(self, lid):
-        return next((l["name"] for l in self.get_lists() if l["id"] == lid), "?")
-
-    def label_id(self, name):
-        return next((l["id"] for l in self.get_labels() if l.get("name", "").lower() == name.lower()), None)
-
-    def label_names(self, card):
-        m = {l["id"]: l.get("name", "") for l in self.get_labels()}
-        return [m.get(i, "") for i in card.get("idLabels", [])]
-
-    def category(self, card):
-        for n in self.label_names(card):
-            f = LABEL_TO_FOLDER.get(n.lower())
-            if f:
-                return f
-        return None
-
-    def move_card(self, cid, list_name):
-        lid = self.list_id(list_name)
-        if lid:
-            self._put(f"/cards/{cid}/idList", {"value": lid})
-            if self._cards:
-                for c in self._cards:
-                    if c["id"] == cid:
-                        c["idList"] = lid
-                        break
-
-    def create_card(self, name, list_name, label=None, desc=""):
-        p = {"name": name, "idList": self.list_id(list_name), "pos": "bottom"}
-        if desc:
-            p["desc"] = desc
-        c = self._post("/cards", p)
-        if label:
-            lid = self.label_id(label)
-            if lid:
-                self._post(f"/cards/{c['id']}/idLabels", {"value": lid})
-        return c
-
-    def update_name(self, cid, name):
-        self._put(f"/cards/{cid}", {"name": name})
-
-    def add_label(self, cid, label):
-        lid = self.label_id(label)
-        if lid:
-            self._post(f"/cards/{cid}/idLabels", {"value": lid})
-
-    def set_desc(self, cid, desc):
-        self._put(f"/cards/{cid}", {"desc": desc})
-
-    def archive_card(self, cid):
-        self._put(f"/cards/{cid}", {"closed": "true"})
-
-    def reload(self):
-        self._lists = self._labels = self._cards = None
-
-
 # ── Library ───────────────────────────────────────────────────────────────────
 
 
@@ -1117,6 +952,7 @@ class UserData:
         "quotes",
         "sessions",
         "book_status",
+        "bookmarks",
     ]
 
     def __init__(self, user_id: str):
@@ -1211,8 +1047,11 @@ class UserData:
         self._save("progress", data)
 
     # ── Playback ──
+    def playback_load(self) -> dict:
+        return self._load("playback", dict)
+
     def playback_get(self, book_id: str) -> dict | None:
-        return self._load("playback", dict).get(book_id)
+        return self.playback_load().get(book_id)
 
     def playback_set(self, book_id: str, track_index: int, position: float, filename: str = ""):
         data = self._load("playback", dict)
@@ -1304,6 +1143,37 @@ class UserData:
             del data[book_id]
             self._save("book_status", data)
 
+    # ── Bookmarks ──
+    def bookmarks_load(self) -> dict[str, list[dict]]:
+        return self._load("bookmarks", dict)
+
+    def bookmarks_get(self, book_id: str) -> list[dict]:
+        return self.bookmarks_load().get(book_id, [])
+
+    def bookmarks_add(self, book_id: str, track: int, time: float, note: str = "") -> dict:
+        data = self.bookmarks_load()
+        entry = {
+            "track": track,
+            "time": round(time, 2),
+            "note": note,
+            "ts": datetime.now().isoformat(timespec="seconds"),
+        }
+        data.setdefault(book_id, []).append(entry)
+        self._save("bookmarks", data)
+        return entry
+
+    def bookmarks_remove(self, book_id: str, ts: str) -> bool:
+        data = self.bookmarks_load()
+        book_marks = data.get(book_id, [])
+        for i, bm in enumerate(book_marks):
+            if bm["ts"] == ts:
+                book_marks.pop(i)
+                if not book_marks:
+                    del data[book_id]
+                self._save("bookmarks", data)
+                return True
+        return False
+
 
 # ── Config ───────────────────────────────────────────────────────────────────
 
@@ -1311,36 +1181,6 @@ class UserData:
 def load_config() -> dict:
     if not CONFIG_PATH.exists():
         CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
-        CONFIG_PATH.write_text(
-            json.dumps(
-                {
-                    "trello_api_key": "",
-                    "trello_token": "",
-                    "board_id": "62d4e11502252b7a4dc11d7f",
-                },
-                indent=2,
-                ensure_ascii=False,
-            ),
-            encoding="utf-8",
-        )
+        CONFIG_PATH.write_text(json.dumps({}, indent=2, ensure_ascii=False), encoding="utf-8")
     with open(CONFIG_PATH, encoding="utf-8") as f:
         return json.load(f)
-
-
-def connect_trello(config) -> TrelloClient | None:
-    """Connect to Trello (headless, no TUI output)."""
-    key, tok = config.get("trello_api_key", ""), config.get("trello_token", "")
-    bid = config.get("board_id", "62d4e11502252b7a4dc11d7f")
-    if not (key and tok):
-        return None
-    t = TrelloClient(key, tok, bid)
-    try:
-        t.get_lists()
-        t.get_cards()
-        t.get_labels()
-        t.save_cache()
-        return t
-    except Exception:
-        if t.load_from_cache():
-            return t
-        return None

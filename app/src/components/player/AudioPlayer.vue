@@ -1,6 +1,21 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue'
 import { usePlayer } from '../../composables/usePlayer'
-import { IconPlay, IconPause, IconSkipForward, IconSkipBack, IconVolume, IconVolumeMute } from '../shared/icons'
+import { api } from '../../api'
+import type { Bookmark } from '../../types'
+import {
+  IconPlay,
+  IconPause,
+  IconSkipForward,
+  IconSkipBack,
+  IconVolume,
+  IconVolumeMute,
+  IconRewind15,
+  IconForward15,
+  IconMoon,
+  IconBookmark,
+  IconTrash,
+} from '../shared/icons'
 
 const {
   currentBook,
@@ -11,6 +26,8 @@ const {
   duration,
   volume,
   currentTrack,
+  playbackRate,
+  sleepTimer,
   formatTime,
   togglePlay,
   nextTrack,
@@ -19,6 +36,10 @@ const {
   setVolume,
   startSeek,
   endSeek,
+  skipForward,
+  skipBackward,
+  setPlaybackRate,
+  setSleepTimer,
 } = usePlayer()
 
 function onSeekInput() {
@@ -29,6 +50,70 @@ function onSeekChange(e: Event) {
   const val = parseFloat((e.target as HTMLInputElement).value)
   endSeek(val)
 }
+
+// ── Bookmarks ──
+const bookmarks = ref<Bookmark[]>([])
+const showBookmarks = ref(false)
+const bookmarkNote = ref('')
+const showBookmarkInput = ref(false)
+
+async function loadBookmarks() {
+  if (!currentBook.value) return
+  try {
+    bookmarks.value = await api.getBookmarks(currentBook.value.id)
+  } catch {
+    bookmarks.value = []
+  }
+}
+
+async function addBookmark() {
+  if (!currentBook.value) return
+  await api.addBookmark(currentBook.value.id, currentTrackIndex.value, currentTime.value, bookmarkNote.value)
+  bookmarkNote.value = ''
+  showBookmarkInput.value = false
+  await loadBookmarks()
+}
+
+async function removeBookmark(ts: string) {
+  if (!currentBook.value) return
+  await api.removeBookmark(currentBook.value.id, ts)
+  await loadBookmarks()
+}
+
+function seekToBookmark(bm: Bookmark) {
+  if (bm.track !== currentTrackIndex.value) {
+    playTrack(bm.track)
+    // After track loads, seek to position
+    const unwatch = watch(currentTime, () => {
+      endSeek(bm.time)
+      unwatch()
+    })
+  } else {
+    endSeek(bm.time)
+  }
+}
+
+watch(currentBook, () => loadBookmarks())
+
+// ── Speed control ──
+const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
+const showSpeedPicker = ref(false)
+
+function cycleSpeed() {
+  const idx = SPEEDS.indexOf(playbackRate.value)
+  const next = SPEEDS[(idx + 1) % SPEEDS.length]
+  setPlaybackRate(next)
+}
+
+// ── Sleep timer ──
+const showSleepMenu = ref(false)
+const SLEEP_OPTIONS = [
+  { label: '15 мин', value: 15 },
+  { label: '30 мин', value: 30 },
+  { label: '45 мин', value: 45 },
+  { label: '60 мин', value: 60 },
+  { label: 'Конец трека', value: -1 },
+]
 </script>
 
 <template>
@@ -44,7 +129,15 @@ function onSeekChange(e: Event) {
     </div>
 
     <!-- Controls -->
-    <div class="mb-5 flex items-center justify-center gap-5">
+    <div class="mb-5 flex items-center justify-center gap-3">
+      <button
+        class="flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-2 text-[--t2] transition-colors hover:text-[--t1]"
+        title="Назад 15 сек"
+        @click="skipBackward()"
+      >
+        <IconRewind15 :size="22" />
+      </button>
+
       <button
         class="flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-2.5 text-[--t2] transition-colors hover:text-[--t1]"
         @click="prevTrack"
@@ -66,6 +159,14 @@ function onSeekChange(e: Event) {
       >
         <IconSkipForward :size="20" />
       </button>
+
+      <button
+        class="flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-2 text-[--t2] transition-colors hover:text-[--t1]"
+        title="Вперёд 15 сек"
+        @click="skipForward()"
+      >
+        <IconForward15 :size="22" />
+      </button>
     </div>
 
     <!-- Seek bar -->
@@ -86,24 +187,155 @@ function onSeekChange(e: Event) {
       </div>
     </div>
 
-    <!-- Volume -->
-    <div class="mb-5 flex items-center gap-3">
+    <!-- Feature bar: Volume, Speed, Sleep, Bookmark -->
+    <div class="mb-5 flex items-center gap-4">
+      <!-- Volume -->
+      <div class="flex items-center gap-2">
+        <button
+          class="cursor-pointer border-0 bg-transparent p-1 text-[--t3] transition-colors hover:text-[--t1]"
+          @click="setVolume(volume > 0 ? 0 : 1)"
+        >
+          <component :is="volume > 0 ? IconVolume : IconVolumeMute" :size="16" />
+        </button>
+        <input
+          type="range"
+          :min="0"
+          :max="1"
+          :value="volume"
+          step="0.01"
+          class="flex-1"
+          style="max-width: 80px"
+          @input="(e: Event) => setVolume(parseFloat((e.target as HTMLInputElement).value))"
+        />
+      </div>
+
+      <div class="flex-1" />
+
+      <!-- Speed -->
+      <div class="relative">
+        <button
+          class="cursor-pointer rounded-lg border border-[--border] bg-transparent px-2 py-1 text-[12px] font-semibold text-[--t2] transition-colors hover:text-[--t1]"
+          @click="cycleSpeed"
+          @contextmenu.prevent="showSpeedPicker = !showSpeedPicker"
+        >
+          {{ playbackRate }}x
+        </button>
+        <div
+          v-if="showSpeedPicker"
+          class="absolute right-0 bottom-full z-10 mb-1 rounded-xl border border-[--border] py-1 shadow-lg"
+          style="background: var(--bg-card)"
+        >
+          <button
+            v-for="s in SPEEDS"
+            :key="s"
+            class="block w-full cursor-pointer border-0 bg-transparent px-4 py-1.5 text-left text-[12px] transition-colors hover:bg-white/5"
+            :class="s === playbackRate ? 'font-semibold text-[--accent]' : 'text-[--t2]'"
+            @click="
+              setPlaybackRate(s)
+              showSpeedPicker = false
+            "
+          >
+            {{ s }}x
+          </button>
+        </div>
+      </div>
+
+      <!-- Sleep timer -->
+      <div class="relative">
+        <button
+          class="relative cursor-pointer border-0 bg-transparent p-1 text-[--t3] transition-colors hover:text-[--t1]"
+          :class="sleepTimer !== null ? 'text-[--accent]' : ''"
+          @click="showSleepMenu = !showSleepMenu"
+        >
+          <IconMoon :size="16" />
+          <span
+            v-if="sleepTimer !== null"
+            class="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full px-0.5 text-[9px] font-bold text-white"
+            style="background: var(--accent)"
+          >
+            {{ sleepTimer }}
+          </span>
+        </button>
+        <div
+          v-if="showSleepMenu"
+          class="absolute right-0 bottom-full z-10 mb-1 rounded-xl border border-[--border] py-1 shadow-lg"
+          style="background: var(--bg-card)"
+        >
+          <button
+            v-for="opt in SLEEP_OPTIONS"
+            :key="opt.value"
+            class="block w-full cursor-pointer border-0 bg-transparent px-4 py-1.5 text-left text-[12px] text-[--t2] transition-colors hover:bg-white/5"
+            @click="
+              setSleepTimer(opt.value)
+              showSleepMenu = false
+            "
+          >
+            {{ opt.label }}
+          </button>
+          <button
+            v-if="sleepTimer !== null"
+            class="block w-full cursor-pointer border-0 bg-transparent px-4 py-1.5 text-left text-[12px] text-red-400 transition-colors hover:bg-white/5"
+            @click="
+              setSleepTimer(null)
+              showSleepMenu = false
+            "
+          >
+            Отменить
+          </button>
+        </div>
+      </div>
+
+      <!-- Bookmark -->
       <button
         class="cursor-pointer border-0 bg-transparent p-1 text-[--t3] transition-colors hover:text-[--t1]"
-        @click="setVolume(volume > 0 ? 0 : 1)"
+        title="Добавить закладку"
+        @click="showBookmarkInput = !showBookmarkInput"
       >
-        <component :is="volume > 0 ? IconVolume : IconVolumeMute" :size="16" />
+        <IconBookmark :size="16" />
       </button>
+    </div>
+
+    <!-- Bookmark add input -->
+    <div v-if="showBookmarkInput" class="mb-4 flex gap-2">
       <input
-        type="range"
-        :min="0"
-        :max="1"
-        :value="volume"
-        step="0.01"
-        class="flex-1"
-        style="max-width: 120px"
-        @input="(e: Event) => setVolume(parseFloat((e.target as HTMLInputElement).value))"
+        v-model="bookmarkNote"
+        class="input-field flex-1 px-3 py-2 text-[13px]"
+        placeholder="Заметка (необязательно)"
+        @keyup.enter="addBookmark"
       />
+      <button class="btn btn-primary shrink-0 text-[12px]" @click="addBookmark">Сохранить</button>
+    </div>
+
+    <!-- Bookmarks list -->
+    <div v-if="bookmarks.length" class="mb-4 border-t border-[--border] pt-4">
+      <button
+        class="section-label mb-3 flex w-full cursor-pointer items-center gap-2 border-0 bg-transparent text-left"
+        @click="showBookmarks = !showBookmarks"
+      >
+        <IconBookmark :size="14" />
+        Закладки ({{ bookmarks.length }})
+        <span class="text-[10px] text-[--t3]">{{ showBookmarks ? '▲' : '▼' }}</span>
+      </button>
+      <div v-if="showBookmarks" class="scrollbar-hide max-h-48 space-y-1 overflow-y-auto">
+        <div
+          v-for="bm in bookmarks"
+          :key="bm.ts"
+          class="flex min-h-[40px] items-center gap-3 rounded-xl px-3 py-2 transition-colors hover:bg-white/[0.03]"
+        >
+          <button class="flex-1 cursor-pointer border-0 bg-transparent text-left" @click="seekToBookmark(bm)">
+            <span class="text-[12px] font-medium text-[--t2]">
+              Трек {{ bm.track + 1 }} · {{ formatTime(bm.time) }}
+            </span>
+            <span v-if="bm.note" class="ml-2 text-[11px] text-[--t3]">{{ bm.note }}</span>
+          </button>
+          <button
+            class="shrink-0 cursor-pointer border-0 bg-transparent p-1 text-[--t3] transition-colors hover:text-red-400"
+            @click="removeBookmark(bm.ts)"
+          >
+            <IconTrash :size="13" />
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Track list -->

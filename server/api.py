@@ -8,7 +8,6 @@ Run:
 """
 
 import base64
-import json
 import logging
 import os
 import random
@@ -36,16 +35,13 @@ from .core import (
     ACTION_LABELS,
     ACTION_STYLES,
     BOOK_STATUSES,
-    CACHE_PATH,
     CATEGORIES,
     FOLDER_TO_LABEL,
     LABEL_TO_FOLDER,
     LIST_TO_STATUS,
     STATUS_STYLE,
     Library,
-    TrelloClient,
     UserData,
-    best_card_match,
     compute_achievements,
     count_mp3,
     estimate_duration_hours,
@@ -53,7 +49,6 @@ from .core import (
     fmt_duration,
     folder_size_mb,
     fuzzy_match,
-    load_config,
     normalize,
     parse_folder_name,
     reading_velocity,
@@ -148,32 +143,7 @@ def _enrich_book(
     return result
 
 
-def _card_to_dict(card: dict, lmap: dict, trello: TrelloClient | None) -> dict:
-    """Convert Trello card to API dict."""
-    list_name = lmap.get(card["idList"], "?")
-    a, t, r = parse_folder_name(card["name"])
-    category = trello.category(card) if trello else None
-    return {
-        "id": card["id"],
-        "name": card["name"],
-        "list": list_name,
-        "status": LIST_TO_STATUS.get(list_name, list_name),
-        "author": a,
-        "title": t,
-        "reader": r or "",
-        "category": category or "",
-        "labels": trello.label_names(card) if trello else [],
-        "desc": card.get("desc", ""),
-    }
-
-
 # ── Pydantic models ────────────────────────────────────────────────────────
-
-
-class MoveCardRequest(BaseModel):
-    target: str
-    rating: int = 0
-    detail: str = ""
 
 
 class NoteRequest(BaseModel):
@@ -201,13 +171,6 @@ class CollectionRequest(BaseModel):
     description: str = ""
 
 
-class CreateCardRequest(BaseModel):
-    name: str
-    list_name: str = "Прочесть"
-    label: str | None = None
-    desc: str = ""
-
-
 class PlaybackPositionRequest(BaseModel):
     track_index: int
     position: float
@@ -231,45 +194,20 @@ class BookStatusRequest(BaseModel):
     status: str
 
 
+class BookmarkRequest(BaseModel):
+    track: int
+    time: float
+    note: str = ""
+
+
 # ── App state ───────────────────────────────────────────────────────────────
 
 lib = Library()
-trello: TrelloClient | None = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global trello
     init_db()
-    config = load_config()
-    key = config.get("trello_api_key", "")
-    tok = config.get("trello_token", "")
-    bid = config.get("board_id", "62d4e11502252b7a4dc11d7f")
-
-    if key and tok:
-        t = TrelloClient(key, tok, bid)
-        try:
-            t.get_lists()
-            t.get_cards()
-            t.get_labels()
-            t.save_cache()
-            trello = t
-            logger.info("Trello connected")
-        except Exception as e:
-            logger.warning("Trello API error: %s", e)
-            if t.load_from_cache():
-                trello = t
-                logger.info("Trello loaded from cache")
-            else:
-                logger.warning("No Trello cache available")
-    else:
-        t = TrelloClient("", "", bid)
-        if t.load_from_cache():
-            trello = t
-            logger.info("Trello loaded from cache (no API keys)")
-        else:
-            logger.info("Trello not configured")
-
     yield
 
 
@@ -291,22 +229,6 @@ app.add_middleware(
 async def unhandled_exception_handler(request: Request, exc: Exception):
     logger.error("Unhandled error on %s %s: %s", request.method, request.url.path, exc, exc_info=True)
     return JSONResponse(status_code=500, content={"detail": "Internal server error"})
-
-
-# ── Helper to get trello data ──────────────────────────────────────────────
-
-
-def _lmap() -> dict:
-    if not trello:
-        return {}
-    return {l["id"]: l["name"] for l in trello.get_lists()}
-
-
-def _cards_in(*names) -> list[dict]:
-    if not trello:
-        return []
-    ids = {trello.list_id(n) for n in names}
-    return [c for c in trello.get_cards() if c["idList"] in ids]
 
 
 # ── Helper: get per-user data accessor ─────────────────────────────────────
@@ -416,7 +338,6 @@ def get_constants():
         "list_to_status": LIST_TO_STATUS,
         "label_to_folder": LABEL_TO_FOLDER,
         "folder_to_label": FOLDER_TO_LABEL,
-        "trello_connected": trello is not None,
         "book_statuses": BOOK_STATUSES,
     }
 
@@ -430,43 +351,58 @@ def get_dashboard(user: dict = Depends(get_current_user)):
     books = lib.find_all_books()
     hist = ud.history_load()
     done = [h for h in hist if h["action"] == "done"]
-    velocity = reading_velocity(hist)
 
-    is_admin = user.get("role") == "admin"
-
+    # Active books from book_status (all users)
+    statuses = ud.book_status_load()
     active_cards = []
-    if is_admin:
-        lmap = _lmap()
-        if trello:
-            for c in trello.get_cards():
-                ln = lmap.get(c["idList"], "")
-                if ln in ("В процессе", "В телефоне"):
-                    cd = _card_to_dict(c, lmap, trello)
-                    cd["progress"] = ud.progress_get(cd["title"])
-                    active_cards.append(cd)
-    else:
-        # Non-admin: show books with status="reading"
-        statuses = ud.book_status_load()
-        for book_id, info in statuses.items():
-            if info.get("status") == "reading":
-                try:
-                    path = _book_from_id(book_id)
-                    if path.exists():
-                        a, t, r = parse_folder_name(path.name)
-                        b = {
-                            "path": path,
-                            "folder": path.name,
-                            "category": path.parent.name,
-                            "author": a,
-                            "title": t,
-                            "reader": r,
-                        }
-                        enriched = _enrich_book(b, hist, ud=ud)
-                        enriched["list"] = "В процессе"
-                        enriched["name"] = b["folder"]
-                        active_cards.append(enriched)
-                except Exception:
-                    pass
+    for book_id, info in statuses.items():
+        if info.get("status") == "reading":
+            try:
+                path = _book_from_id(book_id)
+                if path.exists():
+                    a, t, r = parse_folder_name(path.name)
+                    b = {
+                        "path": path,
+                        "folder": path.name,
+                        "category": path.parent.name,
+                        "author": a,
+                        "title": t,
+                        "reader": r,
+                    }
+                    enriched = _enrich_book(b, hist, ud=ud)
+                    enriched["list"] = "В процессе"
+                    enriched["name"] = b["folder"]
+                    active_cards.append(enriched)
+            except Exception:
+                pass
+
+    # Now playing: find book with most recent playback position
+    now_playing = None
+    playback_data = ud.playback_load()
+    if playback_data:
+        most_recent = None
+        for bid, pos in playback_data.items():
+            updated = pos.get("updated")
+            if updated and (most_recent is None or updated > most_recent.get("updated", "")):
+                most_recent = {**pos, "book_id": bid}
+        if most_recent:
+            try:
+                path = _book_from_id(most_recent["book_id"])
+                if path.exists():
+                    a, t, r = parse_folder_name(path.name)
+                    # Calculate progress
+                    progress = ud.progress_get(t)
+                    now_playing = {
+                        "book_id": most_recent["book_id"],
+                        "title": t,
+                        "author": a,
+                        "cover_id": most_recent["book_id"],
+                        "progress": progress,
+                        "current_track": most_recent.get("track_index", 0),
+                        "current_time": most_recent.get("position", 0),
+                    }
+            except Exception:
+                pass
 
     recent = []
     for h in reversed(hist[-8:]):
@@ -501,8 +437,8 @@ def get_dashboard(user: dict = Depends(get_current_user)):
         "total_books": len(books),
         "total_done": len(done),
         "active_count": len(active_cards),
-        "velocity": velocity,
         "active_books": active_cards,
+        "now_playing": now_playing,
         "recent": recent,
         "heatmap": dict(day_counts),
         "quote": quote,
@@ -524,23 +460,12 @@ def get_books(
     user: dict = Depends(get_current_user),
 ):
     ud = _user_data(user)
-    is_admin = user.get("role") == "admin"
     books = lib.find_all_books()
     hist = ud.history_load()
     pd = ud.progress_load()
     td = ud.tags_load()
     nd = ud.notes_load()
     book_statuses = ud.book_status_load()
-
-    card_map: dict[str, tuple[dict, str]] = {}
-    if is_admin and trello:
-        lmap = _lmap()
-        for c in trello.get_cards():
-            _, ct, _ = parse_folder_name(c["name"])
-            ln = lmap.get(c["idList"], "")
-            card_map[normalize(c["name"])] = (c, ln)
-            if ct:
-                card_map[normalize(ct)] = (c, ln)
 
     result = []
     for b in books:
@@ -561,15 +486,6 @@ def get_books(
         if bs:
             enriched["book_status"] = bs["status"]
 
-        if is_admin and card_map:
-            key = normalize(b["title"])
-            fkey = normalize(b["folder"])
-            match = card_map.get(key) or card_map.get(fkey)
-            if match:
-                card, ln = match
-                enriched["status"] = ln
-                enriched["card_id"] = card["id"]
-
         result.append(enriched)
 
     if sort == "title":
@@ -589,7 +505,6 @@ def get_books(
 @app.get("/api/books/{book_id}")
 def get_book(book_id: str, user: dict = Depends(get_current_user)):
     ud = _user_data(user)
-    is_admin = user.get("role") == "admin"
     path = _book_from_id(book_id)
     if not path.exists():
         raise HTTPException(404, "Book not found")
@@ -612,14 +527,6 @@ def get_book(book_id: str, user: dict = Depends(get_current_user)):
     bs = ud.book_status_get(book_id)
     if bs:
         enriched["book_status"] = bs["status"]
-
-    if is_admin and trello:
-        lmap = _lmap()
-        card, score = best_card_match(a, t, trello.get_cards())
-        if card and score > 0.5:
-            ln = lmap.get(card["idList"], "")
-            enriched["status"] = ln
-            enriched["card_id"] = card["id"]
 
     timeline = []
     nf = normalize(path.name)
@@ -777,168 +684,6 @@ def set_playback(book_id: str, req: PlaybackPositionRequest, user: dict = Depend
     ud = _user_data(user)
     ud.playback_set(book_id, req.track_index, req.position, req.filename)
     return {"ok": True}
-
-
-# ── Trello ──────────────────────────────────────────────────────────────────
-
-
-@app.get("/api/trello/status")
-def get_trello_status(user: dict = Depends(get_current_user)):
-    require_admin(user)
-    if not trello:
-        raise HTTPException(503, "Trello not connected")
-    lmap = _lmap()
-    cards = trello.get_cards()
-    list_counts: dict[str, int] = {}
-    for c in cards:
-        ln = lmap.get(c["idList"], "?")
-        list_counts[ln] = list_counts.get(ln, 0) + 1
-
-    cache_ts = None
-    cache_age_min = None
-    if CACHE_PATH.exists():
-        try:
-            data = json.loads(CACHE_PATH.read_text(encoding="utf-8"))
-            cache_ts = data.get("ts")
-            if cache_ts:
-                dt = datetime.fromisoformat(cache_ts)
-                cache_age_min = int((datetime.now() - dt).total_seconds() / 60)
-        except Exception:
-            pass
-
-    return {
-        "total_cards": len(cards),
-        "list_counts": list_counts,
-        "cache_ts": cache_ts,
-        "cache_age_min": cache_age_min,
-    }
-
-
-@app.get("/api/trello/cards")
-def get_trello_cards(list_name: str | None = Query(None), user: dict = Depends(get_current_user)):
-    require_admin(user)
-    if not trello:
-        raise HTTPException(503, "Trello not connected")
-    lmap = _lmap()
-    cards = trello.get_cards()
-    result = []
-    for c in cards:
-        cd = _card_to_dict(c, lmap, trello)
-        if list_name and cd["list"] != list_name:
-            continue
-        ud = _user_data(user)
-        cd["progress"] = ud.progress_get(cd["title"])
-        result.append(cd)
-    return result
-
-
-@app.get("/api/trello/lists")
-def get_trello_lists(user: dict = Depends(get_current_user)):
-    require_admin(user)
-    if not trello:
-        raise HTTPException(503, "Trello not connected")
-    return [{"id": l["id"], "name": l["name"]} for l in trello.get_lists()]
-
-
-@app.post("/api/trello/cards/{card_id}/move")
-def move_trello_card(card_id: str, req: MoveCardRequest, user: dict = Depends(get_current_user)):
-    require_admin(user)
-    if not trello:
-        raise HTTPException(503, "Trello not connected")
-
-    card = None
-    for c in trello.get_cards():
-        if c["id"] == card_id:
-            card = c
-            break
-    if not card:
-        raise HTTPException(404, "Card not found")
-
-    lmap = _lmap()
-    old_list = lmap.get(card["idList"], "?")
-
-    action_map = {
-        "В процессе": "listen",
-        "В телефоне": "phone",
-        "Прочитано": "done",
-        "На Паузе": "pause",
-        "Забраковано": "reject",
-        "Прочесть": "move",
-    }
-    action = action_map.get(req.target, "move")
-    detail = req.detail or f"{old_list} → {req.target}"
-
-    ud = _user_data(user)
-    trello.move_card(card_id, req.target)
-    ud.history_add(action, card["name"], detail, req.rating)
-
-    if req.target == "Прочитано":
-        _, t, _ = parse_folder_name(card["name"])
-        ud.progress_set(t, 100)
-
-    trello.save_cache()
-
-    return {"ok": True, "action": action, "from": old_list, "to": req.target}
-
-
-@app.post("/api/trello/cards")
-def create_trello_card(req: CreateCardRequest, user: dict = Depends(get_current_user)):
-    require_admin(user)
-    if not trello:
-        raise HTTPException(503, "Trello not connected")
-    try:
-        ud = _user_data(user)
-        card = trello.create_card(req.name, req.list_name, req.label, req.desc)
-        trello.save_cache()
-        ud.history_add("inbox", req.name, f"Создана карточка → {req.list_name}")
-        return {"ok": True, "card_id": card["id"]}
-    except Exception as e:
-        raise HTTPException(500, str(e))
-
-
-@app.post("/api/trello/sync")
-def sync_trello(user: dict = Depends(get_current_user)):
-    require_admin(user)
-    if not trello:
-        raise HTTPException(503, "Trello not connected")
-    try:
-        trello.reload()
-        trello.get_lists()
-        trello.get_cards()
-        trello.get_labels()
-        trello.save_cache()
-
-        lmap = _lmap()
-        rows = []
-        for c in trello.get_cards():
-            ln = lmap.get(c["idList"], "?")
-            a, t, r = parse_folder_name(c["name"])
-            rows.append(
-                {
-                    "Автор": a,
-                    "Название": t,
-                    "Чтец": r or "",
-                    "Категория": trello.category(c) or "",
-                    "Статус": LIST_TO_STATUS.get(ln, ln),
-                }
-            )
-        rows.sort(key=lambda r: (r["Категория"], r["Автор"].lower(), r["Название"].lower()))
-        lib.save_tracker(rows)
-
-        lmap = _lmap()
-        list_counts: dict[str, int] = {}
-        for c in trello.get_cards():
-            ln = lmap.get(c["idList"], "?")
-            list_counts[ln] = list_counts.get(ln, 0) + 1
-
-        return {
-            "ok": True,
-            "cards": len(trello.get_cards()),
-            "list_counts": list_counts,
-            "synced_at": datetime.now().isoformat(timespec="seconds"),
-        }
-    except Exception as e:
-        raise HTTPException(500, str(e))
 
 
 # ── History ─────────────────────────────────────────────────────────────────
@@ -1183,6 +928,30 @@ def set_book_status(book_id: str, req: BookStatusRequest, user: dict = Depends(g
 def remove_book_status(book_id: str, user: dict = Depends(get_current_user)):
     ud = _user_data(user)
     ud.book_status_remove(book_id)
+    return {"ok": True}
+
+
+# ── Bookmarks ──────────────────────────────────────────────────────────────
+
+
+@app.get("/api/user/bookmarks/{book_id}")
+def get_bookmarks(book_id: str, user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    return ud.bookmarks_get(book_id)
+
+
+@app.post("/api/user/bookmarks/{book_id}")
+def add_bookmark(book_id: str, req: BookmarkRequest, user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    entry = ud.bookmarks_add(book_id, req.track, req.time, req.note)
+    return entry
+
+
+@app.delete("/api/user/bookmarks/{book_id}/{ts}")
+def remove_bookmark(book_id: str, ts: str, user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    if not ud.bookmarks_remove(book_id, ts):
+        raise HTTPException(404, "Bookmark not found")
     return {"ok": True}
 
 

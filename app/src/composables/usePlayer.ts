@@ -16,6 +16,10 @@ const duration = ref(0)
 const volume = ref(1)
 const isPlayerVisible = ref(false)
 const playingOffline = ref(false)
+const playbackRate = ref(parseFloat(localStorage.getItem('leerio_playback_rate') || '1'))
+const sleepTimer = ref<number | null>(null)
+
+let sleepTimerId: ReturnType<typeof setTimeout> | null = null
 
 const downloads = useDownloads()
 const toast = useToast()
@@ -47,6 +51,7 @@ function ensureAudio(): HTMLAudioElement {
   if (!audio) {
     audio = new Audio()
     audio.volume = volume.value
+    audio.playbackRate = playbackRate.value
 
     audio.addEventListener('timeupdate', () => {
       if (!isSeeking) {
@@ -268,6 +273,70 @@ function setVolume(v: number) {
   if (audio) audio.volume = volume.value
 }
 
+function setPlaybackRate(rate: number) {
+  playbackRate.value = rate
+  if (audio) audio.playbackRate = rate
+  localStorage.setItem('leerio_playback_rate', String(rate))
+}
+
+function skipForward(seconds = 15) {
+  if (!audio) return
+  const newTime = currentTime.value + seconds
+  if (newTime >= (audio.duration || Infinity)) {
+    nextTrack()
+  } else {
+    seek(newTime)
+  }
+}
+
+function skipBackward(seconds = 15) {
+  if (!audio) return
+  const newTime = currentTime.value - seconds
+  if (newTime < 0 && currentTrackIndex.value > 0) {
+    playTrack(currentTrackIndex.value - 1)
+  } else {
+    seek(Math.max(0, newTime))
+  }
+}
+
+function setSleepTimer(minutes: number | null) {
+  if (sleepTimerId) {
+    clearTimeout(sleepTimerId)
+    sleepTimerId = null
+  }
+  if (minutes === null) {
+    sleepTimer.value = null
+    return
+  }
+  if (minutes === -1) {
+    // End of current track
+    sleepTimer.value = null
+    const onEnded = () => {
+      const a = ensureAudio()
+      a.pause()
+      a.removeEventListener('ended', onEnded)
+    }
+    const a = ensureAudio()
+    a.addEventListener('ended', onEnded, { once: true })
+    sleepTimer.value = 0
+    return
+  }
+  sleepTimer.value = minutes
+  // Countdown every minute
+  const tick = () => {
+    if (sleepTimer.value === null) return
+    sleepTimer.value--
+    if (sleepTimer.value <= 0) {
+      sleepTimer.value = null
+      const a = ensureAudio()
+      a.pause()
+    } else {
+      sleepTimerId = setTimeout(tick, 60_000)
+    }
+  }
+  sleepTimerId = setTimeout(tick, 60_000)
+}
+
 function closePlayer() {
   if (activeSessionBook) {
     api.stopSession(activeSessionBook).catch(() => {})
@@ -275,6 +344,7 @@ function closePlayer() {
   }
   savePosition()
   stopSaveTimer()
+  setSleepTimer(null)
   if (audio) {
     audio.pause()
     audio.src = ''
@@ -312,6 +382,8 @@ export function usePlayer() {
     volume,
     isPlayerVisible,
     playingOffline,
+    playbackRate,
+    sleepTimer,
 
     // Computed
     currentTrack,
@@ -329,6 +401,10 @@ export function usePlayer() {
     nextTrack,
     prevTrack,
     setVolume,
+    skipForward,
+    skipBackward,
+    setPlaybackRate,
+    setSleepTimer,
     closePlayer,
 
     // Helpers

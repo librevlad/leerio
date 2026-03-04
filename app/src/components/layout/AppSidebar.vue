@@ -1,34 +1,21 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '../../composables/useAuth'
-import {
-  IconHome,
-  IconLibrary,
-  IconQueue,
-  IconHistory,
-  IconChart,
-  IconSettings,
-  IconMenu,
-  IconX,
-} from '../shared/icons'
+import { IconHome, IconLibrary, IconHistory, IconChart, IconSettings, IconMenu, IconX } from '../shared/icons'
 
 defineProps<{ collapsed: boolean }>()
 const emit = defineEmits<{ 'update:collapsed': [val: boolean] }>()
 const route = useRoute()
 const router = useRouter()
-const { user, isAdmin, logout } = useAuth()
+const { user, logout } = useAuth()
 
-const allLinks = [
-  { path: '/', label: 'Дашборд', icon: IconHome, admin: false },
-  { path: '/library', label: 'Библиотека', icon: IconLibrary, admin: false },
-  { path: '/queue', label: 'Очередь', icon: IconQueue, admin: true },
-  { path: '/history', label: 'История', icon: IconHistory, admin: false },
-  { path: '/analytics', label: 'Аналитика', icon: IconChart, admin: false },
-  { path: '/settings', label: 'Настройки', icon: IconSettings, admin: false },
+const links = [
+  { path: '/', label: 'Дашборд', icon: IconHome },
+  { path: '/library', label: 'Библиотека', icon: IconLibrary },
+  { path: '/history', label: 'История', icon: IconHistory },
+  { path: '/analytics', label: 'Аналитика', icon: IconChart },
+  { path: '/settings', label: 'Настройки', icon: IconSettings },
 ]
-
-const links = computed(() => allLinks.filter((l) => !l.admin || isAdmin.value))
 
 const isActive = (path: string) => {
   if (path === '/') return route.path === '/'

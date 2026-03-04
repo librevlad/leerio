@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { usePlayer } from '../../composables/usePlayer'
-import { IconPlay, IconPause, IconXCircle } from '../shared/icons'
+import { IconPlay, IconPause, IconXCircle, IconForward15 } from '../shared/icons'
 
 const router = useRouter()
 const {
@@ -12,6 +12,7 @@ const {
   overallProgress,
   playingOffline,
   togglePlay,
+  skipForward,
   closePlayer,
 } = usePlayer()
 
@@ -62,6 +63,14 @@ function goToBook() {
           @click="togglePlay"
         >
           <component :is="isPlaying ? IconPause : IconPlay" :size="16" style="color: #fff" />
+        </button>
+
+        <!-- +15s skip -->
+        <button
+          class="shrink-0 cursor-pointer border-0 bg-transparent p-1.5 text-[--t3] transition-colors hover:text-[--t1]"
+          @click="skipForward()"
+        >
+          <IconForward15 :size="18" />
         </button>
 
         <!-- Close -->

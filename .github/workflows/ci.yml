@@ -57,6 +57,51 @@ jobs:
         working-directory: app
         run: npm run build
 
+  apk-build:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [app-build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Install
+        working-directory: app
+        run: npm ci
+      - name: Build web
+        working-directory: app
+        run: npm run build
+      - name: Cap copy
+        working-directory: app
+        run: npx cap copy android
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Build debug APK
+        working-directory: app/android
+        run: ./gradlew assembleDebug
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: leerio-debug-apk
+          path: app/android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Create/update GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-apk
+          name: Latest APK Build
+          body: "Debug APK built from ${{ github.sha }}"
+          prerelease: true
+          files: app/android/app/build/outputs/apk/debug/app-debug.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   deploy:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: [server-lint, app-build]
