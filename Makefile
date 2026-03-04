@@ -1,5 +1,6 @@
 .PHONY: help dev server-dev app-dev docker-up docker-down docker-logs lint format check build setup \
-       server-lint server-format app-lint app-format test server-test app-test type-check clean
+       server-lint server-format app-lint app-format test server-test app-test type-check clean \
+       e2e e2e-ui e2e-prod
 
 .DEFAULT_GOAL := help
 
@@ -81,6 +82,17 @@ setup: ## First-time setup: deps + git hooks
 	pip install -r server/requirements-dev.txt
 	cd app && npm install
 	@echo "Done. Pre-commit and commit-msg hooks enabled."
+
+# ── E2E Testing ─────────────────────────────────────────────────────────
+
+e2e: ## Playwright E2E tests (local)
+	cd app && npx playwright test
+
+e2e-ui: ## Playwright E2E tests (interactive UI)
+	cd app && npx playwright test --ui
+
+e2e-prod: ## Playwright E2E tests (production)
+	cd app && E2E_BASE_URL=https://app.leerio.app npx playwright test
 
 # ── Cleanup ──────────────────────────────────────────────────────────────────
 
