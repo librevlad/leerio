@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leerio — Audiobook Library for Listeners</title>
+  <meta name="description" content="Your personal audiobook library, reimagined. Join the waitlist for early access.">
+  <meta name="theme-color" content="#07070e">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main>
+    <div class="container">
+      <h1 class="logo">Leerio</h1>
+      <p class="tagline">Audiobook library for listeners</p>
+      <p class="description">Your personal audiobook collection — organized, tracked, and always at your fingertips.</p>
+      <p class="coming-soon">Coming soon</p>
+
+      <form class="waitlist" action="https://formsubmit.co/leerio@proton.me" method="POST">
+        <input type="hidden" name="_subject" value="Leerio waitlist signup">
+        <input type="hidden" name="_captcha" value="false">
+        <input type="hidden" name="_next" value="https://leerio.app/?joined=1">
+        <div class="form-row">
+          <input
+            type="email"
+            name="email"
+            placeholder="you@email.com"
+            required
+            autocomplete="email"
+          >
+          <button type="submit">Join waitlist</button>
+        </div>
+      </form>
+
+      <div class="joined" id="joined" hidden>
+        <p>Thanks for joining! We'll be in touch.</p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    if (new URLSearchParams(location.search).has('joined')) {
+      document.querySelector('.waitlist').hidden = true;
+      document.getElementById('joined').hidden = false;
+    }
+  </script>
+</body>
+</html>

@@ -17,6 +17,10 @@ app/             Vue 3 frontend (TypeScript + Tailwind)
   Dockerfile     Multi-stage build (node + nginx)
   nginx.conf     SPA routing + API proxy
 
+landing/         Static coming-soon page (served by Caddy at leerio.app)
+  index.html     Landing page with email waitlist
+  style.css      Dark theme styles
+
 data/            Runtime data files (gitignored, volume-mounted)
   config.json    Trello API keys
   history.json   Action log
@@ -137,18 +141,23 @@ Runs automatically on `git commit` (after `make setup`):
 
 Push to `main` triggers GitHub Actions (single `ci.yml` workflow):
 1. CI: lint (ruff + eslint + prettier), test (pytest + vitest), type-check + build (vue-tsc + vite)
-2. Deploy: gated on CI success (`needs: [server-lint, app-build]`), SSH to VPS, git pull, docker compose up --build, health check via `https://leerio.app` with retry (3 attempts), auto-rollback on failure
+2. Deploy: gated on CI success (`needs: [server-lint, app-build]`), SSH to VPS, git pull, docker compose up --build, health check via `https://app.leerio.app` with retry (3 attempts), auto-rollback on failure
 
 ### Production Architecture
 
 ```
-Internet -> Caddy (:80/:443) -> nginx/app (:80) -> FastAPI/server (:8000)
-             TLS termination     SPA + /api/ proxy    Business logic
+Internet -> Caddy (:80/:443)
+              |
+              ├── leerio.app       -> static landing page (/srv/landing)
+              └── app.leerio.app   -> nginx/app (:80) -> FastAPI/server (:8000)
+                                      SPA + /api/ proxy    Business logic
 ```
 
+- **Domain split**: `leerio.app` serves a static coming-soon landing page; `app.leerio.app` serves the Vue SPA + API
 - **Caddy** handles HTTPS automatically (Let's Encrypt auto-cert/renew, HTTP->HTTPS redirect)
 - Only Caddy exposes host ports (80, 443); server/app are internal-only
-- `Caddyfile` at project root — `leerio.app { reverse_proxy app:80 }`
+- `Caddyfile` at project root — two site blocks: `leerio.app` (file_server) + `app.leerio.app` (reverse_proxy)
+- `landing/` directory mounted read-only into Caddy container at `/srv/landing`
 - `env_file: .env` on server service loads Trello keys + `CORS_ORIGINS`
 - Caddy data/config persisted via named Docker volumes (`caddy_data`, `caddy_config`)
 

@@ -78,7 +78,7 @@ jobs:
             echo "Waiting for services to start..."
             sleep 15
             for i in 1 2 3; do
-              if curl -sf https://leerio.app/api/config/constants > /dev/null; then
+              if curl -sf https://app.leerio.app/api/config/constants > /dev/null; then
                 echo "Health check passed (attempt $i)"
                 exit 0
               fi
