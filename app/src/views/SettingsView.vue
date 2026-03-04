@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { api, getServerUrl, setServerUrl } from '../api'
 import { useTrello } from '../composables/useTrello'
 import { useDownloads } from '../composables/useDownloads'
+import { useAuth } from '../composables/useAuth'
 import type { Constants, SessionStats } from '../types'
 import { IconSync, IconClock, IconTrash, IconDownload } from '../components/shared/icons'
 
+const router = useRouter()
 const { status: trelloStatus, loadStatus, sync } = useTrello()
 const dl = useDownloads()
+const { user, isAdmin, logout } = useAuth()
 const constants = ref<Constants | null>(null)
 const sessionStats = ref<SessionStats | null>(null)
 const syncing = ref(false)
@@ -30,7 +34,9 @@ onMounted(async () => {
   } catch {
     /* ignore */
   }
-  loadStatus()
+  if (isAdmin.value) {
+    loadStatus()
+  }
 })
 
 async function syncTrello() {
@@ -57,6 +63,11 @@ function fmtSize(bytes: number): string {
   if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' МБ'
   return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' ГБ'
 }
+
+async function handleLogout() {
+  await logout()
+  router.push('/login')
+}
 </script>
 
 <template>
@@ -64,6 +75,49 @@ function fmtSize(bytes: number): string {
     <h1 class="page-title mb-8">Настройки</h1>
 
     <div class="max-w-2xl space-y-6">
+      <!-- Profile -->
+      <div class="card p-6">
+        <h3 class="section-label mb-4">Профиль</h3>
+        <div v-if="user" class="flex items-center gap-4">
+          <img
+            v-if="user.picture"
+            :src="user.picture"
+            :alt="user.name"
+            class="h-14 w-14 rounded-full object-cover"
+            referrerpolicy="no-referrer"
+          />
+          <div
+            v-else
+            class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-[18px] font-bold text-[--t2]"
+            style="background: rgba(255, 255, 255, 0.08)"
+          >
+            {{ user.name?.charAt(0) || '?' }}
+          </div>
+          <div class="min-w-0 flex-1">
+            <p class="text-[15px] font-semibold text-[--t1]">{{ user.name }}</p>
+            <p class="text-[13px] text-[--t3]">{{ user.email }}</p>
+            <p v-if="isAdmin" class="mt-1 text-[11px] font-medium text-[--accent]">Администратор</p>
+          </div>
+        </div>
+        <button class="btn btn-ghost mt-4 text-red-400 hover:text-red-300" @click="handleLogout">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+          Выйти
+        </button>
+      </div>
+
       <!-- Server URL -->
       <div class="card p-6">
         <h3 class="section-label mb-4">Сервер</h3>
@@ -85,7 +139,8 @@ function fmtSize(bytes: number): string {
         </div>
       </div>
 
-      <div class="card p-6">
+      <!-- Trello (admin only) -->
+      <div v-if="isAdmin" class="card p-6">
         <h3 class="section-label mb-4">Trello</h3>
         <div class="mb-4 flex items-center gap-3">
           <span

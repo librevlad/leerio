@@ -21,7 +21,10 @@ services:
       start_period: 10s
 
   app:
-    build: ./app
+    build:
+      context: ./app
+      args:
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
     depends_on:
       server:
         condition: service_healthy

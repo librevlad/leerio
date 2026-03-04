@@ -1,21 +1,26 @@
 # Leerio — Audiobook Library Manager
 
-Personal audiobook library with Trello integration, web UI, and TUI.
+SaaS audiobook library with Google OAuth, per-user data, Trello integration (admin), web UI, and TUI.
 
 ## Project Structure
 
 ```
 server/          Python backend (FastAPI)
-  core.py        Business logic, data persistence, Trello client
-  api.py         REST API endpoints
+  core.py        Business logic, data persistence, Trello client, UserData class
+  api.py         REST API endpoints (auth-protected)
+  auth.py        Google OAuth token verification, JWT cookie management
+  db.py          SQLite users database (users table, seed admin)
   metadata.py    Cover art and ID3 tag management
+  migrate_to_multitenancy.py  One-time data migration script
   Dockerfile     Production container
   requirements.txt
 
 app/             Vue 3 frontend (TypeScript + Tailwind)
   src/           Components, views, composables
-  Dockerfile     Multi-stage build (node + nginx)
-  nginx.conf     SPA routing + API proxy
+  src/composables/useAuth.ts  Auth state, Google login, logout
+  src/views/LoginView.vue     Google Sign-In page
+  Dockerfile     Multi-stage build (node + nginx), accepts VITE_GOOGLE_CLIENT_ID build arg
+  nginx.conf     SPA routing + API proxy + Google CSP
 
 landing/         Static coming-soon page (served by Caddy at leerio.app)
   index.html     Landing page with email waitlist
@@ -23,11 +28,15 @@ landing/         Static coming-soon page (served by Caddy at leerio.app)
 
 data/            Runtime data files (gitignored, volume-mounted)
   config.json    Trello API keys
-  history.json   Action log
+  leerio.db      SQLite users database
   tracker.csv    Book catalog from Trello
-  ...            Other JSON data files
+  users/         Per-user data directories
+    {user_id}/   Each user's JSON files
+      history.json, notes.json, tags.json, collections.json,
+      progress.json, playback.json, quotes.json, sessions.json,
+      book_status.json
 
-books/           Audiobook files (gitignored, volume-mounted)
+books/           Audiobook files (gitignored, volume-mounted, shared read-only)
   Бизнес/
   Отношения/
   Саморазвитие/
@@ -72,6 +81,10 @@ docker compose up --build
 - `LEERIO_BOOKS` — books directory (default: `$BASE/books`)
 - `LEERIO_LOG_LEVEL` — Python logging level (default: `INFO`)
 - `CORS_ORIGINS` — comma-separated allowed origins (default: `http://localhost:5173,http://localhost:80`)
+- `GOOGLE_CLIENT_ID` — Google OAuth 2.0 Web Client ID (required for login)
+- `JWT_SECRET` — random 64-char string for signing JWT tokens (required)
+- `LEERIO_DEV` — set to `1` for local dev (disables secure cookie flag)
+- `VITE_GOOGLE_CLIENT_ID` — frontend build arg (passed via docker-compose from `GOOGLE_CLIENT_ID`)
 
 ## Key Conventions
 
@@ -86,6 +99,51 @@ docker compose up --build
 - CORS: env-based origins via `CORS_ORIGINS`; global exception handler logs unhandled errors
 - Root `.dockerignore` excludes `.git`, tests, caches from server build context
 - Node version pinned: `app/.nvmrc` (20) + `engines.node` in `package.json`
+
+## Authentication & Multi-Tenancy
+
+### Auth Flow
+```
+Google Sign-In (frontend) → POST /api/auth/google { id_token }
+→ backend verifies with google-auth → creates/finds user in SQLite
+→ sets httpOnly JWT cookie → frontend redirects to dashboard
+```
+
+### Roles
+- **admin** (`librevlad@gmail.com`): Full access including Trello integration, Queue view
+- **user**: Book library, personal book statuses, notes, tags, progress, analytics
+
+### Data Isolation
+- **Shared**: `books/` (filesystem, read-only), `trello_cache.json`, `config.json`
+- **Per-user**: `data/users/{user_id}/*.json` — history, notes, tags, progress, playback, quotes, sessions, collections, book_status
+- **Users DB**: `data/leerio.db` (SQLite — users table only)
+
+### Auth Endpoints
+- `POST /api/auth/google` — verify Google ID token, set cookie, return user
+- `GET /api/auth/me` — return current user from cookie (401 if not authenticated)
+- `POST /api/auth/logout` — clear cookie
+
+### Book Status System (regular users)
+- Statuses: `want_to_read`, `reading`, `paused`, `done`, `rejected`
+- Endpoints: `GET/PUT/DELETE /api/user/book-status/{book_id}`
+- Admin uses Trello card actions instead
+
+### Public Endpoints (no auth)
+- `GET /api/config/constants` — healthcheck + app constants
+- `GET /api/books/{id}/cover` — cover images (base64 IDs are unguessable)
+- `GET /api/audio/{id}/{track}` — audio streaming (same-origin cookies sent automatically)
+
+### Protected Endpoints
+- All user-data endpoints require `Depends(get_current_user)` — returns per-user `UserData`
+- Trello endpoints additionally require `require_admin(user)` — returns 403 for non-admin
+- Queue view has `meta: { admin: true }` route guard in frontend
+
+### Test Auth
+- `conftest.py` overrides `get_current_user` dependency with `TEST_USER` (admin role)
+- Tests use `app.dependency_overrides` pattern for FastAPI
+
+### Migration
+- Run `python -m server.migrate_to_multitenancy` once to copy `data/*.json` → `data/users/{admin-id}/`
 
 ## Dev Workflow
 

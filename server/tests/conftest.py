@@ -4,6 +4,16 @@ import json
 
 import pytest
 
+TEST_USER = {
+    "user_id": "test-user-001",
+    "email": "test@example.com",
+    "name": "Test User",
+    "picture": "",
+    "role": "admin",
+    "created_at": "2024-01-01T00:00:00",
+    "last_login": None,
+}
+
 
 @pytest.fixture()
 def tmp_data_dir(tmp_path, monkeypatch):
@@ -20,9 +30,14 @@ def tmp_data_dir(tmp_path, monkeypatch):
     config = {"trello_api_key": "", "trello_token": "", "board_id": "test"}
     (data_dir / "config.json").write_text(json.dumps(config), encoding="utf-8")
 
+    # Create users dir for per-user data
+    users_dir = data_dir / "users"
+    users_dir.mkdir()
+
     # Patch all path constants in core
     monkeypatch.setattr(core, "DATA_DIR", data_dir)
     monkeypatch.setattr(core, "BOOKS_DIR", books_dir)
+    monkeypatch.setattr(core, "USERS_DIR", users_dir)
     monkeypatch.setattr(core, "CONFIG_PATH", data_dir / "config.json")
     monkeypatch.setattr(core, "TRACKER_PATH", data_dir / "tracker.csv")
     monkeypatch.setattr(core, "HISTORY_PATH", data_dir / "history.json")
@@ -41,17 +56,32 @@ def tmp_data_dir(tmp_path, monkeypatch):
 
 @pytest.fixture()
 def api_client(tmp_data_dir, monkeypatch):
-    """TestClient with isolated data directories."""
+    """TestClient with isolated data directories and mocked auth."""
     from starlette.testclient import TestClient
 
     import server.api as api_mod
+    import server.db as db_mod
+    from server.auth import get_current_user
     from server.core import Library
 
     # Replace the Library instance so it uses patched BOOKS_DIR
     monkeypatch.setattr(api_mod, "lib", Library())
     monkeypatch.setattr(api_mod, "trello", None)
 
-    return TestClient(api_mod.app)
+    # Patch DB path so init_db doesn't touch real DB
+    monkeypatch.setattr(db_mod, "DB_PATH", tmp_data_dir["data"] / "leerio.db")
+
+    # Override auth dependency to return test user
+    def _mock_user():
+        return TEST_USER
+
+    api_mod.app.dependency_overrides[get_current_user] = _mock_user
+
+    client = TestClient(api_mod.app)
+    yield client
+
+    # Clean up overrides
+    api_mod.app.dependency_overrides.clear()
 
 
 @pytest.fixture()

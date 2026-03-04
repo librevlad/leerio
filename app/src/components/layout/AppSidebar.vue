@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
+import { computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useAuth } from '../../composables/useAuth'
 import {
   IconHome,
   IconLibrary,
@@ -14,19 +16,28 @@ import {
 defineProps<{ collapsed: boolean }>()
 const emit = defineEmits<{ 'update:collapsed': [val: boolean] }>()
 const route = useRoute()
+const router = useRouter()
+const { user, isAdmin, logout } = useAuth()
 
-const links = [
-  { path: '/', label: 'Дашборд', icon: IconHome },
-  { path: '/library', label: 'Библиотека', icon: IconLibrary },
-  { path: '/queue', label: 'Очередь', icon: IconQueue },
-  { path: '/history', label: 'История', icon: IconHistory },
-  { path: '/analytics', label: 'Аналитика', icon: IconChart },
-  { path: '/settings', label: 'Настройки', icon: IconSettings },
+const allLinks = [
+  { path: '/', label: 'Дашборд', icon: IconHome, admin: false },
+  { path: '/library', label: 'Библиотека', icon: IconLibrary, admin: false },
+  { path: '/queue', label: 'Очередь', icon: IconQueue, admin: true },
+  { path: '/history', label: 'История', icon: IconHistory, admin: false },
+  { path: '/analytics', label: 'Аналитика', icon: IconChart, admin: false },
+  { path: '/settings', label: 'Настройки', icon: IconSettings, admin: false },
 ]
+
+const links = computed(() => allLinks.filter((l) => !l.admin || isAdmin.value))
 
 const isActive = (path: string) => {
   if (path === '/') return route.path === '/'
   return route.path.startsWith(path)
+}
+
+async function handleLogout() {
+  await logout()
+  router.push('/login')
 }
 </script>
 
@@ -81,6 +92,48 @@ const isActive = (path: string) => {
       </router-link>
     </nav>
 
-    <div v-if="!collapsed" class="px-5 py-4 text-[11px] text-[--t3] opacity-30">v1.0</div>
+    <!-- User section at bottom -->
+    <div class="border-t px-3 py-3" style="border-color: var(--border)">
+      <div v-if="user && !collapsed" class="mb-2 flex items-center gap-2.5 px-1">
+        <img
+          v-if="user.picture"
+          :src="user.picture"
+          :alt="user.name"
+          class="h-7 w-7 rounded-full object-cover"
+          referrerpolicy="no-referrer"
+        />
+        <div
+          v-else
+          class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-[--t2]"
+          style="background: rgba(255, 255, 255, 0.08)"
+        >
+          {{ user.name?.charAt(0) || '?' }}
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="truncate text-[12px] font-medium text-[--t2]">{{ user.name }}</p>
+          <p class="truncate text-[10px] text-[--t3]">{{ user.email }}</p>
+        </div>
+      </div>
+      <button
+        class="flex w-full cursor-pointer items-center gap-3 rounded-xl border-0 bg-transparent px-3 py-2 text-[--t3] transition-colors hover:bg-white/[0.03] hover:text-[--t2]"
+        @click="handleLogout"
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+        <span v-if="!collapsed" class="text-[12px]">Выйти</span>
+      </button>
+    </div>
   </aside>
 </template>

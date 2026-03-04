@@ -1,3 +1,22 @@
+// ── User types ──────────────────────────────────────────────────────────────
+
+export interface User {
+  user_id: string
+  email: string
+  name: string
+  picture: string
+  role: 'admin' | 'user'
+}
+
+export type BookStatusValue = 'want_to_read' | 'reading' | 'paused' | 'done' | 'rejected'
+
+export interface BookStatusEntry {
+  status: BookStatusValue | null
+  updated?: string
+}
+
+export type BookStatusMap = Record<string, BookStatusEntry>
+
 // ── Book types ──────────────────────────────────────────────────────────────
 
 export interface Book {
@@ -15,6 +34,7 @@ export interface Book {
   rating?: number
   status?: string
   card_id?: string
+  book_status?: BookStatusValue
   // Detail fields
   size_mb?: number
   mp3_count?: number
@@ -81,12 +101,20 @@ export interface HistoryEntry {
 
 // ── Dashboard types ─────────────────────────────────────────────────────────
 
+export interface ActiveBook {
+  id: string
+  title: string
+  author: string
+  list: string
+  progress: number
+}
+
 export interface DashboardData {
   total_books: number
   total_done: number
   active_count: number
   velocity: Velocity
-  active_books: TrelloCard[]
+  active_books: ActiveBook[]
   recent: HistoryEntry[]
   heatmap: Record<string, number>
   quote: Quote | null

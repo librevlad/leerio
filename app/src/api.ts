@@ -1,3 +1,5 @@
+import router from './router'
+
 const STORAGE_KEY = 'leerio_server_url'
 
 export function getServerUrl(): string {
@@ -22,8 +24,13 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const base = getBaseUrl()
   const res = await fetch(`${base}${path}`, {
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     ...options,
   })
+  if (res.status === 401) {
+    router.push('/login')
+    throw new Error('Not authenticated')
+  }
   if (!res.ok) {
     const text = await res.text().catch(() => res.statusText)
     throw new Error(`${res.status}: ${text}`)
@@ -75,6 +82,8 @@ import type {
   Constants,
   TrackList,
   PlaybackPosition,
+  BookStatusMap,
+  BookStatusEntry,
 } from './types'
 
 export const api = {
@@ -98,7 +107,7 @@ export const api = {
   setPlaybackPosition: (bookId: string, trackIndex: number, position: number, filename = '') =>
     put<{ ok: boolean }>(`/books/${bookId}/playback`, { track_index: trackIndex, position, filename }),
 
-  // Trello
+  // Trello (admin only)
   getTrelloStatus: () => get<TrelloStatus>('/trello/status'),
   getTrelloCards: (listName?: string) => {
     const qs = listName ? `?list_name=${encodeURIComponent(listName)}` : ''
@@ -152,4 +161,14 @@ export const api = {
   // Analytics
   getAnalytics: () => get<AnalyticsData>('/analytics'),
   getAchievements: () => get<Achievement[]>('/analytics/achievements'),
+
+  // Book Status (per-user)
+  getAllBookStatuses: () => get<BookStatusMap>('/user/book-status'),
+  getBookStatus: (bookId: string) => get<BookStatusEntry>(`/user/book-status/${bookId}`),
+  setBookStatus: (bookId: string, status: string) => put<{ ok: boolean }>(`/user/book-status/${bookId}`, { status }),
+  removeBookStatus: (bookId: string) => del<{ ok: boolean }>(`/user/book-status/${bookId}`),
+
+  // Auth
+  getMe: () => get<{ user_id: string; email: string; name: string; picture: string; role: string }>('/auth/me'),
+  logout: () => post<{ ok: boolean }>('/auth/logout'),
 }

@@ -23,6 +23,7 @@ const toast = useToast()
 let audio: HTMLAudioElement | null = null
 let saveTimer: ReturnType<typeof setTimeout> | null = null
 let isSeeking = false
+let activeSessionBook: string | null = null
 
 // ── Computed ────────────────────────────────────────────────────────────────
 
@@ -65,12 +66,24 @@ function ensureAudio(): HTMLAudioElement {
     audio.addEventListener('play', () => {
       isPlaying.value = true
       startSaveTimer()
+      const title = currentBook.value?.title
+      if (title && activeSessionBook !== title) {
+        if (activeSessionBook) {
+          api.stopSession(activeSessionBook).catch(() => {})
+        }
+        activeSessionBook = title
+        api.startSession(title).catch(() => {})
+      }
     })
 
     audio.addEventListener('pause', () => {
       isPlaying.value = false
       stopSaveTimer()
       savePosition()
+      if (activeSessionBook) {
+        api.stopSession(activeSessionBook).catch(() => {})
+        activeSessionBook = null
+      }
     })
 
     audio.addEventListener('waiting', () => {
@@ -153,6 +166,10 @@ async function resolveAudioSrc(bookId: string, trackIndex: number): Promise<stri
 // ── Actions ─────────────────────────────────────────────────────────────────
 
 async function loadBook(book: Book) {
+  if (activeSessionBook && activeSessionBook !== book.title) {
+    api.stopSession(activeSessionBook).catch(() => {})
+    activeSessionBook = null
+  }
   isLoading.value = true
   currentBook.value = book
   isPlayerVisible.value = true
@@ -252,6 +269,10 @@ function setVolume(v: number) {
 }
 
 function closePlayer() {
+  if (activeSessionBook) {
+    api.stopSession(activeSessionBook).catch(() => {})
+    activeSessionBook = null
+  }
   savePosition()
   stopSaveTimer()
   if (audio) {

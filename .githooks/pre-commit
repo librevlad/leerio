@@ -10,10 +10,10 @@ STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
 PY_FILES=$(echo "$STAGED" | grep '^server/.*\.py$' || true)
 if [ -n "$PY_FILES" ]; then
     echo "--- ruff check (staged Python files)"
-    echo "$PY_FILES" | xargs ruff check
+    echo "$PY_FILES" | xargs python -m ruff check
 
     echo "--- ruff format --check (staged Python files)"
-    echo "$PY_FILES" | xargs ruff format --check
+    echo "$PY_FILES" | xargs python -m ruff format --check
 else
     echo "--- skipping Python checks (no staged .py files)"
 fi

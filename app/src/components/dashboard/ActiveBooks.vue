@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { TrelloCard } from '../../types'
+import type { ActiveBook } from '../../types'
 import ProgressRing from '../shared/ProgressRing.vue'
 import StatusBadge from '../shared/StatusBadge.vue'
 
-defineProps<{ books: TrelloCard[] }>()
+defineProps<{ books: ActiveBook[] }>()
 </script>
 
 <template>

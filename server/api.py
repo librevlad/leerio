@@ -18,16 +18,24 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from starlette.requests import Request
 
+from .auth import (
+    clear_auth_cookie,
+    get_current_user,
+    require_admin,
+    set_auth_cookie,
+    verify_google_token,
+)
 from .core import (
     ACTION_LABELS,
     ACTION_STYLES,
+    BOOK_STATUSES,
     CACHE_PATH,
     CATEGORIES,
     FOLDER_TO_LABEL,
@@ -36,9 +44,8 @@ from .core import (
     STATUS_STYLE,
     Library,
     TrelloClient,
+    UserData,
     best_card_match,
-    collections_load,
-    collections_save,
     compute_achievements,
     count_mp3,
     estimate_duration_hours,
@@ -46,30 +53,18 @@ from .core import (
     fmt_duration,
     folder_size_mb,
     fuzzy_match,
-    history_add,
-    history_load,
     load_config,
     normalize,
-    note_get,
-    note_set,
-    notes_load,
     parse_folder_name,
-    playback_get,
-    playback_set,
-    progress_get,
-    progress_load,
-    progress_set,
-    quotes_add,
-    quotes_load,
-    quotes_save,
     reading_velocity,
-    session_start,
-    session_stats,
-    session_stop,
-    tags_all,
-    tags_get,
-    tags_load,
-    tags_set,
+)
+from .db import (
+    add_allowed_email,
+    create_or_update_user,
+    init_db,
+    is_email_allowed,
+    list_allowed_emails,
+    remove_allowed_email,
 )
 
 logging.basicConfig(
@@ -98,6 +93,7 @@ def _enrich_book(
     progress_data: dict | None = None,
     tags_data: dict | None = None,
     notes_data: dict | None = None,
+    ud: UserData | None = None,
 ) -> dict:
     """Convert internal book dict to JSON-serializable API response."""
     book_id = _book_id(b["path"])
@@ -105,18 +101,24 @@ def _enrich_book(
 
     if progress_data is not None:
         pct = (progress_data.get(key) or {}).get("pct", 0)
+    elif ud:
+        pct = ud.progress_get(b["title"])
     else:
-        pct = progress_get(b["title"])
+        pct = 0
 
     if tags_data is not None:
         book_tags = tags_data.get(key, [])
+    elif ud:
+        book_tags = ud.tags_get(b["title"])
     else:
-        book_tags = tags_get(b["title"])
+        book_tags = []
 
     if notes_data is not None:
         note = notes_data.get(key, "")
+    elif ud:
+        note = ud.note_get(b["title"])
     else:
-        note = note_get(b["title"])
+        note = ""
 
     result = {
         "id": book_id,
@@ -215,6 +217,14 @@ class SessionStartRequest(BaseModel):
     book: str
 
 
+class GoogleAuthRequest(BaseModel):
+    id_token: str
+
+
+class BookStatusRequest(BaseModel):
+    status: str
+
+
 # ── App state ───────────────────────────────────────────────────────────────
 
 lib = Library()
@@ -224,6 +234,7 @@ trello: TrelloClient | None = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global trello
+    init_db()
     config = load_config()
     key = config.get("trello_api_key", "")
     tok = config.get("trello_token", "")
@@ -292,6 +303,82 @@ def _cards_in(*names) -> list[dict]:
     return [c for c in trello.get_cards() if c["idList"] in ids]
 
 
+# ── Helper: get per-user data accessor ─────────────────────────────────────
+
+
+def _user_data(user: dict) -> UserData:
+    return UserData(user["user_id"])
+
+
+# ── Auth endpoints ─────────────────────────────────────────────────────────
+
+
+class AllowedEmailRequest(BaseModel):
+    email: str
+
+
+@app.post("/api/auth/google")
+def auth_google(req: GoogleAuthRequest):
+    info = verify_google_token(req.id_token)
+    if not is_email_allowed(info["email"]):
+        raise HTTPException(403, "Registration is not allowed for this email")
+    user = create_or_update_user(info["email"], info["name"], info["picture"])
+    response = JSONResponse(
+        content={
+            "user_id": user["user_id"],
+            "email": user["email"],
+            "name": user["name"],
+            "picture": user["picture"],
+            "role": user["role"],
+        }
+    )
+    set_auth_cookie(response, user["user_id"])
+    return response
+
+
+@app.get("/api/auth/me")
+def auth_me(user: dict = Depends(get_current_user)):
+    return {
+        "user_id": user["user_id"],
+        "email": user["email"],
+        "name": user["name"],
+        "picture": user["picture"],
+        "role": user["role"],
+    }
+
+
+@app.post("/api/auth/logout")
+def auth_logout():
+    response = JSONResponse(content={"ok": True})
+    clear_auth_cookie(response)
+    return response
+
+
+# ── Admin: Allowed Emails ──────────────────────────────────────────────────
+
+
+@app.get("/api/admin/allowed-emails")
+def get_allowed_emails(user: dict = Depends(get_current_user)):
+    require_admin(user)
+    return list_allowed_emails()
+
+
+@app.post("/api/admin/allowed-emails")
+def add_email(req: AllowedEmailRequest, user: dict = Depends(get_current_user)):
+    require_admin(user)
+    add_allowed_email(req.email, user["email"])
+    return {"ok": True}
+
+
+@app.delete("/api/admin/allowed-emails/{email}")
+def delete_email(email: str, user: dict = Depends(get_current_user)):
+    require_admin(user)
+    removed = remove_allowed_email(email)
+    if not removed:
+        raise HTTPException(404, "Email not found")
+    return {"ok": True}
+
+
 # ── Config endpoint ─────────────────────────────────────────────────────────
 
 
@@ -306,6 +393,7 @@ def get_constants():
         "label_to_folder": LABEL_TO_FOLDER,
         "folder_to_label": FOLDER_TO_LABEL,
         "trello_connected": trello is not None,
+        "book_statuses": BOOK_STATUSES,
     }
 
 
@@ -313,21 +401,48 @@ def get_constants():
 
 
 @app.get("/api/dashboard")
-def get_dashboard():
+def get_dashboard(user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
     books = lib.find_all_books()
-    hist = history_load()
+    hist = ud.history_load()
     done = [h for h in hist if h["action"] == "done"]
     velocity = reading_velocity(hist)
 
+    is_admin = user.get("role") == "admin"
+
     active_cards = []
-    lmap = _lmap()
-    if trello:
-        for c in trello.get_cards():
-            ln = lmap.get(c["idList"], "")
-            if ln in ("В процессе", "В телефоне"):
-                cd = _card_to_dict(c, lmap, trello)
-                cd["progress"] = progress_get(cd["title"])
-                active_cards.append(cd)
+    if is_admin:
+        lmap = _lmap()
+        if trello:
+            for c in trello.get_cards():
+                ln = lmap.get(c["idList"], "")
+                if ln in ("В процессе", "В телефоне"):
+                    cd = _card_to_dict(c, lmap, trello)
+                    cd["progress"] = ud.progress_get(cd["title"])
+                    active_cards.append(cd)
+    else:
+        # Non-admin: show books with status="reading"
+        statuses = ud.book_status_load()
+        for book_id, info in statuses.items():
+            if info.get("status") == "reading":
+                try:
+                    path = _book_from_id(book_id)
+                    if path.exists():
+                        a, t, r = parse_folder_name(path.name)
+                        b = {
+                            "path": path,
+                            "folder": path.name,
+                            "category": path.parent.name,
+                            "author": a,
+                            "title": t,
+                            "reader": r,
+                        }
+                        enriched = _enrich_book(b, hist, ud=ud)
+                        enriched["list"] = "В процессе"
+                        enriched["name"] = b["folder"]
+                        active_cards.append(enriched)
+                except Exception:
+                    pass
 
     recent = []
     for h in reversed(hist[-8:]):
@@ -348,7 +463,7 @@ def get_dashboard():
         if h["action"] in ("listen", "phone", "done", "inbox"):
             day_counts[h["ts"][:10]] = day_counts.get(h["ts"][:10], 0) + 1
 
-    quotes = quotes_load()
+    quotes = ud.quotes_load()
     quote = random.choice(quotes) if quotes else None
 
     year = str(datetime.now().year)
@@ -382,15 +497,19 @@ def get_books(
     search: str | None = Query(None),
     tag: str | None = Query(None),
     sort: str = Query("title"),
+    user: dict = Depends(get_current_user),
 ):
+    ud = _user_data(user)
+    is_admin = user.get("role") == "admin"
     books = lib.find_all_books()
-    hist = history_load()
-    pd = progress_load()
-    td = tags_load()
-    nd = notes_load()
+    hist = ud.history_load()
+    pd = ud.progress_load()
+    td = ud.tags_load()
+    nd = ud.notes_load()
+    book_statuses = ud.book_status_load()
 
     card_map: dict[str, tuple[dict, str]] = {}
-    if trello:
+    if is_admin and trello:
         lmap = _lmap()
         for c in trello.get_cards():
             _, ct, _ = parse_folder_name(c["name"])
@@ -413,7 +532,12 @@ def get_books(
         if tag and tag not in enriched["tags"]:
             continue
 
-        if card_map:
+        # Attach book status for current user
+        bs = book_statuses.get(enriched["id"])
+        if bs:
+            enriched["book_status"] = bs["status"]
+
+        if is_admin and card_map:
             key = normalize(b["title"])
             fkey = normalize(b["folder"])
             match = card_map.get(key) or card_map.get(fkey)
@@ -439,7 +563,9 @@ def get_books(
 
 
 @app.get("/api/books/{book_id}")
-def get_book(book_id: str):
+def get_book(book_id: str, user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    is_admin = user.get("role") == "admin"
     path = _book_from_id(book_id)
     if not path.exists():
         raise HTTPException(404, "Book not found")
@@ -448,8 +574,8 @@ def get_book(book_id: str):
     a, t, r = parse_folder_name(path.name)
     b = {"path": path, "folder": path.name, "category": category, "author": a, "title": t, "reader": r}
 
-    hist = history_load()
-    enriched = _enrich_book(b, hist)
+    hist = ud.history_load()
+    enriched = _enrich_book(b, hist, ud=ud)
 
     enriched["size_mb"] = round(folder_size_mb(path), 1)
     enriched["mp3_count"] = count_mp3(path)
@@ -458,7 +584,12 @@ def get_book(book_id: str):
     enriched["duration_hours"] = dur
     enriched["duration_fmt"] = fmt_duration(dur)
 
-    if trello:
+    # Attach user's book status
+    bs = ud.book_status_get(book_id)
+    if bs:
+        enriched["book_status"] = bs["status"]
+
+    if is_admin and trello:
         lmap = _lmap()
         card, score = best_card_match(a, t, trello.get_cards())
         if card and score > 0.5:
@@ -487,7 +618,8 @@ def get_book(book_id: str):
 
 
 @app.get("/api/books/{book_id}/similar")
-def get_similar(book_id: str):
+def get_similar(book_id: str, user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
     path = _book_from_id(book_id)
     if not path.exists():
         raise HTTPException(404, "Book not found")
@@ -497,10 +629,10 @@ def get_similar(book_id: str):
     target = {"path": path, "folder": path.name, "category": category, "author": a, "title": t, "reader": r}
 
     books = lib.find_all_books()
-    hist = history_load()
+    hist = ud.history_load()
     similar = find_similar(target, books, hist, top_n=6)
 
-    return [{**_enrich_book(b), "score": round(score, 1)} for b, score in similar]
+    return [{**_enrich_book(b, ud=ud), "score": round(score, 1)} for b, score in similar]
 
 
 # ── Audio / Playback ──────────────────────────────────────────────────────
@@ -608,16 +740,18 @@ def stream_audio(book_id: str, track_index: int, request: Request):
 
 
 @app.get("/api/books/{book_id}/playback")
-def get_playback(book_id: str):
-    pos = playback_get(book_id)
+def get_playback(book_id: str, user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    pos = ud.playback_get(book_id)
     if pos:
         return pos
     return {"track_index": 0, "position": 0, "filename": "", "updated": None}
 
 
 @app.put("/api/books/{book_id}/playback")
-def set_playback(book_id: str, req: PlaybackPositionRequest):
-    playback_set(book_id, req.track_index, req.position, req.filename)
+def set_playback(book_id: str, req: PlaybackPositionRequest, user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    ud.playback_set(book_id, req.track_index, req.position, req.filename)
     return {"ok": True}
 
 
@@ -625,7 +759,8 @@ def set_playback(book_id: str, req: PlaybackPositionRequest):
 
 
 @app.get("/api/trello/status")
-def get_trello_status():
+def get_trello_status(user: dict = Depends(get_current_user)):
+    require_admin(user)
     if not trello:
         raise HTTPException(503, "Trello not connected")
     lmap = _lmap()
@@ -656,7 +791,8 @@ def get_trello_status():
 
 
 @app.get("/api/trello/cards")
-def get_trello_cards(list_name: str | None = Query(None)):
+def get_trello_cards(list_name: str | None = Query(None), user: dict = Depends(get_current_user)):
+    require_admin(user)
     if not trello:
         raise HTTPException(503, "Trello not connected")
     lmap = _lmap()
@@ -666,20 +802,23 @@ def get_trello_cards(list_name: str | None = Query(None)):
         cd = _card_to_dict(c, lmap, trello)
         if list_name and cd["list"] != list_name:
             continue
-        cd["progress"] = progress_get(cd["title"])
+        ud = _user_data(user)
+        cd["progress"] = ud.progress_get(cd["title"])
         result.append(cd)
     return result
 
 
 @app.get("/api/trello/lists")
-def get_trello_lists():
+def get_trello_lists(user: dict = Depends(get_current_user)):
+    require_admin(user)
     if not trello:
         raise HTTPException(503, "Trello not connected")
     return [{"id": l["id"], "name": l["name"]} for l in trello.get_lists()]
 
 
 @app.post("/api/trello/cards/{card_id}/move")
-def move_trello_card(card_id: str, req: MoveCardRequest):
+def move_trello_card(card_id: str, req: MoveCardRequest, user: dict = Depends(get_current_user)):
+    require_admin(user)
     if not trello:
         raise HTTPException(503, "Trello not connected")
 
@@ -705,12 +844,13 @@ def move_trello_card(card_id: str, req: MoveCardRequest):
     action = action_map.get(req.target, "move")
     detail = req.detail or f"{old_list} → {req.target}"
 
+    ud = _user_data(user)
     trello.move_card(card_id, req.target)
-    history_add(action, card["name"], detail, req.rating)
+    ud.history_add(action, card["name"], detail, req.rating)
 
     if req.target == "Прочитано":
         _, t, _ = parse_folder_name(card["name"])
-        progress_set(t, 100)
+        ud.progress_set(t, 100)
 
     trello.save_cache()
 
@@ -718,20 +858,23 @@ def move_trello_card(card_id: str, req: MoveCardRequest):
 
 
 @app.post("/api/trello/cards")
-def create_trello_card(req: CreateCardRequest):
+def create_trello_card(req: CreateCardRequest, user: dict = Depends(get_current_user)):
+    require_admin(user)
     if not trello:
         raise HTTPException(503, "Trello not connected")
     try:
+        ud = _user_data(user)
         card = trello.create_card(req.name, req.list_name, req.label, req.desc)
         trello.save_cache()
-        history_add("inbox", req.name, f"Создана карточка → {req.list_name}")
+        ud.history_add("inbox", req.name, f"Создана карточка → {req.list_name}")
         return {"ok": True, "card_id": card["id"]}
     except Exception as e:
         raise HTTPException(500, str(e))
 
 
 @app.post("/api/trello/sync")
-def sync_trello():
+def sync_trello(user: dict = Depends(get_current_user)):
+    require_admin(user)
     if not trello:
         raise HTTPException(503, "Trello not connected")
     try:
@@ -782,8 +925,10 @@ def get_history(
     action: str | None = Query(None),
     search: str | None = Query(None),
     limit: int = Query(100),
+    user: dict = Depends(get_current_user),
 ):
-    hist = history_load()
+    ud = _user_data(user)
+    hist = ud.history_load()
     result = []
     for h in reversed(hist):
         if action and h["action"] != action:
@@ -810,19 +955,22 @@ def get_history(
 
 
 @app.get("/api/notes/{title}")
-def get_note(title: str):
-    return {"title": title, "text": note_get(title)}
+def get_note(title: str, user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    return {"title": title, "text": ud.note_get(title)}
 
 
 @app.put("/api/notes/{title}")
-def set_note(title: str, req: NoteRequest):
-    note_set(title, req.text)
+def set_note(title: str, req: NoteRequest, user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    ud.note_set(title, req.text)
     return {"ok": True}
 
 
 @app.delete("/api/notes/{title}")
-def delete_note(title: str):
-    note_set(title, "")
+def delete_note(title: str, user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    ud.note_set(title, "")
     return {"ok": True}
 
 
@@ -830,18 +978,21 @@ def delete_note(title: str):
 
 
 @app.get("/api/tags")
-def get_tags_for_title(title: str = Query(...)):
-    return tags_get(title)
+def get_tags_for_title(title: str = Query(...), user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    return ud.tags_get(title)
 
 
 @app.get("/api/tags/all")
-def get_all_tags():
-    return tags_all()
+def get_all_tags(user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    return ud.tags_all()
 
 
 @app.put("/api/tags/{title}")
-def set_tags_for_title(title: str, req: TagsRequest):
-    tags_set(title, req.tags)
+def set_tags_for_title(title: str, req: TagsRequest, user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    ud.tags_set(title, req.tags)
     return {"ok": True}
 
 
@@ -849,13 +1000,15 @@ def set_tags_for_title(title: str, req: TagsRequest):
 
 
 @app.get("/api/progress")
-def get_all_progress():
-    return progress_load()
+def get_all_progress(user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    return ud.progress_load()
 
 
 @app.put("/api/progress/{title}")
-def set_progress_for_title(title: str, req: ProgressRequest):
-    progress_set(title, req.pct, req.note)
+def set_progress_for_title(title: str, req: ProgressRequest, user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    ud.progress_set(title, req.pct, req.note)
     return {"ok": True}
 
 
@@ -863,22 +1016,25 @@ def set_progress_for_title(title: str, req: ProgressRequest):
 
 
 @app.get("/api/quotes")
-def get_quotes():
-    return quotes_load()
+def get_quotes(user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    return ud.quotes_load()
 
 
 @app.post("/api/quotes")
-def add_quote(req: QuoteRequest):
-    quotes_add(req.text, req.book, req.author)
+def add_quote(req: QuoteRequest, user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    ud.quotes_add(req.text, req.book, req.author)
     return {"ok": True}
 
 
 @app.delete("/api/quotes/{idx}")
-def delete_quote(idx: int):
-    data = quotes_load()
+def delete_quote(idx: int, user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    data = ud.quotes_load()
     if 0 <= idx < len(data):
         data.pop(idx)
-        quotes_save(data)
+        ud.quotes_save(data)
         return {"ok": True}
     raise HTTPException(404, "Quote not found")
 
@@ -887,13 +1043,15 @@ def delete_quote(idx: int):
 
 
 @app.get("/api/collections")
-def get_collections():
-    return collections_load()
+def get_collections(user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    return ud.collections_load()
 
 
 @app.post("/api/collections")
-def create_collection(req: CollectionRequest):
-    data = collections_load()
+def create_collection(req: CollectionRequest, user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    data = ud.collections_load()
     data.append(
         {
             "name": req.name,
@@ -902,28 +1060,30 @@ def create_collection(req: CollectionRequest):
             "created": datetime.now().isoformat(timespec="seconds"),
         }
     )
-    collections_save(data)
+    ud.collections_save(data)
     return {"ok": True}
 
 
 @app.put("/api/collections/{idx}")
-def update_collection(idx: int, req: CollectionRequest):
-    data = collections_load()
+def update_collection(idx: int, req: CollectionRequest, user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    data = ud.collections_load()
     if 0 <= idx < len(data):
         data[idx]["name"] = req.name
         data[idx]["books"] = req.books
         data[idx]["description"] = req.description
-        collections_save(data)
+        ud.collections_save(data)
         return {"ok": True}
     raise HTTPException(404, "Collection not found")
 
 
 @app.delete("/api/collections/{idx}")
-def delete_collection(idx: int):
-    data = collections_load()
+def delete_collection(idx: int, user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    data = ud.collections_load()
     if 0 <= idx < len(data):
         data.pop(idx)
-        collections_save(data)
+        ud.collections_save(data)
         return {"ok": True}
     raise HTTPException(404, "Collection not found")
 
@@ -932,29 +1092,84 @@ def delete_collection(idx: int):
 
 
 @app.get("/api/sessions/stats")
-def get_session_stats(days: int = Query(7)):
-    return session_stats(days)
+def get_session_stats(days: int = Query(7), user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    return ud.session_stats(days)
 
 
 @app.post("/api/sessions/start")
-def start_session(req: SessionStartRequest):
-    entry = session_start(req.book)
+def start_session(req: SessionStartRequest, user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    entry = ud.session_start(req.book)
     return entry
 
 
 @app.post("/api/sessions/stop")
-def stop_session(req: SessionStartRequest):
-    minutes = session_stop(req.book)
+def stop_session(req: SessionStartRequest, user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    minutes = ud.session_stop(req.book)
     return {"minutes": minutes}
+
+
+# ── Book Status (per-user simple status) ───────────────────────────────────
+
+
+@app.get("/api/user/book-status")
+def get_all_book_statuses(user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    return ud.book_status_load()
+
+
+@app.get("/api/user/book-status/{book_id}")
+def get_book_status(book_id: str, user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    status = ud.book_status_get(book_id)
+    return status or {"status": None}
+
+
+@app.put("/api/user/book-status/{book_id}")
+def set_book_status(book_id: str, req: BookStatusRequest, user: dict = Depends(get_current_user)):
+    if req.status not in BOOK_STATUSES:
+        raise HTTPException(400, f"Invalid status. Must be one of: {BOOK_STATUSES}")
+    ud = _user_data(user)
+    ud.book_status_set(book_id, req.status)
+
+    # Log to user's history
+    status_labels = {
+        "want_to_read": "Хочу прочесть",
+        "reading": "Слушаю",
+        "paused": "На паузе",
+        "done": "Прослушано",
+        "rejected": "Забраковано",
+    }
+    action_map = {"reading": "listen", "paused": "pause", "done": "done", "rejected": "reject", "want_to_read": "inbox"}
+    path = _book_from_id(book_id)
+    book_name = path.name if path.exists() else book_id
+    ud.history_add(action_map.get(req.status, "move"), book_name, status_labels.get(req.status, req.status))
+
+    if req.status == "done":
+        a, t, r = parse_folder_name(path.name) if path.exists() else ("", "", "")
+        if t:
+            ud.progress_set(t, 100)
+
+    return {"ok": True}
+
+
+@app.delete("/api/user/book-status/{book_id}")
+def remove_book_status(book_id: str, user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
+    ud.book_status_remove(book_id)
+    return {"ok": True}
 
 
 # ── Analytics ───────────────────────────────────────────────────────────────
 
 
 @app.get("/api/analytics")
-def get_analytics():
+def get_analytics(user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
     books = lib.find_all_books()
-    hist = history_load()
+    hist = ud.history_load()
     done = [h for h in hist if h["action"] == "done"]
     velocity = reading_velocity(hist)
 
@@ -1008,10 +1223,11 @@ def get_analytics():
 
 
 @app.get("/api/analytics/achievements")
-def get_achievements():
+def get_achievements(user: dict = Depends(get_current_user)):
+    ud = _user_data(user)
     books = lib.find_all_books()
-    hist = history_load()
-    return compute_achievements(hist, books)
+    hist = ud.history_load()
+    return compute_achievements(hist, books, notes_data=ud.notes_load())
 
 
 # ── Serve static files in production ────────────────────────────────────────

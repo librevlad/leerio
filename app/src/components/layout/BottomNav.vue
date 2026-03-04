@@ -1,16 +1,21 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useAuth } from '../../composables/useAuth'
 import { IconHome, IconLibrary, IconQueue, IconHistory, IconSettings } from '../shared/icons'
 
 const route = useRoute()
+const { isAdmin } = useAuth()
 
-const tabs = [
-  { path: '/', label: 'Главная', icon: IconHome },
-  { path: '/library', label: 'Книги', icon: IconLibrary },
-  { path: '/queue', label: 'Очередь', icon: IconQueue },
-  { path: '/history', label: 'История', icon: IconHistory },
-  { path: '/settings', label: 'Ещё', icon: IconSettings },
+const allTabs = [
+  { path: '/', label: 'Главная', icon: IconHome, admin: false },
+  { path: '/library', label: 'Книги', icon: IconLibrary, admin: false },
+  { path: '/queue', label: 'Очередь', icon: IconQueue, admin: true },
+  { path: '/history', label: 'История', icon: IconHistory, admin: false },
+  { path: '/settings', label: 'Ещё', icon: IconSettings, admin: false },
 ]
+
+const tabs = computed(() => allTabs.filter((t) => !t.admin || isAdmin.value))
 
 const isActive = (path: string) => {
   if (path === '/') return route.path === '/'

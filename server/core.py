@@ -36,6 +36,7 @@ PROGRESS_PATH = DATA_DIR / "progress.json"
 PLAYBACK_PATH = DATA_DIR / "playback.json"
 QUOTES_PATH = DATA_DIR / "quotes.json"
 SESSIONS_PATH = DATA_DIR / "sessions.json"
+USERS_DIR = DATA_DIR / "users"
 BACKUP_DIR = BASE / "_backups"
 
 CATEGORIES = ["Бизнес", "Отношения", "Саморазвитие", "Художественная", "Языки"]
@@ -420,7 +421,7 @@ def collections_save(data: list[dict]):
 # ── Achievements ────────────────────────────────────────────────────────────
 
 
-def compute_achievements(hist: list[dict], books: list[dict]) -> list[dict]:
+def compute_achievements(hist: list[dict], books: list[dict], notes_data: dict | None = None) -> list[dict]:
     """Calculate earned achievements/badges from history and library state."""
     badges = []
     done = [h for h in hist if h["action"] == "done"]
@@ -509,7 +510,8 @@ def compute_achievements(hist: list[dict], books: list[dict]) -> list[dict]:
         badges.append({"icon": chr(128230), "name": "Сортировщик", "desc": f"Разобрал {len(inbox)} книг из dl/"})
 
     # Notes
-    notes_count = len([v for v in notes_load().values() if v.strip()])
+    _notes = notes_data if notes_data is not None else notes_load()
+    notes_count = len([v for v in _notes.values() if v.strip()])
     if notes_count >= 5:
         badges.append({"icon": chr(128221), "name": "Летописец", "desc": f"{notes_count} заметок"})
 
@@ -1095,6 +1097,212 @@ class Library:
             w.writeheader()
             for r in rows:
                 w.writerow({k: r.get(k, "") for k in fields})
+
+
+# ── Per-user data ─────────────────────────────────────────────────────────────
+
+BOOK_STATUSES = ["want_to_read", "reading", "paused", "done", "rejected"]
+
+
+class UserData:
+    """Per-user data access — reads/writes from data/users/{user_id}/."""
+
+    _FILE_NAMES = [
+        "history",
+        "notes",
+        "tags",
+        "collections",
+        "progress",
+        "playback",
+        "quotes",
+        "sessions",
+        "book_status",
+    ]
+
+    def __init__(self, user_id: str):
+        self.user_id = user_id
+        self.dir = USERS_DIR / user_id
+        self.dir.mkdir(parents=True, exist_ok=True)
+
+    def _path(self, name: str) -> Path:
+        return self.dir / f"{name}.json"
+
+    def _load(self, name: str, default_factory=dict):
+        return _load_json(self._path(name), default_factory)
+
+    def _save(self, name: str, data):
+        _safe_json_write(self._path(name), data)
+
+    # ── History ──
+    def history_load(self) -> list[dict]:
+        return self._load("history", list)
+
+    def history_add(self, action: str, book: str, detail: str = "", rating: int = 0):
+        log = self.history_load()
+        entry = {"ts": datetime.now().isoformat(timespec="seconds"), "action": action, "book": book, "detail": detail}
+        if rating:
+            entry["rating"] = rating
+        log.append(entry)
+        if len(log) > HISTORY_LIMIT:
+            log = log[-HISTORY_LIMIT:]
+        self._save("history", log)
+
+    # ── Notes ──
+    def notes_load(self) -> dict[str, str]:
+        return self._load("notes", dict)
+
+    def note_get(self, title: str) -> str:
+        return self.notes_load().get(normalize(title), "")
+
+    def note_set(self, title: str, text: str):
+        data = self.notes_load()
+        key = normalize(title)
+        if text.strip():
+            data[key] = text.strip()
+        elif key in data:
+            del data[key]
+        self._save("notes", data)
+
+    # ── Tags ──
+    def tags_load(self) -> dict[str, list[str]]:
+        return self._load("tags", dict)
+
+    def tags_get(self, title: str) -> list[str]:
+        return self.tags_load().get(normalize(title), [])
+
+    def tags_set(self, title: str, tags: list[str]):
+        data = self.tags_load()
+        key = normalize(title)
+        if tags:
+            data[key] = [t.strip() for t in tags if t.strip()]
+        elif key in data:
+            del data[key]
+        self._save("tags", data)
+
+    def tags_all(self) -> list[str]:
+        data = self.tags_load()
+        s = set()
+        for ts in data.values():
+            s.update(ts)
+        return sorted(s)
+
+    # ── Collections ──
+    def collections_load(self) -> list[dict]:
+        return self._load("collections", list)
+
+    def collections_save(self, data: list[dict]):
+        self._save("collections", data)
+
+    # ── Progress ──
+    def progress_load(self) -> dict[str, dict]:
+        return self._load("progress", dict)
+
+    def progress_get(self, title: str) -> int:
+        entry = self.progress_load().get(normalize(title), {})
+        return entry.get("pct", 0)
+
+    def progress_set(self, title: str, pct: int, note: str = ""):
+        data = self.progress_load()
+        data[normalize(title)] = {
+            "pct": max(0, min(100, pct)),
+            "updated": datetime.now().isoformat(timespec="seconds"),
+            "note": note,
+        }
+        self._save("progress", data)
+
+    # ── Playback ──
+    def playback_get(self, book_id: str) -> dict | None:
+        return self._load("playback", dict).get(book_id)
+
+    def playback_set(self, book_id: str, track_index: int, position: float, filename: str = ""):
+        data = self._load("playback", dict)
+        data[book_id] = {
+            "track_index": track_index,
+            "position": position,
+            "filename": filename,
+            "updated": datetime.now().isoformat(timespec="seconds"),
+        }
+        self._save("playback", data)
+
+    # ── Quotes ──
+    def quotes_load(self) -> list[dict]:
+        return self._load("quotes", list)
+
+    def quotes_save(self, data: list[dict]):
+        self._save("quotes", data)
+
+    def quotes_add(self, text: str, book: str, author: str = ""):
+        data = self.quotes_load()
+        data.append(
+            {"text": text.strip(), "book": book, "author": author, "ts": datetime.now().isoformat(timespec="seconds")}
+        )
+        self.quotes_save(data)
+
+    # ── Sessions ──
+    def sessions_load(self) -> list[dict]:
+        return self._load("sessions", list)
+
+    def session_start(self, book: str) -> dict:
+        data = self.sessions_load()
+        entry = {"book": book, "start": datetime.now().isoformat(timespec="seconds"), "end": None, "minutes": 0}
+        data.append(entry)
+        self._save("sessions", data)
+        return entry
+
+    def session_stop(self, book: str) -> int:
+        data = self.sessions_load()
+        for s in reversed(data):
+            if s["book"] == book and s["end"] is None:
+                s["end"] = datetime.now().isoformat(timespec="seconds")
+                start = datetime.fromisoformat(s["start"])
+                s["minutes"] = int((datetime.now() - start).total_seconds() / 60)
+                self._save("sessions", data)
+                return s["minutes"]
+        return 0
+
+    def session_stats(self, days: int = 7) -> dict:
+        data = self.sessions_load()
+        cutoff = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        total_min = today_min = week_min = 0
+        by_hour: dict[int, int] = {}
+        for s in data:
+            if not s.get("end"):
+                continue
+            mins = s.get("minutes", 0)
+            total_min += mins
+            start = datetime.fromisoformat(s["start"])
+            if (cutoff - start).days == 0:
+                today_min += mins
+            if (cutoff - start).days < days:
+                week_min += mins
+            by_hour[start.hour] = by_hour.get(start.hour, 0) + mins
+        peak_hour = max(by_hour, key=by_hour.get, default=None) if by_hour else None
+        return {
+            "total_hours": total_min / 60,
+            "today_min": today_min,
+            "week_hours": week_min / 60,
+            "peak_hour": peak_hour,
+        }
+
+    # ── Book Status ──
+    def book_status_load(self) -> dict[str, dict]:
+        return self._load("book_status", dict)
+
+    def book_status_get(self, book_id: str) -> dict | None:
+        return self.book_status_load().get(book_id)
+
+    def book_status_set(self, book_id: str, status: str):
+        if status not in BOOK_STATUSES:
+            return
+        data = self.book_status_load()
+        data[book_id] = {"status": status, "updated": datetime.now().isoformat(timespec="seconds")}
+        self._save("book_status", data)
+
+    def book_status_remove(self, book_id: str):
+        data = self.book_status_load()
+        if book_id in data:
+            del data[book_id]
+            self._save("book_status", data)
 
 
 # ── Config ───────────────────────────────────────────────────────────────────
