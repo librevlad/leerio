@@ -157,6 +157,13 @@ function updateMediaSession() {
 // ── Resolve audio source (local or server) ──────────────────────────────────
 
 async function resolveAudioSrc(bookId: string, trackIndex: number): Promise<string> {
+  // External URL (LibriVox / archive.org)
+  const track = tracks.value[trackIndex]
+  if (track?.url) {
+    playingOffline.value = false
+    return track.url
+  }
+  // Local downloads (native app)
   if (downloads.isNative.value && downloads.isTrackDownloaded(bookId, trackIndex)) {
     const localUrl = await downloads.getLocalAudioUrl(bookId, trackIndex)
     if (localUrl) {
@@ -180,7 +187,9 @@ async function loadBook(book: Book) {
   isPlayerVisible.value = true
 
   try {
-    const res = await api.getBookTracks(book.id)
+    const isLibriVox = book.id.startsWith('lv:')
+    const lvId = isLibriVox ? book.id.slice(3) : ''
+    const res = isLibriVox ? await api.librivoxChapters(lvId) : await api.getBookTracks(book.id)
     tracks.value = res.tracks
 
     // Restore saved position

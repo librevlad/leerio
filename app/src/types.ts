@@ -130,6 +130,7 @@ export interface Track {
   path: string
   duration: number
   size_bytes?: number
+  url?: string // Direct MP3 URL for external sources (e.g. archive.org)
 }
 
 export interface TrackList {
@@ -185,4 +186,26 @@ export interface Constants {
   list_to_status: Record<string, string>
   label_to_folder: Record<string, string>
   folder_to_label: Record<string, string>
+}
+
+// ── LibriVox types ─────────────────────────────────────────────────────────
+
+export interface LibriVoxBook {
+  id: string // "lv:12345"
+  librivox_id: string
+  source: 'librivox'
+  title: string
+  author: string
+  description: string
+  language: string
+  copyright_year: string
+  num_sections: number
+  total_time: string
+  total_time_secs: number
+  url_librivox: string
+}
+
+export interface LibriVoxSearchResult {
+  books: LibriVoxBook[]
+  total: number
 }

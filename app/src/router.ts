@@ -36,6 +36,16 @@ const router = createRouter({
       component: () => import('./views/AnalyticsView.vue'),
     },
     {
+      path: '/discover',
+      name: 'discover',
+      component: () => import('./views/DiscoverView.vue'),
+    },
+    {
+      path: '/discover/:id',
+      name: 'librivox-book',
+      component: () => import('./views/LibriVoxDetailView.vue'),
+    },
+    {
       path: '/settings',
       name: 'settings',
       component: () => import('./views/SettingsView.vue'),

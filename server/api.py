@@ -19,7 +19,7 @@ from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from starlette.requests import Request
@@ -62,6 +62,9 @@ from .db import (
     remove_allowed_email,
     verify_user_password,
 )
+from .librivox import get_book as lv_get_book
+from .librivox import get_chapters as lv_get_chapters
+from .librivox import search_books as lv_search_books
 
 logging.basicConfig(
     level=getattr(logging, os.environ.get("LEERIO_LOG_LEVEL", "INFO").upper(), logging.INFO),
@@ -386,21 +389,35 @@ def get_dashboard(user: dict = Depends(get_current_user)):
             if updated and (most_recent is None or updated > most_recent.get("updated", "")):
                 most_recent = {**pos, "book_id": bid}
         if most_recent:
+            bid = most_recent["book_id"]
             try:
-                path = _book_from_id(most_recent["book_id"])
-                if path.exists():
-                    a, t, r = parse_folder_name(path.name)
-                    # Calculate progress
-                    progress = ud.progress_get(t)
-                    now_playing = {
-                        "book_id": most_recent["book_id"],
-                        "title": t,
-                        "author": a,
-                        "cover_id": most_recent["book_id"],
-                        "progress": progress,
-                        "current_track": most_recent.get("track_index", 0),
-                        "current_time": most_recent.get("position", 0),
-                    }
+                if bid.startswith("lv:"):
+                    lv_id = bid[3:]
+                    lv_book = lv_get_book(lv_id)
+                    if lv_book:
+                        now_playing = {
+                            "book_id": bid,
+                            "title": lv_book["title"],
+                            "author": lv_book["author"],
+                            "cover_id": bid,
+                            "progress": 0,
+                            "current_track": most_recent.get("track_index", 0),
+                            "current_time": most_recent.get("position", 0),
+                        }
+                else:
+                    path = _book_from_id(bid)
+                    if path.exists():
+                        a, t, r = parse_folder_name(path.name)
+                        progress = ud.progress_get(t)
+                        now_playing = {
+                            "book_id": bid,
+                            "title": t,
+                            "author": a,
+                            "cover_id": bid,
+                            "progress": progress,
+                            "current_track": most_recent.get("track_index", 0),
+                            "current_time": most_recent.get("position", 0),
+                        }
             except Exception:
                 pass
 
@@ -1021,6 +1038,57 @@ def get_achievements(user: dict = Depends(get_current_user)):
     books = lib.find_all_books()
     hist = ud.history_load()
     return compute_achievements(hist, books, notes_data=ud.notes_load())
+
+
+# ── LibriVox ──────────────────────────────────────────────────────────────
+
+
+@app.get("/api/librivox/search")
+def librivox_search(
+    title: str = Query(""),
+    author: str = Query(""),
+    language: str = Query(""),
+    limit: int = Query(20),
+    offset: int = Query(0),
+    user: dict = Depends(get_current_user),
+):
+    return lv_search_books(title=title, author=author, language=language, limit=limit, offset=offset)
+
+
+@app.get("/api/librivox/books/{librivox_id}")
+def librivox_book(librivox_id: str, user: dict = Depends(get_current_user)):
+    book = lv_get_book(librivox_id)
+    if not book:
+        raise HTTPException(404, "LibriVox book not found")
+    return book
+
+
+@app.get("/api/librivox/books/{librivox_id}/chapters")
+def librivox_chapters(librivox_id: str, user: dict = Depends(get_current_user)):
+    data = lv_get_chapters(librivox_id)
+    chapters = data["chapters"]
+    # Return in TrackList shape for player compatibility
+    tracks = [
+        {
+            "index": ch["index"],
+            "filename": ch["title"],
+            "path": ch["url"],
+            "duration": ch["duration"],
+            "size_bytes": ch.get("size_bytes", 0),
+            "url": ch["url"],
+        }
+        for ch in chapters
+    ]
+    return {"book_id": f"lv:{librivox_id}", "count": len(tracks), "tracks": tracks}
+
+
+@app.get("/api/librivox/books/{librivox_id}/cover")
+def librivox_cover(librivox_id: str):
+    data = lv_get_chapters(librivox_id)
+    cover_url = data.get("cover_url")
+    if not cover_url:
+        raise HTTPException(404, "No cover available")
+    return RedirectResponse(url=cover_url)
 
 
 # ── Serve static files in production ────────────────────────────────────────

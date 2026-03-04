@@ -48,6 +48,10 @@ export function coverUrl(bookId: string): string {
   return apiUrl(`/books/${bookId}/cover`)
 }
 
+export function librivoxCoverUrl(librivoxId: string): string {
+  return apiUrl(`/librivox/books/${librivoxId}/cover`)
+}
+
 import type {
   DashboardData,
   Book,
@@ -64,6 +68,8 @@ import type {
   PlaybackPosition,
   BookStatusMap,
   BookStatusEntry,
+  LibriVoxSearchResult,
+  LibriVoxBook,
 } from './types'
 
 export const api = {
@@ -144,4 +150,12 @@ export const api = {
   // Auth
   getMe: () => get<{ user_id: string; email: string; name: string; picture: string; role: string }>('/auth/me'),
   logout: () => post<{ ok: boolean }>('/auth/logout'),
+
+  // LibriVox
+  librivoxSearch: (params: Record<string, string>) => {
+    const qs = new URLSearchParams(params).toString()
+    return get<LibriVoxSearchResult>(`/librivox/search?${qs}`)
+  },
+  librivoxBook: (lvId: string) => get<LibriVoxBook>(`/librivox/books/${lvId}`),
+  librivoxChapters: (lvId: string) => get<TrackList>(`/librivox/books/${lvId}/chapters`),
 }

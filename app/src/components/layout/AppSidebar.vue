@@ -1,7 +1,16 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '../../composables/useAuth'
-import { IconHome, IconLibrary, IconHistory, IconChart, IconSettings, IconMenu, IconX } from '../shared/icons'
+import {
+  IconHome,
+  IconLibrary,
+  IconHistory,
+  IconChart,
+  IconSettings,
+  IconMenu,
+  IconX,
+  IconSearch,
+} from '../shared/icons'
 
 defineProps<{ collapsed: boolean }>()
 const emit = defineEmits<{ 'update:collapsed': [val: boolean] }>()
@@ -12,6 +21,7 @@ const { user, logout } = useAuth()
 const links = [
   { path: '/', label: 'Дашборд', icon: IconHome },
   { path: '/library', label: 'Библиотека', icon: IconLibrary },
+  { path: '/discover', label: 'LibriVox', icon: IconSearch },
   { path: '/history', label: 'История', icon: IconHistory },
   { path: '/analytics', label: 'Аналитика', icon: IconChart },
   { path: '/settings', label: 'Настройки', icon: IconSettings },

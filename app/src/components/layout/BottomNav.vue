@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import { IconHome, IconLibrary, IconHistory, IconSettings } from '../shared/icons'
+import { IconHome, IconLibrary, IconHistory, IconSettings, IconSearch } from '../shared/icons'
 
 const route = useRoute()
 
 const tabs = [
   { path: '/', label: 'Главная', icon: IconHome },
   { path: '/library', label: 'Книги', icon: IconLibrary },
+  { path: '/discover', label: 'LibriVox', icon: IconSearch },
   { path: '/history', label: 'История', icon: IconHistory },
   { path: '/settings', label: 'Ещё', icon: IconSettings },
 ]

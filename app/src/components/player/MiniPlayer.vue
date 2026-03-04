@@ -18,7 +18,8 @@ const {
 
 function goToBook() {
   if (currentBook.value) {
-    router.push(`/book/${currentBook.value.id}`)
+    const id = currentBook.value.id
+    router.push(id.startsWith('lv:') ? `/discover/${id.slice(3)}` : `/book/${id}`)
   }
 }
 </script>
