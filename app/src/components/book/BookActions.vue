@@ -49,6 +49,11 @@ async function markDone() {
   showDoneDialog.value = false
 }
 
+async function reject() {
+  await move('Забраковано')
+  showRejectDialog.value = false
+}
+
 async function handleCreateCard() {
   creating.value = true
   try {
@@ -155,10 +160,7 @@ const actions = [
       :message="`Отправить «${title}» в забракованные?`"
       confirm-text="Забраковать"
       confirm-class="!bg-red-600 hover:!bg-red-500 !text-white !shadow-none"
-      @confirm="
-        move('Забраковано')
-        showRejectDialog = false
-      "
+      @confirm="reject"
       @cancel="showRejectDialog = false"
     />
   </div>
