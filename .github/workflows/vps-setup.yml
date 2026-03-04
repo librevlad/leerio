@@ -7,24 +7,28 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     steps:
-      - name: Download books archive
+      - name: Download books and upload via SSH
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_KEY: ${{ secrets.VPS_SSH_KEY }}
         run: |
-          gh release download books-upload --repo librevlad/leerio --pattern "test-books.tar.gz" --dir /tmp
-          ls -lh /tmp/test-books.tar.gz
+          # Download release asset
+          gh release download books-upload --repo librevlad/leerio --pattern "test-books.tar.gz" --dir .
+          ls -lh test-books.tar.gz
 
-      - name: Upload books to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          source: /tmp/test-books.tar.gz
-          target: /tmp/
-          strip_components: 2
+          # Setup SSH key
+          mkdir -p ~/.ssh
+          echo "$VPS_KEY" > ~/.ssh/vps_key
+          chmod 600 ~/.ssh/vps_key
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null
 
-      - name: Setup SSH and extract books
+          # Upload via scp
+          scp -i ~/.ssh/vps_key test-books.tar.gz "$VPS_USER@$VPS_HOST:/tmp/test-books.tar.gz"
+          echo ">>> Upload complete"
+
+      - name: Setup SSH access and extract books
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -55,7 +59,7 @@ jobs:
 
             # ── 4. Extract books ───────────────────────────────────────
             cd /opt/leerio
-            mkdir -p books
+            mkdir -p books/Саморазвитие books/Бизнес
             tar xzf /tmp/test-books.tar.gz -C books/
             rm -f /tmp/test-books.tar.gz
             echo ">>> Books extracted:"
