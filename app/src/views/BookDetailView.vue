@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api'
 import type { Book } from '../types'
 import BookInfo from '../components/book/BookInfo.vue'
-import BookProgress from '../components/book/BookProgress.vue'
 import BookNotes from '../components/book/BookNotes.vue'
 import BookTags from '../components/book/BookTags.vue'
 import BookTimeline from '../components/book/BookTimeline.vue'
@@ -62,8 +61,18 @@ async function loadBook() {
   }
 }
 
-function startListening() {
-  if (book.value) player.loadBook(book.value)
+async function startListening() {
+  if (!book.value) return
+  player.loadBook(book.value)
+  // Auto-set status to "reading" if not already in a terminal state
+  if (!book.value.book_status || book.value.book_status === 'want_to_read') {
+    try {
+      await api.setBookStatus(book.value.id, 'reading')
+      book.value.book_status = 'reading'
+    } catch {
+      /* non-critical */
+    }
+  }
 }
 
 onMounted(loadBook)
@@ -100,15 +109,17 @@ onMounted(loadBook)
       <!-- Hero card spans full width -->
       <BookInfo :book="book" class="mb-5" />
 
-      <!-- Listen button + Download -->
-      <div v-if="book.mp3_count && book.mp3_count > 0" class="mb-5 flex flex-wrap items-center gap-3">
-        <button class="btn btn-primary" @click="startListening">
+      <!-- Listen button + Status + Download -->
+      <div class="mb-5 flex flex-wrap items-center gap-3">
+        <button v-if="book.mp3_count && book.mp3_count > 0" class="btn btn-primary" @click="startListening">
           <IconPlay :size="16" />
           {{ isCurrentBook ? 'Продолжить' : 'Слушать' }}
         </button>
 
+        <BookActions :book-id="book.id" :book-status="book.book_status" @status-changed="loadBook" />
+
         <!-- Download button (native only) -->
-        <template v-if="dl.isNative.value">
+        <template v-if="dl.isNative.value && book.mp3_count && book.mp3_count > 0">
           <!-- Not downloaded -->
           <button v-if="!isDownloaded && !isDownloading" class="btn btn-ghost" @click="startDownload">
             <IconDownload :size="16" />
@@ -158,13 +169,6 @@ onMounted(loadBook)
       <!-- Two-column layout -->
       <div class="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <div class="space-y-5 lg:col-span-2">
-          <BookActions
-            :book-id="book.id"
-            :book-status="book.book_status"
-            :title="book.title"
-            @status-changed="loadBook"
-          />
-          <BookProgress :title="book.title" :progress="book.progress" @updated="(p) => (book!.progress = p)" />
           <BookNotes :title="book.title" :note="book.note" />
           <BookQuotes :book-title="book.title" :book-author="book.author" />
           <BookTags :title="book.title" :tags="book.tags" @updated="(t) => (book!.tags = t)" />

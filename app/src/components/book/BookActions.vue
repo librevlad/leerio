@@ -7,29 +7,41 @@ import type { BookStatusValue } from '../../types'
 const props = defineProps<{
   bookId: string
   bookStatus?: BookStatusValue
-  title: string
 }>()
 const emit = defineEmits<{ statusChanged: [] }>()
 
 const toast = useToast()
 const loading = ref(false)
 
-const statusButtons: { status: BookStatusValue; label: string; style: string }[] = [
-  { status: 'want_to_read', label: 'Хочу прочесть', style: 'ghost' },
-  { status: 'reading', label: 'Слушаю', style: 'ghost' },
-  { status: 'paused', label: 'Пауза', style: 'ghost' },
-  { status: 'done', label: 'Прослушано', style: 'primary' },
-  { status: 'rejected', label: 'Не интересно', style: 'danger' },
+const statuses: { value: BookStatusValue; label: string }[] = [
+  { value: 'want_to_read', label: 'Хочу прочесть' },
+  { value: 'reading', label: 'Слушаю' },
+  { value: 'paused', label: 'На паузе' },
+  { value: 'done', label: 'Прослушано' },
+  { value: 'rejected', label: 'Не интересно' },
 ]
 
-async function setBookStatus(status: BookStatusValue) {
+async function setStatus(e: Event) {
+  const value = (e.target as HTMLSelectElement).value as BookStatusValue | ''
+  if (!value) {
+    // Clear status
+    loading.value = true
+    try {
+      await api.removeBookStatus(props.bookId)
+      emit('statusChanged')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Ошибка')
+    } finally {
+      loading.value = false
+    }
+    return
+  }
   loading.value = true
   try {
-    await api.setBookStatus(props.bookId, status)
-    toast.success(statusButtons.find((s) => s.status === status)?.label || status)
+    await api.setBookStatus(props.bookId, value)
     emit('statusChanged')
-  } catch (e: unknown) {
-    toast.error(e instanceof Error ? e.message : 'Ошибка')
+  } catch (err: unknown) {
+    toast.error(err instanceof Error ? err.message : 'Ошибка')
   } finally {
     loading.value = false
   }
@@ -37,21 +49,15 @@ async function setBookStatus(status: BookStatusValue) {
 </script>
 
 <template>
-  <div class="card p-5">
-    <h3 class="section-label mb-3">Действия</h3>
-    <div class="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-      <button
-        v-for="sb in statusButtons"
-        :key="sb.status"
-        class="btn justify-center"
-        :class="[
-          bookStatus === sb.status ? 'btn-primary !opacity-100' : sb.style === 'danger' ? 'btn-danger' : 'btn-ghost',
-        ]"
-        :disabled="loading || bookStatus === sb.status"
-        @click="setBookStatus(sb.status)"
-      >
-        {{ sb.label }}
-      </button>
-    </div>
-  </div>
+  <select
+    class="input-field cursor-pointer px-3 py-2.5 text-[13px]"
+    :value="bookStatus || ''"
+    :disabled="loading"
+    @change="setStatus"
+  >
+    <option value="">Без статуса</option>
+    <option v-for="s in statuses" :key="s.value" :value="s.value">
+      {{ s.label }}
+    </option>
+  </select>
 </template>
