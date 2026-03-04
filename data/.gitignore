@@ -1,0 +1,6 @@
+# Runtime data files — not tracked in git
+*.json
+*.csv
+*.md
+!.gitkeep
+!.gitignore

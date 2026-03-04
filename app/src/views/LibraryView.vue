@@ -1,0 +1,117 @@
+<script setup lang="ts">
+import { ref, computed, onMounted, watch } from 'vue'
+import { useBooks } from '../composables/useBooks'
+import SearchInput from '../components/shared/SearchInput.vue'
+import BookCard from '../components/shared/BookCard.vue'
+import EmptyState from '../components/shared/EmptyState.vue'
+
+const { books, loading, load, categories } = useBooks()
+
+const search = ref('')
+const category = ref('')
+const sort = ref('title')
+
+onMounted(() => loadBooks())
+
+watch([category, sort], () => loadBooks())
+
+function loadBooks() {
+  const params: Record<string, string> = {}
+  if (category.value) params.category = category.value
+  if (sort.value) params.sort = sort.value
+  load(params)
+}
+
+const filtered = computed(() => {
+  if (!search.value) return books.value
+  const q = search.value.toLowerCase()
+  return books.value.filter(
+    (b) =>
+      b.title.toLowerCase().includes(q) ||
+      b.author.toLowerCase().includes(q) ||
+      b.folder.toLowerCase().includes(q)
+  )
+})
+
+const sortOptions = [
+  { value: 'title', label: 'Название' },
+  { value: 'author', label: 'Автор' },
+  { value: 'category', label: 'Категория' },
+  { value: 'progress', label: 'Прогресс' },
+  { value: 'rating', label: 'Оценка' },
+]
+
+const catColors: Record<string, { bg: string; border: string; text: string }> = {
+  'Бизнес':         { bg: 'bg-amber-500/8',   border: 'border-amber-500/20',   text: 'text-amber-400' },
+  'Отношения':      { bg: 'bg-pink-500/8',    border: 'border-pink-500/20',    text: 'text-pink-400' },
+  'Саморазвитие':   { bg: 'bg-violet-500/8',  border: 'border-violet-500/20',  text: 'text-violet-400' },
+  'Художественная': { bg: 'bg-cyan-500/8',    border: 'border-cyan-500/20',    text: 'text-cyan-400' },
+  'Языки':          { bg: 'bg-emerald-500/8', border: 'border-emerald-500/20', text: 'text-emerald-400' },
+}
+const catFallback = { bg: 'bg-slate-500/8', border: 'border-slate-500/20', text: 'text-slate-400' }
+</script>
+
+<template>
+  <div>
+    <div class="flex items-end justify-between mb-6 gap-4">
+      <div>
+        <h1 class="page-title">Библиотека</h1>
+        <p class="text-[13px] text-[--t3] mt-1">{{ filtered.length }} книг</p>
+      </div>
+      <SearchInput v-model="search" placeholder="Поиск..." class="w-64" />
+    </div>
+
+    <!-- Category filter pills -->
+    <div class="flex gap-2 mb-4 overflow-x-auto pb-1">
+      <button
+        class="px-4 py-2 rounded-full text-[12px] font-semibold cursor-pointer transition-all duration-200 border flex-shrink-0"
+        :class="category === ''
+          ? 'bg-white/10 border-white/15 text-[--t1]'
+          : 'bg-transparent border-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'"
+        @click="category = ''"
+      >
+        Все
+      </button>
+      <button
+        v-for="cat in categories"
+        :key="cat"
+        class="px-4 py-2 rounded-full text-[12px] font-semibold cursor-pointer transition-all duration-200 border flex-shrink-0"
+        :class="category === cat
+          ? [(catColors[cat] || catFallback).bg, (catColors[cat] || catFallback).border, (catColors[cat] || catFallback).text]
+          : 'bg-transparent border-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'"
+        @click="category = cat"
+      >
+        {{ cat }}
+      </button>
+    </div>
+
+    <!-- Sort chips -->
+    <div class="flex items-center gap-1.5 mb-8">
+      <span class="text-[11px] text-[--t3] mr-1">Сортировка:</span>
+      <button
+        v-for="s in sortOptions"
+        :key="s.value"
+        class="px-3 py-1.5 rounded-full text-[11px] font-medium cursor-pointer transition-all duration-200 border-0"
+        :class="sort === s.value
+          ? 'bg-[--accent-soft] text-[--accent]'
+          : 'bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'"
+        @click="sort = s.value"
+      >
+        {{ s.label }}
+      </button>
+    </div>
+
+    <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+      <div v-for="i in 8" :key="i">
+        <div class="skeleton h-16 rounded-t-[20px] rounded-b-none" />
+        <div class="skeleton h-36 rounded-t-none rounded-b-[20px] border-t-0" />
+      </div>
+    </div>
+
+    <div v-else-if="filtered.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+      <BookCard v-for="book in filtered" :key="book.id" :book="book" />
+    </div>
+
+    <EmptyState v-else title="Книги не найдены" description="Попробуйте изменить фильтры" />
+  </div>
+</template>

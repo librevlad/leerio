@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+
+# Node
+app/node_modules/
+app/dist/
+
+# Runtime data (sensitive + generated)
+data/*.json
+data/*.csv
+data/*.md
+!data/.gitkeep
+!data/.gitignore
+
+# Books (large binary files, volume-mounted)
+books/
+
+# Environment
+.env
+
+# Backups
+_backups/
+*.bak
+
+# IDE
+.vscode/
+.idea/
+
+# Claude Code
+.claude/
+
+# OS
+Thumbs.db
+.DS_Store

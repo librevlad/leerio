@@ -1,0 +1,104 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { api } from '../../api'
+import { useToast } from '../../composables/useToast'
+import type { Quote } from '../../types'
+import { IconX } from '../shared/icons'
+
+const props = defineProps<{ bookTitle: string; bookAuthor: string }>()
+const toast = useToast()
+
+const allQuotes = ref<Quote[]>([])
+const loading = ref(true)
+const newText = ref('')
+const adding = ref(false)
+
+const quotes = computed(() =>
+  allQuotes.value
+    .map((q, i) => ({ ...q, _idx: i }))
+    .filter(q => q.book === props.bookTitle)
+)
+
+onMounted(async () => {
+  try {
+    allQuotes.value = await api.getQuotes()
+  } catch { /* ignore */ }
+  finally { loading.value = false }
+})
+
+async function addQuote() {
+  const text = newText.value.trim()
+  if (!text) return
+  adding.value = true
+  try {
+    await api.addQuote(text, props.bookTitle, props.bookAuthor)
+    allQuotes.value = await api.getQuotes()
+    newText.value = ''
+    toast.success('Цитата добавлена')
+  } catch {
+    toast.error('Не удалось добавить цитату')
+  } finally {
+    adding.value = false
+  }
+}
+
+async function removeQuote(idx: number) {
+  try {
+    await api.deleteQuote(idx)
+    allQuotes.value = await api.getQuotes()
+  } catch {
+    toast.error('Не удалось удалить цитату')
+  }
+}
+</script>
+
+<template>
+  <div class="card p-5">
+    <h3 class="section-label mb-3">Цитаты</h3>
+
+    <div v-if="loading" class="space-y-2">
+      <div class="skeleton h-12 rounded-xl" />
+    </div>
+
+    <div v-else>
+      <!-- Existing quotes -->
+      <div v-if="quotes.length" class="space-y-2 mb-3">
+        <div
+          v-for="q in quotes"
+          :key="q._idx"
+          class="group relative px-4 py-3 rounded-xl text-[13px] leading-relaxed text-[--t2] italic"
+          style="background: rgba(232,146,58,0.05); border-left: 2px solid var(--accent)"
+        >
+          <button
+            class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer bg-transparent border-0 p-0.5 text-[--t3] hover:text-red-400"
+            @click="removeQuote(q._idx)"
+          >
+            <IconX :size="12" />
+          </button>
+          "{{ q.text }}"
+          <p v-if="q.ts" class="text-[10px] text-[--t3] mt-1 not-italic">
+            {{ new Date(q.ts).toLocaleDateString('ru', { day: 'numeric', month: 'short' }) }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Add new quote -->
+      <div class="flex gap-2">
+        <textarea
+          v-model="newText"
+          rows="2"
+          placeholder="Добавить цитату..."
+          class="input-field flex-1 px-3.5 py-2.5 text-[12px] resize-none"
+          @keydown.ctrl.enter="addQuote"
+        />
+        <button
+          class="btn btn-ghost self-end flex-shrink-0"
+          :disabled="adding || !newText.trim()"
+          @click="addQuote"
+        >
+          {{ adding ? '...' : 'Добавить' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</template>

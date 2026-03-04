@@ -1,0 +1,22 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    environment:
+      LEERIO_DATA: /data
+      LEERIO_BOOKS: /books
+    volumes:
+      - ./data:/data
+      - ./books:/books:ro
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  app:
+    build: ./app
+    ports:
+      - "80:80"
+    depends_on:
+      - server
+    restart: unless-stopped

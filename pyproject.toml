@@ -1,0 +1,20 @@
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+src = ["server"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = [
+  "E501",  # line too long — handled by formatter
+  "E701",  # multiple statements on one line (colon) — existing compact style
+  "E702",  # multiple statements on one line (semicolon) — existing compact style
+  "E741",  # ambiguous variable name — `l` used in list comprehensions
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["server"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

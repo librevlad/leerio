@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -e
+
+echo "==> Running pre-commit checks..."
+
+echo "--- ruff check server/"
+ruff check server/
+
+echo "--- ruff format --check server/"
+ruff format --check server/
+
+echo "--- vue-tsc type check"
+cd app && npx vue-tsc --noEmit
+
+echo "==> All checks passed."
