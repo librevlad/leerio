@@ -36,39 +36,52 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             set -e
-            echo ">>> Running as: $(whoami)"
+            echo ">>> user=$(whoami) home=$HOME host=$(hostname)"
+            echo ">>> id: $(id)"
 
             # ── 1. Add SSH public key ──────────────────────────────────
             mkdir -p ~/.ssh && chmod 700 ~/.ssh
             PUB_KEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKhYGTAbB1TMNsntTXTZFhGj6yorDy1+Sdp3LG7EiEsQ user@User-PC"
             grep -qF "$PUB_KEY" ~/.ssh/authorized_keys 2>/dev/null || echo "$PUB_KEY" >> ~/.ssh/authorized_keys
             chmod 600 ~/.ssh/authorized_keys
-            echo ">>> SSH key added"
+            echo ">>> SSH key added to ~/.ssh/authorized_keys"
 
-            # ── 2. Enable password auth (needs sudo) ──────────────────
-            sudo sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
-            sudo sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
-            sudo systemctl restart sshd || sudo systemctl restart ssh
-            echo ">>> Password auth enabled"
+            # ── 2. Check sudo access ───────────────────────────────────
+            if sudo -n true 2>/dev/null; then
+              echo ">>> sudo available (NOPASSWD)"
+              HAS_SUDO=1
+            else
+              echo ">>> sudo requires password — skipping password/sshd setup"
+              HAS_SUDO=0
+            fi
 
-            # ── 3. Set new password ────────────────────────────────────
-            NEW_PASS=$(openssl rand -base64 12)
-            echo "$(whoami):$NEW_PASS" | sudo chpasswd
-            echo "=========================================="
-            echo "NEW PASSWORD for $(whoami): $NEW_PASS"
-            echo "=========================================="
-
-            # Also set root password if we're not root
-            if [ "$(whoami)" != "root" ]; then
-              echo "root:$NEW_PASS" | sudo chpasswd
-              echo "ROOT PASSWORD also set to: $NEW_PASS"
+            # ── 3. Enable password auth + set password (if sudo) ──────
+            if [ "$HAS_SUDO" = "1" ]; then
+              sudo sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+              sudo sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+              sudo systemctl restart sshd || sudo systemctl restart ssh
+              NEW_PASS=$(openssl rand -base64 12)
+              echo "$(whoami):$NEW_PASS" | sudo chpasswd
+              echo "=========================================="
+              echo "NEW PASSWORD: $NEW_PASS"
+              echo "=========================================="
+              # Also set root password
+              echo "root:$NEW_PASS" | sudo chpasswd 2>/dev/null || true
             fi
 
             # ── 4. Extract books ───────────────────────────────────────
             cd /opt/leerio
-            sudo mkdir -p books/Саморазвитие books/Бизнес
-            sudo tar xzf /tmp/test-books.tar.gz -C books/
-            sudo chown -R $(whoami):$(whoami) books/
-            rm -f /tmp/test-books.tar.gz
-            echo ">>> Books extracted:"
-            ls books/Саморазвитие/ books/Бизнес/ 2>/dev/null || ls books/
+            mkdir -p books/Саморазвитие books/Бизнес 2>/dev/null || true
+            if [ -f /tmp/test-books.tar.gz ]; then
+              tar xzf /tmp/test-books.tar.gz -C books/ 2>/dev/null || sudo tar xzf /tmp/test-books.tar.gz -C books/
+              rm -f /tmp/test-books.tar.gz
+              echo ">>> Books extracted:"
+              ls books/Саморазвитие/ books/Бизнес/ 2>/dev/null || ls books/
+            else
+              echo ">>> No archive at /tmp/test-books.tar.gz"
+              ls /tmp/*.tar.gz 2>/dev/null || echo ">>> No tar.gz in /tmp"
+            fi
+
+            # ── 5. Print SSH connection info ───────────────────────────
+            echo ""
+            echo ">>> To connect: ssh $(whoami)@$(hostname -I | awk '{print $1}')"
