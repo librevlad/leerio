@@ -166,7 +166,9 @@ const startDate = computed(() => {
                   <IconHardDrive :size="14" class="text-[--accent-2]" />
                 </span>
                 <div>
-                  <span class="text-[12px] font-semibold text-[--t1]">{{ book.size_mb }} МБ</span>
+                  <span class="text-[12px] font-semibold text-[--t1]"
+                    >{{ typeof book.size_mb === 'number' ? book.size_mb.toFixed(1) : book.size_mb }} МБ</span
+                  >
                   <p class="text-[11px] text-[--t3]">Размер</p>
                 </div>
               </div>
@@ -223,7 +225,9 @@ const startDate = computed(() => {
             <IconHardDrive :size="14" class="text-[--accent-2]" />
           </span>
           <div>
-            <span class="text-[12px] font-semibold text-[--t1]">{{ book.size_mb }} МБ</span>
+            <span class="text-[12px] font-semibold text-[--t1]"
+              >{{ typeof book.size_mb === 'number' ? book.size_mb.toFixed(1) : book.size_mb }} МБ</span
+            >
             <p class="text-[10px] text-[--t3]">Размер</p>
           </div>
         </div>
