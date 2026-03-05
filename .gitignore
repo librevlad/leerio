@@ -24,6 +24,9 @@ data/*.md
 # Books (large binary files, volume-mounted)
 books/
 
+# Docker (override is dev-only, must not land on VPS)
+docker-compose.override.yml
+
 # Environment
 .env
 

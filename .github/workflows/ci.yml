@@ -159,6 +159,7 @@ jobs:
             cd /opt/leerio
             PREV_SHA=$(git rev-parse HEAD)
             git pull origin main
+            rm -f docker-compose.override.yml
             sed -i 's|CORS_ORIGINS=https://leerio.app|CORS_ORIGINS=https://app.leerio.app|' .env
             docker compose build --pull
             docker compose up -d

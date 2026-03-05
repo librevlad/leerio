@@ -233,9 +233,9 @@ Internet -> Caddy (:80/:443)
 
 ### Dev vs Production
 
-- `docker-compose.override.yml` re-exposes dev ports (8000, 5173, 8001) and disables Caddy via `profiles: ["production"]`
+- `docker-compose.override.yml` re-exposes dev ports (8000, 5173, 8001) and disables Caddy via `profiles: ["production"]` — gitignored, dev-only
 - Local `docker compose up` = dev mode (no Caddy, direct port access)
-- Production VPS has no override file — Caddy runs by default
+- Production VPS: deploy script removes override file; Caddy runs by default
 
 ### Docker
 - Server service has a healthcheck (`curl /api/config/constants`, 30s interval)
