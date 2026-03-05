@@ -50,16 +50,6 @@ const router = createRouter({
       component: () => import('./views/UploadView.vue'),
     },
     {
-      path: '/discover',
-      name: 'discover',
-      component: () => import('./views/DiscoverView.vue'),
-    },
-    {
-      path: '/discover/:id',
-      name: 'librivox-book',
-      component: () => import('./views/LibriVoxDetailView.vue'),
-    },
-    {
       path: '/collections',
       name: 'collections',
       component: () => import('./views/CollectionsView.vue'),

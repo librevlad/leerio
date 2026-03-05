@@ -152,7 +152,7 @@ function savePosition() {
   // Auto-track book progress (0-100%)
   const pct = Math.round(overallProgress.value)
   if (pct > 0) {
-    api.setProgress(currentBook.value.title, pct).catch((e) => console.warn('Не удалось сохранить прогресс:', e))
+    api.setProgress(currentBook.value.id, pct).catch((e) => console.warn('Не удалось сохранить прогресс:', e))
   }
 }
 
@@ -198,7 +198,7 @@ async function resolveAudioSrc(bookId: string, trackIndex: number): Promise<stri
     playingOffline.value = true
     return url || ''
   }
-  // External URL (LibriVox / archive.org)
+  // External URL (e.g. direct MP3 link)
   const track = tracks.value[trackIndex]
   if (track?.url) {
     playingOffline.value = false
@@ -230,7 +230,6 @@ async function loadBook(book: Book) {
 
   try {
     const isLocalBook = book.id.startsWith('lb:')
-    const isLibriVox = book.id.startsWith('lv:')
     const isUserBook = book.id.startsWith('ub:')
     const { isOnline } = useNetwork()
 
@@ -284,13 +283,8 @@ async function loadBook(book: Book) {
         playingOffline.value = true
       }
     } else {
-      const lvId = isLibriVox ? book.id.slice(3) : ''
       const ubSlug = isUserBook ? (book.id.split(':')[2] ?? '') : ''
-      const res = isLibriVox
-        ? await api.librivoxChapters(lvId)
-        : isUserBook
-          ? await api.getUserBookTracks(ubSlug)
-          : await api.getBookTracks(book.id)
+      const res = isUserBook ? await api.getUserBookTracks(ubSlug) : await api.getBookTracks(book.id)
       tracks.value = res.tracks
     }
 

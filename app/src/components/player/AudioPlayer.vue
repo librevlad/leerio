@@ -76,9 +76,8 @@ async function addBookmark() {
   await loadBookmarks()
 }
 
-async function removeBookmark(ts: string) {
-  if (!currentBook.value) return
-  await api.removeBookmark(currentBook.value.id, ts)
+async function removeBookmark(bookmarkId: number) {
+  await api.removeBookmark(bookmarkId)
   await loadBookmarks()
 }
 
@@ -336,7 +335,7 @@ const SLEEP_OPTIONS = [
           </button>
           <button
             class="shrink-0 cursor-pointer border-0 bg-transparent p-1 text-[--t3] transition-colors hover:text-red-400"
-            @click="removeBookmark(bm.ts)"
+            @click="removeBookmark(bm.id)"
           >
             <IconTrash :size="13" />
           </button>

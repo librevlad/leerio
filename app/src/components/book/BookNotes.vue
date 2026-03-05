@@ -4,7 +4,7 @@ import { useDebounceFn } from '@vueuse/core'
 import { api } from '../../api'
 import { useToast } from '../../composables/useToast'
 
-const props = defineProps<{ title: string; note: string }>()
+const props = defineProps<{ bookId: string; title: string; note: string }>()
 const toast = useToast()
 
 const text = ref(props.note)
@@ -20,7 +20,7 @@ watch(
 const save = useDebounceFn(async (val: string) => {
   saving.value = true
   try {
-    await api.setNote(props.title, val)
+    await api.setNote(props.bookId, val)
   } catch {
     toast.error('Не удалось сохранить заметку')
   } finally {

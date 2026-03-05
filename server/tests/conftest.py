@@ -17,8 +17,9 @@ TEST_USER = {
 
 @pytest.fixture()
 def tmp_data_dir(tmp_path, monkeypatch):
-    """Patch server.core paths to use a temporary directory."""
+    """Patch server.core paths and server.db to use a temporary directory."""
     import server.core as core
+    import server.db as db_mod
 
     data_dir = tmp_path / "data"
     data_dir.mkdir()
@@ -49,6 +50,9 @@ def tmp_data_dir(tmp_path, monkeypatch):
     monkeypatch.setattr(core, "SESSIONS_PATH", data_dir / "sessions.json")
     monkeypatch.setattr(core, "RECOMMENDATIONS_PATH", data_dir / "recommendations.md")
 
+    # Patch DB path
+    monkeypatch.setattr(db_mod, "DB_PATH", data_dir / "leerio.db")
+
     return {"data": data_dir, "books": books_dir}
 
 
@@ -60,13 +64,9 @@ def api_client(tmp_data_dir, monkeypatch):
     import server.api as api_mod
     import server.db as db_mod
     from server.auth import get_current_user
-    from server.core import Library
 
-    # Replace the Library instance so it uses patched BOOKS_DIR
-    monkeypatch.setattr(api_mod, "lib", Library())
-
-    # Patch DB path so init_db doesn't touch real DB
-    monkeypatch.setattr(db_mod, "DB_PATH", tmp_data_dir["data"] / "leerio.db")
+    # Ensure tables exist
+    db_mod.init_db()
 
     # Override auth dependency to return test user
     def _mock_user():
@@ -83,13 +83,34 @@ def api_client(tmp_data_dir, monkeypatch):
 
 @pytest.fixture()
 def sample_books(tmp_data_dir):
-    """Create a few sample book directories."""
+    """Create sample books in the database and filesystem."""
+    import server.db as db_mod
+
+    # Ensure tables exist
+    db_mod.init_db()
+
     books_dir = tmp_data_dir["books"]
-    books = [
-        ("Саморазвитие", "Автор Один - Книга Первая [Чтец]"),
-        ("Бизнес", "Автор Два - Книга Вторая"),
-        ("Художественная", "Толстой - Война и Мир [Козий]"),
+
+    # Create filesystem directories (for covers/audio)
+    book_data = [
+        ("Саморазвитие", "Автор Один - Книга Первая [Чтец]", "Автор Один", "Книга Первая", "Чтец"),
+        ("Бизнес", "Автор Два - Книга Вторая", "Автор Два", "Книга Вторая", ""),
+        ("Художественная", "Толстой - Война и Мир [Козий]", "Толстой", "Война и Мир", "Козий"),
     ]
-    for cat, folder in books:
-        (books_dir / cat / folder).mkdir()
-    return books
+
+    conn = db_mod._get_conn()
+    try:
+        book_ids = []
+        for cat, folder, author, title, reader in book_data:
+            (books_dir / cat / folder).mkdir(parents=True, exist_ok=True)
+            slug = f"{author}-{title}".lower().replace(" ", "-")
+            conn.execute(
+                """INSERT INTO books (slug, title, author, reader, category, folder, s3_prefix, has_cover, mp3_count)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0)""",
+                (slug, title, author, reader, cat, folder, f"{cat}/{folder}"),
+            )
+            book_ids.append(conn.execute("SELECT last_insert_rowid()").fetchone()[0])
+        conn.commit()
+        return book_ids
+    finally:
+        conn.close()

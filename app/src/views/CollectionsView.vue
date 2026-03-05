@@ -13,18 +13,18 @@ const { books, load: loadBooks } = useBooks()
 const collections = ref<Collection[]>([])
 const loading = ref(true)
 const showCreate = ref(false)
-const editIdx = ref<number | null>(null)
+const editId = ref<number | null>(null)
 const expandedIdx = ref<number | null>(null)
 
 // Form state
 const formName = ref('')
 const formDesc = ref('')
-const formBooks = ref<string[]>([])
+const formBooks = ref<number[]>([])
 const bookSearch = ref('')
 
-// Map book titles to Book objects for covers/links
-function bookByTitle(title: string): Book | undefined {
-  return books.value.find((b) => b.title === title)
+// Map book IDs to Book objects for covers/links
+function bookById(id: number): Book | undefined {
+  return books.value.find((b) => b.id === String(id))
 }
 
 const filteredBooks = computed(() => {
@@ -49,31 +49,30 @@ function openCreate() {
   formDesc.value = ''
   formBooks.value = []
   bookSearch.value = ''
-  editIdx.value = null
+  editId.value = null
   showCreate.value = true
 }
 
-function openEdit(idx: number) {
-  const c = collections.value[idx]!
-  formName.value = c.name
-  formDesc.value = c.description
-  formBooks.value = [...c.books]
+function openEdit(col: Collection) {
+  formName.value = col.name
+  formDesc.value = col.description
+  formBooks.value = [...col.books]
   bookSearch.value = ''
-  editIdx.value = idx
+  editId.value = col.id
   showCreate.value = true
 }
 
 function closeForm() {
   showCreate.value = false
-  editIdx.value = null
+  editId.value = null
 }
 
-function toggleBook(title: string) {
-  const i = formBooks.value.indexOf(title)
+function toggleBook(bookId: number) {
+  const i = formBooks.value.indexOf(bookId)
   if (i >= 0) {
     formBooks.value.splice(i, 1)
   } else {
-    formBooks.value.push(title)
+    formBooks.value.push(bookId)
   }
 }
 
@@ -87,8 +86,8 @@ async function save() {
     return
   }
   try {
-    if (editIdx.value !== null) {
-      await api.updateCollection(editIdx.value, formName.value.trim(), formBooks.value, formDesc.value.trim())
+    if (editId.value !== null) {
+      await api.updateCollection(editId.value, formName.value.trim(), formBooks.value, formDesc.value.trim())
       toast.success('Коллекция обновлена')
     } else {
       await api.createCollection(formName.value.trim(), formBooks.value, formDesc.value.trim())
@@ -101,12 +100,12 @@ async function save() {
   }
 }
 
-async function remove(idx: number) {
-  if (!confirm(`Удалить коллекцию "${collections.value[idx]!.name}"?`)) return
+async function remove(col: Collection) {
+  if (!confirm(`Удалить коллекцию "${col.name}"?`)) return
   try {
-    await api.deleteCollection(idx)
+    await api.deleteCollection(col.id)
     toast.success('Удалено')
-    if (expandedIdx.value === idx) expandedIdx.value = null
+    expandedIdx.value = null
     await loadCollections()
   } catch {
     toast.error('Ошибка удаления')
@@ -150,7 +149,7 @@ onMounted(async () => {
 
     <!-- Collections list -->
     <div v-else-if="!showCreate" class="space-y-4">
-      <div v-for="(col, idx) in collections" :key="idx" class="card overflow-hidden">
+      <div v-for="(col, idx) in collections" :key="col.id" class="card overflow-hidden">
         <!-- Collection header — clickable to expand -->
         <button
           class="flex w-full cursor-pointer items-center gap-4 border-0 bg-transparent p-4 text-left transition-colors hover:bg-white/[0.02]"
@@ -160,8 +159,8 @@ onMounted(async () => {
           <div class="relative h-14 w-14 flex-shrink-0">
             <template v-if="col.books.length">
               <div
-                v-for="(title, i) in col.books.slice(0, 3)"
-                :key="title"
+                v-for="(bookId, i) in col.books.slice(0, 3)"
+                :key="bookId"
                 class="absolute overflow-hidden rounded-lg shadow-md"
                 :style="{
                   width: '40px',
@@ -172,9 +171,9 @@ onMounted(async () => {
                 }"
               >
                 <img
-                  v-if="bookByTitle(title)?.has_cover"
-                  :src="coverUrl(bookByTitle(title)!.id)"
-                  :alt="title"
+                  v-if="bookById(bookId)?.has_cover"
+                  :src="coverUrl(bookById(bookId)!.id)"
+                  :alt="bookById(bookId)?.title ?? ''"
                   class="h-full w-full object-cover"
                 />
                 <div
@@ -182,7 +181,7 @@ onMounted(async () => {
                   class="flex h-full w-full items-center justify-center text-[12px] font-bold text-white/50"
                   style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)"
                 >
-                  {{ title.charAt(0) }}
+                  {{ (bookById(bookId)?.title ?? '?').charAt(0) }}
                 </div>
               </div>
             </template>
@@ -213,13 +212,13 @@ onMounted(async () => {
           <div class="ml-2 flex flex-shrink-0 gap-1" @click.stop>
             <button
               class="rounded-lg p-2 text-[--t3] transition-colors hover:bg-white/5 hover:text-[--t2]"
-              @click="openEdit(idx)"
+              @click="openEdit(col)"
             >
               <IconEdit :size="14" />
             </button>
             <button
               class="rounded-lg p-2 text-[--t3] transition-colors hover:bg-red-500/15 hover:text-red-400"
-              @click="remove(idx)"
+              @click="remove(col)"
             >
               <IconTrash :size="14" />
             </button>
@@ -246,16 +245,16 @@ onMounted(async () => {
         <div v-if="expandedIdx === idx" class="border-t px-4 pt-4 pb-4" style="border-color: var(--border)">
           <div v-if="col.books.length" class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             <router-link
-              v-for="title in col.books"
-              :key="title"
-              :to="bookByTitle(title) ? `/book/${bookByTitle(title)!.id}` : '#'"
+              v-for="bookId in col.books"
+              :key="bookId"
+              :to="bookById(bookId) ? `/book/${bookById(bookId)!.id}` : '#'"
               class="group flex items-center gap-3 rounded-xl p-2.5 no-underline transition-colors hover:bg-white/[0.04]"
             >
               <div class="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg">
                 <img
-                  v-if="bookByTitle(title)?.has_cover"
-                  :src="coverUrl(bookByTitle(title)!.id)"
-                  :alt="title"
+                  v-if="bookById(bookId)?.has_cover"
+                  :src="coverUrl(bookById(bookId)!.id)"
+                  :alt="bookById(bookId)?.title ?? ''"
                   class="h-full w-full object-cover"
                 />
                 <div
@@ -263,15 +262,15 @@ onMounted(async () => {
                   class="flex h-full w-full items-center justify-center text-[14px] font-bold text-white/50"
                   style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)"
                 >
-                  {{ title.charAt(0) }}
+                  {{ (bookById(bookId)?.title ?? '?').charAt(0) }}
                 </div>
               </div>
               <div class="min-w-0">
                 <p class="line-clamp-2 text-[12px] font-medium text-[--t2] transition-colors group-hover:text-[--t1]">
-                  {{ title }}
+                  {{ bookById(bookId)?.title ?? 'Неизвестная книга' }}
                 </p>
-                <p v-if="bookByTitle(title)" class="mt-0.5 line-clamp-1 text-[11px] text-[--t3]">
-                  {{ bookByTitle(title)!.author }}
+                <p v-if="bookById(bookId)" class="mt-0.5 line-clamp-1 text-[11px] text-[--t3]">
+                  {{ bookById(bookId)!.author }}
                 </p>
               </div>
             </router-link>
@@ -292,7 +291,7 @@ onMounted(async () => {
           <div class="dialog-panel w-full max-w-lg p-6" @click.stop>
             <div class="mb-5 flex items-center justify-between">
               <h2 class="text-[18px] font-bold text-[--t1]">
-                {{ editIdx !== null ? 'Редактировать' : 'Новая коллекция' }}
+                {{ editId !== null ? 'Редактировать' : 'Новая коллекция' }}
               </h2>
               <button
                 class="rounded-lg p-1.5 text-[--t3] transition-colors hover:bg-white/5 hover:text-[--t2]"
@@ -339,15 +338,20 @@ onMounted(async () => {
               <!-- Selected books preview -->
               <div v-if="formBooks.length && !bookSearch" class="mb-2 flex flex-wrap gap-1.5">
                 <span
-                  v-for="title in formBooks"
-                  :key="title"
+                  v-for="bookId in formBooks"
+                  :key="bookId"
                   class="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-[--accent]"
                   style="background: var(--accent-soft)"
                 >
-                  {{ title.length > 25 ? title.slice(0, 25) + '...' : title }}
+                  {{
+                    (() => {
+                      const t = bookById(bookId)?.title ?? 'Книга #' + bookId
+                      return t.length > 25 ? t.slice(0, 25) + '...' : t
+                    })()
+                  }}
                   <button
                     class="ml-0.5 cursor-pointer border-0 bg-transparent p-0 text-[--accent] hover:text-white"
-                    @click="toggleBook(title)"
+                    @click="toggleBook(bookId)"
                   >
                     <IconX :size="10" />
                   </button>
@@ -363,18 +367,18 @@ onMounted(async () => {
                   v-for="book in filteredBooks"
                   :key="book.id"
                   class="flex w-full cursor-pointer items-center gap-2.5 rounded-lg border-0 bg-transparent px-2.5 py-2 text-left transition-colors hover:bg-white/[0.04]"
-                  :class="formBooks.includes(book.title) ? 'text-[--accent]' : 'text-[--t2]'"
-                  @click="toggleBook(book.title)"
+                  :class="formBooks.includes(Number(book.id)) ? 'text-[--accent]' : 'text-[--t2]'"
+                  @click="toggleBook(Number(book.id))"
                 >
                   <span
                     class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded border"
                     :class="
-                      formBooks.includes(book.title)
+                      formBooks.includes(Number(book.id))
                         ? 'border-[--accent] bg-[--accent]'
                         : 'border-[--border] bg-transparent'
                     "
                   >
-                    <IconCheck v-if="formBooks.includes(book.title)" :size="10" class="text-black" />
+                    <IconCheck v-if="formBooks.includes(Number(book.id))" :size="10" class="text-black" />
                   </span>
                   <div class="h-7 w-7 flex-shrink-0 overflow-hidden rounded">
                     <img
@@ -400,7 +404,7 @@ onMounted(async () => {
 
             <div class="flex gap-2">
               <button class="btn btn-primary flex-1" @click="save">
-                {{ editIdx !== null ? 'Сохранить' : 'Создать' }}
+                {{ editId !== null ? 'Сохранить' : 'Создать' }}
               </button>
               <button class="btn btn-ghost" @click="closeForm">Отмена</button>
             </div>

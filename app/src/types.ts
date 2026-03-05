@@ -155,6 +155,7 @@ export interface PlaybackPosition {
 // ── Bookmark types ─────────────────────────────────────────────────────────
 
 export interface Bookmark {
+  id: number
   track: number
   time: number
   note: string
@@ -164,6 +165,7 @@ export interface Bookmark {
 // ── Other types ─────────────────────────────────────────────────────────────
 
 export interface Quote {
+  id: number
   text: string
   book: string
   author: string
@@ -171,8 +173,9 @@ export interface Quote {
 }
 
 export interface Collection {
+  id: number
   name: string
-  books: string[]
+  books: number[]
   description: string
   created: string
 }
@@ -192,28 +195,6 @@ export interface Constants {
   list_to_status: Record<string, string>
   label_to_folder: Record<string, string>
   folder_to_label: Record<string, string>
-}
-
-// ── LibriVox types ─────────────────────────────────────────────────────────
-
-export interface LibriVoxBook {
-  id: string // "lv:12345"
-  librivox_id: string
-  source: 'librivox'
-  title: string
-  author: string
-  description: string
-  language: string
-  copyright_year: string
-  num_sections: number
-  total_time: string
-  total_time_secs: number
-  url_librivox: string
-}
-
-export interface LibriVoxSearchResult {
-  books: LibriVoxBook[]
-  total: number
 }
 
 // ── User Books & TTS types ────────────────────────────────────────────────

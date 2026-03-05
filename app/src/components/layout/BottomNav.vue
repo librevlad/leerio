@@ -5,7 +5,6 @@ import {
   IconHome,
   IconLibrary,
   IconFolder,
-  IconSearch,
   IconMenu,
   IconUpload,
   IconBookmark,
@@ -23,7 +22,6 @@ const tabs = [
   { path: '/', label: 'Главная', icon: IconHome },
   { path: '/library', label: 'Каталог', icon: IconLibrary },
   { path: '/my-library', label: 'Моя', icon: IconFolder },
-  { path: '/discover', label: 'Найти', icon: IconSearch },
 ]
 
 const moreLinks = [

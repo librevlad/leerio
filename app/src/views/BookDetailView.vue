@@ -185,11 +185,11 @@ watch(() => route.params.id, loadBook)
       <!-- 5. Two-column layout -->
       <div class="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <div class="space-y-5 lg:col-span-2">
-          <BookNotes :title="book.title" :note="book.note" />
+          <BookNotes :book-id="book.id" :title="book.title" :note="book.note" />
           <BookQuotes :book-title="book.title" :book-author="book.author" />
         </div>
         <div class="space-y-5">
-          <BookTags :title="book.title" :tags="book.tags" @updated="(t) => (book!.tags = t)" />
+          <BookTags :book-id="book.id" :title="book.title" :tags="book.tags" @updated="(t) => (book!.tags = t)" />
           <BookTimeline :entries="book.timeline || []" />
           <BookSimilar :book-id="book.id" />
         </div>

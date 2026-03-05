@@ -4,7 +4,7 @@ import { api } from '../../api'
 import { useToast } from '../../composables/useToast'
 import { IconX } from '../shared/icons'
 
-const props = defineProps<{ title: string; tags: string[] }>()
+const props = defineProps<{ bookId: string; title: string; tags: string[] }>()
 const emit = defineEmits<{ updated: [tags: string[]] }>()
 
 const toast = useToast()
@@ -49,7 +49,7 @@ function hideSuggestions() {
 
 async function save() {
   try {
-    await api.setTags(props.title, currentTags.value)
+    await api.setTags(props.bookId, currentTags.value)
     emit('updated', currentTags.value)
   } catch {
     toast.error('Не удалось сохранить теги')

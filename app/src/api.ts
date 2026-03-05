@@ -109,10 +109,6 @@ export function coverUrl(bookId: string): string {
   return apiUrl(`/books/${bookId}/cover`)
 }
 
-export function librivoxCoverUrl(librivoxId: string): string {
-  return apiUrl(`/librivox/books/${librivoxId}/cover`)
-}
-
 export function userBookCoverUrl(slug: string): string {
   return apiUrl(`/user/books/${slug}/cover`)
 }
@@ -133,8 +129,6 @@ import type {
   PlaybackPosition,
   BookStatusMap,
   BookStatusEntry,
-  LibriVoxSearchResult,
-  LibriVoxBook,
   UserBook,
   TTSVoice,
   TTSEngine,
@@ -169,31 +163,31 @@ export const api = {
   },
 
   // Notes
-  getNote: (title: string) => get<{ title: string; text: string }>(`/notes/${encodeURIComponent(title)}`),
-  setNote: (title: string, text: string) => put<{ ok: boolean }>(`/notes/${encodeURIComponent(title)}`, { text }),
-  deleteNote: (title: string) => del<{ ok: boolean }>(`/notes/${encodeURIComponent(title)}`),
+  getNote: (bookId: string) => get<{ title: string; text: string }>(`/books/${bookId}/notes`),
+  setNote: (bookId: string, text: string) => put<{ ok: boolean }>(`/books/${bookId}/notes`, { text }),
+  deleteNote: (bookId: string) => del<{ ok: boolean }>(`/books/${bookId}/notes`),
 
   // Tags
-  getTags: (title: string) => get<string[]>(`/tags?title=${encodeURIComponent(title)}`),
+  getTags: (bookId: string) => get<string[]>(`/books/${bookId}/tags`),
   getAllTags: () => get<string[]>('/tags/all'),
-  setTags: (title: string, tags: string[]) => put<{ ok: boolean }>(`/tags/${encodeURIComponent(title)}`, { tags }),
+  setTags: (bookId: string, tags: string[]) => put<{ ok: boolean }>(`/books/${bookId}/tags`, { tags }),
 
   // Progress
   getAllProgress: () => get<Record<string, { pct: number }>>('/progress'),
-  setProgress: (title: string, pct: number) => put<{ ok: boolean }>(`/progress/${encodeURIComponent(title)}`, { pct }),
+  setProgress: (bookId: string, pct: number) => put<{ ok: boolean }>(`/books/${bookId}/progress`, { pct }),
 
   // Quotes
   getQuotes: () => get<Quote[]>('/quotes'),
   addQuote: (text: string, book: string, author = '') => post<{ ok: boolean }>('/quotes', { text, book, author }),
-  deleteQuote: (idx: number) => del<{ ok: boolean }>(`/quotes/${idx}`),
+  deleteQuote: (quoteId: number) => del<{ ok: boolean }>(`/quotes/${quoteId}`),
 
   // Collections
   getCollections: () => get<Collection[]>('/collections'),
-  createCollection: (name: string, books: string[] = [], description = '') =>
+  createCollection: (name: string, books: number[] = [], description = '') =>
     post<{ ok: boolean }>('/collections', { name, books, description }),
-  updateCollection: (idx: number, name: string, books: string[], description: string) =>
-    put<{ ok: boolean }>(`/collections/${idx}`, { name, books, description }),
-  deleteCollection: (idx: number) => del<{ ok: boolean }>(`/collections/${idx}`),
+  updateCollection: (id: number, name: string, books: number[], description: string) =>
+    put<{ ok: boolean }>(`/collections/${id}`, { name, books, description }),
+  deleteCollection: (id: number) => del<{ ok: boolean }>(`/collections/${id}`),
 
   // Sessions
   getSessionStats: (days = 7) => get<SessionStats>(`/sessions/stats?days=${days}`),
@@ -208,7 +202,7 @@ export const api = {
   getBookmarks: (bookId: string) => get<Bookmark[]>(`/user/bookmarks/${bookId}`),
   addBookmark: (bookId: string, track: number, time: number, note = '') =>
     post<Bookmark>(`/user/bookmarks/${bookId}`, { track, time, note }),
-  removeBookmark: (bookId: string, ts: string) => del<{ ok: boolean }>(`/user/bookmarks/${bookId}/${ts}`),
+  removeBookmark: (bookmarkId: number) => del<{ ok: boolean }>(`/user/bookmarks/${bookmarkId}`),
 
   // Book Status (per-user)
   getAllBookStatuses: () => get<BookStatusMap>('/user/book-status'),
@@ -219,14 +213,6 @@ export const api = {
   // Auth
   getMe: () => get<{ user_id: string; email: string; name: string; picture: string; role: string }>('/auth/me'),
   logout: () => post<{ ok: boolean }>('/auth/logout'),
-
-  // LibriVox
-  librivoxSearch: (params: Record<string, string>) => {
-    const qs = new URLSearchParams(params).toString()
-    return get<LibriVoxSearchResult>(`/librivox/search?${qs}`)
-  },
-  librivoxBook: (lvId: string) => get<LibriVoxBook>(`/librivox/books/${lvId}`),
-  librivoxChapters: (lvId: string) => get<TrackList>(`/librivox/books/${lvId}/chapters`),
 
   // User Books (personal library)
   getUserBooks: () => get<UserBook[]>('/user/books'),

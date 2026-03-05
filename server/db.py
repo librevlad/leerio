@@ -1,7 +1,8 @@
 """
-server/db.py — SQLite user database for authentication.
+server/db.py — SQLite database for authentication and all app data.
 
-Manages users table with Google OAuth and email/password identity.
+Manages users, books, tracks, and per-user data (statuses, progress,
+playback, notes, tags, history, quotes, sessions, bookmarks, collections).
 """
 
 import hashlib
@@ -9,10 +10,14 @@ import logging
 import os
 import secrets
 import sqlite3
-
-from .core import DATA_DIR
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 logger = logging.getLogger("leerio.db")
+
+# Resolve DATA_DIR here to avoid circular import with core.py
+_BASE = Path(os.environ.get("LEERIO_BASE", str(Path(__file__).resolve().parent.parent)))
+DATA_DIR = Path(os.environ.get("LEERIO_DATA", str(_BASE / "data")))
 
 DB_PATH = DATA_DIR / "leerio.db"
 
@@ -25,13 +30,20 @@ def _get_conn() -> sqlite3.Connection:
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA foreign_keys=ON")
     return conn
 
 
+# ---------------------------------------------------------------------------
+# Database initialisation
+# ---------------------------------------------------------------------------
+
+
 def init_db():
-    """Create users table, allowed_emails table, and ensure seed user exists."""
+    """Create all tables and ensure seed data exists."""
     conn = _get_conn()
     try:
+        # --- Auth tables ---
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS users (
@@ -55,6 +67,171 @@ def init_db():
             )
             """
         )
+
+        # --- Book catalogue ---
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS books (
+                id INTEGER PRIMARY KEY,
+                slug TEXT UNIQUE NOT NULL,
+                title TEXT NOT NULL,
+                author TEXT NOT NULL,
+                reader TEXT DEFAULT '',
+                category TEXT DEFAULT '',
+                folder TEXT NOT NULL,
+                s3_prefix TEXT NOT NULL,
+                has_cover BOOLEAN DEFAULT 0,
+                mp3_count INTEGER DEFAULT 0,
+                duration_hours REAL DEFAULT 0,
+                size_mb REAL DEFAULT 0,
+                created_at TEXT DEFAULT (datetime('now'))
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS tracks (
+                id INTEGER PRIMARY KEY,
+                book_id INTEGER REFERENCES books(id) ON DELETE CASCADE,
+                idx INTEGER NOT NULL,
+                filename TEXT NOT NULL,
+                s3_key TEXT NOT NULL,
+                duration REAL DEFAULT 0,
+                size_bytes INTEGER DEFAULT 0,
+                UNIQUE(book_id, idx)
+            )
+            """
+        )
+
+        # --- Per-user data ---
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS user_book_status (
+                user_id TEXT NOT NULL,
+                book_id INTEGER NOT NULL REFERENCES books(id),
+                status TEXT NOT NULL,
+                updated TEXT DEFAULT (datetime('now')),
+                PRIMARY KEY(user_id, book_id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS user_progress (
+                user_id TEXT NOT NULL,
+                book_id INTEGER NOT NULL REFERENCES books(id),
+                percent INTEGER DEFAULT 0,
+                updated TEXT DEFAULT (datetime('now')),
+                PRIMARY KEY(user_id, book_id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS user_playback (
+                user_id TEXT NOT NULL,
+                book_id INTEGER NOT NULL,
+                track_index INTEGER DEFAULT 0,
+                position REAL DEFAULT 0,
+                filename TEXT DEFAULT '',
+                updated TEXT DEFAULT (datetime('now')),
+                PRIMARY KEY(user_id, book_id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS user_notes (
+                user_id TEXT NOT NULL,
+                book_id INTEGER NOT NULL REFERENCES books(id),
+                note TEXT DEFAULT '',
+                PRIMARY KEY(user_id, book_id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS user_tags (
+                id INTEGER PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                book_id INTEGER NOT NULL REFERENCES books(id),
+                tag TEXT NOT NULL,
+                UNIQUE(user_id, book_id, tag)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS user_history (
+                id INTEGER PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                ts TEXT DEFAULT (datetime('now')),
+                action TEXT NOT NULL,
+                book_id INTEGER,
+                book_title TEXT DEFAULT '',
+                detail TEXT DEFAULT '',
+                rating INTEGER DEFAULT 0
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS user_quotes (
+                id INTEGER PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                text TEXT NOT NULL,
+                author TEXT DEFAULT '',
+                book TEXT DEFAULT '',
+                ts TEXT DEFAULT (datetime('now'))
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS user_sessions (
+                id INTEGER PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                book_title TEXT NOT NULL,
+                started TEXT NOT NULL,
+                ended TEXT,
+                duration_min REAL DEFAULT 0
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS user_bookmarks (
+                id INTEGER PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                book_id INTEGER NOT NULL,
+                track_index INTEGER NOT NULL,
+                position REAL NOT NULL,
+                note TEXT DEFAULT '',
+                created_at TEXT DEFAULT (datetime('now'))
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS user_collections (
+                id INTEGER PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                name TEXT NOT NULL,
+                description TEXT DEFAULT '',
+                created_at TEXT DEFAULT (datetime('now'))
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS collection_books (
+                collection_id INTEGER REFERENCES user_collections(id) ON DELETE CASCADE,
+                book_id INTEGER REFERENCES books(id),
+                PRIMARY KEY(collection_id, book_id)
+            )
+            """
+        )
+
         conn.commit()
         _migrate_password_column(conn)
         _ensure_seed_user(conn)
@@ -62,6 +239,11 @@ def init_db():
     finally:
         conn.close()
     logger.info("Database initialized at %s", DB_PATH)
+
+
+# ---------------------------------------------------------------------------
+# Auth helpers (unchanged)
+# ---------------------------------------------------------------------------
 
 
 def _migrate_password_column(conn: sqlite3.Connection):
@@ -242,5 +424,664 @@ def create_or_update_user(email: str, name: str, picture: str) -> dict:
             conn.commit()
             logger.info("New user created: %s", email)
             return dict(conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone())
+    finally:
+        conn.close()
+
+
+# ===========================================================================
+# Books CRUD
+# ===========================================================================
+
+
+def get_all_books() -> list[dict]:
+    """Return all books."""
+    conn = _get_conn()
+    try:
+        rows = conn.execute("SELECT * FROM books ORDER BY title").fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+def get_book_by_id(book_id: int) -> dict | None:
+    conn = _get_conn()
+    try:
+        row = conn.execute("SELECT * FROM books WHERE id = ?", (book_id,)).fetchone()
+        return dict(row) if row else None
+    finally:
+        conn.close()
+
+
+def get_book_by_slug(slug: str) -> dict | None:
+    conn = _get_conn()
+    try:
+        row = conn.execute("SELECT * FROM books WHERE slug = ?", (slug,)).fetchone()
+        return dict(row) if row else None
+    finally:
+        conn.close()
+
+
+def search_books(category: str | None = None, search: str | None = None, sort: str = "title") -> list[dict]:
+    """Search books with optional category filter, text search, and sort."""
+    conn = _get_conn()
+    try:
+        clauses: list[str] = []
+        params: list[str] = []
+        if category:
+            clauses.append("category = ?")
+            params.append(category)
+        if search:
+            clauses.append("(title LIKE ? OR author LIKE ? OR reader LIKE ?)")
+            q = f"%{search}%"
+            params.extend([q, q, q])
+        where = (" WHERE " + " AND ".join(clauses)) if clauses else ""
+        allowed_sorts = {"title": "title", "author": "author", "created_at": "created_at"}
+        order = allowed_sorts.get(sort, "title")
+        rows = conn.execute(f"SELECT * FROM books{where} ORDER BY {order}", params).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+def get_book_tracks(book_id: int) -> list[dict]:
+    """Return tracks for a book ordered by index."""
+    conn = _get_conn()
+    try:
+        rows = conn.execute("SELECT * FROM tracks WHERE book_id = ? ORDER BY idx", (book_id,)).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+# ===========================================================================
+# User Book Status
+# ===========================================================================
+
+
+def get_user_book_status(user_id: str, book_id: int) -> dict | None:
+    conn = _get_conn()
+    try:
+        row = conn.execute(
+            "SELECT status, updated FROM user_book_status WHERE user_id = ? AND book_id = ?",
+            (user_id, book_id),
+        ).fetchone()
+        return dict(row) if row else None
+    finally:
+        conn.close()
+
+
+def set_user_book_status(user_id: str, book_id: int, status: str):
+    conn = _get_conn()
+    try:
+        conn.execute(
+            """INSERT INTO user_book_status (user_id, book_id, status, updated)
+               VALUES (?, ?, ?, datetime('now'))
+               ON CONFLICT(user_id, book_id) DO UPDATE SET status=excluded.status, updated=excluded.updated""",
+            (user_id, book_id, status),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def remove_user_book_status(user_id: str, book_id: int):
+    conn = _get_conn()
+    try:
+        conn.execute(
+            "DELETE FROM user_book_status WHERE user_id = ? AND book_id = ?",
+            (user_id, book_id),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_all_user_book_statuses(user_id: str) -> dict:
+    """Return {book_id: {status, updated}} for the user."""
+    conn = _get_conn()
+    try:
+        rows = conn.execute(
+            "SELECT book_id, status, updated FROM user_book_status WHERE user_id = ?",
+            (user_id,),
+        ).fetchall()
+        return {r["book_id"]: {"status": r["status"], "updated": r["updated"]} for r in rows}
+    finally:
+        conn.close()
+
+
+# ===========================================================================
+# User Progress
+# ===========================================================================
+
+
+def get_user_progress(user_id: str, book_id: int) -> int:
+    """Return progress percent (0 if not set)."""
+    conn = _get_conn()
+    try:
+        row = conn.execute(
+            "SELECT percent FROM user_progress WHERE user_id = ? AND book_id = ?",
+            (user_id, book_id),
+        ).fetchone()
+        return row["percent"] if row else 0
+    finally:
+        conn.close()
+
+
+def set_user_progress(user_id: str, book_id: int, percent: int):
+    conn = _get_conn()
+    try:
+        conn.execute(
+            """INSERT INTO user_progress (user_id, book_id, percent, updated)
+               VALUES (?, ?, ?, datetime('now'))
+               ON CONFLICT(user_id, book_id) DO UPDATE SET percent=excluded.percent, updated=excluded.updated""",
+            (user_id, book_id, percent),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_all_user_progress(user_id: str) -> dict:
+    """Return {book_id: {pct, updated}}."""
+    conn = _get_conn()
+    try:
+        rows = conn.execute(
+            "SELECT book_id, percent, updated FROM user_progress WHERE user_id = ?",
+            (user_id,),
+        ).fetchall()
+        return {r["book_id"]: {"pct": r["percent"], "updated": r["updated"]} for r in rows}
+    finally:
+        conn.close()
+
+
+# ===========================================================================
+# User Playback
+# ===========================================================================
+
+
+def get_user_playback(user_id: str, book_id: int) -> dict | None:
+    conn = _get_conn()
+    try:
+        row = conn.execute(
+            "SELECT track_index, position, filename, updated FROM user_playback WHERE user_id = ? AND book_id = ?",
+            (user_id, book_id),
+        ).fetchone()
+        return dict(row) if row else None
+    finally:
+        conn.close()
+
+
+def set_user_playback(user_id: str, book_id: int, track_index: int, position: float, filename: str = ""):
+    conn = _get_conn()
+    try:
+        conn.execute(
+            """INSERT INTO user_playback (user_id, book_id, track_index, position, filename, updated)
+               VALUES (?, ?, ?, ?, ?, datetime('now'))
+               ON CONFLICT(user_id, book_id) DO UPDATE
+               SET track_index=excluded.track_index, position=excluded.position,
+                   filename=excluded.filename, updated=excluded.updated""",
+            (user_id, book_id, track_index, position, filename),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+# ===========================================================================
+# User Notes
+# ===========================================================================
+
+
+def get_user_note(user_id: str, book_id: int) -> str:
+    conn = _get_conn()
+    try:
+        row = conn.execute(
+            "SELECT note FROM user_notes WHERE user_id = ? AND book_id = ?",
+            (user_id, book_id),
+        ).fetchone()
+        return row["note"] if row else ""
+    finally:
+        conn.close()
+
+
+def set_user_note(user_id: str, book_id: int, note: str):
+    conn = _get_conn()
+    try:
+        if not note:
+            conn.execute(
+                "DELETE FROM user_notes WHERE user_id = ? AND book_id = ?",
+                (user_id, book_id),
+            )
+        else:
+            conn.execute(
+                """INSERT INTO user_notes (user_id, book_id, note)
+                   VALUES (?, ?, ?)
+                   ON CONFLICT(user_id, book_id) DO UPDATE SET note=excluded.note""",
+                (user_id, book_id, note),
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+# ===========================================================================
+# User Tags
+# ===========================================================================
+
+
+def get_user_tags(user_id: str, book_id: int) -> list[str]:
+    conn = _get_conn()
+    try:
+        rows = conn.execute(
+            "SELECT tag FROM user_tags WHERE user_id = ? AND book_id = ?",
+            (user_id, book_id),
+        ).fetchall()
+        return [r["tag"] for r in rows]
+    finally:
+        conn.close()
+
+
+def set_user_tags(user_id: str, book_id: int, tags: list[str]):
+    """Replace all tags for a user/book with the given list."""
+    conn = _get_conn()
+    try:
+        conn.execute(
+            "DELETE FROM user_tags WHERE user_id = ? AND book_id = ?",
+            (user_id, book_id),
+        )
+        for tag in tags:
+            tag = tag.strip()
+            if tag:
+                conn.execute(
+                    "INSERT OR IGNORE INTO user_tags (user_id, book_id, tag) VALUES (?, ?, ?)",
+                    (user_id, book_id, tag),
+                )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_all_user_tags(user_id: str) -> list[str]:
+    """Return all unique tags for a user across all books."""
+    conn = _get_conn()
+    try:
+        rows = conn.execute(
+            "SELECT DISTINCT tag FROM user_tags WHERE user_id = ? ORDER BY tag",
+            (user_id,),
+        ).fetchall()
+        return [r["tag"] for r in rows]
+    finally:
+        conn.close()
+
+
+# ===========================================================================
+# User History
+# ===========================================================================
+
+
+def get_user_history(
+    user_id: str, action: str | None = None, search: str | None = None, limit: int = 100
+) -> list[dict]:
+    conn = _get_conn()
+    try:
+        clauses = ["user_id = ?"]
+        params: list = [user_id]
+        if action:
+            clauses.append("action = ?")
+            params.append(action)
+        if search:
+            clauses.append("(book_title LIKE ? OR detail LIKE ?)")
+            q = f"%{search}%"
+            params.extend([q, q])
+        where = " WHERE " + " AND ".join(clauses)
+        params.append(limit)
+        rows = conn.execute(f"SELECT * FROM user_history{where} ORDER BY ts DESC LIMIT ?", params).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+def add_user_history(
+    user_id: str, action: str, book_id: int | None = None, book_title: str = "", detail: str = "", rating: int = 0
+):
+    conn = _get_conn()
+    try:
+        conn.execute(
+            "INSERT INTO user_history (user_id, action, book_id, book_title, detail, rating) VALUES (?, ?, ?, ?, ?, ?)",
+            (user_id, action, book_id, book_title, detail, rating),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+# ===========================================================================
+# User Quotes
+# ===========================================================================
+
+
+def get_user_quotes(user_id: str) -> list[dict]:
+    conn = _get_conn()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM user_quotes WHERE user_id = ? ORDER BY ts DESC",
+            (user_id,),
+        ).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+def add_user_quote(user_id: str, text: str, book: str = "", author: str = ""):
+    conn = _get_conn()
+    try:
+        conn.execute(
+            "INSERT INTO user_quotes (user_id, text, book, author) VALUES (?, ?, ?, ?)",
+            (user_id, text, book, author),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def delete_user_quote(user_id: str, quote_id: int):
+    conn = _get_conn()
+    try:
+        conn.execute(
+            "DELETE FROM user_quotes WHERE id = ? AND user_id = ?",
+            (quote_id, user_id),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+# ===========================================================================
+# User Sessions
+# ===========================================================================
+
+
+def get_user_sessions(user_id: str) -> list[dict]:
+    conn = _get_conn()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM user_sessions WHERE user_id = ? ORDER BY started DESC",
+            (user_id,),
+        ).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+def start_user_session(user_id: str, book_title: str) -> dict:
+    """Start a listening session. Returns the created session dict."""
+    conn = _get_conn()
+    try:
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        cur = conn.execute(
+            "INSERT INTO user_sessions (user_id, book_title, started) VALUES (?, ?, ?)",
+            (user_id, book_title, now),
+        )
+        conn.commit()
+        row = conn.execute("SELECT * FROM user_sessions WHERE id = ?", (cur.lastrowid,)).fetchone()
+        return dict(row)
+    finally:
+        conn.close()
+
+
+def stop_user_session(user_id: str, book_title: str) -> float:
+    """Stop the most recent open session for this book. Returns duration in minutes."""
+    conn = _get_conn()
+    try:
+        row = conn.execute(
+            "SELECT id, started FROM user_sessions WHERE user_id = ? AND book_title = ? AND ended IS NULL ORDER BY started DESC LIMIT 1",
+            (user_id, book_title),
+        ).fetchone()
+        if not row:
+            return 0.0
+        started = datetime.strptime(row["started"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+        now = datetime.now(timezone.utc)
+        duration_min = (now - started).total_seconds() / 60.0
+        now_str = now.strftime("%Y-%m-%d %H:%M:%S")
+        conn.execute(
+            "UPDATE user_sessions SET ended = ?, duration_min = ? WHERE id = ?",
+            (now_str, round(duration_min, 2), row["id"]),
+        )
+        conn.commit()
+        return round(duration_min, 2)
+    finally:
+        conn.close()
+
+
+def get_session_stats(user_id: str, days: int = 7) -> dict:
+    """Return {total_hours, today_min, week_hours, peak_hour}."""
+    conn = _get_conn()
+    try:
+        # Total hours across all time
+        total_row = conn.execute(
+            "SELECT COALESCE(SUM(duration_min), 0) as total FROM user_sessions WHERE user_id = ? AND duration_min > 0",
+            (user_id,),
+        ).fetchone()
+        total_hours = round(total_row["total"] / 60.0, 2)
+
+        # Today's minutes
+        today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        today_row = conn.execute(
+            "SELECT COALESCE(SUM(duration_min), 0) as total FROM user_sessions WHERE user_id = ? AND started LIKE ?",
+            (user_id, f"{today_str}%"),
+        ).fetchone()
+        today_min = round(today_row["total"], 1)
+
+        # Last N days hours
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
+        week_row = conn.execute(
+            "SELECT COALESCE(SUM(duration_min), 0) as total FROM user_sessions WHERE user_id = ? AND started >= ?",
+            (user_id, cutoff),
+        ).fetchone()
+        week_hours = round(week_row["total"] / 60.0, 2)
+
+        # Peak hour (most sessions started)
+        peak_row = conn.execute(
+            """SELECT CAST(strftime('%H', started) AS INTEGER) as hour, COUNT(*) as cnt
+               FROM user_sessions WHERE user_id = ?
+               GROUP BY hour ORDER BY cnt DESC LIMIT 1""",
+            (user_id,),
+        ).fetchone()
+        peak_hour = peak_row["hour"] if peak_row else 0
+
+        return {
+            "total_hours": total_hours,
+            "today_min": today_min,
+            "week_hours": week_hours,
+            "peak_hour": peak_hour,
+        }
+    finally:
+        conn.close()
+
+
+# ===========================================================================
+# User Bookmarks
+# ===========================================================================
+
+
+def get_user_bookmarks(user_id: str, book_id: int) -> list[dict]:
+    conn = _get_conn()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM user_bookmarks WHERE user_id = ? AND book_id = ? ORDER BY created_at",
+            (user_id, book_id),
+        ).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+def add_user_bookmark(user_id: str, book_id: int, track_index: int, position: float, note: str = "") -> dict:
+    conn = _get_conn()
+    try:
+        cur = conn.execute(
+            "INSERT INTO user_bookmarks (user_id, book_id, track_index, position, note) VALUES (?, ?, ?, ?, ?)",
+            (user_id, book_id, track_index, position, note),
+        )
+        conn.commit()
+        row = conn.execute("SELECT * FROM user_bookmarks WHERE id = ?", (cur.lastrowid,)).fetchone()
+        return dict(row)
+    finally:
+        conn.close()
+
+
+def remove_user_bookmark(user_id: str, bookmark_id: int) -> bool:
+    conn = _get_conn()
+    try:
+        cur = conn.execute(
+            "DELETE FROM user_bookmarks WHERE id = ? AND user_id = ?",
+            (bookmark_id, user_id),
+        )
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+# ===========================================================================
+# User Collections
+# ===========================================================================
+
+
+def get_user_collections(user_id: str) -> list[dict]:
+    """Return collections with their book lists."""
+    conn = _get_conn()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM user_collections WHERE user_id = ? ORDER BY created_at",
+            (user_id,),
+        ).fetchall()
+        result = []
+        for r in rows:
+            c = dict(r)
+            book_rows = conn.execute(
+                "SELECT book_id FROM collection_books WHERE collection_id = ?",
+                (c["id"],),
+            ).fetchall()
+            c["books"] = [br["book_id"] for br in book_rows]
+            result.append(c)
+        return result
+    finally:
+        conn.close()
+
+
+def create_user_collection(user_id: str, name: str, book_ids: list[int] | None = None, description: str = "") -> int:
+    """Create a collection and return its id."""
+    conn = _get_conn()
+    try:
+        cur = conn.execute(
+            "INSERT INTO user_collections (user_id, name, description) VALUES (?, ?, ?)",
+            (user_id, name, description),
+        )
+        coll_id = cur.lastrowid
+        for bid in book_ids or []:
+            conn.execute(
+                "INSERT OR IGNORE INTO collection_books (collection_id, book_id) VALUES (?, ?)",
+                (coll_id, bid),
+            )
+        conn.commit()
+        return coll_id
+    finally:
+        conn.close()
+
+
+def update_user_collection(user_id: str, collection_id: int, name: str, book_ids: list[int], description: str):
+    conn = _get_conn()
+    try:
+        conn.execute(
+            "UPDATE user_collections SET name = ?, description = ? WHERE id = ? AND user_id = ?",
+            (name, description, collection_id, user_id),
+        )
+        conn.execute("DELETE FROM collection_books WHERE collection_id = ?", (collection_id,))
+        for bid in book_ids:
+            conn.execute(
+                "INSERT OR IGNORE INTO collection_books (collection_id, book_id) VALUES (?, ?)",
+                (collection_id, bid),
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def delete_user_collection(user_id: str, collection_id: int) -> bool:
+    conn = _get_conn()
+    try:
+        cur = conn.execute(
+            "DELETE FROM user_collections WHERE id = ? AND user_id = ?",
+            (collection_id, user_id),
+        )
+        conn.commit()
+        return cur.rowcount > 0
+    finally:
+        conn.close()
+
+
+# ===========================================================================
+# Batch queries (for list views — avoid N+1)
+# ===========================================================================
+
+
+def get_all_user_notes_map(user_id: str) -> dict[int, str]:
+    """Return {book_id: note} for all books with notes."""
+    conn = _get_conn()
+    try:
+        rows = conn.execute("SELECT book_id, note FROM user_notes WHERE user_id = ?", (user_id,)).fetchall()
+        return {r["book_id"]: r["note"] for r in rows}
+    finally:
+        conn.close()
+
+
+def get_all_user_tags_map(user_id: str) -> dict[int, list[str]]:
+    """Return {book_id: [tag1, tag2, ...]} for all books with tags."""
+    conn = _get_conn()
+    try:
+        rows = conn.execute(
+            "SELECT book_id, tag FROM user_tags WHERE user_id = ? ORDER BY book_id", (user_id,)
+        ).fetchall()
+        result: dict[int, list[str]] = {}
+        for r in rows:
+            result.setdefault(r["book_id"], []).append(r["tag"])
+        return result
+    finally:
+        conn.close()
+
+
+def get_user_history_for_book(user_id: str, book_id: int) -> list[dict]:
+    """Return history entries for a specific book."""
+    conn = _get_conn()
+    try:
+        rows = conn.execute(
+            "SELECT * FROM user_history WHERE user_id = ? AND book_id = ? ORDER BY ts DESC",
+            (user_id, book_id),
+        ).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+def get_user_rating(user_id: str, book_id: int) -> int:
+    """Return the rating from the most recent 'done' history entry for a book."""
+    conn = _get_conn()
+    try:
+        row = conn.execute(
+            "SELECT rating FROM user_history WHERE user_id = ? AND book_id = ? AND action = 'done' AND rating > 0 ORDER BY ts DESC LIMIT 1",
+            (user_id, book_id),
+        ).fetchone()
+        return row["rating"] if row else 0
+    finally:
+        conn.close()
+
+
+def get_categories() -> list[str]:
+    """Return distinct categories from the books table."""
+    conn = _get_conn()
+    try:
+        rows = conn.execute("SELECT DISTINCT category FROM books WHERE category != '' ORDER BY category").fetchall()
+        return [r["category"] for r in rows]
     finally:
         conn.close()

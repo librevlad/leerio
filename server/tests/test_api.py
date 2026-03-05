@@ -7,11 +7,6 @@ class TestAuth:
         from starlette.testclient import TestClient
 
         import server.api as api_mod
-        import server.db as db_mod
-        from server.core import Library
-
-        monkeypatch.setattr(api_mod, "lib", Library())
-        monkeypatch.setattr(db_mod, "DB_PATH", tmp_data_dir["data"] / "leerio.db")
 
         # No dependency override — real auth check
         client = TestClient(api_mod.app, raise_server_exceptions=False)
@@ -39,10 +34,6 @@ class TestAccessControl:
 
         import server.api as api_mod
         import server.db as db_mod
-        from server.core import Library
-
-        monkeypatch.setattr(api_mod, "lib", Library())
-        monkeypatch.setattr(db_mod, "DB_PATH", tmp_data_dir["data"] / "leerio.db")
 
         # Initialize DB with allowlist containing only admin
         monkeypatch.setenv("ALLOWED_EMAILS", "admin@example.com")
@@ -106,11 +97,16 @@ class TestBooks:
         assert "Толстой" in books[0]["author"]
 
     def test_get_book_not_found(self, api_client):
-        import base64
-
-        fake_id = base64.urlsafe_b64encode(b"/nonexistent/path").decode()
-        r = api_client.get(f"/api/books/{fake_id}")
+        r = api_client.get("/api/books/999999")
         assert r.status_code == 404
+
+    def test_get_book_by_id(self, api_client, sample_books):
+        book_id = sample_books[0]
+        r = api_client.get(f"/api/books/{book_id}")
+        assert r.status_code == 200
+        data = r.json()
+        assert data["title"] == "Книга Первая"
+        assert data["author"] == "Автор Один"
 
     def test_empty_library(self, api_client):
         r = api_client.get("/api/books")
@@ -158,9 +154,48 @@ class TestProgress:
         assert r.status_code == 200
         assert r.json() == {}
 
-    def test_set_progress(self, api_client):
-        r = api_client.put("/api/progress/Книга", json={"pct": 50})
+    def test_set_progress(self, api_client, sample_books):
+        book_id = sample_books[0]
+        r = api_client.put(f"/api/books/{book_id}/progress", json={"pct": 50})
         assert r.status_code == 200
         r = api_client.get("/api/progress")
         data = r.json()
         assert len(data) == 1
+
+
+class TestBookStatus:
+    def test_set_and_get_status(self, api_client, sample_books):
+        book_id = sample_books[0]
+        r = api_client.put(f"/api/user/book-status/{book_id}", json={"status": "reading"})
+        assert r.status_code == 200
+        r = api_client.get(f"/api/user/book-status/{book_id}")
+        assert r.json()["status"] == "reading"
+
+    def test_invalid_status(self, api_client, sample_books):
+        book_id = sample_books[0]
+        r = api_client.put(f"/api/user/book-status/{book_id}", json={"status": "invalid"})
+        assert r.status_code == 400
+
+
+class TestNotes:
+    def test_set_and_get_note(self, api_client, sample_books):
+        book_id = sample_books[0]
+        r = api_client.put(f"/api/books/{book_id}/notes", json={"text": "Отличная книга"})
+        assert r.status_code == 200
+        r = api_client.get(f"/api/books/{book_id}/notes")
+        assert r.json()["text"] == "Отличная книга"
+
+
+class TestTags:
+    def test_set_and_get_tags(self, api_client, sample_books):
+        book_id = sample_books[0]
+        r = api_client.put(f"/api/books/{book_id}/tags", json={"tags": ["tag1", "tag2"]})
+        assert r.status_code == 200
+        r = api_client.get(f"/api/books/{book_id}/tags")
+        assert set(r.json()) == {"tag1", "tag2"}
+
+    def test_all_tags(self, api_client, sample_books):
+        book_id = sample_books[0]
+        api_client.put(f"/api/books/{book_id}/tags", json={"tags": ["alpha", "beta"]})
+        r = api_client.get("/api/tags/all")
+        assert set(r.json()) == {"alpha", "beta"}

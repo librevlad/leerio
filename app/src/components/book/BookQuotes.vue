@@ -13,9 +13,7 @@ const loading = ref(true)
 const newText = ref('')
 const adding = ref(false)
 
-const quotes = computed(() =>
-  allQuotes.value.map((q, i) => ({ ...q, _idx: i })).filter((q) => q.book === props.bookTitle),
-)
+const quotes = computed(() => allQuotes.value.filter((q) => q.book === props.bookTitle))
 
 onMounted(async () => {
   try {
@@ -43,9 +41,9 @@ async function addQuote() {
   }
 }
 
-async function removeQuote(idx: number) {
+async function removeQuote(quoteId: number) {
   try {
-    await api.deleteQuote(idx)
+    await api.deleteQuote(quoteId)
     allQuotes.value = await api.getQuotes()
   } catch {
     toast.error('Не удалось удалить цитату')
@@ -66,13 +64,13 @@ async function removeQuote(idx: number) {
       <div v-if="quotes.length" class="mb-3 space-y-2">
         <div
           v-for="q in quotes"
-          :key="q._idx"
+          :key="q.id"
           class="group relative rounded-xl px-4 py-3 text-[13px] leading-relaxed text-[--t2] italic"
           style="background: rgba(232, 146, 58, 0.05); border-left: 2px solid var(--accent)"
         >
           <button
             class="absolute top-2 right-2 cursor-pointer border-0 bg-transparent p-0.5 text-[--t3] opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
-            @click="removeQuote(q._idx)"
+            @click="removeQuote(q.id)"
           >
             <IconX :size="12" />
           </button>

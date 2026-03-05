@@ -70,7 +70,6 @@ const coverSrc = computed(() => {
     const slug = id.split(':')[2] ?? ''
     return currentBook.value.has_cover ? userBookCoverUrl(slug) : ''
   }
-  if (id.startsWith('lv:')) return '' // LibriVox has no cover via our API
   return currentBook.value.has_cover ? coverUrl(id) : ''
 })
 
@@ -88,7 +87,7 @@ function goToBook() {
   if (!currentBook.value) return
   closeFullscreen()
   const id = currentBook.value.id
-  router.push(id.startsWith('lv:') ? `/discover/${id.slice(3)}` : `/book/${id}`)
+  router.push(`/book/${id}`)
 }
 
 function onSeekInput(e: Event) {
