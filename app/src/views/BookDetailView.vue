@@ -10,7 +10,6 @@ import BookTimeline from '../components/book/BookTimeline.vue'
 import BookSimilar from '../components/book/BookSimilar.vue'
 import BookActions from '../components/book/BookActions.vue'
 import BookQuotes from '../components/book/BookQuotes.vue'
-import BookFolder from '../components/book/BookFolder.vue'
 import BookChapters from '../components/book/BookChapters.vue'
 import AudioPlayer from '../components/player/AudioPlayer.vue'
 import { IconArrowLeft, IconPlay, IconDownload, IconTrash, IconCheck, IconX } from '../components/shared/icons'
@@ -197,7 +196,6 @@ watch(() => route.params.id, loadBook)
           <BookTags :title="book.title" :tags="book.tags" @updated="(t) => (book!.tags = t)" />
           <BookTimeline :entries="book.timeline || []" />
           <BookSimilar :book-id="book.id" />
-          <BookFolder v-if="book.folder" :folder="book.folder" :path="book.path" />
         </div>
       </div>
     </div>
