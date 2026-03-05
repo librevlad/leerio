@@ -34,6 +34,11 @@ function fmtSize(bytes: number): string {
   return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' ГБ'
 }
 
+function clearCache() {
+  cache.clear()
+  cacheBytes.value = 0
+}
+
 async function handleLogout() {
   await logout()
   router.push('/login')
@@ -203,13 +208,7 @@ async function handleLogout() {
             <p class="text-[18px] leading-none font-bold text-[--t1]">{{ fmtSize(cacheBytes) }}</p>
           </div>
         </div>
-        <button
-          class="btn btn-ghost mt-4"
-          @click="
-            cache.clear()
-            cacheBytes = 0
-          "
-        >
+        <button class="btn btn-ghost mt-4" @click="clearCache">
           <IconTrash :size="14" />
           Очистить кэш
         </button>

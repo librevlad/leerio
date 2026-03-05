@@ -157,6 +157,12 @@ function onSwipeEnd(e: TouchEvent) {
   const deltaY = touch.clientY - swipeStartY
   if (deltaY > 80) closeFullscreen()
 }
+
+function closeOverlays() {
+  showSpeedMenu.value = false
+  showSleepMenu.value = false
+  showVolumeSlider.value = false
+}
 </script>
 
 <template>
@@ -407,11 +413,7 @@ function onSwipeEnd(e: TouchEvent) {
       <div
         v-if="showSpeedMenu || showSleepMenu || showVolumeSlider"
         class="fixed inset-0 z-[5]"
-        @click="
-          showSpeedMenu = false
-          showSleepMenu = false
-          showVolumeSlider = false
-        "
+        @click="closeOverlays"
       />
     </div>
   </transition>
