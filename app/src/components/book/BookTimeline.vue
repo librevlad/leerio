@@ -10,7 +10,11 @@ const glowColor: Record<string, string> = {
   pause: 'rgba(250,204,21,0.3)',
   done: 'rgba(74,222,128,0.3)',
   reject: 'rgba(248,113,113,0.3)',
-  inbox: 'rgba(148,163,184,0.2)',
+  inbox: 'rgba(34,211,238,0.25)',
+  relisten: 'rgba(34,211,238,0.25)',
+  move: 'rgba(148,163,184,0.2)',
+  undo: 'rgba(148,163,184,0.2)',
+  delete: 'rgba(248,113,113,0.25)',
   download: 'rgba(148,163,184,0.2)',
 }
 
