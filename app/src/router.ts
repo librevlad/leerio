@@ -60,6 +60,11 @@ const router = createRouter({
       component: () => import('./views/LibriVoxDetailView.vue'),
     },
     {
+      path: '/collections',
+      name: 'collections',
+      component: () => import('./views/CollectionsView.vue'),
+    },
+    {
       path: '/settings',
       name: 'settings',
       component: () => import('./views/SettingsView.vue'),
