@@ -172,7 +172,8 @@ jobs:
             sed -i '/^S3_ACCESS_KEY=/d' .env 2>/dev/null; echo "S3_ACCESS_KEY=$S3_ACCESS_KEY" >> .env
             sed -i '/^S3_SECRET_KEY=/d' .env 2>/dev/null; echo "S3_SECRET_KEY=$S3_SECRET_KEY" >> .env
             sed -i '/^S3_BUCKET=/d' .env 2>/dev/null; echo "S3_BUCKET=$S3_BUCKET" >> .env
-            docker compose build --pull
+            docker compose build --pull --no-cache app
+            docker compose build --pull server
             docker compose up -d
             echo "Waiting for services to start..."
             sleep 15
@@ -186,6 +187,7 @@ jobs:
             done
             echo "All health checks failed — rolling back to $PREV_SHA"
             git checkout "$PREV_SHA"
-            docker compose build --pull
+            docker compose build --pull --no-cache app
+            docker compose build --pull server
             docker compose up -d
             exit 1
