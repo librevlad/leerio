@@ -18,6 +18,8 @@ const props = defineProps<{
 const dl = useDownloads()
 const downloaded = computed(() => dl.isNative.value && dl.isBookDownloaded(props.book.id))
 const coverLoaded = ref(false)
+const coverError = ref(false)
+const hasCover = computed(() => (props.book.has_cover || props.coverSrc) && !coverError.value)
 
 const coverGradient: Record<string, string> = {
   Бизнес: 'linear-gradient(135deg, #92400e 0%, #d97706 50%, #fbbf24 100%)',
@@ -47,12 +49,13 @@ const fallbackPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1
       :style="{ background: coverGradient[book.category] || fallbackGradient }"
     >
       <img
-        v-if="book.has_cover || coverSrc"
+        v-if="hasCover"
         :src="coverSrc || coverUrl(book.id)"
         :alt="book.title"
         class="absolute inset-0 h-full w-full object-cover transition-opacity duration-300"
         :class="coverLoaded ? 'opacity-100 blur-[1px] brightness-75' : 'opacity-0'"
         @load="coverLoaded = true"
+        @error="coverError = true"
       />
       <div
         v-if="!coverLoaded"
@@ -79,10 +82,11 @@ const fallbackPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1
       <div class="-mt-10 mb-3 flex items-end gap-3">
         <div class="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg shadow-lg ring-2 ring-[--card-solid]">
           <img
-            v-if="book.has_cover || coverSrc"
+            v-if="hasCover"
             :src="coverSrc || coverUrl(book.id)"
             :alt="book.title"
             class="h-full w-full object-cover"
+            @error="coverError = true"
           />
           <div
             v-else

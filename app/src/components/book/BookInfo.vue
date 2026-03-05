@@ -8,6 +8,8 @@ import { IconStar, IconStarOutline, IconHardDrive, IconMusic, IconClock, IconHea
 
 const props = defineProps<{ book: Book }>()
 const coverLoaded = ref(false)
+const coverError = ref(false)
+const hasCover = computed(() => props.book.has_cover && !coverError.value)
 
 const hasMetadata = () => props.book.size_mb || props.book.mp3_count || props.book.duration_fmt || props.book.rating
 
@@ -81,18 +83,19 @@ const startDate = computed(() => {
           <!-- Cover -->
           <div
             class="relative h-[140px] w-[140px] shrink-0 overflow-hidden rounded-lg shadow-lg"
-            :style="!book.has_cover ? { background: coverGradient[book.category] || fallbackGradient } : {}"
+            :style="!hasCover ? { background: coverGradient[book.category] || fallbackGradient } : {}"
           >
             <img
-              v-if="book.has_cover"
+              v-if="hasCover"
               :src="coverUrl(book.id)"
               :alt="book.title"
               class="h-full w-full object-cover transition-opacity duration-300"
               :class="coverLoaded ? 'opacity-100' : 'opacity-0'"
               @load="coverLoaded = true"
+              @error="coverError = true"
             />
             <div
-              v-if="!book.has_cover"
+              v-if="!hasCover"
               class="absolute inset-0"
               :style="{ background: coverPattern[book.category] || fallbackPattern }"
             />
@@ -134,18 +137,19 @@ const startDate = computed(() => {
           <!-- Cover -->
           <div
             class="relative h-[200px] w-[200px] shrink-0 overflow-hidden rounded-lg shadow-lg"
-            :style="!book.has_cover ? { background: coverGradient[book.category] || fallbackGradient } : {}"
+            :style="!hasCover ? { background: coverGradient[book.category] || fallbackGradient } : {}"
           >
             <img
-              v-if="book.has_cover"
+              v-if="hasCover"
               :src="coverUrl(book.id)"
               :alt="book.title"
               class="h-full w-full object-cover transition-opacity duration-300"
               :class="coverLoaded ? 'opacity-100' : 'opacity-0'"
               @load="coverLoaded = true"
+              @error="coverError = true"
             />
             <div
-              v-if="!book.has_cover"
+              v-if="!hasCover"
               class="absolute inset-0"
               :style="{ background: coverPattern[book.category] || fallbackPattern }"
             />
