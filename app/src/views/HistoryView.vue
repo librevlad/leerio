@@ -102,7 +102,7 @@ const grouped = computed(() => {
       currentDate = d
       groups.push({ date: d, entries: [] })
     }
-    groups[groups.length - 1].entries.push(e)
+    groups[groups.length - 1]!.entries.push(e)
   }
   return groups
 })
