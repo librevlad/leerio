@@ -216,7 +216,10 @@ function closeOverlays() {
         <p class="truncate text-[15px] font-semibold text-[--t1]">
           {{ currentTrack?.filename ?? '' }}
         </p>
-        <p class="mt-1 flex items-center justify-center gap-2 text-[12px] text-[--t3]">
+        <p
+          v-if="currentBook.author || playingOffline"
+          class="mt-1 flex items-center justify-center gap-2 text-[12px] text-[--t3]"
+        >
           {{ currentBook.author }}
           <span
             v-if="playingOffline"
