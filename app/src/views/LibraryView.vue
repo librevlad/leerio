@@ -15,50 +15,6 @@ const category = ref('')
 const sort = ref('title')
 const statusFilter = ref<BookStatusValue | ''>('')
 
-const statusPills: {
-  value: BookStatusValue | ''
-  label: string
-  color: string
-  activeBg: string
-  activeBorder: string
-}[] = [
-  {
-    value: '',
-    label: 'Все',
-    color: 'text-[--accent]',
-    activeBg: 'bg-[--accent-soft]',
-    activeBorder: 'border-[--accent]/30',
-  },
-  {
-    value: 'reading',
-    label: 'Слушаю',
-    color: 'text-purple-400',
-    activeBg: 'bg-purple-500/10',
-    activeBorder: 'border-purple-500/30',
-  },
-  {
-    value: 'want_to_read',
-    label: 'Хочу',
-    color: 'text-slate-400',
-    activeBg: 'bg-slate-500/10',
-    activeBorder: 'border-slate-500/30',
-  },
-  {
-    value: 'done',
-    label: 'Готово',
-    color: 'text-emerald-400',
-    activeBg: 'bg-emerald-500/10',
-    activeBorder: 'border-emerald-500/30',
-  },
-  {
-    value: 'paused',
-    label: 'На паузе',
-    color: 'text-amber-400',
-    activeBg: 'bg-amber-500/10',
-    activeBorder: 'border-amber-500/30',
-  },
-]
-
 onMounted(() => loadBooks())
 
 watch([category, sort], () => loadBooks())
@@ -102,14 +58,55 @@ const catColors: Record<string, { bg: string; border: string; text: string }> = 
 }
 const catFallback = { bg: 'bg-slate-500/8', border: 'border-slate-500/20', text: 'text-slate-400' }
 
-const stats = computed(() => {
+// Status counts from actual book_status field (consistent with filter)
+const statusCounts = computed(() => {
   const all = books.value
   return {
-    total: all.length,
-    inProgress: all.filter((b) => b.progress > 0 && b.progress < 100).length,
+    reading: all.filter((b) => b.book_status === 'reading').length,
     done: all.filter((b) => b.book_status === 'done').length,
   }
 })
+
+// Status pills with live counts
+const statusPills = computed(() => [
+  {
+    value: '' as BookStatusValue | '',
+    label: 'Все',
+    color: 'text-[--accent]',
+    activeBg: 'bg-[--accent-soft]',
+    activeBorder: 'border-[--accent]/30',
+  },
+  {
+    value: 'reading' as BookStatusValue | '',
+    label: 'Слушаю',
+    count: statusCounts.value.reading,
+    color: 'text-purple-400',
+    activeBg: 'bg-purple-500/10',
+    activeBorder: 'border-purple-500/30',
+  },
+  {
+    value: 'want_to_read' as BookStatusValue | '',
+    label: 'Хочу',
+    color: 'text-slate-400',
+    activeBg: 'bg-slate-500/10',
+    activeBorder: 'border-slate-500/30',
+  },
+  {
+    value: 'done' as BookStatusValue | '',
+    label: 'Готово',
+    count: statusCounts.value.done,
+    color: 'text-emerald-400',
+    activeBg: 'bg-emerald-500/10',
+    activeBorder: 'border-emerald-500/30',
+  },
+  {
+    value: 'paused' as BookStatusValue | '',
+    label: 'На паузе',
+    color: 'text-amber-400',
+    activeBg: 'bg-amber-500/10',
+    activeBorder: 'border-amber-500/30',
+  },
+])
 
 function resetFilters() {
   search.value = ''
@@ -133,99 +130,79 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
           <span class="font-bold text-[--accent]">{{ filtered.length }}</span> книг
         </p>
       </div>
-      <div class="flex items-center gap-2 sm:gap-3">
-        <SearchInput v-model="search" placeholder="Поиск..." class="w-full sm:w-56" />
-      </div>
+      <SearchInput v-model="search" placeholder="Поиск..." class="w-full sm:w-56" />
     </div>
 
-    <!-- Stats banner (desktop) -->
-    <div v-if="!loading && stats.total" class="mb-5 hidden items-center gap-6 text-[12px] text-[--t3] md:flex">
-      <span>
-        <span class="font-semibold text-[--t2]">{{ stats.total }}</span> всего
-      </span>
-      <span v-if="stats.inProgress">
-        <span class="font-semibold text-purple-400">{{ stats.inProgress }}</span> слушаю
-      </span>
-      <span v-if="stats.done">
-        <span class="font-semibold text-emerald-400">{{ stats.done }}</span> прослушано
-      </span>
+    <!-- Category pills -->
+    <div class="scrollbar-hide fade-mask-r mb-3 flex gap-2 overflow-x-auto pb-0.5">
+      <button
+        class="flex-shrink-0 cursor-pointer rounded-full border px-3.5 py-1.5 text-[12px] font-semibold transition-all duration-200"
+        :class="
+          category === ''
+            ? 'border-white/15 bg-white/10 text-[--t1]'
+            : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
+        "
+        @click="category = ''"
+      >
+        Все
+      </button>
+      <button
+        v-for="cat in categories"
+        :key="cat"
+        class="flex-shrink-0 cursor-pointer rounded-full border px-3.5 py-1.5 text-[12px] font-semibold transition-all duration-200"
+        :class="
+          category === cat
+            ? [
+                (catColors[cat] || catFallback).bg,
+                (catColors[cat] || catFallback).border,
+                (catColors[cat] || catFallback).text,
+              ]
+            : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
+        "
+        @click="category = cat"
+      >
+        {{ cat }}
+      </button>
     </div>
 
-    <!-- Unified filter card -->
-    <div class="card mb-6 space-y-3 px-4 py-3">
-      <!-- Category pills -->
-      <div>
-        <span class="mr-2 text-[11px] font-semibold text-[--t3]">Категория:</span>
-        <div class="scrollbar-hide fade-mask-r mt-1.5 flex gap-2 overflow-x-auto pb-0.5">
-          <button
-            class="flex-shrink-0 cursor-pointer rounded-full border px-3.5 py-1.5 text-[12px] font-semibold transition-all duration-200"
-            :class="
-              category === ''
-                ? 'border-white/15 bg-white/10 text-[--t1]'
-                : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
-            "
-            @click="category = ''"
+    <!-- Status + Sort row -->
+    <div class="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div class="scrollbar-hide fade-mask-r flex gap-1.5 overflow-x-auto pb-0.5">
+        <button
+          v-for="sp in statusPills"
+          :key="sp.value"
+          class="flex flex-shrink-0 cursor-pointer items-center gap-1 rounded-full border px-3 py-1.5 text-[12px] font-semibold transition-all duration-200"
+          :class="
+            statusFilter === sp.value
+              ? [sp.activeBg, sp.activeBorder, sp.color]
+              : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
+          "
+          @click="statusFilter = sp.value"
+        >
+          {{ sp.label }}
+          <span
+            v-if="sp.count"
+            class="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] leading-none"
+            :class="statusFilter === sp.value ? 'bg-white/10' : 'bg-white/5'"
           >
-            Все
-          </button>
-          <button
-            v-for="cat in categories"
-            :key="cat"
-            class="flex-shrink-0 cursor-pointer rounded-full border px-3.5 py-1.5 text-[12px] font-semibold transition-all duration-200"
-            :class="
-              category === cat
-                ? [
-                    (catColors[cat] || catFallback).bg,
-                    (catColors[cat] || catFallback).border,
-                    (catColors[cat] || catFallback).text,
-                  ]
-                : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
-            "
-            @click="category = cat"
-          >
-            {{ cat }}
-          </button>
-        </div>
+            {{ sp.count }}
+          </span>
+        </button>
       </div>
-
-      <!-- Status pills (color-coded) -->
-      <div>
-        <span class="mr-2 text-[11px] font-semibold text-[--t3]">Статус:</span>
-        <div class="scrollbar-hide fade-mask-r mt-1.5 flex gap-2 overflow-x-auto pb-0.5">
-          <button
-            v-for="sp in statusPills"
-            :key="sp.value"
-            class="flex-shrink-0 cursor-pointer rounded-full border px-3.5 py-1.5 text-[12px] font-semibold transition-all duration-200"
-            :class="
-              statusFilter === sp.value
-                ? [sp.activeBg, sp.activeBorder, sp.color]
-                : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
-            "
-            @click="statusFilter = sp.value"
-          >
-            {{ sp.label }}
-          </button>
-        </div>
-      </div>
-
-      <!-- Sort row -->
-      <div class="flex items-center gap-1.5 pt-1">
-        <span class="mr-1 text-[11px] font-semibold text-[--t3]">Сортировка:</span>
-        <div class="scrollbar-hide flex gap-1.5 overflow-x-auto">
-          <button
-            v-for="s in sortOptions"
-            :key="s.value"
-            class="cursor-pointer rounded-full border-0 px-3 py-1 text-[11px] font-medium transition-all duration-200"
-            :class="
-              sort === s.value
-                ? 'bg-[--accent-soft] text-[--accent]'
-                : 'bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
-            "
-            @click="sort = s.value"
-          >
-            {{ s.label }}
-          </button>
-        </div>
+      <div class="scrollbar-hide flex flex-shrink-0 items-center gap-1 overflow-x-auto">
+        <button
+          v-for="s in sortOptions"
+          :key="s.value"
+          class="cursor-pointer rounded-full border-0 px-2.5 py-1 text-[11px] font-medium transition-all duration-200"
+          :class="
+            sort === s.value
+              ? 'bg-[--accent-soft] text-[--accent]'
+              : 'bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
+          "
+          @click="sort = s.value"
+        >
+          {{ s.label }}
+        </button>
       </div>
     </div>
 
