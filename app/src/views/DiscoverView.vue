@@ -2,7 +2,6 @@
 import { ref, computed, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useLibriVox } from '../composables/useLibriVox'
-import { librivoxCoverUrl } from '../api'
 import SearchInput from '../components/shared/SearchInput.vue'
 import BookCard from '../components/shared/BookCard.vue'
 import EmptyState from '../components/shared/EmptyState.vue'
@@ -46,7 +45,7 @@ function toBook(lv: (typeof books.value)[number]): Book {
     progress: 0,
     tags: [],
     note: '',
-    has_cover: true,
+    has_cover: false,
     duration_fmt: lv.total_time || undefined,
   }
 }
@@ -109,7 +108,6 @@ const hasSearched = computed(() => title.value.trim() !== '' || language.value !
           :book="book"
           source="librivox"
           :to="`/discover/${books[i]!.librivox_id}`"
-          :cover-src="librivoxCoverUrl(books[i]!.librivox_id)"
         />
       </div>
 

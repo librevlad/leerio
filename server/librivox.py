@@ -63,14 +63,17 @@ def search_books(
     offset: int = 0,
 ) -> dict:
     """Search LibriVox audiobooks. Returns {books, total}."""
-    params: dict[str, str | int] = {"format": "json", "limit": limit, "offset": offset}
+    params: dict[str, str | int] = {"format": "json"}
     if title:
-        params["title"] = title
+        # LibriVox API uses ^ prefix for partial title matching
+        params["title"] = f"^{title}"
     if author:
         params["author"] = author
-    if language:
-        # LibriVox API uses full language names
-        params["language"] = language
+    # LibriVox API ignores the language parameter, so we filter server-side.
+    # Over-fetch when filtering by language to fill the requested page.
+    fetch_limit = limit * 5 if language else limit
+    params["limit"] = fetch_limit
+    params["offset"] = offset
 
     try:
         resp = requests.get(LIBRIVOX_API, params=params, timeout=REQUEST_TIMEOUT)
@@ -86,6 +89,12 @@ def search_books(
         return {"books": [], "total": 0}
 
     books = [_normalize_book(b) for b in raw_books]
+
+    if language:
+        lang_lower = language.lower()
+        books = [b for b in books if b["language"].lower() == lang_lower]
+        books = books[:limit]
+
     return {"books": books, "total": len(books)}
 
 
