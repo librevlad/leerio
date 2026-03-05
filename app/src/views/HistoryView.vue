@@ -192,7 +192,9 @@ function formatTime(ts: string): string {
                 {{ e.book }}
               </router-link>
               <p v-else class="truncate text-[13px] font-medium text-[--t2]">{{ e.book }}</p>
-              <p v-if="e.detail" class="mt-0.5 truncate text-[11px] text-[--t3]">{{ e.detail }}</p>
+              <p v-if="e.detail && e.detail !== e.action_label" class="mt-0.5 truncate text-[11px] text-[--t3]">
+                {{ e.detail }}
+              </p>
             </div>
 
             <!-- Time -->

@@ -325,7 +325,7 @@ def estimate_duration_hours(path: Path) -> float | None:
 
 
 def fmt_duration(hours: float | None) -> str:
-    if hours is None:
+    if not hours:
         return ""
     if hours < 1:
         return f"{hours * 60:.0f} мин"
