@@ -73,7 +73,7 @@ async function handleUpload() {
 
     await api.uploadBook(formData)
     toast.success('Книга загружена!')
-    router.push('/my-books')
+    router.push('/my-library')
   } catch (e: unknown) {
     toast.error(`Ошибка: ${e instanceof Error ? e.message : 'Неизвестная ошибка'}`)
   } finally {
@@ -129,11 +129,11 @@ function onLocalFilesChange(e: Event) {
     const newFiles = Array.from(input.files)
     localFiles.value = [...localFiles.value, ...newFiles]
     // Auto-fill title from first file name if empty
-    if (!localTitle.value && newFiles.length > 0) {
+    if (!localTitle.value && newFiles[0]) {
       const name = newFiles[0].name.replace(/\.\w+$/, '')
       // Try to extract "Author - Title" pattern
       const match = name.match(/^(.+?)\s*-\s*(.+)$/)
-      if (match) {
+      if (match?.[1] && match[2]) {
         localAuthor.value = match[1].trim()
         localTitle.value = match[2].trim()
       } else {
@@ -473,7 +473,7 @@ async function handleTTSConvert() {
         </div>
         <router-link
           v-if="jobStatus === 'done'"
-          to="/my-books"
+          to="/my-library"
           class="mt-3 inline-block text-[12px] font-medium text-emerald-400 hover:underline"
         >
           Перейти к моим книгам

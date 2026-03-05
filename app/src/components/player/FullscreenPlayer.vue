@@ -3,7 +3,8 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePlayer } from '../../composables/usePlayer'
 import { useDownloads } from '../../composables/useDownloads'
-import { coverUrl, userBookCoverUrl } from '../../api'
+import { useToast } from '../../composables/useToast'
+import { api, coverUrl, userBookCoverUrl } from '../../api'
 import {
   IconChevronDown,
   IconChevronUp,
@@ -24,6 +25,7 @@ import {
 
 const router = useRouter()
 const dl = useDownloads()
+const toast = useToast()
 
 const {
   currentBook,
@@ -65,7 +67,7 @@ const coverSrc = computed(() => {
   const id = currentBook.value.id
   if (id.startsWith('lb:')) return '' // local book - no server cover
   if (id.startsWith('ub:')) {
-    const slug = id.split(':')[2]
+    const slug = id.split(':')[2] ?? ''
     return currentBook.value.has_cover ? userBookCoverUrl(slug) : ''
   }
   if (id.startsWith('lv:')) return '' // LibriVox has no cover via our API
@@ -132,11 +134,28 @@ function isTrackDownloaded(index: number) {
   return dl.isNative.value && dl.isTrackDownloaded(currentBook.value.id, index)
 }
 
-function onSwipeDown(e: TouchEvent) {
-  const touch = e.changedTouches[0]
-  if (touch && touch.clientY > 100) {
-    closeFullscreen()
+async function addBookmark() {
+  if (!currentBook.value) return
+  try {
+    await api.addBookmark(currentBook.value.id, currentTrackIndex.value, currentTime.value)
+    toast.success('Закладка добавлена')
+  } catch {
+    toast.error('Не удалось добавить закладку')
   }
+}
+
+let swipeStartY = 0
+
+function onSwipeStart(e: TouchEvent) {
+  const touch = e.touches[0]
+  if (touch) swipeStartY = touch.clientY
+}
+
+function onSwipeEnd(e: TouchEvent) {
+  const touch = e.changedTouches[0]
+  if (!touch) return
+  const deltaY = touch.clientY - swipeStartY
+  if (deltaY > 80) closeFullscreen()
 }
 </script>
 
@@ -146,7 +165,8 @@ function onSwipeDown(e: TouchEvent) {
       v-if="isFullscreen && currentBook"
       class="fixed inset-0 z-[100] flex flex-col overflow-hidden"
       style="background: linear-gradient(180deg, #0d0d16 0%, #07070e 100%)"
-      @touchend="onSwipeDown"
+      @touchstart="onSwipeStart"
+      @touchend="onSwipeEnd"
     >
       <!-- Header -->
       <div class="safe-top flex items-center justify-between px-4 py-3">
@@ -322,7 +342,7 @@ function onSwipeDown(e: TouchEvent) {
         <!-- Bookmark -->
         <button
           class="flex h-10 items-center gap-1 rounded-full border-0 bg-transparent px-2 text-[--t3] transition-colors hover:text-[--t2]"
-          @click="goToBook"
+          @click="addBookmark"
         >
           <IconBookmark :size="16" />
         </button>

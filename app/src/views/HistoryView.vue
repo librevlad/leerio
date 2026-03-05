@@ -62,9 +62,21 @@ function formatDate(ts: string): string {
 
     <div class="mb-6 flex flex-wrap items-center gap-3">
       <SearchInput v-model="search" placeholder="Поиск по книге..." class="min-w-[200px] flex-1" />
-      <select v-model="actionFilter" class="input-field cursor-pointer px-3 py-2.5 text-[13px]">
-        <option v-for="a in actions" :key="a.value" :value="a.value">{{ a.label }}</option>
-      </select>
+      <div class="scrollbar-hide flex gap-1.5 overflow-x-auto">
+        <button
+          v-for="a in actions"
+          :key="a.value"
+          class="flex-shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[12px] font-medium transition-all"
+          :class="
+            actionFilter === a.value
+              ? 'border-[--accent]/30 bg-[--accent-soft] text-[--accent]'
+              : 'border-[--border] bg-transparent text-[--t3] hover:text-[--t2]'
+          "
+          @click="actionFilter = a.value"
+        >
+          {{ a.label }}
+        </button>
+      </div>
     </div>
 
     <div v-if="loading" class="space-y-2">

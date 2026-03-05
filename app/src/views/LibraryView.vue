@@ -6,12 +6,22 @@ import BookCard from '../components/shared/BookCard.vue'
 import EmptyState from '../components/shared/EmptyState.vue'
 import PullIndicator from '../components/shared/PullIndicator.vue'
 import { usePullToRefresh } from '../composables/usePullToRefresh'
+import type { BookStatusValue } from '../types'
 
 const { books, loading, load, categories } = useBooks()
 
 const search = ref('')
 const category = ref('')
 const sort = ref('title')
+const statusFilter = ref<BookStatusValue | ''>('')
+
+const statusPills: { value: BookStatusValue | ''; label: string }[] = [
+  { value: '', label: 'Все' },
+  { value: 'reading', label: 'Слушаю' },
+  { value: 'want_to_read', label: 'Хочу' },
+  { value: 'done', label: 'Готово' },
+  { value: 'paused', label: 'На паузе' },
+]
 
 onMounted(() => loadBooks())
 
@@ -25,12 +35,18 @@ function loadBooks() {
 }
 
 const filtered = computed(() => {
-  if (!search.value) return books.value
-  const q = search.value.toLowerCase()
-  return books.value.filter(
-    (b) =>
-      b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q) || b.folder.toLowerCase().includes(q),
-  )
+  let result = books.value
+  if (statusFilter.value) {
+    result = result.filter((b) => b.book_status === statusFilter.value)
+  }
+  if (search.value) {
+    const q = search.value.toLowerCase()
+    result = result.filter(
+      (b) =>
+        b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q) || b.folder.toLowerCase().includes(q),
+    )
+  }
+  return result
 })
 
 const sortOptions = [
@@ -54,6 +70,7 @@ function resetFilters() {
   search.value = ''
   category.value = ''
   sort.value = 'title'
+  statusFilter.value = ''
 }
 
 const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
@@ -99,6 +116,23 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
         @click="category = cat"
       >
         {{ cat }}
+      </button>
+    </div>
+
+    <!-- Status filter pills -->
+    <div class="scrollbar-hide fade-mask-r mb-4 flex gap-2 overflow-x-auto pb-1">
+      <button
+        v-for="sp in statusPills"
+        :key="sp.value"
+        class="flex-shrink-0 cursor-pointer rounded-full border px-4 py-2 text-[12px] font-semibold transition-all duration-200"
+        :class="
+          statusFilter === sp.value
+            ? 'border-[--accent]/30 bg-[--accent-soft] text-[--accent]'
+            : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
+        "
+        @click="statusFilter = sp.value"
+      >
+        {{ sp.label }}
       </button>
     </div>
 

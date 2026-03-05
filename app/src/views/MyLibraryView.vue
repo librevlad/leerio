@@ -154,7 +154,7 @@ const filters = [
   { key: 'uploaded' as const, label: 'Загруженные' },
 ]
 
-const sourceBadgeMap: Record<string, 'library' | 'librivox' | 'user' | 'local'> = {
+const sourceBadgeMap: Record<UnifiedItem['source'], 'library' | 'librivox' | 'user' | 'local'> = {
   downloaded: 'library',
   local: 'local',
   uploaded: 'user',

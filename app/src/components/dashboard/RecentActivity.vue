@@ -18,7 +18,12 @@ function timeAgo(ts: string): string {
 
 <template>
   <div v-if="entries.length">
-    <h2 class="section-label mb-4">Последние действия</h2>
+    <div class="mb-4 flex items-center justify-between">
+      <h2 class="section-label">Последние действия</h2>
+      <router-link to="/history" class="text-[12px] font-medium text-[--accent] no-underline hover:underline">
+        Все действия
+      </router-link>
+    </div>
     <div class="card p-2">
       <div
         v-for="(e, i) in entries"

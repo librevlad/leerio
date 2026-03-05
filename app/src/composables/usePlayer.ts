@@ -255,7 +255,7 @@ async function loadBook(book: Book) {
 
     // Offline + downloaded book: use local track metadata
     if (!isOnline.value && downloads.isBookDownloaded(book.id)) {
-      const meta = downloads.meta.value[book.id]
+      const meta = downloads.meta.value.books[book.id]
       if (meta?.tracks) {
         tracks.value = meta.tracks.map((t: { index: number; filename: string }, i: number) => ({
           index: i,
@@ -267,7 +267,7 @@ async function loadBook(book: Book) {
       }
     } else {
       const lvId = isLibriVox ? book.id.slice(3) : ''
-      const ubSlug = isUserBook ? book.id.split(':')[2] : ''
+      const ubSlug = isUserBook ? (book.id.split(':')[2] ?? '') : ''
       const res = isLibriVox
         ? await api.librivoxChapters(lvId)
         : isUserBook

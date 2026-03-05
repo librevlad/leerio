@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useDebounceFn } from '@vueuse/core'
 import { useLibriVox } from '../composables/useLibriVox'
 import SearchInput from '../components/shared/SearchInput.vue'
 import EmptyState from '../components/shared/EmptyState.vue'
@@ -26,7 +27,8 @@ function doSearch() {
   search(title.value.trim(), language.value)
 }
 
-watch(title, () => doSearch())
+const debouncedSearch = useDebounceFn(doSearch, 400)
+watch(title, () => debouncedSearch())
 watch(language, () => doSearch())
 
 function formatDuration(secs: number): string {
