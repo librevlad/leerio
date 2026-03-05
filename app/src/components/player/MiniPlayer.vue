@@ -1,32 +1,28 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
 import { usePlayer } from '../../composables/usePlayer'
 import { IconPlay, IconPause, IconXCircle, IconForward15 } from '../shared/icons'
 
-const router = useRouter()
 const {
   currentBook,
   isPlaying,
   isPlayerVisible,
+  isFullscreen,
   currentTrack,
   overallProgress,
   playingOffline,
   togglePlay,
   skipForward,
   closePlayer,
+  openFullscreen,
 } = usePlayer()
-
-function goToBook() {
-  if (currentBook.value) {
-    const id = currentBook.value.id
-    router.push(id.startsWith('lv:') ? `/discover/${id.slice(3)}` : `/book/${id}`)
-  }
-}
 </script>
 
 <template>
   <transition name="mini-player">
-    <div v-if="isPlayerVisible && currentBook" class="fixed right-0 bottom-[60px] left-0 z-40 md:bottom-0 md:left-56">
+    <div
+      v-if="isPlayerVisible && currentBook && !isFullscreen"
+      class="fixed right-0 bottom-[60px] left-0 z-40 md:bottom-0 md:left-56"
+    >
       <!-- Progress bar -->
       <div class="h-[2px] w-full" style="background: rgba(255, 255, 255, 0.06)">
         <div
@@ -42,7 +38,7 @@ function goToBook() {
         style="background: rgba(17, 17, 25, 0.92); backdrop-filter: blur(20px); border-top: 1px solid var(--border)"
       >
         <!-- Info (clickable) -->
-        <button class="min-w-0 flex-1 cursor-pointer border-0 bg-transparent p-0 text-left" @click="goToBook">
+        <button class="min-w-0 flex-1 cursor-pointer border-0 bg-transparent p-0 text-left" @click="openFullscreen">
           <p class="flex items-center gap-1.5 truncate text-[13px] leading-tight font-semibold text-[--t1]">
             <span
               v-if="playingOffline"

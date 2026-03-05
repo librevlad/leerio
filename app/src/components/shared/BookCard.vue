@@ -4,11 +4,15 @@ import type { Book } from '../../types'
 import { coverUrl } from '../../api'
 import CategoryBadge from './CategoryBadge.vue'
 import StatusBadge from './StatusBadge.vue'
+import SourceBadge from './SourceBadge.vue'
 import ProgressBar from './ProgressBar.vue'
 import { IconStar, IconStarOutline, IconCheck } from './icons'
 import { useDownloads } from '../../composables/useDownloads'
 
-const props = defineProps<{ book: Book }>()
+const props = defineProps<{
+  book: Book
+  source?: 'library' | 'librivox' | 'user' | 'local'
+}>()
 const dl = useDownloads()
 const downloaded = computed(() => dl.isNative.value && dl.isBookDownloaded(props.book.id))
 const coverLoaded = ref(false)
@@ -57,6 +61,9 @@ const fallbackPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1
         class="absolute inset-0"
         style="background: linear-gradient(to bottom, transparent 30%, rgba(0, 0, 0, 0.6) 100%)"
       />
+      <div v-if="source" class="absolute top-2.5 right-3 z-10">
+        <SourceBadge :source="source" />
+      </div>
       <div class="absolute right-3 bottom-2.5 left-3 flex items-end justify-between gap-2">
         <div class="flex items-center gap-1.5">
           <CategoryBadge :category="book.category" />

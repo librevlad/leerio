@@ -1,6 +1,8 @@
 import { ref, computed } from 'vue'
 import { api, audioUrl } from '../api'
 import { useDownloads } from './useDownloads'
+import { useLocalBooks } from './useLocalBooks'
+import { useNetwork } from './useNetwork'
 import { useToast } from './useToast'
 import type { Book, Track } from '../types'
 
@@ -18,6 +20,7 @@ const isPlayerVisible = ref(false)
 const playingOffline = ref(false)
 const playbackRate = ref(parseFloat(localStorage.getItem('leerio_playback_rate') || '1'))
 const sleepTimer = ref<number | null>(null)
+const isFullscreen = ref(false)
 
 let sleepTimerId: ReturnType<typeof setTimeout> | null = null
 
@@ -111,6 +114,20 @@ function ensureAudio(): HTMLAudioElement {
 
 function savePosition() {
   if (!currentBook.value || !currentTrack.value) return
+
+  // Always save to localStorage for offline fallback
+  try {
+    localStorage.setItem(
+      `leerio_pos_${currentBook.value.id}`,
+      JSON.stringify({ track_index: currentTrackIndex.value, position: currentTime.value }),
+    )
+  } catch {
+    // localStorage full
+  }
+
+  // For local-only books, don't call API
+  if (currentBook.value.id.startsWith('lb:')) return
+
   api
     .setPlaybackPosition(currentBook.value.id, currentTrackIndex.value, currentTime.value, currentTrack.value.filename)
     .catch((e) => console.warn('Не удалось сохранить позицию:', e))
@@ -157,6 +174,13 @@ function updateMediaSession() {
 // ── Resolve audio source (local or server) ──────────────────────────────────
 
 async function resolveAudioSrc(bookId: string, trackIndex: number): Promise<string> {
+  // Local book (device-only, stored in IndexedDB)
+  if (bookId.startsWith('lb:')) {
+    const { getLocalAudioUrl: getLocalUrl } = useLocalBooks()
+    const url = await getLocalUrl(bookId, trackIndex)
+    playingOffline.value = true
+    return url || ''
+  }
   // External URL (LibriVox / archive.org)
   const track = tracks.value[trackIndex]
   if (track?.url) {
@@ -187,14 +211,81 @@ async function loadBook(book: Book) {
   isPlayerVisible.value = true
 
   try {
+    const isLocalBook = book.id.startsWith('lb:')
     const isLibriVox = book.id.startsWith('lv:')
-    const lvId = isLibriVox ? book.id.slice(3) : ''
-    const res = isLibriVox ? await api.librivoxChapters(lvId) : await api.getBookTracks(book.id)
-    tracks.value = res.tracks
+    const isUserBook = book.id.startsWith('ub:')
+    const { isOnline } = useNetwork()
+
+    if (isLocalBook) {
+      // Local-only book: load from IndexedDB
+      const { getLocalBook, getLocalAudioUrl: getLocalUrl } = useLocalBooks()
+      const lb = getLocalBook(book.id)
+      if (!lb) throw new Error('Local book not found')
+      tracks.value = lb.tracks.map((t) => ({
+        index: t.index,
+        filename: t.filename,
+        path: t.path,
+        duration: t.duration,
+      }))
+      playingOffline.value = true
+      currentTrackIndex.value = 0
+
+      // Restore position from localStorage
+      const savedPos = localStorage.getItem(`leerio_pos_${book.id}`)
+      const pos = savedPos ? JSON.parse(savedPos) : { track_index: 0, position: 0 }
+      const idx = pos.track_index < tracks.value.length ? pos.track_index : 0
+      currentTrackIndex.value = idx
+
+      const a = ensureAudio()
+      const localUrl = await getLocalUrl(book.id, idx)
+      a.src = localUrl || ''
+      a.load()
+
+      if (pos.position > 0) {
+        const onLoaded = () => {
+          a.currentTime = pos.position
+          a.removeEventListener('loadedmetadata', onLoaded)
+        }
+        a.addEventListener('loadedmetadata', onLoaded)
+      }
+
+      updateMediaSession()
+      return
+    }
+
+    // Offline + downloaded book: use local track metadata
+    if (!isOnline.value && downloads.isBookDownloaded(book.id)) {
+      const meta = downloads.meta.value[book.id]
+      if (meta?.tracks) {
+        tracks.value = meta.tracks.map((t: { index: number; filename: string }, i: number) => ({
+          index: i,
+          filename: t.filename,
+          path: '',
+          duration: 0,
+        }))
+        playingOffline.value = true
+      }
+    } else {
+      const lvId = isLibriVox ? book.id.slice(3) : ''
+      const ubSlug = isUserBook ? book.id.split(':')[2] : ''
+      const res = isLibriVox
+        ? await api.librivoxChapters(lvId)
+        : isUserBook
+          ? await api.getUserBookTracks(ubSlug)
+          : await api.getBookTracks(book.id)
+      tracks.value = res.tracks
+    }
 
     // Restore saved position
-    const pos = await api.getPlaybackPosition(book.id)
-    const idx = pos.track_index < res.tracks.length ? pos.track_index : 0
+    let pos = { track_index: 0, position: 0 }
+    try {
+      pos = await api.getPlaybackPosition(book.id)
+    } catch {
+      // Offline — try localStorage fallback
+      const savedPos = localStorage.getItem(`leerio_pos_${book.id}`)
+      if (savedPos) pos = JSON.parse(savedPos)
+    }
+    const idx = pos.track_index < tracks.value.length ? pos.track_index : 0
     currentTrackIndex.value = idx
 
     const a = ensureAudio()
@@ -346,6 +437,14 @@ function setSleepTimer(minutes: number | null) {
   sleepTimerId = setTimeout(tick, 60_000)
 }
 
+function openFullscreen() {
+  isFullscreen.value = true
+}
+
+function closeFullscreen() {
+  isFullscreen.value = false
+}
+
 function closePlayer() {
   if (activeSessionBook) {
     api.stopSession(activeSessionBook).catch(() => {})
@@ -393,6 +492,7 @@ export function usePlayer() {
     playingOffline,
     playbackRate,
     sleepTimer,
+    isFullscreen,
 
     // Computed
     currentTrack,
@@ -414,6 +514,8 @@ export function usePlayer() {
     skipBackward,
     setPlaybackRate,
     setSleepTimer,
+    openFullscreen,
+    closeFullscreen,
     closePlayer,
 
     // Helpers

@@ -39,6 +39,11 @@ export interface Book {
   duration_hours?: number | null
   duration_fmt?: string
   timeline?: HistoryEntry[]
+  // Personal book fields
+  is_personal?: boolean
+  source?: 'upload' | 'tts'
+  slug?: string
+  created_at?: string
 }
 
 export interface SimilarBook extends Book {
@@ -208,4 +213,60 @@ export interface LibriVoxBook {
 export interface LibriVoxSearchResult {
   books: LibriVoxBook[]
   total: number
+}
+
+// ── User Books & TTS types ────────────────────────────────────────────────
+
+export interface UserBook {
+  id: string
+  slug: string
+  title: string
+  author: string
+  reader: string
+  source: 'upload' | 'tts'
+  created_at: string
+  is_personal: true
+  has_cover: boolean
+  mp3_count: number
+  size_mb?: number
+  duration_hours?: number | null
+}
+
+export interface TTSVoice {
+  id: string
+  name: string
+  lang: string
+  gender: 'male' | 'female'
+}
+
+// ── Local Book types (device-only) ──────────────────────────────────────
+
+export interface LocalTrack {
+  index: number
+  filename: string
+  path: string // objectURL or filesystem path
+  duration: number
+}
+
+export interface LocalBook {
+  id: string // "lb:{uuid}"
+  title: string
+  author: string
+  tracks: LocalTrack[]
+  coverDataUrl?: string // base64
+  addedAt: string
+}
+
+export interface TTSJob {
+  id: string
+  title: string
+  author: string
+  voice: string
+  slug: string
+  status: 'processing' | 'done' | 'error'
+  progress: number
+  total_chapters: number
+  done_chapters: number
+  error: string | null
+  created_at: string
 }

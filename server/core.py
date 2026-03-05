@@ -11,6 +11,7 @@ import os
 import re
 import shutil
 import time as _time
+import unicodedata
 from collections import Counter
 from datetime import datetime
 from difflib import SequenceMatcher
@@ -229,6 +230,63 @@ def standardize_name(author: str, title: str, reader: str | None) -> str:
     if reader:
         parts.append(f" [{reader}]")
     return "".join(parts)
+
+
+def make_slug(title: str, author: str = "") -> str:
+    """Create a URL/filesystem-safe slug from title and author."""
+    text = f"{author} {title}".strip() if author else title.strip()
+    # Transliterate Cyrillic
+    _cyr = {
+        "а": "a",
+        "б": "b",
+        "в": "v",
+        "г": "g",
+        "д": "d",
+        "е": "e",
+        "ё": "yo",
+        "ж": "zh",
+        "з": "z",
+        "и": "i",
+        "й": "y",
+        "к": "k",
+        "л": "l",
+        "м": "m",
+        "н": "n",
+        "о": "o",
+        "п": "p",
+        "р": "r",
+        "с": "s",
+        "т": "t",
+        "у": "u",
+        "ф": "f",
+        "х": "kh",
+        "ц": "ts",
+        "ч": "ch",
+        "ш": "sh",
+        "щ": "shch",
+        "ъ": "",
+        "ы": "y",
+        "ь": "",
+        "э": "e",
+        "ю": "yu",
+        "я": "ya",
+    }
+    result = []
+    for ch in text.lower():
+        if ch in _cyr:
+            result.append(_cyr[ch])
+        elif ch.isascii() and ch.isalnum():
+            result.append(ch)
+        elif ch in " -_":
+            result.append("-")
+        else:
+            # Try Unicode decomposition for accented chars
+            decomposed = unicodedata.normalize("NFD", ch)
+            for c in decomposed:
+                if c.isascii() and c.isalnum():
+                    result.append(c)
+    slug = re.sub(r"-+", "-", "".join(result)).strip("-")
+    return slug[:80] if slug else "book"
 
 
 def folder_size_mb(path: Path) -> float:
@@ -1173,6 +1231,98 @@ class UserData:
                 self._save("bookmarks", data)
                 return True
         return False
+
+    # ── User Books (personal library) ──
+    @property
+    def books_dir(self) -> Path:
+        d = self.dir / "books"
+        d.mkdir(parents=True, exist_ok=True)
+        return d
+
+    def user_books_list(self) -> list[dict]:
+        """Scan books/*/meta.json and return list of personal books."""
+        result = []
+        bd = self.books_dir
+        for d in sorted(bd.iterdir()):
+            meta_path = d / "meta.json"
+            if d.is_dir() and meta_path.exists():
+                meta = _load_json(meta_path, dict)
+                meta["slug"] = d.name
+                meta["path"] = str(d)
+                result.append(meta)
+        return result
+
+    def user_book_create(self, slug: str, title: str, author: str, reader: str = "", source: str = "upload") -> Path:
+        """Create a new user book directory with meta.json. Returns the book dir path."""
+        book_dir = self.books_dir / slug
+        book_dir.mkdir(parents=True, exist_ok=True)
+        meta = {
+            "title": title,
+            "author": author,
+            "reader": reader,
+            "source": source,
+            "created_at": datetime.now().isoformat(timespec="seconds"),
+        }
+        _safe_json_write(book_dir / "meta.json", meta)
+        return book_dir
+
+    def user_book_get(self, slug: str) -> dict | None:
+        """Get a single user book's metadata."""
+        meta_path = self.books_dir / slug / "meta.json"
+        if not meta_path.exists():
+            return None
+        meta = _load_json(meta_path, dict)
+        meta["slug"] = slug
+        meta["path"] = str(self.books_dir / slug)
+        return meta
+
+    def user_book_delete(self, slug: str) -> bool:
+        """Delete a user book directory."""
+        book_dir = self.books_dir / slug
+        if book_dir.exists() and book_dir.is_dir():
+            shutil.rmtree(book_dir)
+            return True
+        return False
+
+    # ── TTS Jobs ──
+    def tts_jobs_load(self) -> list[dict]:
+        return self._load("tts_jobs", list)
+
+    def tts_jobs_save(self, data: list[dict]):
+        self._save("tts_jobs", data)
+
+    def tts_job_create(self, job_id: str, title: str, author: str, voice: str, slug: str) -> dict:
+        jobs = self.tts_jobs_load()
+        job = {
+            "id": job_id,
+            "title": title,
+            "author": author,
+            "voice": voice,
+            "slug": slug,
+            "status": "processing",
+            "progress": 0,
+            "total_chapters": 0,
+            "done_chapters": 0,
+            "error": None,
+            "created_at": datetime.now().isoformat(timespec="seconds"),
+        }
+        jobs.append(job)
+        self.tts_jobs_save(jobs)
+        return job
+
+    def tts_job_get(self, job_id: str) -> dict | None:
+        for j in self.tts_jobs_load():
+            if j["id"] == job_id:
+                return j
+        return None
+
+    def tts_job_update(self, job_id: str, **kwargs):
+        jobs = self.tts_jobs_load()
+        for j in jobs:
+            if j["id"] == job_id:
+                j.update(kwargs)
+                break
+        self.tts_jobs_save(jobs)
 
 
 # ── Config ───────────────────────────────────────────────────────────────────

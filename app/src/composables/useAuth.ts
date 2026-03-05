@@ -17,11 +17,26 @@ export function useAuth() {
       const res = await fetch(apiUrl('/auth/me'), { credentials: 'include' })
       if (res.ok) {
         user.value = await res.json()
+        try {
+          localStorage.setItem('leerio_user', JSON.stringify(user.value))
+        } catch {
+          /* full */
+        }
         return true
       }
       user.value = null
       return false
     } catch {
+      // Offline — try cached user
+      try {
+        const cached = localStorage.getItem('leerio_user')
+        if (cached) {
+          user.value = JSON.parse(cached)
+          return true
+        }
+      } catch {
+        /* parse error */
+      }
       user.value = null
       return false
     } finally {
@@ -51,6 +66,11 @@ export function useAuth() {
     const data = await res.json()
     user.value = data
     checked.value = true
+    try {
+      localStorage.setItem('leerio_user', JSON.stringify(data))
+    } catch {
+      /* full */
+    }
     return data
   }
 
@@ -75,6 +95,11 @@ export function useAuth() {
     const data = await res.json()
     user.value = data
     checked.value = true
+    try {
+      localStorage.setItem('leerio_user', JSON.stringify(data))
+    } catch {
+      /* full */
+    }
     return data
   }
 
@@ -82,6 +107,7 @@ export function useAuth() {
     await fetch(apiUrl('/auth/logout'), { method: 'POST', credentials: 'include' })
     user.value = null
     checked.value = false
+    localStorage.removeItem('leerio_user')
   }
 
   return {

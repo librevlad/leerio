@@ -9,7 +9,8 @@ import {
   IconSettings,
   IconMenu,
   IconX,
-  IconSearch,
+  IconFolder,
+  IconUpload,
 } from '../shared/icons'
 
 defineProps<{ collapsed: boolean }>()
@@ -20,8 +21,9 @@ const { user, logout } = useAuth()
 
 const links = [
   { path: '/', label: 'Дашборд', icon: IconHome },
-  { path: '/library', label: 'Библиотека', icon: IconLibrary },
-  { path: '/discover', label: 'LibriVox', icon: IconSearch },
+  { path: '/library', label: 'Каталог', icon: IconLibrary },
+  { path: '/my-library', label: 'Моя библиотека', icon: IconFolder },
+  { path: '/upload', label: 'Загрузить', icon: IconUpload },
   { path: '/history', label: 'История', icon: IconHistory },
   { path: '/analytics', label: 'Аналитика', icon: IconChart },
   { path: '/settings', label: 'Настройки', icon: IconSettings },

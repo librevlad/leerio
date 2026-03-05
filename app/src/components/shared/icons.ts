@@ -109,3 +109,29 @@ export const IconSpeed = icon('<path d="M12 12l-3-7m0 0a9 9 0 110 14"/><circle c
 export const IconMoon = icon('<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>')
 export const IconBookmark = icon('<path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>')
 export const IconBookmarkFilled = icon('<path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>', { fill: true })
+
+// Cloud / device / offline icons
+export const IconCloud = icon(
+  '<path d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z"/>',
+)
+export const IconSmartphone = icon(
+  '<rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>',
+)
+export const IconWifiOff = icon(
+  '<line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0119 12.55"/><path d="M5 12.55a10.94 10.94 0 015.17-2.39"/><path d="M10.71 5.05A16 16 0 0122.56 9"/><path d="M1.42 9a15.91 15.91 0 014.7-2.88"/><path d="M8.53 16.11a6 6 0 016.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/>',
+)
+export const IconChevronDown = icon('<path d="M6 9l6 6 6-6"/>')
+export const IconChevronUp = icon('<path d="M18 15l-6-6-6 6"/>')
+export const IconList = icon(
+  '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',
+)
+
+// Upload & TTS icons
+export const IconUpload = icon(
+  '<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>',
+)
+export const IconMicrophone = icon(
+  '<path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>',
+)
+export const IconPlus = icon('<path d="M12 5v14m-7-7h14"/>')
+export const IconFolder = icon('<path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>')

@@ -497,6 +497,19 @@ select option {
   opacity: 0;
 }
 
+/* ── Fullscreen player transition ──────────────────────────────────── */
+
+.fullscreen-player-enter-active {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.fullscreen-player-leave-active {
+  transition: transform 0.25s ease;
+}
+.fullscreen-player-enter-from,
+.fullscreen-player-leave-to {
+  transform: translateY(100%);
+}
+
 /* Bottom nav spacing — pages get extra bottom padding on mobile */
 @media (max-width: 767px) {
   .mobile-bottom-pad {

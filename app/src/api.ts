@@ -1,5 +1,8 @@
 import { Capacitor } from '@capacitor/core'
 import router from './router'
+import { useNetwork } from './composables/useNetwork'
+import { useOfflineCache } from './composables/useOfflineCache'
+import { useOfflineQueue } from './composables/useOfflineQueue'
 
 const API_BASE = Capacitor.isNativePlatform() ? 'https://app.leerio.app/api' : '/api'
 
@@ -24,19 +27,77 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json()
 }
 
+async function requestFormData<T>(path: string, formData: FormData): Promise<T> {
+  const res = await fetch(apiUrl(path), {
+    method: 'POST',
+    credentials: 'include',
+    body: formData,
+  })
+  if (res.status === 401) {
+    router.push('/login')
+    throw new Error('Not authenticated')
+  }
+  if (!res.ok) {
+    const text = await res.text().catch(() => res.statusText)
+    throw new Error(`${res.status}: ${text}`)
+  }
+  return res.json()
+}
+
+// Cacheable GET paths (prefix match)
+const CACHEABLE = ['/books', '/dashboard', '/config/constants', '/progress', '/user/book-status']
+
+function cacheKey(path: string): string {
+  return path.replace(/[^a-zA-Z0-9_/-]/g, '_')
+}
+
 function get<T>(path: string): Promise<T> {
-  return request<T>(path)
+  const { isOnline } = useNetwork()
+  const cache = useOfflineCache()
+  const key = cacheKey(path)
+  const isCacheable = CACHEABLE.some((p) => path.startsWith(p))
+
+  if (!isOnline.value && isCacheable) {
+    const cached = cache.get<T>(key)
+    if (cached !== null) return Promise.resolve(cached)
+  }
+
+  return request<T>(path).then((data) => {
+    if (isCacheable) cache.set(key, data)
+    return data
+  })
 }
 
 function post<T>(path: string, body?: unknown): Promise<T> {
+  const { isOnline } = useNetwork()
+  const queue = useOfflineQueue()
+
+  if (!isOnline.value) {
+    queue.enqueue('POST', apiUrl(path), body)
+    return Promise.resolve({ ok: true } as T)
+  }
   return request<T>(path, { method: 'POST', body: body ? JSON.stringify(body) : undefined })
 }
 
 function put<T>(path: string, body: unknown): Promise<T> {
+  const { isOnline } = useNetwork()
+  const queue = useOfflineQueue()
+
+  if (!isOnline.value) {
+    queue.enqueue('PUT', apiUrl(path), body)
+    return Promise.resolve({ ok: true } as T)
+  }
   return request<T>(path, { method: 'PUT', body: JSON.stringify(body) })
 }
 
 function del<T>(path: string): Promise<T> {
+  const { isOnline } = useNetwork()
+  const queue = useOfflineQueue()
+
+  if (!isOnline.value) {
+    queue.enqueue('DELETE', apiUrl(path))
+    return Promise.resolve({ ok: true } as T)
+  }
   return request<T>(path, { method: 'DELETE' })
 }
 
@@ -50,6 +111,10 @@ export function coverUrl(bookId: string): string {
 
 export function librivoxCoverUrl(librivoxId: string): string {
   return apiUrl(`/librivox/books/${librivoxId}/cover`)
+}
+
+export function userBookCoverUrl(slug: string): string {
+  return apiUrl(`/user/books/${slug}/cover`)
 }
 
 import type {
@@ -70,6 +135,9 @@ import type {
   BookStatusEntry,
   LibriVoxSearchResult,
   LibriVoxBook,
+  UserBook,
+  TTSVoice,
+  TTSJob,
 } from './types'
 
 export const api = {
@@ -158,4 +226,17 @@ export const api = {
   },
   librivoxBook: (lvId: string) => get<LibriVoxBook>(`/librivox/books/${lvId}`),
   librivoxChapters: (lvId: string) => get<TrackList>(`/librivox/books/${lvId}/chapters`),
+
+  // User Books (personal library)
+  getUserBooks: () => get<UserBook[]>('/user/books'),
+  uploadBook: (formData: FormData) => requestFormData<UserBook>('/user/books', formData),
+  getUserBook: (slug: string) => get<UserBook>(`/user/books/${slug}`),
+  deleteUserBook: (slug: string) => del<{ ok: boolean }>(`/user/books/${slug}`),
+  getUserBookTracks: (slug: string) => get<TrackList>(`/user/books/${slug}/tracks`),
+
+  // TTS
+  getTTSVoices: () => get<TTSVoice[]>('/tts/voices'),
+  startTTSConversion: (formData: FormData) => requestFormData<TTSJob>('/tts/convert', formData),
+  getTTSJobs: () => get<TTSJob[]>('/tts/jobs'),
+  getTTSJob: (jobId: string) => get<TTSJob>(`/tts/jobs/${jobId}`),
 }

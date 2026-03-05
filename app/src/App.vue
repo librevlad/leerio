@@ -5,14 +5,18 @@ import AppSidebar from './components/layout/AppSidebar.vue'
 import BottomNav from './components/layout/BottomNav.vue'
 import AppToast from './components/layout/AppToast.vue'
 import MiniPlayer from './components/player/MiniPlayer.vue'
+import FullscreenPlayer from './components/player/FullscreenPlayer.vue'
 import { usePlayer } from './composables/usePlayer'
 import { useDownloads } from './composables/useDownloads'
 import { useAuth } from './composables/useAuth'
+import { useNetwork } from './composables/useNetwork'
+import { IconWifiOff } from './components/shared/icons'
 
 const sidebarCollapsed = ref(false)
 const { isPlayerVisible } = usePlayer()
 const downloads = useDownloads()
 const { loading: authLoading, isLoggedIn } = useAuth()
+const { isOnline } = useNetwork()
 const route = useRoute()
 
 const isLoginPage = computed(() => route.name === 'login')
@@ -46,6 +50,18 @@ onMounted(() => {
       class="flex-1 overflow-y-auto scroll-smooth transition-all duration-300"
       :class="[sidebarCollapsed ? 'md:ml-16' : 'md:ml-56']"
     >
+      <!-- Offline banner -->
+      <transition name="toast">
+        <div
+          v-if="!isOnline"
+          class="flex items-center justify-center gap-2 px-4 py-1.5 text-[12px] font-medium text-amber-200"
+          style="background: rgba(217, 119, 6, 0.15); border-bottom: 1px solid rgba(217, 119, 6, 0.2)"
+        >
+          <IconWifiOff :size="14" />
+          Офлайн — доступны только скачанные книги
+        </div>
+      </transition>
+
       <div
         class="mx-auto max-w-7xl px-4 py-5 md:px-8 md:py-8 md:pb-8"
         :class="isPlayerVisible ? 'mobile-bottom-pad-player' : 'mobile-bottom-pad'"
@@ -58,6 +74,9 @@ onMounted(() => {
       </div>
     </main>
     <MiniPlayer />
+    <Teleport to="body">
+      <FullscreenPlayer />
+    </Teleport>
     <BottomNav />
     <AppToast />
   </div>

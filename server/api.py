@@ -65,6 +65,8 @@ from .db import (
 from .librivox import get_book as lv_get_book
 from .librivox import get_chapters as lv_get_chapters
 from .librivox import search_books as lv_search_books
+from .tts_api import router as tts_router
+from .upload import router as upload_router
 
 logging.basicConfig(
     level=getattr(logging, os.environ.get("LEERIO_LOG_LEVEL", "INFO").upper(), logging.INFO),
@@ -234,11 +236,36 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
     return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 
+# ── Include routers ──────────────────────────────────────────────────────────
+app.include_router(upload_router)
+app.include_router(tts_router)
+
+
 # ── Helper: get per-user data accessor ─────────────────────────────────────
 
 
 def _user_data(user: dict) -> UserData:
     return UserData(user["user_id"])
+
+
+def _resolve_user_book_path(book_id: str, user: dict | None = None) -> Path | None:
+    """If book_id starts with 'ub:', resolve to user book directory. Returns None if not a user book."""
+    if not book_id.startswith("ub:"):
+        return None
+    parts = book_id.split(":", 2)
+    if len(parts) != 3:
+        return None
+    _, uid, slug = parts
+    if user and uid != user["user_id"]:
+        return None
+    book_dir = (
+        Path(os.environ.get("LEERIO_DATA", str(Path(__file__).resolve().parent.parent / "data")))
+        / "users"
+        / uid
+        / "books"
+        / slug
+    )
+    return book_dir if book_dir.exists() else None
 
 
 # ── Auth endpoints ─────────────────────────────────────────────────────────
@@ -404,6 +431,21 @@ def get_dashboard(user: dict = Depends(get_current_user)):
                             "current_track": most_recent.get("track_index", 0),
                             "current_time": most_recent.get("position", 0),
                         }
+                elif bid.startswith("ub:"):
+                    ub_path = _resolve_user_book_path(bid, user)
+                    if ub_path:
+                        from .core import _load_json
+
+                        meta = _load_json(ub_path / "meta.json", dict)
+                        now_playing = {
+                            "book_id": bid,
+                            "title": meta.get("title", ""),
+                            "author": meta.get("author", ""),
+                            "cover_id": bid,
+                            "progress": 0,
+                            "current_track": most_recent.get("track_index", 0),
+                            "current_time": most_recent.get("position", 0),
+                        }
                 else:
                     path = _book_from_id(bid)
                     if path.exists():
@@ -505,6 +547,39 @@ def get_books(
 
         result.append(enriched)
 
+    # Add personal books
+    user_books = ud.user_books_list()
+    for ub in user_books:
+        book_id = f"ub:{user['user_id']}:{ub['slug']}"
+        ub_title = ub.get("title", "")
+        ub_author = ub.get("author", "")
+        if category and category != "Личные":
+            continue
+        if search:
+            q = search.lower()
+            if q not in ub_title.lower() and q not in ub_author.lower():
+                continue
+        book_dir = Path(ub["path"])
+        enriched = {
+            "id": book_id,
+            "folder": ub["slug"],
+            "category": "Личные",
+            "author": ub_author,
+            "title": ub_title,
+            "reader": ub.get("reader", ""),
+            "path": ub["path"],
+            "progress": 0,
+            "tags": [],
+            "note": "",
+            "has_cover": (book_dir / "cover.jpg").exists(),
+            "is_personal": True,
+            "source": ub.get("source", "upload"),
+        }
+        bs = book_statuses.get(book_id)
+        if bs:
+            enriched["book_status"] = bs["status"]
+        result.append(enriched)
+
     if sort == "title":
         result.sort(key=lambda x: x["title"].lower())
     elif sort == "author":
@@ -522,6 +597,41 @@ def get_books(
 @app.get("/api/books/{book_id}")
 def get_book(book_id: str, user: dict = Depends(get_current_user)):
     ud = _user_data(user)
+
+    # Handle user book IDs
+    ub_path = _resolve_user_book_path(book_id, user)
+    if ub_path:
+        from .core import _load_json
+
+        meta = _load_json(ub_path / "meta.json", dict)
+        slug = ub_path.name
+        enriched = {
+            "id": book_id,
+            "slug": slug,
+            "folder": slug,
+            "category": "Личные",
+            "author": meta.get("author", ""),
+            "title": meta.get("title", ""),
+            "reader": meta.get("reader", ""),
+            "path": str(ub_path),
+            "progress": 0,
+            "tags": [],
+            "note": "",
+            "has_cover": (ub_path / "cover.jpg").exists(),
+            "is_personal": True,
+            "source": meta.get("source", "upload"),
+            "created_at": meta.get("created_at", ""),
+            "size_mb": round(folder_size_mb(ub_path), 1),
+            "mp3_count": count_mp3(ub_path),
+            "duration_hours": estimate_duration_hours(ub_path),
+            "duration_fmt": fmt_duration(estimate_duration_hours(ub_path)),
+            "timeline": [],
+        }
+        bs = ud.book_status_get(book_id)
+        if bs:
+            enriched["book_status"] = bs["status"]
+        return enriched
+
     path = _book_from_id(book_id)
     if not path.exists():
         raise HTTPException(404, "Book not found")
@@ -588,7 +698,11 @@ def get_similar(book_id: str, user: dict = Depends(get_current_user)):
 
 @app.get("/api/books/{book_id}/tracks")
 def get_book_tracks(book_id: str):
-    path = _book_from_id(book_id)
+    ub_path = _resolve_user_book_path(book_id)
+    if ub_path:
+        path = ub_path
+    else:
+        path = _book_from_id(book_id)
     if not path.exists():
         raise HTTPException(404, "Book not found")
 
@@ -618,7 +732,11 @@ def get_book_tracks(book_id: str):
 
 @app.get("/api/books/{book_id}/cover")
 def get_book_cover(book_id: str):
-    path = _book_from_id(book_id)
+    ub_path = _resolve_user_book_path(book_id)
+    if ub_path:
+        path = ub_path
+    else:
+        path = _book_from_id(book_id)
     if not path.exists():
         raise HTTPException(404, "Book not found")
     cover = path / "cover.jpg"
@@ -629,7 +747,11 @@ def get_book_cover(book_id: str):
 
 @app.get("/api/audio/{book_id}/{track_index}")
 def stream_audio(book_id: str, track_index: int, request: Request):
-    path = _book_from_id(book_id)
+    ub_path = _resolve_user_book_path(book_id)
+    if ub_path:
+        path = ub_path
+    else:
+        path = _book_from_id(book_id)
     if not path.exists():
         raise HTTPException(404, "Book not found")
 

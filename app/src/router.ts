@@ -36,6 +36,20 @@ const router = createRouter({
       component: () => import('./views/AnalyticsView.vue'),
     },
     {
+      path: '/my-library',
+      name: 'my-library',
+      component: () => import('./views/MyLibraryView.vue'),
+    },
+    {
+      path: '/my-books',
+      redirect: '/my-library',
+    },
+    {
+      path: '/upload',
+      name: 'upload',
+      component: () => import('./views/UploadView.vue'),
+    },
+    {
       path: '/discover',
       name: 'discover',
       component: () => import('./views/DiscoverView.vue'),

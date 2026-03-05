@@ -3,13 +3,18 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '../api'
 import { useDownloads } from '../composables/useDownloads'
+import { useLocalBooks } from '../composables/useLocalBooks'
+import { useOfflineCache } from '../composables/useOfflineCache'
 import { useAuth } from '../composables/useAuth'
 import type { Constants, SessionStats } from '../types'
-import { IconTrash, IconDownload } from '../components/shared/icons'
+import { IconTrash, IconDownload, IconHardDrive } from '../components/shared/icons'
 
 const router = useRouter()
 const dl = useDownloads()
+const { localBooks } = useLocalBooks()
+const cache = useOfflineCache()
 const { user, isAdmin, logout } = useAuth()
+const cacheBytes = ref(cache.cacheSize())
 const constants = ref<Constants | null>(null)
 const sessionStats = ref<SessionStats | null>(null)
 
@@ -173,6 +178,40 @@ async function handleLogout() {
         >
           <IconTrash :size="14" />
           Удалить все загрузки
+        </button>
+      </div>
+
+      <!-- Storage -->
+      <div class="card p-6">
+        <h3 class="section-label mb-4">
+          <span class="flex items-center gap-2">
+            <IconHardDrive :size="16" />
+            Хранилище
+          </span>
+        </h3>
+        <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          <div v-if="dl.isNative.value">
+            <p class="mb-1 text-[12px] text-[--t3]">Скачанные книги</p>
+            <p class="text-[18px] leading-none font-bold text-[--t1]">{{ fmtSize(dl.totalDownloadedSize.value) }}</p>
+          </div>
+          <div>
+            <p class="mb-1 text-[12px] text-[--t3]">Локальные книги</p>
+            <p class="text-[18px] leading-none font-bold text-[--t1]">{{ localBooks.length }} шт</p>
+          </div>
+          <div>
+            <p class="mb-1 text-[12px] text-[--t3]">Кэш</p>
+            <p class="text-[18px] leading-none font-bold text-[--t1]">{{ fmtSize(cacheBytes) }}</p>
+          </div>
+        </div>
+        <button
+          class="btn btn-ghost mt-4"
+          @click="
+            cache.clear()
+            cacheBytes = 0
+          "
+        >
+          <IconTrash :size="14" />
+          Очистить кэш
         </button>
       </div>
 
