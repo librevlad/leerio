@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api'
 import type { Book } from '../types'
@@ -77,6 +77,7 @@ async function startListening() {
 }
 
 onMounted(loadBook)
+watch(() => route.params.id, loadBook)
 </script>
 
 <template>
