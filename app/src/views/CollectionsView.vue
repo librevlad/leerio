@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { api } from '../api'
+import { ref, computed, onMounted } from 'vue'
+import { api, coverUrl } from '../api'
 import { useBooks } from '../composables/useBooks'
 import { useToast } from '../composables/useToast'
-import type { Collection } from '../types'
-import { IconPlus, IconTrash, IconEdit, IconX, IconCheck, IconBookmark, IconMusic } from '../components/shared/icons'
+import type { Collection, Book } from '../types'
+import { IconPlus, IconTrash, IconEdit, IconX, IconCheck, IconBookmark, IconSearch } from '../components/shared/icons'
 import EmptyState from '../components/shared/EmptyState.vue'
 
 const toast = useToast()
@@ -14,11 +14,24 @@ const collections = ref<Collection[]>([])
 const loading = ref(true)
 const showCreate = ref(false)
 const editIdx = ref<number | null>(null)
+const expandedIdx = ref<number | null>(null)
 
 // Form state
 const formName = ref('')
 const formDesc = ref('')
 const formBooks = ref<string[]>([])
+const bookSearch = ref('')
+
+// Map book titles to Book objects for covers/links
+function bookByTitle(title: string): Book | undefined {
+  return books.value.find((b) => b.title === title)
+}
+
+const filteredBooks = computed(() => {
+  const q = bookSearch.value.toLowerCase().trim()
+  if (!q) return books.value
+  return books.value.filter((b) => b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q))
+})
 
 async function loadCollections() {
   loading.value = true
@@ -35,6 +48,7 @@ function openCreate() {
   formName.value = ''
   formDesc.value = ''
   formBooks.value = []
+  bookSearch.value = ''
   editIdx.value = null
   showCreate.value = true
 }
@@ -44,6 +58,7 @@ function openEdit(idx: number) {
   formName.value = c.name
   formDesc.value = c.description
   formBooks.value = [...c.books]
+  bookSearch.value = ''
   editIdx.value = idx
   showCreate.value = true
 }
@@ -60,6 +75,10 @@ function toggleBook(title: string) {
   } else {
     formBooks.value.push(title)
   }
+}
+
+function toggleExpand(idx: number) {
+  expandedIdx.value = expandedIdx.value === idx ? null : idx
 }
 
 async function save() {
@@ -87,6 +106,7 @@ async function remove(idx: number) {
   try {
     await api.deleteCollection(idx)
     toast.success('Удалено')
+    if (expandedIdx.value === idx) expandedIdx.value = null
     await loadCollections()
   } catch {
     toast.error('Ошибка удаления')
@@ -129,105 +149,264 @@ onMounted(async () => {
     />
 
     <!-- Collections list -->
-    <div v-else-if="!showCreate" class="space-y-3">
-      <div v-for="(col, idx) in collections" :key="idx" class="card p-4">
-        <div class="mb-2 flex items-start justify-between">
+    <div v-else-if="!showCreate" class="space-y-4">
+      <div v-for="(col, idx) in collections" :key="idx" class="card overflow-hidden">
+        <!-- Collection header — clickable to expand -->
+        <button
+          class="flex w-full cursor-pointer items-center gap-4 border-0 bg-transparent p-4 text-left transition-colors hover:bg-white/[0.02]"
+          @click="toggleExpand(idx)"
+        >
+          <!-- Cover stack preview -->
+          <div class="relative h-14 w-14 flex-shrink-0">
+            <template v-if="col.books.length">
+              <div
+                v-for="(title, i) in col.books.slice(0, 3)"
+                :key="title"
+                class="absolute overflow-hidden rounded-lg shadow-md"
+                :style="{
+                  width: '40px',
+                  height: '40px',
+                  top: i * 4 + 'px',
+                  left: i * 6 + 'px',
+                  zIndex: 3 - i,
+                }"
+              >
+                <img
+                  v-if="bookByTitle(title)?.has_cover"
+                  :src="coverUrl(bookByTitle(title)!.id)"
+                  :alt="title"
+                  class="h-full w-full object-cover"
+                />
+                <div
+                  v-else
+                  class="flex h-full w-full items-center justify-center text-[12px] font-bold text-white/50"
+                  style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)"
+                >
+                  {{ title.charAt(0) }}
+                </div>
+              </div>
+            </template>
+            <div
+              v-else
+              class="flex h-14 w-14 items-center justify-center rounded-xl"
+              style="background: rgba(255, 255, 255, 0.04)"
+            >
+              <IconBookmark :size="20" class="text-[--t3]" />
+            </div>
+          </div>
+
+          <!-- Info -->
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-2">
-              <IconBookmark :size="16" class="flex-shrink-0 text-[--accent]" />
               <h3 class="truncate text-[14px] font-semibold text-[--t1]">{{ col.name }}</h3>
+              <span
+                class="flex-shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-medium text-[--t3]"
+                style="background: rgba(255, 255, 255, 0.05)"
+              >
+                {{ col.books.length }}
+              </span>
             </div>
-            <p v-if="col.description" class="mt-1 line-clamp-2 text-[12px] text-[--t3]">{{ col.description }}</p>
+            <p v-if="col.description" class="mt-0.5 line-clamp-1 text-[12px] text-[--t3]">{{ col.description }}</p>
           </div>
-          <div class="ml-3 flex flex-shrink-0 gap-1">
+
+          <!-- Actions -->
+          <div class="ml-2 flex flex-shrink-0 gap-1" @click.stop>
             <button
-              class="rounded-lg p-1.5 text-[--t3] transition-colors hover:bg-white/5 hover:text-[--t2]"
+              class="rounded-lg p-2 text-[--t3] transition-colors hover:bg-white/5 hover:text-[--t2]"
               @click="openEdit(idx)"
             >
               <IconEdit :size="14" />
             </button>
             <button
-              class="rounded-lg p-1.5 text-[--t3] transition-colors hover:bg-red-500/15 hover:text-red-400"
+              class="rounded-lg p-2 text-[--t3] transition-colors hover:bg-red-500/15 hover:text-red-400"
               @click="remove(idx)"
             >
               <IconTrash :size="14" />
             </button>
           </div>
-        </div>
-        <div v-if="col.books.length" class="flex flex-wrap gap-1.5">
-          <span
-            v-for="book in col.books"
-            :key="book"
-            class="max-w-[200px] truncate rounded-md px-2 py-0.5 text-[11px] font-medium text-[--t3]"
-            style="background: rgba(255, 255, 255, 0.05)"
-          >
-            {{ book }}
-          </span>
-        </div>
-        <p v-else class="flex items-center gap-1 text-[12px] text-[--t3]">
-          <IconMusic :size="12" />
-          Пусто
-        </p>
-      </div>
-    </div>
 
-    <!-- Create/Edit form -->
-    <div v-if="showCreate" class="card p-5">
-      <div class="mb-4 flex items-center justify-between">
-        <h2 class="text-[16px] font-semibold text-[--t1]">
-          {{ editIdx !== null ? 'Редактировать' : 'Новая коллекция' }}
-        </h2>
-        <button
-          class="rounded-lg p-1.5 text-[--t3] transition-colors hover:bg-white/5 hover:text-[--t2]"
-          @click="closeForm"
-        >
-          <IconX :size="16" />
+          <!-- Chevron -->
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="flex-shrink-0 text-[--t3] transition-transform duration-200"
+            :class="expandedIdx === idx ? 'rotate-180' : ''"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
         </button>
-      </div>
 
-      <div class="mb-4">
-        <label class="mb-1.5 block text-[12px] font-medium text-[--t2]">Название</label>
-        <input v-model="formName" class="input w-full" placeholder="Моя подборка..." @keyup.enter="save" />
-      </div>
-
-      <div class="mb-4">
-        <label class="mb-1.5 block text-[12px] font-medium text-[--t2]">Описание</label>
-        <input v-model="formDesc" class="input w-full" placeholder="Необязательно..." />
-      </div>
-
-      <div class="mb-5">
-        <label class="mb-2 block text-[12px] font-medium text-[--t2]">
-          Книги
-          <span v-if="formBooks.length" class="text-[--t3]">({{ formBooks.length }})</span>
-        </label>
-        <div class="max-h-60 space-y-1 overflow-y-auto">
-          <button
-            v-for="book in books"
-            :key="book.id"
-            class="flex w-full cursor-pointer items-center gap-2.5 rounded-lg border-0 bg-transparent px-2.5 py-2 text-left transition-colors hover:bg-white/[0.03]"
-            :class="formBooks.includes(book.title) ? 'text-[--accent]' : 'text-[--t2]'"
-            @click="toggleBook(book.title)"
-          >
-            <span
-              class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded border"
-              :class="
-                formBooks.includes(book.title) ? 'border-[--accent] bg-[--accent]' : 'border-[--border] bg-transparent'
-              "
+        <!-- Expanded: book grid -->
+        <div v-if="expandedIdx === idx" class="border-t px-4 pt-4 pb-4" style="border-color: var(--border)">
+          <div v-if="col.books.length" class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            <router-link
+              v-for="title in col.books"
+              :key="title"
+              :to="bookByTitle(title) ? `/book/${bookByTitle(title)!.id}` : '#'"
+              class="group flex items-center gap-3 rounded-xl p-2.5 no-underline transition-colors hover:bg-white/[0.04]"
             >
-              <IconCheck v-if="formBooks.includes(book.title)" :size="10" class="text-black" />
-            </span>
-            <span class="truncate text-[13px]">{{ book.title }}</span>
-            <span class="ml-auto flex-shrink-0 text-[11px] text-[--t3]">{{ book.author }}</span>
-          </button>
+              <div class="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg">
+                <img
+                  v-if="bookByTitle(title)?.has_cover"
+                  :src="coverUrl(bookByTitle(title)!.id)"
+                  :alt="title"
+                  class="h-full w-full object-cover"
+                />
+                <div
+                  v-else
+                  class="flex h-full w-full items-center justify-center text-[14px] font-bold text-white/50"
+                  style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)"
+                >
+                  {{ title.charAt(0) }}
+                </div>
+              </div>
+              <div class="min-w-0">
+                <p class="line-clamp-2 text-[12px] font-medium text-[--t2] transition-colors group-hover:text-[--t1]">
+                  {{ title }}
+                </p>
+                <p v-if="bookByTitle(title)" class="mt-0.5 line-clamp-1 text-[11px] text-[--t3]">
+                  {{ bookByTitle(title)!.author }}
+                </p>
+              </div>
+            </router-link>
+          </div>
+          <p v-else class="py-4 text-center text-[13px] text-[--t3]">Нет книг в коллекции</p>
         </div>
       </div>
-
-      <div class="flex gap-2">
-        <button class="btn btn-primary flex-1" @click="save">
-          {{ editIdx !== null ? 'Сохранить' : 'Создать' }}
-        </button>
-        <button class="btn btn-ghost" @click="closeForm">Отмена</button>
-      </div>
     </div>
+
+    <!-- Create/Edit form (dialog overlay) -->
+    <Teleport to="body">
+      <transition name="dialog">
+        <div
+          v-if="showCreate"
+          class="dialog-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
+          @click.self="closeForm"
+        >
+          <div class="dialog-panel w-full max-w-lg p-6" @click.stop>
+            <div class="mb-5 flex items-center justify-between">
+              <h2 class="text-[18px] font-bold text-[--t1]">
+                {{ editIdx !== null ? 'Редактировать' : 'Новая коллекция' }}
+              </h2>
+              <button
+                class="rounded-lg p-1.5 text-[--t3] transition-colors hover:bg-white/5 hover:text-[--t2]"
+                @click="closeForm"
+              >
+                <IconX :size="18" />
+              </button>
+            </div>
+
+            <div class="mb-4">
+              <label class="mb-1.5 block text-[12px] font-medium text-[--t2]">Название *</label>
+              <input
+                v-model="formName"
+                class="input-field w-full px-3.5 py-2.5"
+                placeholder="Моя подборка..."
+                @keyup.enter="save"
+              />
+            </div>
+
+            <div class="mb-4">
+              <label class="mb-1.5 block text-[12px] font-medium text-[--t2]">Описание</label>
+              <input v-model="formDesc" class="input-field w-full px-3.5 py-2.5" placeholder="Необязательно..." />
+            </div>
+
+            <div class="mb-5">
+              <label class="mb-2 block text-[12px] font-medium text-[--t2]">
+                Книги
+                <span v-if="formBooks.length" class="text-[--accent]">({{ formBooks.length }})</span>
+              </label>
+
+              <!-- Search -->
+              <div class="relative mb-2">
+                <IconSearch
+                  :size="14"
+                  class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-[--t3]"
+                />
+                <input
+                  v-model="bookSearch"
+                  class="input-field w-full py-2 pr-3 pl-8 text-[13px]"
+                  placeholder="Поиск по книгам..."
+                />
+              </div>
+
+              <!-- Selected books preview -->
+              <div v-if="formBooks.length && !bookSearch" class="mb-2 flex flex-wrap gap-1.5">
+                <span
+                  v-for="title in formBooks"
+                  :key="title"
+                  class="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-[--accent]"
+                  style="background: var(--accent-soft)"
+                >
+                  {{ title.length > 25 ? title.slice(0, 25) + '...' : title }}
+                  <button
+                    class="ml-0.5 cursor-pointer border-0 bg-transparent p-0 text-[--accent] hover:text-white"
+                    @click="toggleBook(title)"
+                  >
+                    <IconX :size="10" />
+                  </button>
+                </span>
+              </div>
+
+              <!-- Book list -->
+              <div
+                class="max-h-56 space-y-0.5 overflow-y-auto rounded-lg border p-1"
+                style="border-color: var(--border)"
+              >
+                <button
+                  v-for="book in filteredBooks"
+                  :key="book.id"
+                  class="flex w-full cursor-pointer items-center gap-2.5 rounded-lg border-0 bg-transparent px-2.5 py-2 text-left transition-colors hover:bg-white/[0.04]"
+                  :class="formBooks.includes(book.title) ? 'text-[--accent]' : 'text-[--t2]'"
+                  @click="toggleBook(book.title)"
+                >
+                  <span
+                    class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded border"
+                    :class="
+                      formBooks.includes(book.title)
+                        ? 'border-[--accent] bg-[--accent]'
+                        : 'border-[--border] bg-transparent'
+                    "
+                  >
+                    <IconCheck v-if="formBooks.includes(book.title)" :size="10" class="text-black" />
+                  </span>
+                  <div class="h-7 w-7 flex-shrink-0 overflow-hidden rounded">
+                    <img
+                      v-if="book.has_cover"
+                      :src="coverUrl(book.id)"
+                      :alt="book.title"
+                      class="h-full w-full object-cover"
+                    />
+                    <div
+                      v-else
+                      class="flex h-full w-full items-center justify-center text-[9px] font-bold text-white/40"
+                      style="background: rgba(255, 255, 255, 0.06)"
+                    >
+                      {{ book.title.charAt(0) }}
+                    </div>
+                  </div>
+                  <span class="min-w-0 flex-1 truncate text-[13px]">{{ book.title }}</span>
+                  <span class="ml-auto flex-shrink-0 text-[11px] text-[--t3]">{{ book.author }}</span>
+                </button>
+                <p v-if="!filteredBooks.length" class="py-4 text-center text-[12px] text-[--t3]">Ничего не найдено</p>
+              </div>
+            </div>
+
+            <div class="flex gap-2">
+              <button class="btn btn-primary flex-1" @click="save">
+                {{ editIdx !== null ? 'Сохранить' : 'Создать' }}
+              </button>
+              <button class="btn btn-ghost" @click="closeForm">Отмена</button>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </Teleport>
   </div>
 </template>
