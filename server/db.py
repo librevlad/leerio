@@ -465,9 +465,10 @@ def _sync_books_from_s3(client):
         categories = [p["Prefix"].rstrip("/") for p in cat_resp.get("CommonPrefixes", [])]
 
         for cat in categories:
-            # List book folders within each category
+            # List all objects in category, collect mp3s and covers per folder
             paginator = client.get_paginator("list_objects_v2")
-            book_folders: dict[str, list[str]] = {}  # folder -> [mp3 keys]
+            book_mp3s: dict[str, list[str]] = {}  # folder -> [mp3 keys]
+            book_covers: set[str] = set()  # folders that have a cover file
 
             for page in paginator.paginate(Bucket=bucket, Prefix=f"{cat}/"):
                 for obj in page.get("Contents", []):
@@ -477,25 +478,26 @@ def _sync_books_from_s3(client):
                     if len(parts) < 3:
                         continue
                     folder = parts[1]
-                    filename = parts[2]
-                    if filename.lower().endswith(".mp3"):
-                        book_folders.setdefault(folder, []).append(key)
+                    filename = parts[2].lower()
+                    if filename.endswith(".mp3"):
+                        book_mp3s.setdefault(folder, []).append(key)
+                    elif filename.startswith("cover"):
+                        book_covers.add(folder)
 
-            for folder, mp3_keys in sorted(book_folders.items()):
+            for folder, mp3_keys in sorted(book_mp3s.items()):
                 author, title, reader = parse_folder_name(folder)
                 slug = make_slug(title, author)
 
-                if slug in existing_slugs:
-                    continue
-
                 s3_prefix = f"{cat}/{folder}"
-                has_cover = 0
-                # Check for cover in same prefix
-                try:
-                    cover_resp = client.list_objects_v2(Bucket=bucket, Prefix=f"{s3_prefix}/cover", MaxKeys=1)
-                    has_cover = int(cover_resp.get("KeyCount", 0) > 0)
-                except Exception:
-                    pass
+                has_cover = int(folder in book_covers)
+
+                if slug in existing_slugs:
+                    # Update has_cover for existing books (may have been wrong on first sync)
+                    conn.execute(
+                        "UPDATE books SET has_cover = ? WHERE slug = ?",
+                        (has_cover, slug),
+                    )
+                    continue
 
                 conn.execute(
                     """INSERT INTO books (slug, title, author, reader, category, folder,
