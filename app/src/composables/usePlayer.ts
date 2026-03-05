@@ -106,6 +106,23 @@ function ensureAudio(): HTMLAudioElement {
       isLoading.value = false
       toast.error('Ошибка загрузки аудио')
     })
+
+    // Pause when headphones are disconnected
+    if (navigator.mediaDevices?.addEventListener) {
+      let previousDevices: string[] = []
+      navigator.mediaDevices.enumerateDevices().then((devices) => {
+        previousDevices = devices.filter((d) => d.kind === 'audiooutput').map((d) => d.deviceId)
+      })
+      navigator.mediaDevices.addEventListener('devicechange', () => {
+        navigator.mediaDevices.enumerateDevices().then((devices) => {
+          const currentOutputs = devices.filter((d) => d.kind === 'audiooutput').map((d) => d.deviceId)
+          if (previousDevices.length > currentOutputs.length && audio && !audio.paused) {
+            audio.pause()
+          }
+          previousDevices = currentOutputs
+        })
+      })
+    }
   }
   return audio
 }
@@ -209,6 +226,7 @@ async function loadBook(book: Book) {
   isLoading.value = true
   currentBook.value = book
   isPlayerVisible.value = true
+  isFullscreen.value = true
 
   try {
     const isLocalBook = book.id.startsWith('lb:')

@@ -11,7 +11,6 @@ import BookSimilar from '../components/book/BookSimilar.vue'
 import BookActions from '../components/book/BookActions.vue'
 import BookQuotes from '../components/book/BookQuotes.vue'
 import BookChapters from '../components/book/BookChapters.vue'
-import AudioPlayer from '../components/player/AudioPlayer.vue'
 import { IconArrowLeft, IconPlay, IconDownload, IconTrash, IconCheck, IconX } from '../components/shared/icons'
 import ProgressBar from '../components/shared/ProgressBar.vue'
 import { usePlayer } from '../composables/usePlayer'
@@ -180,10 +179,7 @@ watch(() => route.params.id, loadBook)
         <BookActions :book-id="book.id" :book-status="book.book_status" @status-changed="loadBook" />
       </div>
 
-      <!-- 3. Audio player (when this book is loaded) -->
-      <AudioPlayer v-if="isCurrentBook" class="mb-5" />
-
-      <!-- 4. Chapters -->
+      <!-- 3. Chapters -->
       <BookChapters v-if="book.mp3_count && book.mp3_count > 0" :book="book" class="mb-5" />
 
       <!-- 5. Two-column layout -->

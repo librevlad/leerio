@@ -43,6 +43,7 @@ async function handleTrackClick(index: number) {
     await player.loadBook(props.book)
     player.playTrack(index)
   }
+  player.openFullscreen()
 }
 
 onMounted(async () => {
