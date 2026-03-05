@@ -3,7 +3,6 @@ import { ref, onMounted, computed } from 'vue'
 import { useUserBooks } from '@/composables/useUserBooks'
 import { useLocalBooks } from '@/composables/useLocalBooks'
 import { useDownloads } from '@/composables/useDownloads'
-import { usePlayer } from '@/composables/usePlayer'
 import { useToast } from '@/composables/useToast'
 import { userBookCoverUrl, coverUrl } from '@/api'
 import {
@@ -17,13 +16,12 @@ import {
 } from '@/components/shared/icons'
 import SourceBadge from '@/components/shared/SourceBadge.vue'
 import ProgressBar from '@/components/shared/ProgressBar.vue'
-import type { Book, TTSJob } from '@/types'
+import type { TTSJob } from '@/types'
 
 const toast = useToast()
 const { userBooks, ttsJobs, loading: ubLoading, loadUserBooks, loadTTSJobs, deleteBook, pollJob } = useUserBooks()
 const { localBooks, removeLocalBook } = useLocalBooks()
 const downloads = useDownloads()
-const { loadBook } = usePlayer()
 
 const activeFilter = ref<'all' | 'downloaded' | 'local' | 'uploaded'>('all')
 const activeJobs = computed(() => ttsJobs.value.filter((j: TTSJob) => j.status === 'processing'))
@@ -113,24 +111,6 @@ onMounted(async () => {
     })
   }
 })
-
-function playItem(item: UnifiedItem) {
-  const asBook: Book = {
-    id: item.id,
-    folder: '',
-    category: '',
-    author: item.author,
-    title: item.title,
-    reader: item.reader ?? '',
-    path: '',
-    progress: 0,
-    tags: [],
-    note: '',
-    has_cover: item.hasCover,
-    is_personal: item.isPersonal,
-  }
-  loadBook(asBook)
-}
 
 async function handleDelete(item: UnifiedItem) {
   if (!confirm(`Удалить "${item.title}"?`)) return
@@ -245,13 +225,14 @@ const coverPatterns: Record<string, string> = {
 
     <!-- Grid -->
     <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      <div v-for="item in items" :key="item.id" class="card card-hover group cursor-pointer overflow-hidden">
+      <router-link
+        v-for="item in items"
+        :key="item.id"
+        :to="`/book/${item.id}`"
+        class="card card-hover group cursor-pointer overflow-hidden no-underline"
+      >
         <!-- Gradient backdrop with blurred cover -->
-        <div
-          class="relative h-28 overflow-hidden"
-          :style="{ background: coverGradients[item.source] }"
-          @click="playItem(item)"
-        >
+        <div class="relative h-28 overflow-hidden" :style="{ background: coverGradients[item.source] }">
           <img
             v-if="item.coverSrc"
             :src="item.coverSrc"
@@ -279,7 +260,7 @@ const coverPatterns: Record<string, string> = {
 
         <!-- Floating cover + content -->
         <div class="relative px-4">
-          <div class="-mt-9 mb-2.5 flex items-end gap-3" @click="playItem(item)">
+          <div class="-mt-9 mb-2.5 flex items-end gap-3">
             <div
               class="relative h-[72px] w-[72px] flex-shrink-0 overflow-hidden rounded-lg shadow-lg ring-2 ring-[--card-solid]"
             >
@@ -305,7 +286,7 @@ const coverPatterns: Record<string, string> = {
             </div>
           </div>
 
-          <div class="pb-3" @click="playItem(item)">
+          <div class="pb-3">
             <p v-if="item.author" class="mb-2 truncate text-[12px] text-[--t3]">{{ item.author }}</p>
             <div class="flex items-center justify-between">
               <span v-if="item.trackCount" class="flex items-center gap-1 text-[11px] text-[--t3]">
@@ -321,7 +302,7 @@ const coverPatterns: Record<string, string> = {
             </div>
           </div>
         </div>
-      </div>
+      </router-link>
     </div>
   </div>
 </template>
