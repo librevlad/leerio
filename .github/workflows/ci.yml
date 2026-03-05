@@ -172,8 +172,6 @@ jobs:
             sed -i '/^S3_ACCESS_KEY=/d' .env 2>/dev/null; echo "S3_ACCESS_KEY=$S3_ACCESS_KEY" >> .env
             sed -i '/^S3_SECRET_KEY=/d' .env 2>/dev/null; echo "S3_SECRET_KEY=$S3_SECRET_KEY" >> .env
             sed -i '/^S3_BUCKET=/d' .env 2>/dev/null; echo "S3_BUCKET=$S3_BUCKET" >> .env
-            # Clear old book data so S3 sync repopulates
-            python3 -c "import sqlite3; c=sqlite3.connect('data/leerio.db'); c.execute('DELETE FROM tracks'); c.execute('DELETE FROM books'); c.commit(); c.close()" 2>/dev/null || true
             docker compose build --pull
             docker compose up -d
             echo "Waiting for services to start..."
