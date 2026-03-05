@@ -406,63 +406,6 @@ def get_dashboard(user: dict = Depends(get_current_user)):
             except Exception:
                 pass
 
-    # Now playing: find book with most recent playback position
-    now_playing = None
-    playback_data = ud.playback_load()
-    if playback_data:
-        most_recent = None
-        for bid, pos in playback_data.items():
-            updated = pos.get("updated")
-            if updated and (most_recent is None or updated > most_recent.get("updated", "")):
-                most_recent = {**pos, "book_id": bid}
-        if most_recent:
-            bid = most_recent["book_id"]
-            try:
-                if bid.startswith("lv:"):
-                    lv_id = bid[3:]
-                    lv_book = lv_get_book(lv_id)
-                    if lv_book:
-                        now_playing = {
-                            "book_id": bid,
-                            "title": lv_book["title"],
-                            "author": lv_book["author"],
-                            "cover_id": bid,
-                            "progress": 0,
-                            "current_track": most_recent.get("track_index", 0),
-                            "current_time": most_recent.get("position", 0),
-                        }
-                elif bid.startswith("ub:"):
-                    ub_path = _resolve_user_book_path(bid, user)
-                    if ub_path:
-                        from .core import _load_json
-
-                        meta = _load_json(ub_path / "meta.json", dict)
-                        now_playing = {
-                            "book_id": bid,
-                            "title": meta.get("title", ""),
-                            "author": meta.get("author", ""),
-                            "cover_id": bid,
-                            "progress": 0,
-                            "current_track": most_recent.get("track_index", 0),
-                            "current_time": most_recent.get("position", 0),
-                        }
-                else:
-                    path = _book_from_id(bid)
-                    if path.exists():
-                        a, t, r = parse_folder_name(path.name)
-                        progress = ud.progress_get(t)
-                        now_playing = {
-                            "book_id": bid,
-                            "title": t,
-                            "author": a,
-                            "cover_id": bid,
-                            "progress": progress,
-                            "current_track": most_recent.get("track_index", 0),
-                            "current_time": most_recent.get("position", 0),
-                        }
-            except Exception:
-                pass
-
     # Build folder→book_id lookup for linking history entries
     folder_to_id = {b["folder"]: _book_id(b["path"]) for b in books}
 
@@ -501,7 +444,7 @@ def get_dashboard(user: dict = Depends(get_current_user)):
         "total_done": len(done),
         "active_count": len(active_cards),
         "active_books": active_cards,
-        "now_playing": now_playing,
+        "now_playing": None,
         "recent": recent,
         "heatmap": dict(day_counts),
         "quote": quote,

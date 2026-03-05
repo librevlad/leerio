@@ -2,7 +2,6 @@
 import { ref, onMounted } from 'vue'
 import { api } from '../api'
 import type { DashboardData } from '../types'
-import NowPlaying from '../components/dashboard/NowPlaying.vue'
 import HeroStats from '../components/dashboard/HeroStats.vue'
 import ActiveBooks from '../components/dashboard/ActiveBooks.vue'
 import ActivityHeatmap from '../components/dashboard/ActivityHeatmap.vue'
@@ -51,8 +50,6 @@ onMounted(loadData)
     </div>
 
     <div v-else-if="data" class="fade-in space-y-8">
-      <NowPlaying v-if="data.now_playing" :data="data.now_playing" />
-
       <HeroStats :total-books="data.total_books" :total-done="data.total_done" :active-count="data.active_count" />
 
       <ActiveBooks :books="data.active_books" />
