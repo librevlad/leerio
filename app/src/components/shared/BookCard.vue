@@ -118,7 +118,9 @@ const fallbackPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1
         :title="book.author || book.reader"
       >
         {{ book.author
-        }}<span v-if="book.reader" class="text-[--t3]">{{ book.author ? ' · ' : '' }}{{ book.reader }}</span>
+        }}<span v-if="book.reader && book.reader !== book.author" class="text-[--t3]"
+          >{{ book.author ? ' · ' : '' }}{{ book.reader }}</span
+        >
       </p>
 
       <!-- Progress bar -->

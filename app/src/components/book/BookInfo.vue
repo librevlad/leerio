@@ -104,7 +104,10 @@ const startDate = computed(() => {
               {{ book.title }}
             </h1>
             <p v-if="book.author" class="mt-1 text-[13px] text-[--t2]" :title="book.author">{{ book.author }}</p>
-            <p v-if="book.reader" class="mt-0.5 flex items-center gap-1.5 text-[12px] text-[--t3]">
+            <p
+              v-if="book.reader && book.reader !== book.author"
+              class="mt-0.5 flex items-center gap-1.5 text-[12px] text-[--t3]"
+            >
               <IconHeadphones :size="12" />
               {{ book.reader }}
             </p>
@@ -154,7 +157,10 @@ const startDate = computed(() => {
               {{ book.title }}
             </h1>
             <p v-if="book.author" class="mt-1.5 text-[14px] text-[--t2]" :title="book.author">{{ book.author }}</p>
-            <p v-if="book.reader" class="mt-1 flex items-center gap-1.5 text-[13px] text-[--t3]">
+            <p
+              v-if="book.reader && book.reader !== book.author"
+              class="mt-1 flex items-center gap-1.5 text-[13px] text-[--t3]"
+            >
               <IconHeadphones :size="13" />
               {{ book.reader }}
             </p>
