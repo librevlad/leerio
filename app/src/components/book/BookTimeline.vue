@@ -49,7 +49,7 @@ function formatDate(ts: string): string {
         <div class="-mt-0.5 min-w-0 flex-1">
           <div class="flex flex-wrap items-baseline gap-2">
             <span class="text-[12px] font-semibold text-[--t1]">{{ e.action_label }}</span>
-            <span v-if="e.detail" class="text-[11px] text-[--t3]">{{ e.detail }}</span>
+            <span v-if="e.detail && e.detail !== e.action_label" class="text-[11px] text-[--t3]">{{ e.detail }}</span>
           </div>
           <p class="mt-0.5 text-[10px] text-[--t3]">{{ formatDate(e.ts) }}</p>
         </div>

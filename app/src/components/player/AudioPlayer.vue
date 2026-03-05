@@ -361,7 +361,7 @@ const SLEEP_OPTIONS = [
           <span class="flex-1 truncate text-[13px] font-medium">
             {{ track.filename }}
           </span>
-          <span class="shrink-0 text-[11px] text-[--t3]">
+          <span v-if="track.duration" class="shrink-0 text-[11px] text-[--t3]">
             {{ formatTime(track.duration) }}
           </span>
         </button>

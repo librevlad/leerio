@@ -403,7 +403,9 @@ function closeOverlays() {
               class="h-2 w-2 flex-shrink-0 rounded-full bg-emerald-400"
               title="Скачано"
             />
-            <span class="flex-shrink-0 text-[11px] text-[--t3]">{{ formatTime(track.duration) }}</span>
+            <span v-if="track.duration" class="flex-shrink-0 text-[11px] text-[--t3]">{{
+              formatTime(track.duration)
+            }}</span>
           </button>
         </div>
       </div>
