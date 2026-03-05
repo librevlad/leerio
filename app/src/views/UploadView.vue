@@ -6,7 +6,8 @@ import { useToast } from '@/composables/useToast'
 import { useUserBooks } from '@/composables/useUserBooks'
 import { useLocalBooks } from '@/composables/useLocalBooks'
 import { useNetwork } from '@/composables/useNetwork'
-import { IconUpload, IconMicrophone, IconMusic, IconX, IconSmartphone } from '@/components/shared/icons'
+import ProgressBar from '@/components/shared/ProgressBar.vue'
+import { IconUpload, IconMicrophone, IconMusic, IconX, IconSmartphone, IconCheck } from '@/components/shared/icons'
 import type { TTSVoice, TTSEngine } from '@/types'
 
 const router = useRouter()
@@ -250,120 +251,125 @@ async function handleTTSConvert() {
     converting.value = false
   }
 }
+
+const tabDefs = [
+  {
+    key: 'upload' as const,
+    label: 'Загрузить MP3',
+    icon: IconUpload,
+    color: 'text-teal-300',
+    activeBg: 'bg-teal-500/15',
+    activeBorder: 'border-teal-500/40',
+  },
+  {
+    key: 'tts' as const,
+    label: 'Озвучить документ',
+    icon: IconMicrophone,
+    color: 'text-violet-300',
+    activeBg: 'bg-violet-500/15',
+    activeBorder: 'border-violet-500/40',
+  },
+  {
+    key: 'local' as const,
+    label: 'С устройства',
+    icon: IconSmartphone,
+    color: 'text-indigo-300',
+    activeBg: 'bg-indigo-500/15',
+    activeBorder: 'border-indigo-500/40',
+  },
+]
 </script>
 
 <template>
   <div>
     <!-- Header -->
     <div class="mb-6">
-      <h1 class="text-[20px] font-bold text-[--t1]">Загрузить</h1>
+      <h1 class="page-title">Загрузить</h1>
       <p class="mt-1 text-[13px] text-[--t3]">Загрузите MP3 или создайте аудиокнигу из документа</p>
     </div>
 
     <!-- Tabs -->
-    <div class="mb-6 flex gap-2">
+    <div class="scrollbar-hide mb-6 flex gap-2 overflow-x-auto">
       <button
-        class="flex items-center gap-2 rounded-full border px-4 py-2 text-[13px] font-medium transition-all"
+        v-for="tab in tabDefs"
+        :key="tab.key"
+        class="flex flex-shrink-0 cursor-pointer items-center gap-2 rounded-full border px-4 py-2 text-[13px] font-medium transition-all duration-200"
         :class="
-          activeTab === 'upload'
-            ? 'border-teal-500/40 bg-teal-500/15 text-teal-300'
-            : 'border-[--border] text-[--t3] hover:border-[--t3] hover:text-[--t2]'
+          activeTab === tab.key
+            ? [tab.activeBg, tab.activeBorder, tab.color]
+            : 'border-[--border] text-[--t3] hover:bg-white/5 hover:text-[--t2]'
         "
-        @click="activeTab = 'upload'"
+        @click="activeTab = tab.key"
       >
-        <IconUpload :size="16" />
-        Загрузить MP3
-      </button>
-      <button
-        class="flex items-center gap-2 rounded-full border px-4 py-2 text-[13px] font-medium transition-all"
-        :class="
-          activeTab === 'tts'
-            ? 'border-violet-500/40 bg-violet-500/15 text-violet-300'
-            : 'border-[--border] text-[--t3] hover:border-[--t3] hover:text-[--t2]'
-        "
-        @click="activeTab = 'tts'"
-      >
-        <IconMicrophone :size="16" />
-        Озвучить документ
-      </button>
-      <button
-        class="flex items-center gap-2 rounded-full border px-4 py-2 text-[13px] font-medium transition-all"
-        :class="
-          activeTab === 'local'
-            ? 'border-indigo-500/40 bg-indigo-500/15 text-indigo-300'
-            : 'border-[--border] text-[--t3] hover:border-[--t3] hover:text-[--t2]'
-        "
-        @click="activeTab = 'local'"
-      >
-        <IconSmartphone :size="16" />
-        С устройства
+        <component :is="tab.icon" :size="16" />
+        {{ tab.label }}
       </button>
     </div>
 
     <!-- Upload MP3 Tab -->
-    <div v-if="activeTab === 'upload'" class="max-w-xl space-y-4">
-      <!-- Title -->
-      <div>
-        <label class="mb-1 block text-[12px] font-medium text-[--t2]">Название *</label>
-        <input
-          v-model="uploadTitle"
-          type="text"
-          placeholder="Война и Мир"
-          class="w-full rounded-lg border border-[--border] bg-transparent px-3 py-2 text-[13px] text-[--t1] transition-all outline-none focus:border-teal-500/50"
-        />
-      </div>
+    <div v-if="activeTab === 'upload'" class="max-w-xl space-y-5">
+      <div class="card space-y-4 px-5 py-5">
+        <!-- Title -->
+        <div>
+          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">Название *</label>
+          <input v-model="uploadTitle" type="text" placeholder="Война и Мир" class="input-field w-full px-3.5 py-2.5" />
+        </div>
 
-      <!-- Author -->
-      <div>
-        <label class="mb-1 block text-[12px] font-medium text-[--t2]">Автор</label>
-        <input
-          v-model="uploadAuthor"
-          type="text"
-          placeholder="Лев Толстой"
-          class="w-full rounded-lg border border-[--border] bg-transparent px-3 py-2 text-[13px] text-[--t1] transition-all outline-none focus:border-teal-500/50"
-        />
-      </div>
+        <!-- Author -->
+        <div>
+          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">Автор</label>
+          <input
+            v-model="uploadAuthor"
+            type="text"
+            placeholder="Лев Толстой"
+            class="input-field w-full px-3.5 py-2.5"
+          />
+        </div>
 
-      <!-- Reader -->
-      <div>
-        <label class="mb-1 block text-[12px] font-medium text-[--t2]">Чтец</label>
-        <input
-          v-model="uploadReader"
-          type="text"
-          placeholder="Иван Козий"
-          class="w-full rounded-lg border border-[--border] bg-transparent px-3 py-2 text-[13px] text-[--t1] transition-all outline-none focus:border-teal-500/50"
-        />
+        <!-- Reader -->
+        <div>
+          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">Чтец</label>
+          <input v-model="uploadReader" type="text" placeholder="Иван Козий" class="input-field w-full px-3.5 py-2.5" />
+        </div>
       </div>
 
       <!-- MP3 Files -->
-      <div>
-        <label class="mb-1 block text-[12px] font-medium text-[--t2]">MP3 файлы *</label>
+      <div class="card px-5 py-5">
+        <label class="mb-3 block text-[12px] font-semibold text-[--t2]">MP3 файлы *</label>
         <div
-          class="rounded-lg border-2 border-dashed border-[--border] p-6 text-center transition-all hover:border-teal-500/30"
+          class="rounded-2xl border-2 border-dashed border-[--border] p-8 text-center transition-all hover:border-teal-500/30 hover:bg-teal-500/[0.02]"
         >
-          <IconMusic :size="32" class="mx-auto mb-2 text-[--t3]" />
-          <p class="text-[13px] text-[--t3]">Перетащите MP3 файлы сюда</p>
+          <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-500/10">
+            <IconMusic :size="24" class="text-teal-400" />
+          </div>
+          <p class="mb-1 text-[13px] font-medium text-[--t2]">Перетащите MP3 файлы сюда</p>
+          <p class="mb-3 text-[12px] text-[--t3]">или выберите с устройства</p>
           <label
-            class="mt-2 inline-block cursor-pointer rounded-lg bg-teal-500/15 px-4 py-2 text-[12px] font-medium text-teal-300 transition-all hover:bg-teal-500/25"
+            class="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-teal-500/15 px-4 py-2 text-[12px] font-semibold text-teal-300 transition-all hover:bg-teal-500/25"
           >
+            <IconUpload :size="14" />
             Выбрать файлы
             <input type="file" accept=".mp3" multiple class="hidden" @change="onFilesChange" />
           </label>
         </div>
 
         <!-- File list -->
-        <div v-if="uploadFiles.length" class="mt-3 space-y-1">
+        <div v-if="uploadFiles.length" class="mt-4 space-y-1.5">
+          <div class="mb-2 text-[11px] font-semibold text-[--t3]">{{ uploadFiles.length }} файлов</div>
           <div
             v-for="(file, i) in uploadFiles"
             :key="i"
-            class="flex items-center justify-between rounded-lg border border-[--border] px-3 py-2"
+            class="flex items-center justify-between rounded-xl bg-white/[0.03] px-3.5 py-2.5"
           >
-            <div class="flex items-center gap-2 text-[12px] text-[--t2]">
-              <IconMusic :size="14" class="text-teal-400" />
-              {{ file.name }}
-              <span class="text-[--t3]">({{ (file.size / 1024 / 1024).toFixed(1) }} МБ)</span>
+            <div class="flex min-w-0 items-center gap-2.5">
+              <IconMusic :size="14" class="flex-shrink-0 text-teal-400" />
+              <span class="truncate text-[12px] text-[--t2]">{{ file.name }}</span>
+              <span class="flex-shrink-0 text-[11px] text-[--t3]">{{ (file.size / 1024 / 1024).toFixed(1) }} МБ</span>
             </div>
-            <button class="text-[--t3] transition-all hover:text-red-400" @click="removeFile(i)">
+            <button
+              class="flex-shrink-0 rounded-full p-1 text-[--t3] transition-all hover:bg-red-500/15 hover:text-red-400"
+              @click="removeFile(i)"
+            >
               <IconX :size="14" />
             </button>
           </div>
@@ -371,121 +377,130 @@ async function handleTTSConvert() {
       </div>
 
       <!-- Cover -->
-      <div>
-        <label class="mb-1 block text-[12px] font-medium text-[--t2]">Обложка (опционально)</label>
+      <div class="card px-5 py-5">
+        <label class="mb-3 block text-[12px] font-semibold text-[--t2]">Обложка (опционально)</label>
         <label
-          class="inline-block cursor-pointer rounded-lg border border-[--border] px-4 py-2 text-[12px] text-[--t3] transition-all hover:border-teal-500/30"
+          class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-[--border] px-4 py-3 text-[12px] text-[--t3] transition-all hover:border-teal-500/30 hover:bg-teal-500/[0.02]"
         >
+          <IconUpload :size="14" />
           {{ uploadCover ? uploadCover.name : 'Выбрать изображение' }}
           <input type="file" accept="image/*" class="hidden" @change="onCoverChange" />
         </label>
+        <div v-if="uploadCover" class="mt-2 flex items-center gap-1.5 text-[11px] text-emerald-400">
+          <IconCheck :size="12" />
+          Обложка выбрана
+        </div>
       </div>
 
       <!-- Upload button -->
       <button
-        class="w-full rounded-lg bg-teal-500 px-4 py-3 text-[14px] font-semibold text-white transition-all hover:bg-teal-600 disabled:opacity-50"
+        class="btn btn-primary w-full justify-center text-[14px]"
         :disabled="uploading || !uploadTitle.trim() || uploadFiles.length === 0"
         @click="handleUpload"
       >
+        <IconUpload v-if="!uploading" :size="16" />
         <span v-if="uploading">Загрузка... {{ uploadProgress }}%</span>
         <span v-else>Загрузить</span>
       </button>
     </div>
 
     <!-- TTS Tab -->
-    <div v-if="activeTab === 'tts'" class="max-w-xl space-y-4">
-      <!-- Title -->
-      <div>
-        <label class="mb-1 block text-[12px] font-medium text-[--t2]">Название *</label>
-        <input
-          v-model="ttsTitle"
-          type="text"
-          placeholder="Название книги"
-          class="w-full rounded-lg border border-[--border] bg-transparent px-3 py-2 text-[13px] text-[--t1] transition-all outline-none focus:border-violet-500/50"
-        />
-      </div>
+    <div v-if="activeTab === 'tts'" class="max-w-xl space-y-5">
+      <div class="card space-y-4 px-5 py-5">
+        <!-- Title -->
+        <div>
+          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">Название *</label>
+          <input v-model="ttsTitle" type="text" placeholder="Название книги" class="input-field w-full px-3.5 py-2.5" />
+        </div>
 
-      <!-- Author -->
-      <div>
-        <label class="mb-1 block text-[12px] font-medium text-[--t2]">Автор</label>
-        <input
-          v-model="ttsAuthor"
-          type="text"
-          placeholder="Автор"
-          class="w-full rounded-lg border border-[--border] bg-transparent px-3 py-2 text-[13px] text-[--t1] transition-all outline-none focus:border-violet-500/50"
-        />
-      </div>
+        <!-- Author -->
+        <div>
+          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">Автор</label>
+          <input v-model="ttsAuthor" type="text" placeholder="Автор" class="input-field w-full px-3.5 py-2.5" />
+        </div>
 
-      <!-- Document file -->
-      <div>
-        <label class="mb-1 block text-[12px] font-medium text-[--t2]">Документ (PDF, EPUB, TXT, FB2) *</label>
-        <label
-          class="inline-block cursor-pointer rounded-lg border border-dashed border-[--border] px-4 py-3 text-[13px] text-[--t3] transition-all hover:border-violet-500/30"
-        >
-          {{ ttsFile ? ttsFile.name : 'Выбрать файл' }}
-          <input type="file" accept=".pdf,.epub,.txt,.fb2" class="hidden" @change="onTTSFileChange" />
-        </label>
-      </div>
-
-      <!-- Engine selector -->
-      <div v-if="showEngineSelector">
-        <label class="mb-1 block text-[12px] font-medium text-[--t2]">Движок</label>
-        <div class="flex gap-2">
-          <button
-            v-for="eng in engines.filter((e) => e.available)"
-            :key="eng.id"
-            class="rounded-full border px-3 py-1.5 text-[12px] font-medium transition-all"
-            :class="
-              ttsEngine === eng.id
-                ? 'border-violet-500/40 bg-violet-500/15 text-violet-300'
-                : 'border-[--border] text-[--t3] hover:text-[--t2]'
-            "
-            @click="selectEngine(eng.id as 'edge' | 'openai')"
+        <!-- Document file -->
+        <div>
+          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">Документ (PDF, EPUB, TXT, FB2) *</label>
+          <label
+            class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-[--border] px-4 py-3 text-[13px] transition-all hover:border-violet-500/30 hover:bg-violet-500/[0.02]"
+            :class="ttsFile ? 'text-violet-300' : 'text-[--t3]'"
           >
-            {{ eng.name }}
-          </button>
+            <IconUpload :size="14" />
+            {{ ttsFile ? ttsFile.name : 'Выбрать файл' }}
+            <input type="file" accept=".pdf,.epub,.txt,.fb2" class="hidden" @change="onTTSFileChange" />
+          </label>
         </div>
       </div>
 
-      <!-- Voice selection -->
-      <div>
-        <label class="mb-1 block text-[12px] font-medium text-[--t2]">Голос</label>
-        <select
-          v-model="ttsVoice"
-          class="w-full rounded-lg border border-[--border] bg-transparent px-3 py-2 text-[13px] text-[--t1] outline-none"
-        >
-          <option v-for="v in voices" :key="v.id" :value="v.id">
-            {{ v.name }} ({{ v.lang }}, {{ v.gender === 'male' ? 'муж.' : v.gender === 'female' ? 'жен.' : '' }})
-          </option>
-        </select>
-      </div>
+      <!-- Voice settings card -->
+      <div class="card space-y-4 px-5 py-5">
+        <h3 class="section-label">Настройки голоса</h3>
 
-      <!-- Rate -->
-      <div>
-        <label class="mb-1 block text-[12px] font-medium text-[--t2]">Скорость</label>
-        <div class="flex gap-2">
-          <button
-            v-for="opt in rateOptions"
-            :key="opt.value"
-            class="rounded-full border px-3 py-1.5 text-[12px] font-medium transition-all"
-            :class="
-              ttsRate === opt.value
-                ? 'border-violet-500/40 bg-violet-500/15 text-violet-300'
-                : 'border-[--border] text-[--t3] hover:text-[--t2]'
-            "
-            @click="ttsRate = opt.value"
-          >
-            {{ opt.label }}
-          </button>
+        <!-- Engine selector -->
+        <div v-if="showEngineSelector">
+          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">Движок</label>
+          <div class="flex gap-2">
+            <button
+              v-for="eng in engines.filter((e) => e.available)"
+              :key="eng.id"
+              class="cursor-pointer rounded-full border px-3.5 py-1.5 text-[12px] font-semibold transition-all duration-200"
+              :class="
+                ttsEngine === eng.id
+                  ? 'border-violet-500/40 bg-violet-500/15 text-violet-300'
+                  : 'border-[--border] text-[--t3] hover:bg-white/5 hover:text-[--t2]'
+              "
+              @click="selectEngine(eng.id as 'edge' | 'openai')"
+            >
+              {{ eng.name }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Voice selection -->
+        <div>
+          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">Голос</label>
+          <select v-model="ttsVoice" class="input-field w-full px-3.5 py-2.5">
+            <option v-for="v in voices" :key="v.id" :value="v.id">
+              {{ v.name }} ({{ v.lang }}, {{ v.gender === 'male' ? 'муж.' : v.gender === 'female' ? 'жен.' : '' }})
+            </option>
+          </select>
+        </div>
+
+        <!-- Rate -->
+        <div>
+          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">Скорость</label>
+          <div class="flex gap-2">
+            <button
+              v-for="opt in rateOptions"
+              :key="opt.value"
+              class="cursor-pointer rounded-full border px-3.5 py-1.5 text-[12px] font-semibold transition-all duration-200"
+              :class="
+                ttsRate === opt.value
+                  ? 'border-violet-500/40 bg-violet-500/15 text-violet-300'
+                  : 'border-[--border] text-[--t3] hover:bg-white/5 hover:text-[--t2]'
+              "
+              @click="ttsRate = opt.value"
+            >
+              {{ opt.label }}
+            </button>
+          </div>
         </div>
       </div>
 
       <!-- Convert button -->
       <button
-        class="w-full rounded-lg bg-violet-500 px-4 py-3 text-[14px] font-semibold text-white transition-all hover:bg-violet-600 disabled:opacity-50"
+        class="btn w-full justify-center text-[14px] font-semibold text-white"
+        style="
+          background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+          box-shadow:
+            0 4px 20px rgba(139, 92, 246, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        "
         :disabled="converting || !ttsTitle.trim() || !ttsFile"
         @click="handleTTSConvert"
       >
+        <IconMicrophone v-if="!converting || !conversionStarted" :size="16" />
         <span v-if="converting && !conversionStarted">Загрузка...</span>
         <span v-else>Создать аудиокнигу</span>
       </button>
@@ -493,96 +508,124 @@ async function handleTTSConvert() {
       <!-- Conversion progress -->
       <div
         v-if="conversionStarted"
-        class="rounded-xl border border-[--border] p-4"
+        class="card overflow-hidden"
         :class="
           jobStatus === 'done'
-            ? 'border-emerald-500/30 bg-emerald-500/5'
+            ? 'border-emerald-500/30'
             : jobStatus === 'error'
-              ? 'border-red-500/30 bg-red-500/5'
-              : 'border-violet-500/30 bg-violet-500/5'
+              ? 'border-red-500/30'
+              : 'border-violet-500/30'
         "
       >
-        <div class="mb-2 flex items-center justify-between">
-          <span class="text-[13px] font-medium text-[--t1]">
-            {{ jobStatus === 'done' ? 'Готово!' : jobStatus === 'error' ? 'Ошибка' : 'Конвертация...' }}
-          </span>
-          <span class="text-[12px] text-[--t3]">{{ jobProgress }}%</span>
-        </div>
-        <div class="h-2 overflow-hidden rounded-full bg-white/10">
-          <div
-            class="h-full rounded-full transition-all duration-300"
-            :class="jobStatus === 'done' ? 'bg-emerald-500' : jobStatus === 'error' ? 'bg-red-500' : 'bg-violet-500'"
-            :style="{ width: `${jobProgress}%` }"
-          />
-        </div>
-        <router-link
-          v-if="jobStatus === 'done'"
-          to="/my-library"
-          class="mt-3 inline-block text-[12px] font-medium text-emerald-400 hover:underline"
+        <div
+          class="px-5 py-4"
+          :class="
+            jobStatus === 'done' ? 'bg-emerald-500/5' : jobStatus === 'error' ? 'bg-red-500/5' : 'bg-violet-500/5'
+          "
         >
-          Перейти к моим книгам
-        </router-link>
+          <div class="mb-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <div
+                class="flex h-8 w-8 items-center justify-center rounded-xl"
+                :class="
+                  jobStatus === 'done'
+                    ? 'bg-emerald-500/15'
+                    : jobStatus === 'error'
+                      ? 'bg-red-500/15'
+                      : 'bg-violet-500/15'
+                "
+              >
+                <IconCheck v-if="jobStatus === 'done'" :size="16" class="text-emerald-400" />
+                <IconX v-else-if="jobStatus === 'error'" :size="16" class="text-red-400" />
+                <IconMicrophone v-else :size="16" class="text-violet-400" />
+              </div>
+              <span class="text-[13px] font-semibold text-[--t1]">
+                {{ jobStatus === 'done' ? 'Готово!' : jobStatus === 'error' ? 'Ошибка' : 'Конвертация...' }}
+              </span>
+            </div>
+            <span class="text-[12px] font-semibold" :class="jobStatus === 'done' ? 'text-emerald-400' : 'text-[--t3]'">
+              {{ jobProgress }}%
+            </span>
+          </div>
+          <ProgressBar :percent="jobProgress" height="h-2" />
+          <router-link
+            v-if="jobStatus === 'done'"
+            to="/my-library"
+            class="mt-3 inline-flex items-center gap-1.5 text-[12px] font-semibold text-emerald-400 no-underline hover:underline"
+          >
+            Перейти к моим книгам
+          </router-link>
+        </div>
       </div>
     </div>
 
     <!-- Local Book Tab -->
-    <div v-if="activeTab === 'local'" class="max-w-xl space-y-4">
-      <div class="rounded-lg border border-indigo-500/20 bg-indigo-500/5 px-4 py-3 text-[12px] text-indigo-300">
-        <IconSmartphone :size="14" class="mr-1 inline" />
-        Книга будет доступна только на этом устройстве и не синхронизируется
+    <div v-if="activeTab === 'local'" class="max-w-xl space-y-5">
+      <div class="flex items-start gap-3 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 px-4 py-3">
+        <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-indigo-500/15">
+          <IconSmartphone :size="16" class="text-indigo-400" />
+        </div>
+        <p class="text-[12px] leading-relaxed text-indigo-300">
+          Книга будет доступна только на этом устройстве и не синхронизируется с облаком
+        </p>
       </div>
 
-      <!-- Title -->
-      <div>
-        <label class="mb-1 block text-[12px] font-medium text-[--t2]">Название *</label>
-        <input
-          v-model="localTitle"
-          type="text"
-          placeholder="Название книги"
-          class="w-full rounded-lg border border-[--border] bg-transparent px-3 py-2 text-[13px] text-[--t1] transition-all outline-none focus:border-indigo-500/50"
-        />
-      </div>
+      <div class="card space-y-4 px-5 py-5">
+        <!-- Title -->
+        <div>
+          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">Название *</label>
+          <input
+            v-model="localTitle"
+            type="text"
+            placeholder="Название книги"
+            class="input-field w-full px-3.5 py-2.5"
+          />
+        </div>
 
-      <!-- Author -->
-      <div>
-        <label class="mb-1 block text-[12px] font-medium text-[--t2]">Автор</label>
-        <input
-          v-model="localAuthor"
-          type="text"
-          placeholder="Автор"
-          class="w-full rounded-lg border border-[--border] bg-transparent px-3 py-2 text-[13px] text-[--t1] transition-all outline-none focus:border-indigo-500/50"
-        />
+        <!-- Author -->
+        <div>
+          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">Автор</label>
+          <input v-model="localAuthor" type="text" placeholder="Автор" class="input-field w-full px-3.5 py-2.5" />
+        </div>
       </div>
 
       <!-- MP3 Files -->
-      <div>
-        <label class="mb-1 block text-[12px] font-medium text-[--t2]">MP3 файлы *</label>
+      <div class="card px-5 py-5">
+        <label class="mb-3 block text-[12px] font-semibold text-[--t2]">MP3 файлы *</label>
         <div
-          class="rounded-lg border-2 border-dashed border-[--border] p-6 text-center transition-all hover:border-indigo-500/30"
+          class="rounded-2xl border-2 border-dashed border-[--border] p-8 text-center transition-all hover:border-indigo-500/30 hover:bg-indigo-500/[0.02]"
         >
-          <IconMusic :size="32" class="mx-auto mb-2 text-[--t3]" />
-          <p class="text-[13px] text-[--t3]">Выберите MP3 файлы с устройства</p>
+          <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500/10">
+            <IconMusic :size="24" class="text-indigo-400" />
+          </div>
+          <p class="mb-1 text-[13px] font-medium text-[--t2]">Выберите MP3 файлы с устройства</p>
+          <p class="mb-3 text-[12px] text-[--t3]">Поддерживаются MP3 и другие аудио форматы</p>
           <label
-            class="mt-2 inline-block cursor-pointer rounded-lg bg-indigo-500/15 px-4 py-2 text-[12px] font-medium text-indigo-300 transition-all hover:bg-indigo-500/25"
+            class="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-indigo-500/15 px-4 py-2 text-[12px] font-semibold text-indigo-300 transition-all hover:bg-indigo-500/25"
           >
+            <IconUpload :size="14" />
             Выбрать файлы
             <input type="file" accept=".mp3,audio/*" multiple class="hidden" @change="onLocalFilesChange" />
           </label>
         </div>
 
         <!-- File list -->
-        <div v-if="localFiles.length" class="mt-3 space-y-1">
+        <div v-if="localFiles.length" class="mt-4 space-y-1.5">
+          <div class="mb-2 text-[11px] font-semibold text-[--t3]">{{ localFiles.length }} файлов</div>
           <div
             v-for="(file, i) in localFiles"
             :key="i"
-            class="flex items-center justify-between rounded-lg border border-[--border] px-3 py-2"
+            class="flex items-center justify-between rounded-xl bg-white/[0.03] px-3.5 py-2.5"
           >
-            <div class="flex items-center gap-2 text-[12px] text-[--t2]">
-              <IconMusic :size="14" class="text-indigo-400" />
-              {{ file.name }}
-              <span class="text-[--t3]">({{ (file.size / 1024 / 1024).toFixed(1) }} МБ)</span>
+            <div class="flex min-w-0 items-center gap-2.5">
+              <IconMusic :size="14" class="flex-shrink-0 text-indigo-400" />
+              <span class="truncate text-[12px] text-[--t2]">{{ file.name }}</span>
+              <span class="flex-shrink-0 text-[11px] text-[--t3]">{{ (file.size / 1024 / 1024).toFixed(1) }} МБ</span>
             </div>
-            <button class="text-[--t3] transition-all hover:text-red-400" @click="removeLocalFile(i)">
+            <button
+              class="flex-shrink-0 rounded-full p-1 text-[--t3] transition-all hover:bg-red-500/15 hover:text-red-400"
+              @click="removeLocalFile(i)"
+            >
               <IconX :size="14" />
             </button>
           </div>
@@ -590,22 +633,34 @@ async function handleTTSConvert() {
       </div>
 
       <!-- Cover -->
-      <div>
-        <label class="mb-1 block text-[12px] font-medium text-[--t2]">Обложка (опционально)</label>
+      <div class="card px-5 py-5">
+        <label class="mb-3 block text-[12px] font-semibold text-[--t2]">Обложка (опционально)</label>
         <label
-          class="inline-block cursor-pointer rounded-lg border border-[--border] px-4 py-2 text-[12px] text-[--t3] transition-all hover:border-indigo-500/30"
+          class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-[--border] px-4 py-3 text-[12px] text-[--t3] transition-all hover:border-indigo-500/30 hover:bg-indigo-500/[0.02]"
         >
+          <IconUpload :size="14" />
           {{ localCover ? 'Обложка выбрана' : 'Выбрать изображение' }}
           <input type="file" accept="image/*" class="hidden" @change="onLocalCoverChange" />
         </label>
+        <div v-if="localCover" class="mt-2 flex items-center gap-1.5 text-[11px] text-emerald-400">
+          <IconCheck :size="12" />
+          Обложка выбрана
+        </div>
       </div>
 
       <!-- Add button -->
       <button
-        class="w-full rounded-lg bg-indigo-500 px-4 py-3 text-[14px] font-semibold text-white transition-all hover:bg-indigo-600 disabled:opacity-50"
+        class="btn w-full justify-center text-[14px] font-semibold text-white"
+        style="
+          background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+          box-shadow:
+            0 4px 20px rgba(99, 102, 241, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        "
         :disabled="addingLocal || !localTitle.trim() || localFiles.length === 0"
         @click="handleAddLocal"
       >
+        <IconSmartphone v-if="!addingLocal" :size="16" />
         <span v-if="addingLocal">Добавление...</span>
         <span v-else>Добавить на устройство</span>
       </button>
@@ -614,7 +669,7 @@ async function handleTTSConvert() {
     <!-- Offline notice for upload/tts tabs -->
     <div
       v-if="!isOnline && (activeTab === 'upload' || activeTab === 'tts')"
-      class="mt-4 max-w-xl rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-[13px] text-amber-300"
+      class="mt-5 max-w-xl rounded-2xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-[13px] text-amber-300"
     >
       Загрузка и TTS доступны только онлайн
     </div>
