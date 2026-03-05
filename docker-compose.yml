@@ -6,12 +6,17 @@ services:
     environment:
       LEERIO_DATA: /data
       LEERIO_BOOKS: /books
+      TTS_OPENAI_BASE_URL: http://openedai-speech:8000/v1
+      TTS_OPENAI_API_KEY: sk-unused
+      TTS_OPENAI_MODEL: tts-1
     env_file:
       - path: .env
         required: false
     volumes:
       - ./data:/data
       - ./books:/books:ro
+    depends_on:
+      - openedai-speech
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8000/api/config/constants"]
@@ -19,6 +24,15 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+
+  openedai-speech:
+    image: ghcr.io/matatonic/openedai-speech
+    environment:
+      TTS_HOME: voices
+      HF_HOME: voices
+    volumes:
+      - tts_voices:/app/voices
+    restart: unless-stopped
 
   app:
     build:
@@ -55,3 +69,4 @@ services:
 volumes:
   caddy_data:
   caddy_config:
+  tts_voices:

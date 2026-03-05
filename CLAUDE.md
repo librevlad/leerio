@@ -209,6 +209,9 @@ Internet -> Caddy (:80/:443)
               ├── leerio.app       -> static landing page (/srv/landing)
               └── app.leerio.app   -> nginx/app (:80) -> FastAPI/server (:8000)
                                       SPA + /api/ proxy    Business logic
+                                                              |
+                                                              └── openedai-speech (:8000)
+                                                                   Piper TTS (CPU)
 ```
 
 - **Domain split**: `leerio.app` serves a static landing page (APK download + web app links); `app.leerio.app` serves the Vue SPA + API
@@ -219,9 +222,18 @@ Internet -> Caddy (:80/:443)
 - `env_file: .env` on server service loads `CORS_ORIGINS` and other config
 - Caddy data/config persisted via named Docker volumes (`caddy_data`, `caddy_config`)
 
+### OpenAI-Compatible TTS (openedai-speech)
+
+- `openedai-speech` service runs alongside the app, provides OpenAI-compatible `/v1/audio/speech` API
+- Uses **Piper** (CPU-only) for `tts-1` model — no GPU required
+- Default voices: alloy, echo, fable, onyx, nova, shimmer (English; maps to Piper ONNX models)
+- Voice models are downloaded on first use and cached in `tts_voices` Docker volume
+- Server connects via `TTS_OPENAI_BASE_URL=http://openedai-speech:8000/v1`
+- Dev override exposes port 8001 for direct access (`localhost:8001`)
+
 ### Dev vs Production
 
-- `docker-compose.override.yml` re-exposes dev ports (8000, 5173) and disables Caddy via `profiles: ["production"]`
+- `docker-compose.override.yml` re-exposes dev ports (8000, 5173, 8001) and disables Caddy via `profiles: ["production"]`
 - Local `docker compose up` = dev mode (no Caddy, direct port access)
 - Production VPS has no override file — Caddy runs by default
 

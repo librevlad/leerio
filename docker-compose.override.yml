@@ -26,5 +26,9 @@ services:
     healthcheck:
       disable: true
 
+  openedai-speech:
+    ports:
+      - "8001:8000"
+
   caddy:
     profiles: ["production"]
