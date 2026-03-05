@@ -429,16 +429,101 @@ def create_or_update_user(email: str, name: str, picture: str) -> dict:
 
 
 # ===========================================================================
-# Books — filesystem sync
+# Books — sync from S3 or filesystem
 # ===========================================================================
 
 
-def sync_books_from_filesystem():
-    """Scan BOOKS_DIR and insert any new books into the database.
+def sync_books():
+    """Sync books into the database from S3 bucket (primary) or local filesystem (fallback).
 
-    Existing books (matched by slug) are skipped. This is safe to call on
-    every startup — it's an idempotent upsert-by-slug.
+    Existing books (matched by slug) are skipped. Safe to call on every startup.
     """
+    from .storage import _get_client
+
+    client = _get_client()
+    if client:
+        _sync_books_from_s3(client)
+    else:
+        _sync_books_from_filesystem()
+
+
+def _sync_books_from_s3(client):
+    """Scan S3 bucket and insert any new books into the database."""
+    import os
+
+    from .core import make_slug, parse_folder_name
+
+    bucket = os.environ.get("S3_BUCKET", "leerio-books")
+
+    conn = _get_conn()
+    try:
+        existing_slugs = {r[0] for r in conn.execute("SELECT slug FROM books").fetchall()}
+        inserted = 0
+
+        # List top-level prefixes (categories)
+        cat_resp = client.list_objects_v2(Bucket=bucket, Delimiter="/")
+        categories = [p["Prefix"].rstrip("/") for p in cat_resp.get("CommonPrefixes", [])]
+
+        for cat in categories:
+            # List book folders within each category
+            paginator = client.get_paginator("list_objects_v2")
+            book_folders: dict[str, list[str]] = {}  # folder -> [mp3 keys]
+
+            for page in paginator.paginate(Bucket=bucket, Prefix=f"{cat}/"):
+                for obj in page.get("Contents", []):
+                    key = obj["Key"]
+                    # key looks like "Бизнес/Author - Title [Reader]/file.mp3"
+                    parts = key.split("/", 2)
+                    if len(parts) < 3:
+                        continue
+                    folder = parts[1]
+                    filename = parts[2]
+                    if filename.lower().endswith(".mp3"):
+                        book_folders.setdefault(folder, []).append(key)
+
+            for folder, mp3_keys in sorted(book_folders.items()):
+                author, title, reader = parse_folder_name(folder)
+                slug = make_slug(title, author)
+
+                if slug in existing_slugs:
+                    continue
+
+                s3_prefix = f"{cat}/{folder}"
+                has_cover = 0
+                # Check for cover in same prefix
+                try:
+                    cover_resp = client.list_objects_v2(Bucket=bucket, Prefix=f"{s3_prefix}/cover", MaxKeys=1)
+                    has_cover = int(cover_resp.get("KeyCount", 0) > 0)
+                except Exception:
+                    pass
+
+                conn.execute(
+                    """INSERT INTO books (slug, title, author, reader, category, folder,
+                       s3_prefix, has_cover, mp3_count)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (slug, title, author, reader or "", cat, folder, s3_prefix, has_cover, len(mp3_keys)),
+                )
+                existing_slugs.add(slug)
+                inserted += 1
+
+                # Insert tracks
+                book_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+                for idx, s3_key in enumerate(sorted(mp3_keys)):
+                    filename = s3_key.rsplit("/", 1)[-1]
+                    conn.execute(
+                        "INSERT INTO tracks (book_id, idx, filename, s3_key) VALUES (?, ?, ?, ?)",
+                        (book_id, idx, filename, s3_key),
+                    )
+
+        conn.commit()
+        if inserted:
+            logger.info("Synced %d new books from S3", inserted)
+    finally:
+        conn.close()
+
+
+def _sync_books_from_filesystem():
+    """Scan BOOKS_DIR and insert any new books into the database (fallback when S3 not configured)."""
     from .core import (
         BOOKS_DIR,
         CATEGORIES,
@@ -470,7 +555,7 @@ def sync_books_from_filesystem():
 
                 mp3_count = count_mp3(book_dir)
                 if mp3_count == 0:
-                    continue  # skip empty dirs
+                    continue
 
                 has_cover = any(book_dir.glob("cover.*"))
                 duration_hours = estimate_duration_hours(book_dir) or 0.0
@@ -498,7 +583,6 @@ def sync_books_from_filesystem():
                 existing_slugs.add(slug)
                 inserted += 1
 
-                # Insert tracks
                 book_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
                 mp3s = sorted(book_dir.rglob("*.mp3"), key=lambda f: str(f))
                 for idx, mp3 in enumerate(mp3s):
