@@ -38,7 +38,7 @@ defineProps<{ books: ActiveBook[] }>()
               <h4 class="line-clamp-2 text-[13px] leading-snug font-semibold text-[--t1]" :title="book.title">
                 {{ book.title }}
               </h4>
-              <p class="mt-1.5 line-clamp-1 text-[12px] text-[--t3]">{{ book.author }}</p>
+              <p v-if="book.author" class="mt-1.5 line-clamp-1 text-[12px] text-[--t3]">{{ book.author }}</p>
             </div>
           </div>
         </router-link>

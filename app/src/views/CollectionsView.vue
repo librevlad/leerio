@@ -401,7 +401,9 @@ onMounted(async () => {
                     </div>
                   </div>
                   <span class="min-w-0 flex-1 truncate text-[13px]">{{ book.title }}</span>
-                  <span class="ml-auto flex-shrink-0 text-[11px] text-[--t3]">{{ book.author }}</span>
+                  <span v-if="book.author" class="ml-auto flex-shrink-0 text-[11px] text-[--t3]">{{
+                    book.author
+                  }}</span>
                 </button>
                 <p v-if="!filteredBooks.length" class="py-4 text-center text-[12px] text-[--t3]">Ничего не найдено</p>
               </div>
