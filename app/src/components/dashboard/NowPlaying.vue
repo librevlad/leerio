@@ -73,8 +73,7 @@ async function play() {
       </div>
     </div>
     <button
-      class="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-white transition-transform hover:scale-105"
-      style="background: var(--gradient-bar)"
+      class="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[--accent] text-white transition-transform hover:scale-105"
       @click.stop="play"
     >
       <IconPlay :size="22" />

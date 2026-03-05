@@ -8,33 +8,9 @@ defineProps<{
 }>()
 
 const stats = [
-  {
-    key: 'totalBooks',
-    label: 'Всего книг',
-    icon: IconLibrary,
-    bg: 'rgba(232,146,58,0.12)',
-    color: 'text-orange-400',
-    bar: 'linear-gradient(90deg, #e8923a, #f0a85c)',
-    to: '/library',
-  },
-  {
-    key: 'totalDone',
-    label: 'Прослушано',
-    icon: IconQueue,
-    bg: 'rgba(52,211,153,0.12)',
-    color: 'text-emerald-400',
-    bar: 'linear-gradient(90deg, #34d399, #6ee7b7)',
-    to: '/history',
-  },
-  {
-    key: 'activeCount',
-    label: 'В процессе',
-    icon: IconMusic,
-    bg: 'rgba(96,165,250,0.12)',
-    color: 'text-blue-400',
-    bar: 'linear-gradient(90deg, #60a5fa, #93c5fd)',
-    to: '/library',
-  },
+  { key: 'totalBooks', label: 'Всего книг', icon: IconLibrary, to: '/library' },
+  { key: 'totalDone', label: 'Прослушано', icon: IconQueue, to: '/history' },
+  { key: 'activeCount', label: 'В процессе', icon: IconMusic, to: '/library' },
 ]
 </script>
 
@@ -44,12 +20,11 @@ const stats = [
       v-for="s in stats"
       :key="s.key"
       :to="s.to"
-      class="card relative overflow-hidden px-5 py-5 no-underline transition-all hover:border-[--accent]/20"
+      class="card relative overflow-hidden px-5 py-5 no-underline transition-colors hover:border-white/10"
     >
-      <div class="absolute top-0 right-0 left-0 h-[2px]" :style="{ background: s.bar }" />
       <div class="mb-4 flex items-center justify-between">
         <span class="text-[12px] font-medium text-[--t3]">{{ s.label }}</span>
-        <span class="stat-icon" :class="s.color" :style="{ background: s.bg }">
+        <span class="stat-icon text-[--accent]" style="background: rgba(255, 255, 255, 0.03)">
           <component :is="s.icon" :size="20" />
         </span>
       </div>

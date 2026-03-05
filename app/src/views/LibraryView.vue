@@ -49,15 +49,6 @@ const sortOptions = [
   { value: 'rating', label: 'Оценка' },
 ]
 
-const catColors: Record<string, { bg: string; border: string; text: string }> = {
-  Бизнес: { bg: 'bg-amber-500/8', border: 'border-amber-500/20', text: 'text-amber-400' },
-  Отношения: { bg: 'bg-pink-500/8', border: 'border-pink-500/20', text: 'text-pink-400' },
-  Саморазвитие: { bg: 'bg-violet-500/8', border: 'border-violet-500/20', text: 'text-violet-400' },
-  Художественная: { bg: 'bg-cyan-500/8', border: 'border-cyan-500/20', text: 'text-cyan-400' },
-  Языки: { bg: 'bg-emerald-500/8', border: 'border-emerald-500/20', text: 'text-emerald-400' },
-}
-const catFallback = { bg: 'bg-slate-500/8', border: 'border-slate-500/20', text: 'text-slate-400' }
-
 // Status counts from actual book_status field (consistent with filter)
 const statusCounts = computed(() => {
   const all = books.value
@@ -69,43 +60,11 @@ const statusCounts = computed(() => {
 
 // Status pills with live counts
 const statusPills = computed(() => [
-  {
-    value: '' as BookStatusValue | '',
-    label: 'Все',
-    color: 'text-[--accent]',
-    activeBg: 'bg-[--accent-soft]',
-    activeBorder: 'border-[--accent]/30',
-  },
-  {
-    value: 'reading' as BookStatusValue | '',
-    label: 'Слушаю',
-    count: statusCounts.value.reading,
-    color: 'text-purple-400',
-    activeBg: 'bg-purple-500/10',
-    activeBorder: 'border-purple-500/30',
-  },
-  {
-    value: 'want_to_read' as BookStatusValue | '',
-    label: 'Хочу',
-    color: 'text-slate-400',
-    activeBg: 'bg-slate-500/10',
-    activeBorder: 'border-slate-500/30',
-  },
-  {
-    value: 'done' as BookStatusValue | '',
-    label: 'Готово',
-    count: statusCounts.value.done,
-    color: 'text-emerald-400',
-    activeBg: 'bg-emerald-500/10',
-    activeBorder: 'border-emerald-500/30',
-  },
-  {
-    value: 'paused' as BookStatusValue | '',
-    label: 'На паузе',
-    color: 'text-amber-400',
-    activeBg: 'bg-amber-500/10',
-    activeBorder: 'border-amber-500/30',
-  },
+  { value: '' as BookStatusValue | '', label: 'Все' },
+  { value: 'reading' as BookStatusValue | '', label: 'Слушаю', count: statusCounts.value.reading },
+  { value: 'want_to_read' as BookStatusValue | '', label: 'Хочу' },
+  { value: 'done' as BookStatusValue | '', label: 'Готово', count: statusCounts.value.done },
+  { value: 'paused' as BookStatusValue | '', label: 'На паузе' },
 ])
 
 function resetFilters() {
@@ -136,10 +95,10 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
     <!-- Category pills -->
     <div class="scrollbar-hide fade-mask-r mb-3 flex gap-2 overflow-x-auto pb-0.5">
       <button
-        class="flex-shrink-0 cursor-pointer rounded-full border px-3.5 py-1.5 text-[12px] font-semibold transition-all duration-200"
+        class="flex-shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
         :class="
           category === ''
-            ? 'border-white/15 bg-white/10 text-[--t1]'
+            ? 'border-white/10 bg-white/[0.08] text-[--t1]'
             : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
         "
         @click="category = ''"
@@ -149,14 +108,10 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
       <button
         v-for="cat in categories"
         :key="cat"
-        class="flex-shrink-0 cursor-pointer rounded-full border px-3.5 py-1.5 text-[12px] font-semibold transition-all duration-200"
+        class="flex-shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
         :class="
           category === cat
-            ? [
-                (catColors[cat] || catFallback).bg,
-                (catColors[cat] || catFallback).border,
-                (catColors[cat] || catFallback).text,
-              ]
+            ? 'border-white/10 bg-white/[0.08] text-[--t1]'
             : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
         "
         @click="category = cat"
@@ -171,10 +126,10 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
         <button
           v-for="sp in statusPills"
           :key="sp.value"
-          class="flex flex-shrink-0 cursor-pointer items-center gap-1 rounded-full border px-3 py-1.5 text-[12px] font-semibold transition-all duration-200"
+          class="flex flex-shrink-0 cursor-pointer items-center gap-1 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
           :class="
             statusFilter === sp.value
-              ? [sp.activeBg, sp.activeBorder, sp.color]
+              ? 'border-white/10 bg-white/[0.08] text-[--t1]'
               : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
           "
           @click="statusFilter = sp.value"
@@ -182,8 +137,7 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
           {{ sp.label }}
           <span
             v-if="sp.count"
-            class="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] leading-none"
-            :class="statusFilter === sp.value ? 'bg-white/10' : 'bg-white/5'"
+            class="ml-0.5 rounded-md bg-white/[0.08] px-1.5 py-0.5 text-[10px] leading-none text-[--t3]"
           >
             {{ sp.count }}
           </span>
@@ -193,7 +147,7 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
         <button
           v-for="s in sortOptions"
           :key="s.value"
-          class="cursor-pointer rounded-full border-0 px-2.5 py-1 text-[11px] font-medium transition-all duration-200"
+          class="cursor-pointer rounded-full border-0 px-2.5 py-1 text-[11px] font-medium transition-colors"
           :class="
             sort === s.value
               ? 'bg-[--accent-soft] text-[--accent]'
@@ -209,8 +163,8 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
     <!-- Loading skeletons -->
     <div v-if="loading" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <div v-for="i in 8" :key="i">
-        <div class="skeleton h-28 rounded-t-[20px] rounded-b-none" />
-        <div class="skeleton h-44 rounded-t-none rounded-b-[20px] border-t-0" />
+        <div class="skeleton h-28 rounded-t-xl rounded-b-none" />
+        <div class="skeleton h-44 rounded-t-none rounded-b-xl border-t-0" />
       </div>
     </div>
 

@@ -70,22 +70,12 @@ async function handleLogout() {
         :key="link.path"
         :to="link.path"
         class="group relative flex items-center gap-3 rounded-xl px-3 py-2.5 no-underline transition-all duration-200"
-        :class="isActive(link.path) ? 'text-white' : 'text-[--t3] hover:bg-white/[0.03] hover:text-[--t2]'"
+        :class="isActive(link.path) ? 'bg-white/[0.08] text-[--t1]' : 'text-[--t3] hover:text-[--t2]'"
       >
-        <span
-          v-if="isActive(link.path)"
-          class="absolute inset-0 rounded-xl"
-          style="background: var(--accent-soft); box-shadow: 0 0 24px rgba(232, 146, 58, 0.06)"
-        />
-        <span
-          v-if="isActive(link.path)"
-          class="absolute top-1/2 left-0 h-4 w-[3px] -translate-y-1/2 rounded-r-full"
-          style="background: var(--accent)"
-        />
-        <span class="relative flex w-5 flex-shrink-0 items-center justify-center">
+        <span class="flex w-5 flex-shrink-0 items-center justify-center">
           <component :is="link.icon" :size="18" />
         </span>
-        <span v-if="!collapsed" class="relative text-[13px]" :class="isActive(link.path) ? 'font-semibold' : ''">{{
+        <span v-if="!collapsed" class="text-[13px]" :class="isActive(link.path) ? 'font-semibold' : ''">{{
           link.label
         }}</span>
       </router-link>

@@ -70,7 +70,7 @@ async function handleLogout() {
             <p class="text-[13px] text-[--t3]">{{ user.email }}</p>
             <span
               v-if="isAdmin"
-              class="mt-1 inline-block rounded-full bg-[--accent-soft] px-2 py-0.5 text-[10px] font-semibold text-[--accent]"
+              class="mt-1 inline-block rounded-md bg-[--accent-soft] px-2 py-0.5 text-[11px] font-medium text-[--accent]"
             >
               Администратор
             </span>

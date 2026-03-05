@@ -30,13 +30,7 @@ function timeAgo(ts: string): string {
         :key="i"
         class="flex items-center gap-3 border-b border-[--border] px-4 py-2.5 transition-colors last:border-0 hover:bg-white/[0.02]"
       >
-        <div class="relative flex-shrink-0">
-          <span class="block h-2 w-2 rounded-full" :class="dotColor[e.action] || 'bg-slate-500'" />
-          <span
-            class="absolute inset-0 rounded-full opacity-40 blur-[3px]"
-            :class="dotColor[e.action] || 'bg-slate-500'"
-          />
-        </div>
+        <span class="block h-2 w-2 flex-shrink-0 rounded-full" :class="dotColor[e.action] || 'bg-slate-500'" />
         <span class="flex-shrink-0 text-[12px] font-semibold text-[--t3]">
           {{ e.action_label }}
         </span>

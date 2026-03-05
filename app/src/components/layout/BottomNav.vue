@@ -33,13 +33,8 @@ const isActive = (path: string) => {
         :key="tab.path"
         :to="tab.path"
         class="relative flex flex-1 flex-col items-center justify-center gap-0.5 no-underline transition-colors duration-200"
-        :class="isActive(tab.path) ? 'text-[--accent-2]' : 'text-[--t3]'"
+        :class="isActive(tab.path) ? 'text-[--accent]' : 'text-[--t3]'"
       >
-        <span
-          v-if="isActive(tab.path)"
-          class="absolute -top-px left-1/2 h-0.5 w-5 -translate-x-1/2 rounded-full"
-          style="background: var(--accent)"
-        />
         <component :is="tab.icon" :size="20" />
         <span class="text-[10px] leading-none font-medium">{{ tab.label }}</span>
       </router-link>

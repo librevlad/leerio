@@ -75,7 +75,7 @@ const fallbackPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1
     <!-- Floating cover thumbnail -->
     <div class="relative px-4">
       <div class="-mt-10 mb-3 flex items-end gap-3">
-        <div class="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl shadow-lg ring-2 ring-[--card-solid]">
+        <div class="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg shadow-lg ring-2 ring-[--card-solid]">
           <img v-if="book.has_cover" :src="coverUrl(book.id)" :alt="book.title" class="h-full w-full object-cover" />
           <div
             v-else
@@ -113,8 +113,8 @@ const fallbackPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1
       <!-- Progress bar -->
       <div v-if="book.progress > 0" class="mb-2.5">
         <div class="mb-1 flex items-center justify-between">
-          <span class="text-[10px] font-semibold text-[--t3]">Прогресс</span>
-          <span class="text-[10px] font-bold text-[--accent]">{{ book.progress }}%</span>
+          <span class="text-[11px] font-medium text-[--t3]">Прогресс</span>
+          <span class="text-[11px] font-bold text-[--accent]">{{ book.progress }}%</span>
         </div>
         <ProgressBar :percent="book.progress" height="h-1.5" />
       </div>
@@ -125,12 +125,12 @@ const fallbackPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1
           <span
             v-for="tag in book.tags.slice(0, 2)"
             :key="tag"
-            class="max-w-[80px] flex-shrink-0 truncate rounded-full px-2 py-0.5 text-[10px] font-medium text-[--t3]"
+            class="max-w-[80px] flex-shrink-0 truncate rounded-md px-2 py-0.5 text-[11px] font-medium text-[--t3]"
             style="background: rgba(255, 255, 255, 0.05)"
           >
             {{ tag }}
           </span>
-          <span v-if="book.tags.length > 2" class="flex-shrink-0 text-[10px] text-[--t3]">
+          <span v-if="book.tags.length > 2" class="flex-shrink-0 text-[11px] text-[--t3]">
             +{{ book.tags.length - 2 }}
           </span>
         </div>

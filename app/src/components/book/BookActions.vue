@@ -14,60 +14,12 @@ const emit = defineEmits<{ statusChanged: [] }>()
 const toast = useToast()
 const loading = ref(false)
 
-const statuses: {
-  value: BookStatusValue
-  label: string
-  color: string
-  activeBg: string
-  activeBorder: string
-  activeText: string
-  dot: string
-}[] = [
-  {
-    value: 'want_to_read',
-    label: 'Хочу прочесть',
-    color: 'bg-slate-400',
-    activeBg: 'bg-slate-500/15',
-    activeBorder: 'border-slate-500/30',
-    activeText: 'text-slate-300',
-    dot: 'bg-slate-400',
-  },
-  {
-    value: 'reading',
-    label: 'Слушаю',
-    color: 'bg-purple-400',
-    activeBg: 'bg-purple-500/15',
-    activeBorder: 'border-purple-500/30',
-    activeText: 'text-purple-400',
-    dot: 'bg-purple-400',
-  },
-  {
-    value: 'paused',
-    label: 'На паузе',
-    color: 'bg-amber-400',
-    activeBg: 'bg-amber-500/15',
-    activeBorder: 'border-amber-500/30',
-    activeText: 'text-amber-400',
-    dot: 'bg-amber-400',
-  },
-  {
-    value: 'done',
-    label: 'Прослушано',
-    color: 'bg-emerald-400',
-    activeBg: 'bg-emerald-500/15',
-    activeBorder: 'border-emerald-500/30',
-    activeText: 'text-emerald-400',
-    dot: 'bg-emerald-400',
-  },
-  {
-    value: 'rejected',
-    label: 'Не интересно',
-    color: 'bg-red-400',
-    activeBg: 'bg-red-500/15',
-    activeBorder: 'border-red-500/30',
-    activeText: 'text-red-400',
-    dot: 'bg-red-400',
-  },
+const statuses: { value: BookStatusValue; label: string }[] = [
+  { value: 'want_to_read', label: 'Хочу прочесть' },
+  { value: 'reading', label: 'Слушаю' },
+  { value: 'paused', label: 'На паузе' },
+  { value: 'done', label: 'Прослушано' },
+  { value: 'rejected', label: 'Не интересно' },
 ]
 
 async function selectStatus(value: BookStatusValue) {
@@ -106,21 +58,20 @@ async function clearStatus() {
     <button
       v-for="s in statuses"
       :key="s.value"
-      class="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-2 text-[12px] font-semibold transition-all"
+      class="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border px-3.5 py-2 text-[12px] font-medium transition-colors"
       :class="
         bookStatus === s.value
-          ? [s.activeBg, s.activeBorder, s.activeText]
-          : 'border-transparent bg-white/[0.04] text-[--t3] hover:bg-white/[0.06] hover:text-[--t2]'
+          ? 'border-[--accent]/20 bg-[--accent-soft] text-[--accent]'
+          : 'border-white/[0.08] bg-white/[0.04] text-[--t2] hover:bg-white/[0.06] hover:text-[--t1]'
       "
       :disabled="loading"
       @click="selectStatus(s.value)"
     >
-      <span class="h-1.5 w-1.5 rounded-full" :class="s.dot" />
       {{ s.label }}
     </button>
     <button
       v-if="bookStatus"
-      class="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-full border border-transparent bg-white/[0.04] p-1.5 text-[--t3] transition-all hover:bg-red-500/10 hover:text-red-400"
+      class="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-lg border border-transparent bg-white/[0.04] p-1.5 text-[--t3] transition-colors hover:bg-red-500/10 hover:text-red-400"
       :disabled="loading"
       title="Убрать статус"
       @click="clearStatus"

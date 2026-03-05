@@ -80,7 +80,7 @@ const startDate = computed(() => {
         <div class="-mt-16 flex gap-4">
           <!-- Cover -->
           <div
-            class="relative h-[140px] w-[140px] shrink-0 overflow-hidden rounded-2xl shadow-xl"
+            class="relative h-[140px] w-[140px] shrink-0 overflow-hidden rounded-lg shadow-lg"
             :style="!book.has_cover ? { background: coverGradient[book.category] || fallbackGradient } : {}"
           >
             <img
@@ -130,7 +130,7 @@ const startDate = computed(() => {
         <div class="-mt-24 flex gap-6">
           <!-- Cover -->
           <div
-            class="relative h-[200px] w-[200px] shrink-0 overflow-hidden rounded-2xl shadow-xl"
+            class="relative h-[200px] w-[200px] shrink-0 overflow-hidden rounded-lg shadow-lg"
             :style="!book.has_cover ? { background: coverGradient[book.category] || fallbackGradient } : {}"
           >
             <img
@@ -167,7 +167,7 @@ const startDate = computed(() => {
                 </span>
                 <div>
                   <span class="text-[12px] font-semibold text-[--t1]">{{ book.size_mb }} МБ</span>
-                  <p class="text-[10px] text-[--t3]">Размер</p>
+                  <p class="text-[11px] text-[--t3]">Размер</p>
                 </div>
               </div>
               <div v-if="book.mp3_count" class="flex items-center gap-2.5">
@@ -176,7 +176,7 @@ const startDate = computed(() => {
                 </span>
                 <div>
                   <span class="text-[12px] font-semibold text-[--t1]">{{ book.mp3_count }}</span>
-                  <p class="text-[10px] text-[--t3]">Файлов</p>
+                  <p class="text-[11px] text-[--t3]">Файлов</p>
                 </div>
               </div>
               <div v-if="book.duration_fmt" class="flex items-center gap-2.5">
@@ -185,7 +185,7 @@ const startDate = computed(() => {
                 </span>
                 <div>
                   <span class="text-[12px] font-semibold text-[--t1]">{{ book.duration_fmt }}</span>
-                  <p class="text-[10px] text-[--t3]">Длительность</p>
+                  <p class="text-[11px] text-[--t3]">Длительность</p>
                 </div>
               </div>
               <div v-if="book.progress > 0" class="ml-1">

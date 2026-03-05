@@ -49,7 +49,7 @@ function initializeGsi() {
       size: 'large',
       width: 300,
       text: 'signin_with',
-      shape: 'pill',
+      shape: 'rectangular',
       logo_alignment: 'left',
     })
   }

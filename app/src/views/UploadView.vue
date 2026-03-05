@@ -253,30 +253,9 @@ async function handleTTSConvert() {
 }
 
 const tabDefs = [
-  {
-    key: 'upload' as const,
-    label: 'Загрузить MP3',
-    icon: IconUpload,
-    color: 'text-teal-300',
-    activeBg: 'bg-teal-500/15',
-    activeBorder: 'border-teal-500/40',
-  },
-  {
-    key: 'tts' as const,
-    label: 'Озвучить документ',
-    icon: IconMicrophone,
-    color: 'text-violet-300',
-    activeBg: 'bg-violet-500/15',
-    activeBorder: 'border-violet-500/40',
-  },
-  {
-    key: 'local' as const,
-    label: 'С устройства',
-    icon: IconSmartphone,
-    color: 'text-indigo-300',
-    activeBg: 'bg-indigo-500/15',
-    activeBorder: 'border-indigo-500/40',
-  },
+  { key: 'upload' as const, label: 'Загрузить MP3', icon: IconUpload },
+  { key: 'tts' as const, label: 'Озвучить документ', icon: IconMicrophone },
+  { key: 'local' as const, label: 'С устройства', icon: IconSmartphone },
 ]
 </script>
 
@@ -293,11 +272,11 @@ const tabDefs = [
       <button
         v-for="tab in tabDefs"
         :key="tab.key"
-        class="flex flex-shrink-0 cursor-pointer items-center gap-2 rounded-full border px-4 py-2 text-[13px] font-medium transition-all duration-200"
+        class="flex flex-shrink-0 cursor-pointer items-center gap-2 rounded-lg border px-4 py-2 text-[13px] font-medium transition-colors"
         :class="
           activeTab === tab.key
-            ? [tab.activeBg, tab.activeBorder, tab.color]
-            : 'border-[--border] text-[--t3] hover:bg-white/5 hover:text-[--t2]'
+            ? 'border-white/10 bg-white/[0.08] text-[--t1]'
+            : 'border-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
         "
         @click="activeTab = tab.key"
       >
@@ -337,15 +316,15 @@ const tabDefs = [
       <div class="card px-5 py-5">
         <label class="mb-3 block text-[12px] font-semibold text-[--t2]">MP3 файлы *</label>
         <div
-          class="rounded-2xl border-2 border-dashed border-[--border] p-8 text-center transition-all hover:border-teal-500/30 hover:bg-teal-500/[0.02]"
+          class="rounded-xl border-2 border-dashed border-[--border] p-8 text-center transition-all hover:border-white/15 hover:bg-white/[0.02]"
         >
-          <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-500/10">
-            <IconMusic :size="24" class="text-teal-400" />
+          <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-white/[0.06]">
+            <IconMusic :size="24" class="text-[--t2]" />
           </div>
           <p class="mb-1 text-[13px] font-medium text-[--t2]">Перетащите MP3 файлы сюда</p>
           <p class="mb-3 text-[12px] text-[--t3]">или выберите с устройства</p>
           <label
-            class="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-teal-500/15 px-4 py-2 text-[12px] font-semibold text-teal-300 transition-all hover:bg-teal-500/25"
+            class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-[--accent-soft] px-4 py-2 text-[12px] font-medium text-[--accent] transition-all hover:bg-[--accent]/20"
           >
             <IconUpload :size="14" />
             Выбрать файлы
@@ -362,7 +341,7 @@ const tabDefs = [
             class="flex items-center justify-between rounded-xl bg-white/[0.03] px-3.5 py-2.5"
           >
             <div class="flex min-w-0 items-center gap-2.5">
-              <IconMusic :size="14" class="flex-shrink-0 text-teal-400" />
+              <IconMusic :size="14" class="flex-shrink-0 text-[--t3]" />
               <span class="truncate text-[12px] text-[--t2]">{{ file.name }}</span>
               <span class="flex-shrink-0 text-[11px] text-[--t3]">{{ (file.size / 1024 / 1024).toFixed(1) }} МБ</span>
             </div>
@@ -380,7 +359,7 @@ const tabDefs = [
       <div class="card px-5 py-5">
         <label class="mb-3 block text-[12px] font-semibold text-[--t2]">Обложка (опционально)</label>
         <label
-          class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-[--border] px-4 py-3 text-[12px] text-[--t3] transition-all hover:border-teal-500/30 hover:bg-teal-500/[0.02]"
+          class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-[--border] px-4 py-3 text-[12px] text-[--t3] transition-all hover:border-white/15 hover:bg-white/[0.02]"
         >
           <IconUpload :size="14" />
           {{ uploadCover ? uploadCover.name : 'Выбрать изображение' }}
@@ -423,8 +402,8 @@ const tabDefs = [
         <div>
           <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">Документ (PDF, EPUB, TXT, FB2) *</label>
           <label
-            class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-[--border] px-4 py-3 text-[13px] transition-all hover:border-violet-500/30 hover:bg-violet-500/[0.02]"
-            :class="ttsFile ? 'text-violet-300' : 'text-[--t3]'"
+            class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-[--border] px-4 py-3 text-[13px] transition-all hover:border-white/15 hover:bg-white/[0.02]"
+            :class="ttsFile ? 'text-[--t1]' : 'text-[--t3]'"
           >
             <IconUpload :size="14" />
             {{ ttsFile ? ttsFile.name : 'Выбрать файл' }}
@@ -444,11 +423,11 @@ const tabDefs = [
             <button
               v-for="eng in engines.filter((e) => e.available)"
               :key="eng.id"
-              class="cursor-pointer rounded-full border px-3.5 py-1.5 text-[12px] font-semibold transition-all duration-200"
+              class="cursor-pointer rounded-lg border px-3.5 py-1.5 text-[12px] font-medium transition-colors"
               :class="
                 ttsEngine === eng.id
-                  ? 'border-violet-500/40 bg-violet-500/15 text-violet-300'
-                  : 'border-[--border] text-[--t3] hover:bg-white/5 hover:text-[--t2]'
+                  ? 'border-white/10 bg-white/[0.08] text-[--t1]'
+                  : 'border-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
               "
               @click="selectEngine(eng.id as 'edge' | 'openai')"
             >
@@ -474,11 +453,11 @@ const tabDefs = [
             <button
               v-for="opt in rateOptions"
               :key="opt.value"
-              class="cursor-pointer rounded-full border px-3.5 py-1.5 text-[12px] font-semibold transition-all duration-200"
+              class="cursor-pointer rounded-lg border px-3.5 py-1.5 text-[12px] font-medium transition-colors"
               :class="
                 ttsRate === opt.value
-                  ? 'border-violet-500/40 bg-violet-500/15 text-violet-300'
-                  : 'border-[--border] text-[--t3] hover:bg-white/5 hover:text-[--t2]'
+                  ? 'border-white/10 bg-white/[0.08] text-[--t1]'
+                  : 'border-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
               "
               @click="ttsRate = opt.value"
             >
@@ -490,13 +469,7 @@ const tabDefs = [
 
       <!-- Convert button -->
       <button
-        class="btn w-full justify-center text-[14px] font-semibold text-white"
-        style="
-          background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
-          box-shadow:
-            0 4px 20px rgba(139, 92, 246, 0.3),
-            inset 0 1px 0 rgba(255, 255, 255, 0.15);
-        "
+        class="btn btn-primary w-full justify-center text-[14px]"
         :disabled="converting || !ttsTitle.trim() || !ttsFile"
         @click="handleTTSConvert"
       >
@@ -561,11 +534,11 @@ const tabDefs = [
 
     <!-- Local Book Tab -->
     <div v-if="activeTab === 'local'" class="max-w-xl space-y-5">
-      <div class="flex items-start gap-3 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 px-4 py-3">
-        <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-indigo-500/15">
-          <IconSmartphone :size="16" class="text-indigo-400" />
+      <div class="flex items-start gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
+        <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white/[0.06]">
+          <IconSmartphone :size="16" class="text-[--t2]" />
         </div>
-        <p class="text-[12px] leading-relaxed text-indigo-300">
+        <p class="text-[12px] leading-relaxed text-[--t2]">
           Книга будет доступна только на этом устройстве и не синхронизируется с облаком
         </p>
       </div>
@@ -593,15 +566,15 @@ const tabDefs = [
       <div class="card px-5 py-5">
         <label class="mb-3 block text-[12px] font-semibold text-[--t2]">MP3 файлы *</label>
         <div
-          class="rounded-2xl border-2 border-dashed border-[--border] p-8 text-center transition-all hover:border-indigo-500/30 hover:bg-indigo-500/[0.02]"
+          class="rounded-xl border-2 border-dashed border-[--border] p-8 text-center transition-all hover:border-white/15 hover:bg-white/[0.02]"
         >
-          <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500/10">
-            <IconMusic :size="24" class="text-indigo-400" />
+          <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-white/[0.06]">
+            <IconMusic :size="24" class="text-[--t2]" />
           </div>
           <p class="mb-1 text-[13px] font-medium text-[--t2]">Выберите MP3 файлы с устройства</p>
           <p class="mb-3 text-[12px] text-[--t3]">Поддерживаются MP3 и другие аудио форматы</p>
           <label
-            class="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-indigo-500/15 px-4 py-2 text-[12px] font-semibold text-indigo-300 transition-all hover:bg-indigo-500/25"
+            class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-[--accent-soft] px-4 py-2 text-[12px] font-medium text-[--accent] transition-all hover:bg-[--accent]/20"
           >
             <IconUpload :size="14" />
             Выбрать файлы
@@ -618,7 +591,7 @@ const tabDefs = [
             class="flex items-center justify-between rounded-xl bg-white/[0.03] px-3.5 py-2.5"
           >
             <div class="flex min-w-0 items-center gap-2.5">
-              <IconMusic :size="14" class="flex-shrink-0 text-indigo-400" />
+              <IconMusic :size="14" class="flex-shrink-0 text-[--t3]" />
               <span class="truncate text-[12px] text-[--t2]">{{ file.name }}</span>
               <span class="flex-shrink-0 text-[11px] text-[--t3]">{{ (file.size / 1024 / 1024).toFixed(1) }} МБ</span>
             </div>
@@ -636,7 +609,7 @@ const tabDefs = [
       <div class="card px-5 py-5">
         <label class="mb-3 block text-[12px] font-semibold text-[--t2]">Обложка (опционально)</label>
         <label
-          class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-[--border] px-4 py-3 text-[12px] text-[--t3] transition-all hover:border-indigo-500/30 hover:bg-indigo-500/[0.02]"
+          class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-[--border] px-4 py-3 text-[12px] text-[--t3] transition-all hover:border-white/15 hover:bg-white/[0.02]"
         >
           <IconUpload :size="14" />
           {{ localCover ? 'Обложка выбрана' : 'Выбрать изображение' }}
@@ -650,13 +623,7 @@ const tabDefs = [
 
       <!-- Add button -->
       <button
-        class="btn w-full justify-center text-[14px] font-semibold text-white"
-        style="
-          background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
-          box-shadow:
-            0 4px 20px rgba(99, 102, 241, 0.3),
-            inset 0 1px 0 rgba(255, 255, 255, 0.15);
-        "
+        class="btn btn-primary w-full justify-center text-[14px]"
         :disabled="addingLocal || !localTitle.trim() || localFiles.length === 0"
         @click="handleAddLocal"
       >
@@ -669,7 +636,7 @@ const tabDefs = [
     <!-- Offline notice for upload/tts tabs -->
     <div
       v-if="!isOnline && (activeTab === 'upload' || activeTab === 'tts')"
-      class="mt-5 max-w-xl rounded-2xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-[13px] text-amber-300"
+      class="mt-5 max-w-xl rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-[13px] text-[--t2]"
     >
       Загрузка и TTS доступны только онлайн
     </div>

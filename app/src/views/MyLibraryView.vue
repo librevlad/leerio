@@ -148,41 +148,11 @@ async function handleDelete(item: UnifiedItem) {
   }
 }
 
-const filters: {
-  key: 'all' | 'downloaded' | 'local' | 'uploaded'
-  label: string
-  color: string
-  activeBg: string
-  activeBorder: string
-}[] = [
-  {
-    key: 'all',
-    label: 'Все',
-    color: 'text-[--accent]',
-    activeBg: 'bg-[--accent-soft]',
-    activeBorder: 'border-[--accent]/40',
-  },
-  {
-    key: 'downloaded',
-    label: 'Скачанные',
-    color: 'text-emerald-400',
-    activeBg: 'bg-emerald-500/10',
-    activeBorder: 'border-emerald-500/30',
-  },
-  {
-    key: 'local',
-    label: 'Локальные',
-    color: 'text-amber-400',
-    activeBg: 'bg-amber-500/10',
-    activeBorder: 'border-amber-500/30',
-  },
-  {
-    key: 'uploaded',
-    label: 'Загруженные',
-    color: 'text-violet-400',
-    activeBg: 'bg-violet-500/10',
-    activeBorder: 'border-violet-500/30',
-  },
+const filters: { key: 'all' | 'downloaded' | 'local' | 'uploaded'; label: string }[] = [
+  { key: 'all', label: 'Все' },
+  { key: 'downloaded', label: 'Скачанные' },
+  { key: 'local', label: 'Локальные' },
+  { key: 'uploaded', label: 'Загруженные' },
 ]
 
 const sourceBadgeMap: Record<UnifiedItem['source'], 'library' | 'librivox' | 'user' | 'local'> = {
@@ -240,11 +210,11 @@ const coverPatterns: Record<string, string> = {
       <button
         v-for="f in filters"
         :key="f.key"
-        class="flex-shrink-0 cursor-pointer rounded-full border px-3.5 py-1.5 text-[12px] font-semibold transition-all duration-200"
+        class="flex-shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
         :class="
           activeFilter === f.key
-            ? [f.activeBg, f.activeBorder, f.color]
-            : 'border-[--border] text-[--t3] hover:bg-white/5 hover:text-[--t2]'
+            ? 'border-white/10 bg-white/[0.08] text-[--t1]'
+            : 'border-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
         "
         @click="activeFilter = f.key"
       >
@@ -255,8 +225,8 @@ const coverPatterns: Record<string, string> = {
     <!-- Loading -->
     <div v-if="ubLoading" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <div v-for="i in 4" :key="i">
-        <div class="skeleton h-28 rounded-t-[20px] rounded-b-none" />
-        <div class="skeleton h-36 rounded-t-none rounded-b-[20px] border-t-0" />
+        <div class="skeleton h-28 rounded-t-xl rounded-b-none" />
+        <div class="skeleton h-36 rounded-t-none rounded-b-xl border-t-0" />
       </div>
     </div>
 
@@ -311,7 +281,7 @@ const coverPatterns: Record<string, string> = {
         <div class="relative px-4">
           <div class="-mt-9 mb-2.5 flex items-end gap-3" @click="playItem(item)">
             <div
-              class="relative h-[72px] w-[72px] flex-shrink-0 overflow-hidden rounded-xl shadow-lg ring-2 ring-[--card-solid]"
+              class="relative h-[72px] w-[72px] flex-shrink-0 overflow-hidden rounded-lg shadow-lg ring-2 ring-[--card-solid]"
             >
               <img v-if="item.coverSrc" :src="item.coverSrc" class="h-full w-full object-cover" alt="" />
               <div

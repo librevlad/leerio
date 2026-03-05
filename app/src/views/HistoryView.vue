@@ -14,63 +14,15 @@ const loading = ref(true)
 const search = ref('')
 const actionFilter = ref('')
 
-const actions: { value: string; label: string; color: string; activeBg: string; activeBorder: string }[] = [
-  {
-    value: '',
-    label: 'Все',
-    color: 'text-[--accent]',
-    activeBg: 'bg-[--accent-soft]',
-    activeBorder: 'border-[--accent]/30',
-  },
-  {
-    value: 'inbox',
-    label: 'Добавлено',
-    color: 'text-cyan-400',
-    activeBg: 'bg-cyan-500/10',
-    activeBorder: 'border-cyan-500/30',
-  },
-  {
-    value: 'listen',
-    label: 'Слушаю',
-    color: 'text-purple-400',
-    activeBg: 'bg-purple-500/10',
-    activeBorder: 'border-purple-500/30',
-  },
-  {
-    value: 'phone',
-    label: 'На телефон',
-    color: 'text-blue-400',
-    activeBg: 'bg-blue-500/10',
-    activeBorder: 'border-blue-500/30',
-  },
-  {
-    value: 'done',
-    label: 'Прослушано',
-    color: 'text-emerald-400',
-    activeBg: 'bg-emerald-500/10',
-    activeBorder: 'border-emerald-500/30',
-  },
-  {
-    value: 'pause',
-    label: 'На паузе',
-    color: 'text-yellow-400',
-    activeBg: 'bg-yellow-500/10',
-    activeBorder: 'border-yellow-500/30',
-  },
-  {
-    value: 'reject',
-    label: 'Забраковано',
-    color: 'text-red-400',
-    activeBg: 'bg-red-500/10',
-    activeBorder: 'border-red-500/30',
-  },
-  {
-    value: 'move',
-    label: 'Перемещено',
-    color: 'text-slate-400',
-    activeBg: 'bg-slate-500/10',
-    activeBorder: 'border-slate-500/30',
-  },
+const actions: { value: string; label: string }[] = [
+  { value: '', label: 'Все' },
+  { value: 'inbox', label: 'Добавлено' },
+  { value: 'listen', label: 'Слушаю' },
+  { value: 'phone', label: 'На телефон' },
+  { value: 'done', label: 'Прослушано' },
+  { value: 'pause', label: 'На паузе' },
+  { value: 'reject', label: 'Забраковано' },
+  { value: 'move', label: 'Перемещено' },
 ]
 
 async function loadHistory() {
@@ -128,23 +80,20 @@ function formatTime(ts: string): string {
     </div>
 
     <!-- Filters -->
-    <div class="card mb-6 px-4 py-3">
-      <span class="mr-2 text-[11px] font-semibold text-[--t3]">Действие:</span>
-      <div class="scrollbar-hide fade-mask-r mt-1.5 flex gap-2 overflow-x-auto pb-0.5">
-        <button
-          v-for="a in actions"
-          :key="a.value"
-          class="flex-shrink-0 cursor-pointer rounded-full border px-3.5 py-1.5 text-[12px] font-semibold transition-all duration-200"
-          :class="
-            actionFilter === a.value
-              ? [a.activeBg, a.activeBorder, a.color]
-              : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
-          "
-          @click="actionFilter = a.value"
-        >
-          {{ a.label }}
-        </button>
-      </div>
+    <div class="scrollbar-hide fade-mask-r mb-6 flex gap-2 overflow-x-auto pb-0.5">
+      <button
+        v-for="a in actions"
+        :key="a.value"
+        class="flex-shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
+        :class="
+          actionFilter === a.value
+            ? 'border-white/10 bg-white/[0.08] text-[--t1]'
+            : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
+        "
+        @click="actionFilter = a.value"
+      >
+        {{ a.label }}
+      </button>
     </div>
 
     <!-- Loading -->
@@ -162,14 +111,7 @@ function formatTime(ts: string): string {
             :key="i"
             class="flex items-center gap-4 border-b border-[--border] px-5 py-3.5 transition-colors last:border-0 hover:bg-white/[0.02]"
           >
-            <!-- Status dot with glow -->
-            <div class="relative flex-shrink-0">
-              <span class="block h-2.5 w-2.5 rounded-full" :class="dotColor[e.action] || 'bg-slate-500'" />
-              <span
-                class="absolute inset-0 rounded-full opacity-40 blur-[3px]"
-                :class="dotColor[e.action] || 'bg-slate-500'"
-              />
-            </div>
+            <span class="block h-2 w-2 flex-shrink-0 rounded-full" :class="dotColor[e.action] || 'bg-slate-500'" />
 
             <!-- Content -->
             <div class="min-w-0 flex-1">
