@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { api, coverUrl } from '../api'
 import { useBooks } from '../composables/useBooks'
 import { useToast } from '../composables/useToast'
@@ -16,6 +16,7 @@ const loading = ref(true)
 const showCreate = ref(false)
 const editId = ref<number | null>(null)
 const expandedIdx = ref<number | null>(null)
+const coverErrors = reactive(new Set<string>())
 
 // Form state
 const formName = ref('')
@@ -176,10 +177,11 @@ onMounted(async () => {
                 }"
               >
                 <img
-                  v-if="bookById(bookId)?.has_cover"
+                  v-if="bookById(bookId)?.has_cover && !coverErrors.has(String(bookId))"
                   :src="coverUrl(bookById(bookId)!.id)"
                   :alt="bookById(bookId)?.title ?? ''"
                   class="h-full w-full object-cover"
+                  @error="coverErrors.add(String(bookId))"
                 />
                 <div
                   v-else
@@ -257,10 +259,11 @@ onMounted(async () => {
             >
               <div class="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg">
                 <img
-                  v-if="bookById(bookId)?.has_cover"
+                  v-if="bookById(bookId)?.has_cover && !coverErrors.has(String(bookId))"
                   :src="coverUrl(bookById(bookId)!.id)"
                   :alt="bookById(bookId)?.title ?? ''"
                   class="h-full w-full object-cover"
+                  @error="coverErrors.add(String(bookId))"
                 />
                 <div
                   v-else
@@ -387,10 +390,11 @@ onMounted(async () => {
                   </span>
                   <div class="h-7 w-7 flex-shrink-0 overflow-hidden rounded">
                     <img
-                      v-if="book.has_cover"
+                      v-if="book.has_cover && !coverErrors.has(book.id)"
                       :src="coverUrl(book.id)"
                       :alt="book.title"
                       class="h-full w-full object-cover"
+                      @error="coverErrors.add(book.id)"
                     />
                     <div
                       v-else

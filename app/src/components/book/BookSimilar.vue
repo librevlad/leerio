@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { api, coverUrl } from '../../api'
 import type { SimilarBook } from '../../types'
 import CategoryBadge from '../shared/CategoryBadge.vue'
@@ -8,6 +8,7 @@ const props = defineProps<{ bookId: string }>()
 
 const similar = ref<SimilarBook[]>([])
 const loading = ref(true)
+const coverErrors = reactive(new Set<string>())
 
 const coverGradient: Record<string, string> = {
   Бизнес: 'linear-gradient(135deg, #92400e 0%, #d97706 100%)',
@@ -52,9 +53,19 @@ onMounted(async () => {
         <!-- Mini cover or gradient swatch -->
         <div
           class="h-9 w-9 flex-shrink-0 overflow-hidden rounded-lg"
-          :style="!book.has_cover ? { background: coverGradient[book.category] || fallbackGradient } : {}"
+          :style="
+            !(book.has_cover && !coverErrors.has(book.id))
+              ? { background: coverGradient[book.category] || fallbackGradient }
+              : {}
+          "
         >
-          <img v-if="book.has_cover" :src="coverUrl(book.id)" :alt="book.title" class="h-full w-full object-cover" />
+          <img
+            v-if="book.has_cover && !coverErrors.has(book.id)"
+            :src="coverUrl(book.id)"
+            :alt="book.title"
+            class="h-full w-full object-cover"
+            @error="coverErrors.add(book.id)"
+          />
         </div>
         <div class="min-w-0 flex-1">
           <p

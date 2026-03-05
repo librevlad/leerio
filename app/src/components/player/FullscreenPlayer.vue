@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePlayer } from '../../composables/usePlayer'
 import { useDownloads } from '../../composables/useDownloads'
@@ -61,6 +61,7 @@ const showSleepMenu = ref(false)
 const showVolumeSlider = ref(false)
 const seekPreview = ref<number | null>(null)
 const isSeeking = ref(false)
+const coverError = ref(false)
 
 const coverSrc = computed(() => {
   if (!currentBook.value) return ''
@@ -71,6 +72,10 @@ const coverSrc = computed(() => {
     return currentBook.value.has_cover ? userBookCoverUrl(slug) : ''
   }
   return currentBook.value.has_cover ? coverUrl(id) : ''
+})
+
+watch(currentBook, () => {
+  coverError.value = false
 })
 
 const trackLabel = computed(() => {
@@ -196,15 +201,25 @@ function closeOverlays() {
       <div class="flex flex-1 items-center justify-center px-8 py-4">
         <div
           class="relative aspect-square w-full max-w-[280px] overflow-hidden rounded-2xl shadow-2xl"
-          :style="coverSrc ? '' : 'background: linear-gradient(135deg, rgba(232,146,58,0.15), rgba(232,146,58,0.05))'"
+          :style="
+            coverSrc && !coverError
+              ? ''
+              : 'background: linear-gradient(135deg, rgba(232,146,58,0.15), rgba(232,146,58,0.05))'
+          "
         >
-          <img v-if="coverSrc" :src="coverSrc" alt="" class="h-full w-full object-cover" />
+          <img
+            v-if="coverSrc && !coverError"
+            :src="coverSrc"
+            alt=""
+            class="h-full w-full object-cover"
+            @error="coverError = true"
+          />
           <div v-else class="flex h-full items-center justify-center">
             <IconMusic :size="64" class="text-[--t3]" />
           </div>
           <!-- Glow effect -->
           <div
-            v-if="coverSrc"
+            v-if="coverSrc && !coverError"
             class="absolute -inset-4 -z-10 blur-3xl"
             style="background: radial-gradient(circle, rgba(232, 146, 58, 0.15) 0%, transparent 70%)"
           />
