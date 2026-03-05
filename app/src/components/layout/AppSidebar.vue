@@ -11,6 +11,7 @@ import {
   IconX,
   IconFolder,
   IconUpload,
+  IconSearch,
 } from '../shared/icons'
 
 defineProps<{ collapsed: boolean }>()
@@ -23,6 +24,7 @@ const links = [
   { path: '/', label: 'Дашборд', icon: IconHome },
   { path: '/library', label: 'Каталог', icon: IconLibrary },
   { path: '/my-library', label: 'Моя библиотека', icon: IconFolder },
+  { path: '/discover', label: 'LibriVox', icon: IconSearch },
   { path: '/upload', label: 'Загрузить', icon: IconUpload },
   { path: '/history', label: 'История', icon: IconHistory },
   { path: '/analytics', label: 'Аналитика', icon: IconChart },
