@@ -19,6 +19,10 @@ const coverGradient: Record<string, string> = {
 const fallbackGradient = 'linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%)'
 
 onMounted(async () => {
+  if (props.bookId.startsWith('ub:') || props.bookId.startsWith('lb:')) {
+    loading.value = false
+    return
+  }
   try {
     similar.value = await api.getSimilar(props.bookId)
   } catch {
