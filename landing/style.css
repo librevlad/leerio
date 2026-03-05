@@ -247,6 +247,7 @@ section {
 
 .browser-frame img {
   width: 100%;
+  height: auto;
   display: block;
 }
 
@@ -277,6 +278,7 @@ section {
 
 .phone-frame img {
   width: 100%;
+  height: auto;
   display: block;
 }
 
