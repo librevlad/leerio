@@ -1,12 +1,22 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { api } from '../api'
+import { api, coverUrl } from '../api'
 import type { HistoryEntry } from '../types'
 import SearchInput from '../components/shared/SearchInput.vue'
 import EmptyState from '../components/shared/EmptyState.vue'
 import PullIndicator from '../components/shared/PullIndicator.vue'
-import { IconStar } from '../components/shared/icons'
-import { dotColor } from '../composables/useStatusColors'
+import {
+  IconStar,
+  IconInbox,
+  IconPlay,
+  IconSmartphone,
+  IconCheck,
+  IconPause,
+  IconXCircle,
+  IconSync,
+  IconTrash,
+  IconDownload,
+} from '../components/shared/icons'
 import { usePullToRefresh } from '../composables/usePullToRefresh'
 
 const entries = ref<HistoryEntry[]>([])
@@ -24,6 +34,36 @@ const actions: { value: string; label: string }[] = [
   { value: 'reject', label: 'Забраковано' },
   { value: 'move', label: 'Перемещено' },
 ]
+
+const actionIcon: Record<string, unknown> = {
+  inbox: IconInbox,
+  listen: IconPlay,
+  phone: IconSmartphone,
+  done: IconCheck,
+  pause: IconPause,
+  reject: IconXCircle,
+  relisten: IconSync,
+  move: IconInbox,
+  undo: IconSync,
+  delete: IconTrash,
+  download: IconDownload,
+}
+
+const actionColor: Record<string, { bg: string; fg: string }> = {
+  inbox: { bg: 'rgba(34, 211, 238, 0.1)', fg: '#22d3ee' },
+  listen: { bg: 'rgba(192, 132, 252, 0.1)', fg: '#c084fc' },
+  phone: { bg: 'rgba(96, 165, 250, 0.1)', fg: '#60a5fa' },
+  done: { bg: 'rgba(52, 211, 153, 0.1)', fg: '#34d399' },
+  pause: { bg: 'rgba(250, 204, 21, 0.1)', fg: '#facc15' },
+  reject: { bg: 'rgba(248, 113, 113, 0.1)', fg: '#f87171' },
+  relisten: { bg: 'rgba(34, 211, 238, 0.1)', fg: '#22d3ee' },
+  move: { bg: 'rgba(148, 163, 184, 0.1)', fg: '#94a3b8' },
+  undo: { bg: 'rgba(148, 163, 184, 0.1)', fg: '#94a3b8' },
+  delete: { bg: 'rgba(248, 113, 113, 0.1)', fg: '#f87171' },
+  download: { bg: 'rgba(148, 163, 184, 0.1)', fg: '#94a3b8' },
+}
+
+const fallbackColor = { bg: 'rgba(148, 163, 184, 0.1)', fg: '#94a3b8' }
 
 async function loadHistory() {
   loading.value = true
@@ -102,33 +142,54 @@ function formatTime(ts: string): string {
     </div>
 
     <!-- Grouped timeline -->
-    <div v-else-if="grouped.length" class="fade-in space-y-6">
+    <div v-else-if="grouped.length" class="fade-in space-y-8">
       <div v-for="group in grouped" :key="group.date">
-        <h3 class="mb-3 text-[12px] font-semibold text-[--t3]">{{ group.date }}</h3>
-        <div class="card overflow-hidden">
+        <h3 class="mb-3 text-[12px] font-bold text-[--t3]">{{ group.date }}</h3>
+        <div class="space-y-2">
           <div
             v-for="(e, i) in group.entries"
             :key="i"
-            class="flex items-center gap-4 border-b border-[--border] px-5 py-3.5 transition-colors last:border-0 hover:bg-white/[0.02]"
+            class="card flex items-center gap-3.5 p-3.5 transition-colors hover:border-white/10"
           >
-            <span class="block h-2 w-2 flex-shrink-0 rounded-full" :class="dotColor[e.action] || 'bg-slate-500'" />
+            <!-- Action icon -->
+            <div
+              class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg"
+              :style="{
+                background: (actionColor[e.action] || fallbackColor).bg,
+                color: (actionColor[e.action] || fallbackColor).fg,
+              }"
+            >
+              <component :is="actionIcon[e.action] || IconInbox" :size="16" />
+            </div>
+
+            <!-- Book cover -->
+            <div v-if="e.book_id" class="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg">
+              <img
+                :src="coverUrl(e.book_id)"
+                :alt="e.book"
+                class="h-full w-full object-cover"
+                @error="($event.target as HTMLImageElement).style.display = 'none'"
+              />
+            </div>
 
             <!-- Content -->
             <div class="min-w-0 flex-1">
               <div class="mb-0.5 flex items-center gap-2">
-                <span class="text-[12px] font-semibold text-[--t2]">{{ e.action_label }}</span>
-                <span v-if="e.rating" class="flex gap-0.5 text-amber-500/60">
+                <span class="text-[12px] font-semibold" :style="{ color: (actionColor[e.action] || fallbackColor).fg }">
+                  {{ e.action_label }}
+                </span>
+                <span v-if="e.rating" class="flex gap-0.5 text-amber-400/60">
                   <IconStar v-for="s in e.rating" :key="s" :size="11" />
                 </span>
               </div>
               <router-link
                 v-if="e.book_id"
                 :to="`/book/${e.book_id}`"
-                class="block truncate text-[13px] font-medium text-[--t1] no-underline transition-colors hover:text-[--accent]"
+                class="block truncate text-[13px] font-medium text-[--t2] no-underline transition-colors hover:text-[--t1]"
               >
                 {{ e.book }}
               </router-link>
-              <p v-else class="truncate text-[13px] font-medium text-[--t1]">{{ e.book }}</p>
+              <p v-else class="truncate text-[13px] font-medium text-[--t2]">{{ e.book }}</p>
               <p v-if="e.detail" class="mt-0.5 truncate text-[11px] text-[--t3]">{{ e.detail }}</p>
             </div>
 
