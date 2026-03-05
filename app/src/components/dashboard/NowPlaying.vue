@@ -53,7 +53,13 @@ async function play() {
         <span class="inline-block h-2 w-2 animate-pulse rounded-full bg-[--accent]" />
         Сейчас слушаю
       </p>
-      <p class="mb-1 truncate text-[16px] font-bold text-[--t1]">{{ data.title }}</p>
+      <router-link
+        :to="`/book/${data.book_id}`"
+        class="mb-1 block truncate text-[16px] font-bold text-[--t1] no-underline transition-colors hover:text-[--accent]"
+        @click.stop
+      >
+        {{ data.title }}
+      </router-link>
       <p class="mb-3 truncate text-[13px] text-[--t3]">{{ data.author }}</p>
       <div class="flex items-center gap-3">
         <div class="h-1.5 flex-1 overflow-hidden rounded-full" style="background: rgba(255, 255, 255, 0.08)">

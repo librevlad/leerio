@@ -60,6 +60,7 @@ export interface HistoryEntry {
   rating: number
   action_label: string
   action_style?: string
+  book_id?: string | null
 }
 
 // ── Dashboard types ─────────────────────────────────────────────────────────

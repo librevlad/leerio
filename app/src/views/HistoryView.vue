@@ -179,7 +179,14 @@ function formatTime(ts: string): string {
                   <IconStar v-for="s in e.rating" :key="s" :size="11" />
                 </span>
               </div>
-              <p class="truncate text-[13px] font-medium text-[--t1]">{{ e.book }}</p>
+              <router-link
+                v-if="e.book_id"
+                :to="`/book/${e.book_id}`"
+                class="block truncate text-[13px] font-medium text-[--t1] no-underline transition-colors hover:text-[--accent]"
+              >
+                {{ e.book }}
+              </router-link>
+              <p v-else class="truncate text-[13px] font-medium text-[--t1]">{{ e.book }}</p>
               <p v-if="e.detail" class="mt-0.5 truncate text-[11px] text-[--t3]">{{ e.detail }}</p>
             </div>
 

@@ -463,6 +463,9 @@ def get_dashboard(user: dict = Depends(get_current_user)):
             except Exception:
                 pass
 
+    # Build folder→book_id lookup for linking history entries
+    folder_to_id = {b["folder"]: _book_id(b["path"]) for b in books}
+
     recent = []
     for h in reversed(hist[-8:]):
         recent.append(
@@ -474,6 +477,7 @@ def get_dashboard(user: dict = Depends(get_current_user)):
                 "rating": h.get("rating", 0),
                 "action_label": ACTION_LABELS.get(h["action"], h["action"]),
                 "action_style": ACTION_STYLES.get(h["action"], "white"),
+                "book_id": folder_to_id.get(h["book"]),
             }
         )
 
@@ -837,6 +841,11 @@ def get_history(
 ):
     ud = _user_data(user)
     hist = ud.history_load()
+
+    # Build folder→book_id lookup for linking history entries
+    books = lib.find_all_books()
+    folder_to_id = {b["folder"]: _book_id(b["path"]) for b in books}
+
     result = []
     for h in reversed(hist):
         if action and h["action"] != action:
@@ -852,6 +861,7 @@ def get_history(
                 "rating": h.get("rating", 0),
                 "action_label": ACTION_LABELS.get(h["action"], h["action"]),
                 "action_style": ACTION_STYLES.get(h["action"], "white"),
+                "book_id": folder_to_id.get(h["book"]),
             }
         )
         if len(result) >= limit:

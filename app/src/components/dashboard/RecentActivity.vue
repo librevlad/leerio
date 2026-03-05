@@ -24,17 +24,30 @@ function timeAgo(ts: string): string {
         Все действия
       </router-link>
     </div>
-    <div class="card p-2">
+    <div class="card overflow-hidden">
       <div
         v-for="(e, i) in entries"
         :key="i"
-        class="flex items-center gap-3 rounded-2xl px-4 py-2.5 transition-colors hover:bg-white/[0.03]"
+        class="flex items-center gap-3 border-b border-[--border] px-4 py-2.5 transition-colors last:border-0 hover:bg-white/[0.02]"
       >
-        <span class="h-2 w-2 flex-shrink-0 rounded-full" :class="dotColor[e.action] || 'bg-slate-500'" />
+        <div class="relative flex-shrink-0">
+          <span class="block h-2 w-2 rounded-full" :class="dotColor[e.action] || 'bg-slate-500'" />
+          <span
+            class="absolute inset-0 rounded-full opacity-40 blur-[3px]"
+            :class="dotColor[e.action] || 'bg-slate-500'"
+          />
+        </div>
         <span class="flex-shrink-0 text-[12px] font-semibold text-[--t3]">
           {{ e.action_label }}
         </span>
-        <span class="flex-1 truncate text-[12px] text-[--t2]">
+        <router-link
+          v-if="e.book_id"
+          :to="`/book/${e.book_id}`"
+          class="flex-1 truncate text-[12px] font-medium text-[--t2] no-underline transition-colors hover:text-[--accent]"
+        >
+          {{ e.book }}
+        </router-link>
+        <span v-else class="flex-1 truncate text-[12px] text-[--t2]">
           {{ e.book }}
         </span>
         <span v-if="e.rating" class="flex flex-shrink-0 gap-0.5 text-amber-500/50">
