@@ -1,0 +1,17 @@
+{
+  "name": "Leerio",
+  "short_name": "Leerio",
+  "description": "Менеджер аудиокниг",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07070e",
+  "theme_color": "#07070e",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
