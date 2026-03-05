@@ -429,6 +429,92 @@ def create_or_update_user(email: str, name: str, picture: str) -> dict:
 
 
 # ===========================================================================
+# Books — filesystem sync
+# ===========================================================================
+
+
+def sync_books_from_filesystem():
+    """Scan BOOKS_DIR and insert any new books into the database.
+
+    Existing books (matched by slug) are skipped. This is safe to call on
+    every startup — it's an idempotent upsert-by-slug.
+    """
+    from .core import (
+        BOOKS_DIR,
+        CATEGORIES,
+        count_mp3,
+        estimate_duration_hours,
+        folder_size_mb,
+        make_slug,
+        parse_folder_name,
+    )
+
+    conn = _get_conn()
+    try:
+        existing_slugs = {r[0] for r in conn.execute("SELECT slug FROM books").fetchall()}
+        inserted = 0
+
+        for cat in CATEGORIES:
+            cat_dir = BOOKS_DIR / cat
+            if not cat_dir.is_dir():
+                continue
+            for book_dir in sorted(cat_dir.iterdir()):
+                if not book_dir.is_dir():
+                    continue
+                folder = book_dir.name
+                author, title, reader = parse_folder_name(folder)
+                slug = make_slug(title, author)
+
+                if slug in existing_slugs:
+                    continue
+
+                mp3_count = count_mp3(book_dir)
+                if mp3_count == 0:
+                    continue  # skip empty dirs
+
+                has_cover = any(book_dir.glob("cover.*"))
+                duration_hours = estimate_duration_hours(book_dir) or 0.0
+                size_mb = folder_size_mb(book_dir)
+                s3_prefix = f"{cat}/{folder}"
+
+                conn.execute(
+                    """INSERT INTO books (slug, title, author, reader, category, folder,
+                       s3_prefix, has_cover, mp3_count, duration_hours, size_mb)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (
+                        slug,
+                        title,
+                        author,
+                        reader or "",
+                        cat,
+                        folder,
+                        s3_prefix,
+                        int(has_cover),
+                        mp3_count,
+                        duration_hours,
+                        size_mb,
+                    ),
+                )
+                existing_slugs.add(slug)
+                inserted += 1
+
+                # Insert tracks
+                book_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+                mp3s = sorted(book_dir.rglob("*.mp3"), key=lambda f: str(f))
+                for idx, mp3 in enumerate(mp3s):
+                    conn.execute(
+                        "INSERT INTO tracks (book_id, idx, filename, s3_key) VALUES (?, ?, ?, ?)",
+                        (book_id, idx, mp3.name, f"{s3_prefix}/{mp3.name}"),
+                    )
+
+        conn.commit()
+        if inserted:
+            logger.info("Synced %d new books from filesystem", inserted)
+    finally:
+        conn.close()
+
+
+# ===========================================================================
 # Books CRUD
 # ===========================================================================
 

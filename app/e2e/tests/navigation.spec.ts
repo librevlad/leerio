@@ -66,7 +66,7 @@ test.describe('Navigation', () => {
     })
 
     test('shows all tabs', async ({ page }) => {
-      const tabs = ['Главная', 'Каталог', 'Моя', 'Найти', 'Ещё']
+      const tabs = ['Главная', 'Каталог', 'Моя', 'Ещё']
       for (const label of tabs) {
         await expect(page.locator(`nav.fixed.bottom-0 >> text=${label}`)).toBeVisible()
       }

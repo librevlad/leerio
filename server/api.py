@@ -286,6 +286,7 @@ class AllowedEmailRequest(BaseModel):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     db.init_db()
+    db.sync_books_from_filesystem()
     yield
 
 

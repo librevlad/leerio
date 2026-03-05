@@ -10,7 +10,6 @@ vi.mock('../api', () => ({
     setProgress: vi.fn().mockResolvedValue(undefined),
     startSession: vi.fn().mockResolvedValue(undefined),
     stopSession: vi.fn().mockResolvedValue(undefined),
-    librivoxChapters: vi.fn(),
     getUserBookTracks: vi.fn(),
   },
   audioUrl: vi.fn((_id: string, _idx: number) => 'http://test/audio.mp3'),
