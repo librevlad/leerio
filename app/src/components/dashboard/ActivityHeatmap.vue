@@ -22,8 +22,8 @@ const cells = computed(() => {
       result.push({
         date: key,
         count,
-        x: weekIdx * 14,
-        y: dayOfWeek * 14,
+        x: weekIdx * 16,
+        y: dayOfWeek * 16,
         month: d.toLocaleDateString('ru', { month: 'short' }),
       })
     }
@@ -54,17 +54,17 @@ function intensity(count: number): string {
   <div class="card p-6">
     <h2 class="section-label mb-5">Активность</h2>
     <div class="overflow-x-auto">
-      <svg :width="Math.max(...cells.map((c) => c.x), 0) + 20" :height="7 * 14 + 20" class="block">
-        <text v-for="[label, x] in months" :key="label" :x="x" y="10" fill="var(--t3)" font-size="9" font-weight="500">
+      <svg :width="Math.max(...cells.map((c) => c.x), 0) + 20" :height="7 * 16 + 24" class="block">
+        <text v-for="[label, x] in months" :key="label" :x="x" y="10" fill="var(--t3)" font-size="10" font-weight="600">
           {{ label }}
         </text>
         <rect
           v-for="c in cells"
           :key="c.date"
           :x="c.x"
-          :y="c.y + 16"
-          width="10"
-          height="10"
+          :y="c.y + 18"
+          width="12"
+          height="12"
           rx="3"
           :class="intensity(c.count)"
         >

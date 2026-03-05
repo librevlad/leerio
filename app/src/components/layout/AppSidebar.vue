@@ -74,7 +74,11 @@ async function handleLogout() {
         :key="link.path"
         :to="link.path"
         class="group relative flex items-center gap-3 rounded-xl px-3 py-2.5 no-underline transition-all duration-200"
-        :class="isActive(link.path) ? 'bg-white/[0.08] text-[--t1]' : 'text-[--t3] hover:text-[--t2]'"
+        :class="
+          isActive(link.path)
+            ? 'bg-white/[0.08] text-[--t1] shadow-[inset_3px_0_0_var(--accent)]'
+            : 'text-[--t3] hover:bg-white/[0.03] hover:text-[--t2]'
+        "
       >
         <span class="flex w-5 flex-shrink-0 items-center justify-center">
           <component :is="link.icon" :size="18" />

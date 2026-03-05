@@ -94,54 +94,64 @@ async function handlePasswordLogin() {
 </script>
 
 <template>
-  <div class="flex min-h-dvh min-h-screen items-center justify-center px-4" style="background: var(--bg)">
-    <div class="w-full max-w-sm text-center">
-      <div class="mb-8 flex items-center justify-center gap-3">
-        <img src="/logo.png" alt="Leerio" class="h-10 w-10 rounded-xl object-contain" />
-        <span class="text-[24px] font-bold tracking-tight text-[--t1]">Leerio</span>
+  <div class="relative flex min-h-dvh min-h-screen items-center justify-center px-4" style="background: var(--bg)">
+    <!-- Subtle radial glow -->
+    <div
+      class="pointer-events-none absolute inset-0"
+      style="background: radial-gradient(ellipse 60% 50% at 50% 40%, rgba(232, 146, 58, 0.06) 0%, transparent 70%)"
+    />
+
+    <div class="relative w-full max-w-sm">
+      <!-- Logo -->
+      <div class="mb-10 flex items-center justify-center gap-3">
+        <img src="/logo.png" alt="Leerio" class="h-11 w-11 rounded-xl object-contain" />
+        <span class="text-[26px] font-bold tracking-tight text-[--t1]">Leerio</span>
       </div>
 
-      <p class="mb-8 text-[14px] text-[--t2]">Войдите, чтобы продолжить</p>
+      <!-- Card -->
+      <div class="card p-7 text-center">
+        <p class="mb-6 text-[14px] text-[--t2]">Войдите, чтобы продолжить</p>
 
-      <!-- Email/Password form -->
-      <form class="mb-6 space-y-3" @submit.prevent="handlePasswordLogin">
-        <input
-          v-model="email"
-          type="email"
-          placeholder="Email"
-          autocomplete="email"
-          class="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-[14px] text-[--t1] transition outline-none focus:border-[--accent]"
-        />
-        <input
-          v-model="password"
-          type="password"
-          placeholder="Пароль"
-          autocomplete="current-password"
-          class="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-[14px] text-[--t1] transition outline-none focus:border-[--accent]"
-        />
-        <button
-          type="submit"
-          :disabled="loading || !email || !password"
-          class="w-full rounded-lg bg-[--accent] px-4 py-2.5 text-[14px] font-semibold text-white transition hover:opacity-90 disabled:opacity-40"
-        >
-          Войти
-        </button>
-      </form>
+        <!-- Email/Password form -->
+        <form class="mb-5 space-y-3" @submit.prevent="handlePasswordLogin">
+          <input
+            v-model="email"
+            type="email"
+            placeholder="Email"
+            autocomplete="email"
+            class="input-field w-full px-4 py-2.5"
+          />
+          <input
+            v-model="password"
+            type="password"
+            placeholder="Пароль"
+            autocomplete="current-password"
+            class="input-field w-full px-4 py-2.5"
+          />
+          <button
+            type="submit"
+            :disabled="loading || !email || !password"
+            class="btn btn-primary w-full justify-center py-2.5"
+          >
+            Войти
+          </button>
+        </form>
 
-      <div class="mb-6 flex items-center gap-3">
-        <div class="h-px flex-1 bg-white/10" />
-        <span class="text-[11px] text-[--t3]">или</span>
-        <div class="h-px flex-1 bg-white/10" />
+        <div class="mb-5 flex items-center gap-3">
+          <div class="h-px flex-1 bg-[--border]" />
+          <span class="text-[11px] text-[--t3]">или</span>
+          <div class="h-px flex-1 bg-[--border]" />
+        </div>
+
+        <div class="flex justify-center">
+          <div id="google-signin-btn" />
+        </div>
+
+        <div v-if="loading" class="mt-5 text-[13px] text-[--t3]">Вход...</div>
+        <div v-if="error" class="mt-5 text-[13px] text-red-400">{{ error }}</div>
       </div>
 
-      <div class="flex justify-center">
-        <div id="google-signin-btn" />
-      </div>
-
-      <div v-if="loading" class="mt-6 text-[13px] text-[--t3]">Вход...</div>
-      <div v-if="error" class="mt-6 text-[13px] text-red-400">{{ error }}</div>
-
-      <p class="mt-12 text-[11px] text-[--t3] opacity-50">Leerio v1.0</p>
+      <p class="mt-10 text-center text-[11px] text-[--t3] opacity-40">Leerio v1.0</p>
     </div>
   </div>
 </template>
