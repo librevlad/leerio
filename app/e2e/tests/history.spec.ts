@@ -17,11 +17,9 @@ test.describe('History', () => {
     await expect(page.locator('input[placeholder="Поиск по книге..."]')).toBeVisible()
   })
 
-  test('has action filter dropdown', async ({ page }) => {
-    const select = page.locator('select.input-field')
-    await expect(select).toBeVisible()
-    // Verify it has the "Все" option
-    await expect(select.locator('option', { hasText: 'Все' })).toBeAttached()
+  test('has action filter pills', async ({ page }) => {
+    const allPill = page.locator('button', { hasText: 'Все' }).first()
+    await expect(allPill).toBeVisible()
   })
 
   test('search filters history entries', async ({ page, takeScreenshot }) => {

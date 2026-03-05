@@ -20,7 +20,7 @@ test.describe('Navigation', () => {
     })
 
     test('shows all nav links', async ({ page }) => {
-      const links = ['Дашборд', 'Библиотека', 'LibriVox', 'История', 'Аналитика', 'Настройки']
+      const links = ['Дашборд', 'Каталог', 'Моя библиотека', 'Загрузить', 'История', 'Аналитика', 'Настройки']
       for (const label of links) {
         await expect(page.locator(`aside a:has-text("${label}")`)).toBeVisible()
       }
@@ -33,7 +33,7 @@ test.describe('Navigation', () => {
     })
 
     test('navigates to library', async ({ page }) => {
-      await page.locator('aside a:has-text("Библиотека")').click()
+      await page.locator('aside a:has-text("Каталог")').click()
       await expect(page).toHaveURL('/library', { timeout: 10_000 })
     })
 
@@ -66,7 +66,7 @@ test.describe('Navigation', () => {
     })
 
     test('shows all tabs', async ({ page }) => {
-      const tabs = ['Главная', 'Книги', 'LibriVox', 'История', 'Ещё']
+      const tabs = ['Главная', 'Каталог', 'Моя', 'LibriVox', 'Ещё']
       for (const label of tabs) {
         await expect(page.locator(`nav.fixed.bottom-0 >> text=${label}`)).toBeVisible()
       }
