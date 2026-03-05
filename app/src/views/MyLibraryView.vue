@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useUserBooks } from '@/composables/useUserBooks'
+import { plural } from '@/utils/plural'
 import { useLocalBooks } from '@/composables/useLocalBooks'
 import { useDownloads } from '@/composables/useDownloads'
 import { useToast } from '@/composables/useToast'
@@ -161,7 +162,7 @@ const coverPatterns: Record<string, string> = {
       <div>
         <h1 class="page-title">Моя библиотека</h1>
         <p class="mt-1 text-[13px] text-[--t3]">
-          {{ totalCount > 0 ? `${totalCount} книг` : 'Пока нет книг' }}
+          {{ totalCount > 0 ? `${totalCount} ${plural(totalCount, 'книга', 'книги', 'книг')}` : 'Пока нет книг' }}
         </p>
       </div>
       <router-link to="/upload" class="btn btn-primary flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold">

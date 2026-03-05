@@ -4,6 +4,7 @@ import { api, coverUrl } from '../api'
 import { useBooks } from '../composables/useBooks'
 import { useToast } from '../composables/useToast'
 import type { Collection, Book } from '../types'
+import { plural } from '../utils/plural'
 import { IconPlus, IconTrash, IconEdit, IconX, IconCheck, IconBookmark, IconSearch } from '../components/shared/icons'
 import EmptyState from '../components/shared/EmptyState.vue'
 
@@ -124,7 +125,11 @@ onMounted(async () => {
       <div>
         <h1 class="page-title">Коллекции</h1>
         <p class="mt-1 text-[13px] text-[--t3]">
-          {{ collections.length > 0 ? `${collections.length} коллекций` : 'Группируйте книги по темам' }}
+          {{
+            collections.length > 0
+              ? `${collections.length} ${plural(collections.length, 'коллекция', 'коллекции', 'коллекций')}`
+              : 'Группируйте книги по темам'
+          }}
         </p>
       </div>
       <button class="btn btn-primary flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold" @click="openCreate">

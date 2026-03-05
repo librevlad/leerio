@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import ProgressBar from '../shared/ProgressBar.vue'
+import { plural } from '../../utils/plural'
 
 const props = defineProps<{
   done: number
@@ -18,6 +19,8 @@ const percent = computed(() => Math.min(100, Math.round((props.done / Math.max(1
     </div>
     <ProgressBar :percent="percent" height="h-1.5" />
     <p class="gradient-text mt-3 text-[24px] leading-none font-bold tracking-tight">{{ percent }}%</p>
-    <p class="mt-1 text-[12px] text-[--t3]">осталось {{ Math.max(0, goal - done) }} книг</p>
+    <p class="mt-1 text-[12px] text-[--t3]">
+      осталось {{ Math.max(0, goal - done) }} {{ plural(Math.max(0, goal - done), 'книга', 'книги', 'книг') }}
+    </p>
   </div>
 </template>

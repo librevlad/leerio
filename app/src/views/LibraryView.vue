@@ -7,6 +7,7 @@ import EmptyState from '../components/shared/EmptyState.vue'
 import PullIndicator from '../components/shared/PullIndicator.vue'
 import { usePullToRefresh } from '../composables/usePullToRefresh'
 import type { BookStatusValue } from '../types'
+import { plural } from '../utils/plural'
 
 const { books, loading, load, categories } = useBooks()
 
@@ -86,7 +87,8 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
       <div>
         <h1 class="page-title">Библиотека</h1>
         <p class="mt-1 text-[13px] text-[--t3]">
-          <span class="font-bold text-[--accent]">{{ filtered.length }}</span> книг
+          <span class="font-bold text-[--accent]">{{ filtered.length }}</span>
+          {{ plural(filtered.length, 'книга', 'книги', 'книг') }}
         </p>
       </div>
       <SearchInput v-model="search" placeholder="Поиск..." class="w-full sm:w-56" />
