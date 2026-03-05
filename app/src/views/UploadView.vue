@@ -107,8 +107,9 @@ const rateOptions = [
 async function loadVoices(engine: string) {
   try {
     voices.value = await api.getTTSVoices(engine)
-    if (voices.value.length > 0) {
-      ttsVoice.value = voices.value[0].id
+    const first = voices.value[0]
+    if (first) {
+      ttsVoice.value = first.id
     }
   } catch {
     /* voices will remain empty */
