@@ -16,6 +16,7 @@ import {
   IconSmartphone,
 } from '@/components/shared/icons'
 import SourceBadge from '@/components/shared/SourceBadge.vue'
+import ProgressBar from '@/components/shared/ProgressBar.vue'
 import type { Book, TTSJob } from '@/types'
 
 const toast = useToast()
@@ -147,11 +148,41 @@ async function handleDelete(item: UnifiedItem) {
   }
 }
 
-const filters = [
-  { key: 'all' as const, label: 'Все' },
-  { key: 'downloaded' as const, label: 'Скачанные' },
-  { key: 'local' as const, label: 'Локальные' },
-  { key: 'uploaded' as const, label: 'Загруженные' },
+const filters: {
+  key: 'all' | 'downloaded' | 'local' | 'uploaded'
+  label: string
+  color: string
+  activeBg: string
+  activeBorder: string
+}[] = [
+  {
+    key: 'all',
+    label: 'Все',
+    color: 'text-[--accent]',
+    activeBg: 'bg-[--accent-soft]',
+    activeBorder: 'border-[--accent]/40',
+  },
+  {
+    key: 'downloaded',
+    label: 'Скачанные',
+    color: 'text-emerald-400',
+    activeBg: 'bg-emerald-500/10',
+    activeBorder: 'border-emerald-500/30',
+  },
+  {
+    key: 'local',
+    label: 'Локальные',
+    color: 'text-amber-400',
+    activeBg: 'bg-amber-500/10',
+    activeBorder: 'border-amber-500/30',
+  },
+  {
+    key: 'uploaded',
+    label: 'Загруженные',
+    color: 'text-violet-400',
+    activeBg: 'bg-violet-500/10',
+    activeBorder: 'border-violet-500/30',
+  },
 ]
 
 const sourceBadgeMap: Record<UnifiedItem['source'], 'library' | 'librivox' | 'user' | 'local'> = {
@@ -160,10 +191,16 @@ const sourceBadgeMap: Record<UnifiedItem['source'], 'library' | 'librivox' | 'us
   uploaded: 'user',
 }
 
-function coverGradient(source: string) {
-  if (source === 'local') return 'from-indigo-500/10 to-blue-500/10'
-  if (source === 'uploaded') return 'from-teal-500/10 to-violet-500/10'
-  return 'from-emerald-500/10 to-teal-500/10'
+const coverGradients: Record<string, string> = {
+  downloaded: 'linear-gradient(135deg, #064e3b 0%, #059669 50%, #34d399 100%)',
+  local: 'linear-gradient(135deg, #1e1b4b 0%, #4338ca 50%, #818cf8 100%)',
+  uploaded: 'linear-gradient(135deg, #134e4a 0%, #0d9488 50%, #5eead4 100%)',
+}
+
+const coverPatterns: Record<string, string> = {
+  downloaded: 'radial-gradient(circle at 80% 20%, rgba(255,255,255,0.12) 0%, transparent 50%)',
+  local: 'radial-gradient(circle at 20% 80%, rgba(255,255,255,0.12) 0%, transparent 50%)',
+  uploaded: 'radial-gradient(circle at 70% 70%, rgba(255,255,255,0.12) 0%, transparent 50%)',
 }
 </script>
 
@@ -172,50 +209,42 @@ function coverGradient(source: string) {
     <!-- Header -->
     <div class="mb-6 flex items-center justify-between">
       <div>
-        <h1 class="text-[20px] font-bold text-[--t1]">Моя библиотека</h1>
+        <h1 class="page-title">Моя библиотека</h1>
         <p class="mt-1 text-[13px] text-[--t3]">
           {{ totalCount > 0 ? `${totalCount} книг` : 'Пока нет книг' }}
         </p>
       </div>
-      <router-link
-        to="/upload"
-        class="flex items-center gap-1.5 rounded-lg bg-[--accent-soft] px-3 py-2 text-[12px] font-medium text-[--accent-2] transition-all hover:bg-[--accent-soft]"
-      >
+      <router-link to="/upload" class="btn btn-primary flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold">
         <IconPlus :size="14" />
         Добавить
       </router-link>
     </div>
 
     <!-- Active TTS Jobs -->
-    <div v-if="activeJobs.length" class="mb-6 space-y-3">
-      <h2 class="text-[14px] font-semibold text-[--t2]">Конвертация</h2>
-      <div v-for="job in activeJobs" :key="job.id" class="rounded-xl border border-violet-500/30 bg-violet-500/5 p-4">
-        <div class="mb-1 flex items-center justify-between">
+    <div v-if="activeJobs.length" class="card mb-6 space-y-3 px-4 py-3">
+      <h2 class="section-label">Конвертация</h2>
+      <div v-for="job in activeJobs" :key="job.id">
+        <div class="mb-1.5 flex items-center justify-between">
           <div class="flex items-center gap-2">
             <IconMicrophone :size="14" class="text-violet-400" />
             <span class="text-[13px] font-medium text-[--t1]">{{ job.title }}</span>
           </div>
           <span class="text-[12px] text-[--t3]">{{ job.done_chapters }}/{{ job.total_chapters }}</span>
         </div>
-        <div class="h-1.5 overflow-hidden rounded-full bg-white/10">
-          <div
-            class="h-full rounded-full bg-violet-500 transition-all duration-300"
-            :style="{ width: `${job.progress}%` }"
-          />
-        </div>
+        <ProgressBar :percent="job.progress" height="h-1.5" />
       </div>
     </div>
 
-    <!-- Filter tabs -->
+    <!-- Filter tabs (color-coded) -->
     <div class="scrollbar-hide mb-5 flex gap-2 overflow-x-auto">
       <button
         v-for="f in filters"
         :key="f.key"
-        class="flex-shrink-0 rounded-full border px-3.5 py-1.5 text-[12px] font-medium transition-all"
+        class="flex-shrink-0 cursor-pointer rounded-full border px-3.5 py-1.5 text-[12px] font-semibold transition-all duration-200"
         :class="
           activeFilter === f.key
-            ? 'border-[--accent]/40 bg-[--accent-soft] text-[--accent-2]'
-            : 'border-[--border] text-[--t3] hover:text-[--t2]'
+            ? [f.activeBg, f.activeBorder, f.color]
+            : 'border-[--border] text-[--t3] hover:bg-white/5 hover:text-[--t2]'
         "
         @click="activeFilter = f.key"
       >
@@ -224,8 +253,11 @@ function coverGradient(source: string) {
     </div>
 
     <!-- Loading -->
-    <div v-if="ubLoading" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <div v-for="i in 3" :key="i" class="skeleton h-36 rounded-2xl" />
+    <div v-if="ubLoading" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div v-for="i in 4" :key="i">
+        <div class="skeleton h-28 rounded-t-[20px] rounded-b-none" />
+        <div class="skeleton h-36 rounded-t-none rounded-b-[20px] border-t-0" />
+      </div>
     </div>
 
     <!-- Empty state -->
@@ -243,47 +275,80 @@ function coverGradient(source: string) {
 
     <!-- Grid -->
     <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      <div
-        v-for="item in items"
-        :key="item.id"
-        class="group cursor-pointer overflow-hidden rounded-2xl border border-[--border] transition-all hover:border-[--accent]/20 hover:shadow-lg"
-      >
-        <!-- Cover -->
+      <div v-for="item in items" :key="item.id" class="card card-hover group cursor-pointer overflow-hidden">
+        <!-- Gradient backdrop with blurred cover -->
         <div
-          class="relative flex h-32 items-center justify-center overflow-hidden"
-          :class="item.coverSrc ? '' : `bg-gradient-to-br ${coverGradient(item.source)}`"
+          class="relative h-28 overflow-hidden"
+          :style="{ background: coverGradients[item.source] }"
           @click="playItem(item)"
         >
-          <img v-if="item.coverSrc" :src="item.coverSrc" class="h-full w-full object-cover" alt="" />
-          <component :is="item.source === 'local' ? IconSmartphone : IconMusic" v-else :size="36" class="text-[--t3]" />
+          <img
+            v-if="item.coverSrc"
+            :src="item.coverSrc"
+            class="absolute inset-0 h-full w-full object-cover blur-[1px] brightness-75"
+            alt=""
+          />
+          <div v-else class="absolute inset-0" :style="{ background: coverPatterns[item.source] }" />
+          <div
+            class="absolute inset-0"
+            style="background: linear-gradient(to bottom, transparent 20%, rgba(0, 0, 0, 0.7) 100%)"
+          />
 
-          <div class="absolute top-2 right-2">
+          <!-- Top badges -->
+          <div class="absolute top-2.5 right-3 flex items-center gap-1.5">
             <SourceBadge :source="sourceBadgeMap[item.source]" />
           </div>
 
           <span
             v-if="item.source === 'downloaded'"
-            class="absolute right-2 bottom-2 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/90 text-white"
+            class="absolute bottom-2.5 left-3 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/90 text-white shadow"
           >
             <IconCheck :size="12" />
           </span>
         </div>
 
-        <!-- Info -->
-        <div class="p-3" @click="playItem(item)">
-          <h3 class="mb-1 line-clamp-2 text-[13px] font-semibold text-[--t1]">{{ item.title }}</h3>
-          <p v-if="item.author" class="truncate text-[12px] text-[--t3]">{{ item.author }}</p>
-          <div class="mt-2 flex items-center justify-between">
-            <span v-if="item.trackCount" class="flex items-center gap-1 text-[11px] text-[--t3]">
-              <IconMusic :size="12" />
-              {{ item.trackCount }} треков
-            </span>
-            <button
-              class="rounded-lg p-1.5 text-[--t3] opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/15 hover:text-red-400"
-              @click.stop="handleDelete(item)"
+        <!-- Floating cover + content -->
+        <div class="relative px-4">
+          <div class="-mt-9 mb-2.5 flex items-end gap-3" @click="playItem(item)">
+            <div
+              class="relative h-[72px] w-[72px] flex-shrink-0 overflow-hidden rounded-xl shadow-lg ring-2 ring-[--card-solid]"
             >
-              <IconTrash :size="14" />
-            </button>
+              <img v-if="item.coverSrc" :src="item.coverSrc" class="h-full w-full object-cover" alt="" />
+              <div
+                v-else
+                class="flex h-full w-full items-center justify-center"
+                :style="{ background: coverGradients[item.source], backgroundImage: coverPatterns[item.source] }"
+              >
+                <component
+                  :is="item.source === 'local' ? IconSmartphone : IconMusic"
+                  :size="24"
+                  class="text-white/50"
+                />
+              </div>
+            </div>
+            <div class="min-w-0 pb-1">
+              <h3
+                class="line-clamp-2 text-[13px] leading-snug font-semibold text-[--t1] transition-colors group-hover:text-white"
+              >
+                {{ item.title }}
+              </h3>
+            </div>
+          </div>
+
+          <div class="pb-3" @click="playItem(item)">
+            <p v-if="item.author" class="mb-2 truncate text-[12px] text-[--t3]">{{ item.author }}</p>
+            <div class="flex items-center justify-between">
+              <span v-if="item.trackCount" class="flex items-center gap-1 text-[11px] text-[--t3]">
+                <IconMusic :size="12" />
+                {{ item.trackCount }} треков
+              </span>
+              <button
+                class="rounded-full p-1.5 text-[--t3] opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/15 hover:text-red-400"
+                @click.stop="handleDelete(item)"
+              >
+                <IconTrash :size="14" />
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -39,9 +39,9 @@ const fallbackPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1
 
 <template>
   <router-link :to="`/book/${book.id}`" class="card card-hover group relative block overflow-hidden no-underline">
-    <!-- Cover gradient banner -->
+    <!-- Gradient backdrop (shorter) -->
     <div
-      class="relative h-44 overflow-hidden"
+      class="relative h-28 overflow-hidden"
       :style="{ background: coverGradient[book.category] || fallbackGradient }"
     >
       <img
@@ -49,7 +49,7 @@ const fallbackPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1
         :src="coverUrl(book.id)"
         :alt="book.title"
         class="absolute inset-0 h-full w-full object-cover transition-opacity duration-300"
-        :class="coverLoaded ? 'opacity-100' : 'opacity-0'"
+        :class="coverLoaded ? 'opacity-100 blur-[1px] brightness-75' : 'opacity-0'"
         @load="coverLoaded = true"
       />
       <div
@@ -59,48 +59,68 @@ const fallbackPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1
       />
       <div
         class="absolute inset-0"
-        style="background: linear-gradient(to bottom, transparent 30%, rgba(0, 0, 0, 0.6) 100%)"
+        style="background: linear-gradient(to bottom, transparent 20%, rgba(0, 0, 0, 0.7) 100%)"
       />
-      <div v-if="source" class="absolute top-2.5 right-3 z-10">
-        <SourceBadge :source="source" />
-      </div>
-      <div class="absolute right-3 bottom-2.5 left-3 flex items-end justify-between gap-2">
+
+      <!-- Top badges -->
+      <div class="absolute top-2.5 right-3 left-3 z-10 flex items-start justify-between">
+        <CategoryBadge :category="book.category" />
         <div class="flex items-center gap-1.5">
-          <CategoryBadge :category="book.category" />
-          <span
-            v-if="downloaded"
-            class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/90 text-white"
-            title="Скачано"
-          >
-            <IconCheck :size="12" />
-          </span>
+          <SourceBadge v-if="source" :source="source" />
+          <StatusBadge v-if="book.book_status" :book-status="book.book_status" />
         </div>
-        <StatusBadge v-if="book.book_status" :book-status="book.book_status" />
       </div>
     </div>
 
-    <!-- Content -->
-    <div class="p-4 pt-3.5">
-      <h3
-        class="mb-1 line-clamp-2 text-[14px] leading-snug font-semibold text-[--t1] transition-colors group-hover:text-white"
-        :title="book.title"
-      >
-        {{ book.title }}
-      </h3>
+    <!-- Floating cover thumbnail -->
+    <div class="relative px-4">
+      <div class="-mt-10 mb-3 flex items-end gap-3">
+        <div class="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl shadow-lg ring-2 ring-[--card-solid]">
+          <img v-if="book.has_cover" :src="coverUrl(book.id)" :alt="book.title" class="h-full w-full object-cover" />
+          <div
+            v-else
+            class="flex h-full w-full items-center justify-center"
+            :style="{
+              background: coverGradient[book.category] || fallbackGradient,
+              backgroundImage: coverPattern[book.category] || fallbackPattern,
+            }"
+          >
+            <span class="text-[20px] font-bold text-white/60">{{ book.title.charAt(0) }}</span>
+          </div>
+          <span
+            v-if="downloaded"
+            class="absolute right-1 bottom-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-white shadow"
+          >
+            <IconCheck :size="10" />
+          </span>
+        </div>
+        <div class="min-w-0 pb-1">
+          <h3
+            class="line-clamp-2 text-[14px] leading-snug font-semibold text-[--t1] transition-colors group-hover:text-white"
+            :title="book.title"
+          >
+            {{ book.title }}
+          </h3>
+        </div>
+      </div>
+
+      <!-- Author / Reader -->
       <p class="mb-3 line-clamp-1 text-[12px] text-[--t2]" :title="book.author">
         {{ book.author }}
         <span v-if="book.reader" class="text-[--t3]"> · {{ book.reader }}</span>
       </p>
 
+      <!-- Progress bar -->
       <div v-if="book.progress > 0" class="mb-2.5">
         <div class="mb-1 flex items-center justify-between">
           <span class="text-[10px] font-semibold text-[--t3]">Прогресс</span>
           <span class="text-[10px] font-bold text-[--accent]">{{ book.progress }}%</span>
         </div>
-        <ProgressBar :percent="book.progress" height="h-1" />
+        <ProgressBar :percent="book.progress" height="h-1.5" />
       </div>
 
-      <div class="mt-auto flex items-center justify-between">
+      <!-- Tags + Rating -->
+      <div class="mt-auto flex items-center justify-between pb-4">
         <div v-if="book.tags.length" class="flex min-w-0 flex-1 gap-1 overflow-hidden">
           <span
             v-for="tag in book.tags.slice(0, 2)"
