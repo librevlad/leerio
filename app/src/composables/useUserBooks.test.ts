@@ -59,7 +59,7 @@ describe('useUserBooks', () => {
     await ub.deleteBook('a')
     expect(api.deleteUserBook).toHaveBeenCalledWith('a')
     expect(ub.userBooks.value).toHaveLength(1)
-    expect(ub.userBooks.value[0].slug).toBe('b')
+    expect(ub.userBooks.value[0]!.slug).toBe('b')
   })
 
   it('pollJob() calls API at interval, stops on done', async () => {

@@ -18,13 +18,13 @@ describe('useToast', () => {
     t.add('msg1')
     t.add('msg2')
     expect(t.toasts.value).toHaveLength(2)
-    expect(t.toasts.value[0].id).not.toBe(t.toasts.value[1].id)
+    expect(t.toasts.value[0]!.id).not.toBe(t.toasts.value[1]!.id)
   })
 
   it('remove() filters out toast by ID', () => {
     const t = useToast()
     t.add('msg')
-    const id = t.toasts.value[0].id
+    const id = t.toasts.value[0]!.id
     t.remove(id)
     expect(t.toasts.value).toHaveLength(0)
   })
@@ -32,25 +32,25 @@ describe('useToast', () => {
   it('success() sets type to success', () => {
     const t = useToast()
     t.success('done')
-    expect(t.toasts.value[0].type).toBe('success')
+    expect(t.toasts.value[0]!.type).toBe('success')
   })
 
   it('error() sets type to error', () => {
     const t = useToast()
     t.error('fail')
-    expect(t.toasts.value[0].type).toBe('error')
+    expect(t.toasts.value[0]!.type).toBe('error')
   })
 
   it('info() sets type to info', () => {
     const t = useToast()
     t.info('note')
-    expect(t.toasts.value[0].type).toBe('info')
+    expect(t.toasts.value[0]!.type).toBe('info')
   })
 
   it('warning() sets type to warning', () => {
     const t = useToast()
     t.warning('warn')
-    expect(t.toasts.value[0].type).toBe('warning')
+    expect(t.toasts.value[0]!.type).toBe('warning')
   })
 
   it('auto-dismisses after 3 seconds', () => {
@@ -69,6 +69,6 @@ describe('useToast', () => {
     vi.advanceTimersByTime(1500)
     // First should be dismissed, second still there
     expect(t.toasts.value).toHaveLength(1)
-    expect(t.toasts.value[0].message).toBe('second')
+    expect(t.toasts.value[0]!.message).toBe('second')
   })
 })

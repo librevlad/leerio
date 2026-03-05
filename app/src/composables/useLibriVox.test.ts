@@ -42,8 +42,8 @@ describe('useLibriVox', () => {
     const lv = useLibriVox()
     await lv.search('test', 'English')
     expect(lv.books.value).toHaveLength(1)
-    expect(lv.books.value[0].id).toBe('lv:123')
-    expect(lv.books.value[0].title).toBe('Test Book')
+    expect(lv.books.value[0]!.id).toBe('lv:123')
+    expect(lv.books.value[0]!.title).toBe('Test Book')
     expect(lv.loading.value).toBe(false)
   })
 
@@ -54,7 +54,7 @@ describe('useLibriVox', () => {
 
     const lv = useLibriVox()
     await lv.search('', '')
-    const book = lv.books.value[0]
+    const book = lv.books.value[0]!
     expect(book.title).toBe('')
     expect(book.author).toBe('')
     expect(book.num_sections).toBe(0)
@@ -95,7 +95,7 @@ describe('useLibriVox', () => {
     } as never)
     await lv.loadMore('test', '')
     expect(lv.books.value).toHaveLength(2)
-    expect(lv.books.value[1].librivox_id).toBe('2')
+    expect(lv.books.value[1]!.librivox_id).toBe('2')
   })
 
   it('search with reset clears previous results', async () => {
@@ -110,6 +110,6 @@ describe('useLibriVox', () => {
     } as never)
     await lv.search('second', '', true)
     expect(lv.books.value).toHaveLength(1)
-    expect(lv.books.value[0].librivox_id).toBe('2')
+    expect(lv.books.value[0]!.librivox_id).toBe('2')
   })
 })
