@@ -510,13 +510,23 @@ select option {
   transform: translateY(100%);
 }
 
+/* Mini-player positioning — above bottom nav + safe area on mobile */
+.mini-player-position {
+  bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 768px) {
+  .mini-player-position {
+    bottom: 0;
+  }
+}
+
 /* Bottom nav spacing — pages get extra bottom padding on mobile */
 @media (max-width: 767px) {
   .mobile-bottom-pad {
-    padding-bottom: 80px;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   }
   .mobile-bottom-pad-player {
-    padding-bottom: 140px;
+    padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px));
   }
   .card {
     border-radius: 16px;

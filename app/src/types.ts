@@ -236,7 +236,14 @@ export interface TTSVoice {
   id: string
   name: string
   lang: string
-  gender: 'male' | 'female'
+  gender: 'male' | 'female' | 'neutral'
+  engine: 'edge' | 'openai'
+}
+
+export interface TTSEngine {
+  id: string
+  name: string
+  available: boolean
 }
 
 // ── Local Book types (device-only) ──────────────────────────────────────

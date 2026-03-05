@@ -84,6 +84,9 @@ docker compose up --build
 - `JWT_SECRET` — random 64-char string for signing JWT tokens (required)
 - `LEERIO_DEV` — set to `1` for local dev (disables secure cookie flag)
 - `VITE_GOOGLE_CLIENT_ID` — frontend build arg (passed via docker-compose from `GOOGLE_CLIENT_ID`)
+- `TTS_OPENAI_BASE_URL` — OpenAI-compatible TTS endpoint (e.g. `http://openedai-speech:8000/v1` or `https://api.openai.com/v1`). Engine selector appears when set.
+- `TTS_OPENAI_API_KEY` — API key for OpenAI-compatible TTS (can be dummy for openedai-speech)
+- `TTS_OPENAI_MODEL` — model name for OpenAI-compatible TTS (default: `tts-1`)
 
 ## Key Conventions
 

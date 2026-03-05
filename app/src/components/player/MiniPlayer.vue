@@ -21,7 +21,7 @@ const {
   <transition name="mini-player">
     <div
       v-if="isPlayerVisible && currentBook && !isFullscreen"
-      class="fixed right-0 bottom-[60px] left-0 z-40 md:bottom-0 md:left-56"
+      class="mini-player-position fixed right-0 left-0 z-40 md:bottom-0 md:left-56"
     >
       <!-- Progress bar -->
       <div class="h-[2px] w-full" style="background: rgba(255, 255, 255, 0.06)">

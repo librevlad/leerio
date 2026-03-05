@@ -137,6 +137,7 @@ import type {
   LibriVoxBook,
   UserBook,
   TTSVoice,
+  TTSEngine,
   TTSJob,
 } from './types'
 
@@ -235,7 +236,8 @@ export const api = {
   getUserBookTracks: (slug: string) => get<TrackList>(`/user/books/${slug}/tracks`),
 
   // TTS
-  getTTSVoices: () => get<TTSVoice[]>('/tts/voices'),
+  getTTSEngines: () => get<TTSEngine[]>('/tts/engines'),
+  getTTSVoices: (engine?: string) => get<TTSVoice[]>(engine ? `/tts/voices?engine=${engine}` : '/tts/voices'),
   startTTSConversion: (formData: FormData) => requestFormData<TTSJob>('/tts/convert', formData),
   getTTSJobs: () => get<TTSJob[]>('/tts/jobs'),
   getTTSJob: (jobId: string) => get<TTSJob>(`/tts/jobs/${jobId}`),

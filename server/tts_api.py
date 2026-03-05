@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
 from .auth import get_current_user
 from .core import UserData, make_slug
-from .tts import VOICES, run_tts_job
+from .tts import get_voices, openai_available, run_tts_job
 
 logger = logging.getLogger("leerio.tts")
 
@@ -26,9 +26,17 @@ def _user_data(user: dict) -> UserData:
     return UserData(user["user_id"])
 
 
+@router.get("/engines")
+def list_engines():
+    return [
+        {"id": "edge", "name": "Edge TTS (Microsoft)", "available": True},
+        {"id": "openai", "name": "OpenAI Compatible", "available": openai_available()},
+    ]
+
+
 @router.get("/voices")
-def list_voices():
-    return VOICES
+def list_voices(engine: str = "edge"):
+    return get_voices(engine)
 
 
 @router.post("/convert")
@@ -37,9 +45,16 @@ async def start_conversion(
     author: str = Form(""),
     voice: str = Form("ru-RU-DmitryNeural"),
     rate: str = Form("+0%"),
+    engine: str = Form("edge"),
     file: UploadFile = File(...),
     user: dict = Depends(get_current_user),
 ):
+    # Validate engine
+    if engine not in ("edge", "openai"):
+        raise HTTPException(400, f"Unknown engine: {engine}")
+    if engine == "openai" and not openai_available():
+        raise HTTPException(400, "OpenAI TTS is not configured")
+
     # Validate file extension
     if not file.filename:
         raise HTTPException(400, "No filename provided")
@@ -48,7 +63,7 @@ async def start_conversion(
         raise HTTPException(400, f"Unsupported format: {ext}. Allowed: {', '.join(ALLOWED_EXTENSIONS)}")
 
     # Validate voice
-    valid_voices = {v["id"] for v in VOICES}
+    valid_voices = {v["id"] for v in get_voices(engine)}
     if voice not in valid_voices:
         raise HTTPException(400, f"Unknown voice: {voice}")
 
@@ -75,7 +90,7 @@ async def start_conversion(
     job = ud.tts_job_create(job_id, title, author, voice, slug)
 
     # Start background task
-    asyncio.create_task(run_tts_job(ud, job_id, source_path, voice, slug, title, author, rate))
+    asyncio.create_task(run_tts_job(ud, job_id, source_path, voice, slug, title, author, rate, engine))
 
     logger.info("TTS conversion started: job=%s, slug=%s, voice=%s", job_id, slug, voice)
     return job

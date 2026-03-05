@@ -98,11 +98,11 @@ export const IconCheck = icon('<polyline points="20 6 9 17 4 12"/>')
 
 // Player feature icons
 export const IconRewind15 = icon(
-  '<path d="M12.066 11.2a1 1 0 113.268.377L13.95 18.03a1 1 0 01-1.98-.243l1.383-6.584zM8.468 18.19V11.2H7.282L5.5 12.68l.777.87.946-.796v5.436h1.245z"/><path d="M21 12a9 9 0 11-9-9M21 3v6h-6"/>',
+  '<path fill="currentColor" stroke="none" d="M12.066 11.2a1 1 0 113.268.377L13.95 18.03a1 1 0 01-1.98-.243l1.383-6.584zM8.468 18.19V11.2H7.282L5.5 12.68l.777.87.946-.796v5.436h1.245z"/><path d="M21 12a9 9 0 11-9-9M21 3v6h-6"/>',
   { strokeWidth: '1.5' },
 )
 export const IconForward15 = icon(
-  '<path d="M12.066 11.2a1 1 0 113.268.377L13.95 18.03a1 1 0 01-1.98-.243l1.383-6.584zM8.468 18.19V11.2H7.282L5.5 12.68l.777.87.946-.796v5.436h1.245z"/><path d="M3 12a9 9 0 019-9M3 3v6h6"/>',
+  '<path fill="currentColor" stroke="none" d="M12.066 11.2a1 1 0 113.268.377L13.95 18.03a1 1 0 01-1.98-.243l1.383-6.584zM8.468 18.19V11.2H7.282L5.5 12.68l.777.87.946-.796v5.436h1.245z"/><path d="M3 12a9 9 0 019-9M3 3v6h6"/>',
   { strokeWidth: '1.5' },
 )
 export const IconSpeed = icon('<path d="M12 12l-3-7m0 0a9 9 0 110 14"/><circle cx="12" cy="12" r="2"/>')

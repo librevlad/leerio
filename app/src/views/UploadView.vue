@@ -7,7 +7,7 @@ import { useUserBooks } from '@/composables/useUserBooks'
 import { useLocalBooks } from '@/composables/useLocalBooks'
 import { useNetwork } from '@/composables/useNetwork'
 import { IconUpload, IconMicrophone, IconMusic, IconX, IconSmartphone } from '@/components/shared/icons'
-import type { TTSVoice } from '@/types'
+import type { TTSVoice, TTSEngine } from '@/types'
 
 const router = useRouter()
 const toast = useToast()
@@ -85,9 +85,12 @@ async function handleUpload() {
 const ttsTitle = ref('')
 const ttsAuthor = ref('')
 const ttsFile = ref<File | null>(null)
+const ttsEngine = ref<'edge' | 'openai'>('edge')
 const ttsVoice = ref('ru-RU-DmitryNeural')
 const ttsRate = ref('+0%')
 const voices = ref<TTSVoice[]>([])
+const engines = ref<TTSEngine[]>([])
+const showEngineSelector = ref(false)
 const converting = ref(false)
 const conversionStarted = ref(false)
 const currentJobId = ref('')
@@ -101,12 +104,31 @@ const rateOptions = [
   { label: '1.5x', value: '+50%' },
 ]
 
-onMounted(async () => {
+async function loadVoices(engine: string) {
   try {
-    voices.value = await api.getTTSVoices()
+    voices.value = await api.getTTSVoices(engine)
+    if (voices.value.length > 0) {
+      ttsVoice.value = voices.value[0].id
+    }
   } catch {
     /* voices will remain empty */
   }
+}
+
+async function selectEngine(engine: 'edge' | 'openai') {
+  ttsEngine.value = engine
+  await loadVoices(engine)
+}
+
+onMounted(async () => {
+  try {
+    engines.value = await api.getTTSEngines()
+    // Show engine selector if openai is available
+    showEngineSelector.value = engines.value.some((e) => e.id === 'openai' && e.available)
+  } catch {
+    /* engines will remain empty */
+  }
+  await loadVoices('edge')
 })
 
 function onTTSFileChange(e: Event) {
@@ -202,6 +224,7 @@ async function handleTTSConvert() {
     formData.append('author', ttsAuthor.value.trim())
     formData.append('voice', ttsVoice.value)
     formData.append('rate', ttsRate.value)
+    formData.append('engine', ttsEngine.value)
     formData.append('file', ttsFile.value)
 
     const job = await api.startTTSConversion(formData)
@@ -403,6 +426,26 @@ async function handleTTSConvert() {
         </label>
       </div>
 
+      <!-- Engine selector -->
+      <div v-if="showEngineSelector">
+        <label class="mb-1 block text-[12px] font-medium text-[--t2]">Движок</label>
+        <div class="flex gap-2">
+          <button
+            v-for="eng in engines.filter((e) => e.available)"
+            :key="eng.id"
+            class="rounded-full border px-3 py-1.5 text-[12px] font-medium transition-all"
+            :class="
+              ttsEngine === eng.id
+                ? 'border-violet-500/40 bg-violet-500/15 text-violet-300'
+                : 'border-[--border] text-[--t3] hover:text-[--t2]'
+            "
+            @click="selectEngine(eng.id as 'edge' | 'openai')"
+          >
+            {{ eng.name }}
+          </button>
+        </div>
+      </div>
+
       <!-- Voice selection -->
       <div>
         <label class="mb-1 block text-[12px] font-medium text-[--t2]">Голос</label>
@@ -411,7 +454,7 @@ async function handleTTSConvert() {
           class="w-full rounded-lg border border-[--border] bg-transparent px-3 py-2 text-[13px] text-[--t1] outline-none"
         >
           <option v-for="v in voices" :key="v.id" :value="v.id">
-            {{ v.name }} ({{ v.lang }}, {{ v.gender === 'male' ? 'муж.' : 'жен.' }})
+            {{ v.name }} ({{ v.lang }}, {{ v.gender === 'male' ? 'муж.' : v.gender === 'female' ? 'жен.' : '' }})
           </option>
         </select>
       </div>
