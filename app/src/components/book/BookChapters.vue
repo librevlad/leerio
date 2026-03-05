@@ -97,7 +97,9 @@ onMounted(async () => {
           <!-- Filename -->
           <span class="min-w-0 flex-1 truncate text-[13px]">{{ track.filename }}</span>
           <!-- Duration -->
-          <span class="shrink-0 font-mono text-[12px] text-[--t3]">{{ formatDuration(track.duration) }}</span>
+          <span v-if="track.duration" class="shrink-0 font-mono text-[12px] text-[--t3]">{{
+            formatDuration(track.duration)
+          }}</span>
         </button>
       </div>
 

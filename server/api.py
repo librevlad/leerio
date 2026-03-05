@@ -424,6 +424,12 @@ def get_dashboard(user: dict = Depends(get_current_user)):
     all_books = db.get_all_books()
     book_by_id = {b["id"]: b for b in all_books}
 
+    # Count personal user books too
+    from .core import UserData
+
+    ud = UserData(uid)
+    user_books_count = len(ud.user_books_list())
+
     hist = db.get_user_history(uid, limit=500)
     statuses = db.get_all_user_book_statuses(uid)
     progress = db.get_all_user_progress(uid)
@@ -482,7 +488,7 @@ def get_dashboard(user: dict = Depends(get_current_user)):
     cat_counts = Counter(b["category"] for b in all_books)
 
     return {
-        "total_books": len(all_books),
+        "total_books": len(all_books) + user_books_count,
         "total_done": len(done),
         "active_count": len(active_cards),
         "active_books": active_cards,
@@ -1072,6 +1078,11 @@ def get_analytics(user: dict = Depends(get_current_user)):
     all_books = db.get_all_books()
     hist = db.get_user_history(uid, limit=10000)
 
+    # Count personal user books
+    from .core import UserData
+
+    user_books_count = len(UserData(uid).user_books_list())
+
     legacy_hist = _db_history_to_legacy(hist)
     done = [h for h in hist if h.get("action") == "done"]
     velocity = reading_velocity(legacy_hist)
@@ -1117,7 +1128,7 @@ def get_analytics(user: dict = Depends(get_current_user)):
     top_authors = author_counts.most_common(10)
 
     return {
-        "total_books": len(all_books),
+        "total_books": len(all_books) + user_books_count,
         "total_done": len(done),
         "category_counts": dict(cat_counts),
         "done_by_category": dict(done_by_cat),
@@ -1133,6 +1144,20 @@ def get_analytics(user: dict = Depends(get_current_user)):
 def get_achievements(user: dict = Depends(get_current_user)):
     uid = user["user_id"]
     all_books = db.get_all_books()
+
+    # Include personal user books in achievement counts
+    from .core import UserData
+
+    for ub in UserData(uid).user_books_list():
+        all_books.append(
+            {
+                "id": f"ub:{uid}:{ub['slug']}",
+                "folder": ub["slug"],
+                "category": "Личные",
+                "author": ub.get("author", ""),
+                "title": ub.get("title", ""),
+            }
+        )
     hist = db.get_user_history(uid, limit=10000)
     notes_map = db.get_all_user_notes_map(uid)
 
