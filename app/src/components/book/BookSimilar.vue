@@ -61,7 +61,9 @@ onMounted(async () => {
           >
             {{ book.title }}
           </p>
-          <p class="truncate text-[11px] text-[--t3]" :title="book.author">{{ book.author }}</p>
+          <p v-if="book.author" class="truncate text-[11px] text-[--t3]" :title="book.author">
+            {{ book.author }}
+          </p>
         </div>
         <CategoryBadge :category="book.category" />
       </router-link>

@@ -112,9 +112,9 @@ const fallbackPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1
       </div>
 
       <!-- Author / Reader -->
-      <p class="mb-3 line-clamp-1 text-[12px] text-[--t2]" :title="book.author">
-        {{ book.author }}
-        <span v-if="book.reader" class="text-[--t3]"> · {{ book.reader }}</span>
+      <p class="mb-3 line-clamp-1 text-[12px] text-[--t2]" :title="book.author || book.reader">
+        {{ book.author
+        }}<span v-if="book.reader" class="text-[--t3]">{{ book.author ? ' · ' : '' }}{{ book.reader }}</span>
       </p>
 
       <!-- Progress bar -->
