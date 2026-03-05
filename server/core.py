@@ -17,6 +17,17 @@ from datetime import datetime
 from difflib import SequenceMatcher
 from pathlib import Path
 
+
+def _plural(n: int, one: str, few: str, many: str) -> str:
+    """Russian pluralization: 1 книга, 2 книги, 5 книг."""
+    mod10, mod100 = abs(n) % 10, abs(n) % 100
+    if mod10 == 1 and mod100 != 11:
+        return f"{n} {one}"
+    if 2 <= mod10 <= 4 and (mod100 < 10 or mod100 >= 20):
+        return f"{n} {few}"
+    return f"{n} {many}"
+
+
 # ── Path config (env-var based) ──────────────────────────────────────────────
 
 BASE = Path(os.environ.get("LEERIO_BASE", str(Path(__file__).resolve().parent.parent)))
@@ -477,9 +488,17 @@ def compute_achievements(hist: list[dict], books: list[dict], notes_data: dict |
     rated = [h for h in done if h.get("rating")]
     fives = [h for h in rated if h["rating"] == 5]
     if rated:
-        badges.append({"icon": chr(11088), "name": "Критик", "desc": f"Оценил {len(rated)} книг"})
+        badges.append(
+            {"icon": chr(11088), "name": "Критик", "desc": f"Оценил {_plural(len(rated), 'книгу', 'книги', 'книг')}"}
+        )
     if len(fives) >= 3:
-        badges.append({"icon": chr(128142), "name": "Знаток шедевров", "desc": f"{len(fives)} книг на 5 звёзд"})
+        badges.append(
+            {
+                "icon": chr(128142),
+                "name": "Знаток шедевров",
+                "desc": f"{_plural(len(fives), 'книга', 'книги', 'книг')} на 5 звёзд",
+            }
+        )
 
     # Streak calculation
     months = set()
@@ -513,20 +532,34 @@ def compute_achievements(hist: list[dict], books: list[dict], notes_data: dict |
                 {
                     "icon": chr(9889),
                     "name": "Марафонец",
-                    "desc": f"Лучший месяц: {best_month[1]} книг ({best_month[0]})",
+                    "desc": f"Лучший месяц: {_plural(best_month[1], 'книга', 'книги', 'книг')} ({best_month[0]})",
                 }
             )
 
     # Library size
     if len(books) >= 100:
-        badges.append({"icon": chr(128218), "name": "Коллекционер", "desc": f"{len(books)} книг в библиотеке"})
+        badges.append(
+            {
+                "icon": chr(128218),
+                "name": "Коллекционер",
+                "desc": f"{_plural(len(books), 'книга', 'книги', 'книг')} в библиотеке",
+            }
+        )
     if len(books) >= 200:
-        badges.append({"icon": chr(127963), "name": "Библиотекарь", "desc": f"{len(books)}+ книг"})
+        badges.append(
+            {"icon": chr(127963), "name": "Библиотекарь", "desc": f"{_plural(len(books), 'книга', 'книги', 'книг')}+"}
+        )
 
     # Inbox speed
     inbox = [h for h in hist if h["action"] == "inbox"]
     if len(inbox) >= 10:
-        badges.append({"icon": chr(128230), "name": "Сортировщик", "desc": f"Разобрал {len(inbox)} книг из dl/"})
+        badges.append(
+            {
+                "icon": chr(128230),
+                "name": "Сортировщик",
+                "desc": f"Разобрал {_plural(len(inbox), 'книгу', 'книги', 'книг')} из dl/",
+            }
+        )
 
     # Notes
     _notes = notes_data if notes_data is not None else notes_load()

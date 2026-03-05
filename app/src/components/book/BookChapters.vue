@@ -23,6 +23,7 @@ const visibleTracks = computed(() => {
 
 const totalDuration = computed(() => {
   const total = tracks.value.reduce((sum, t) => sum + t.duration, 0)
+  if (!total) return null
   const hours = Math.floor(total / 3600)
   const minutes = Math.round((total % 3600) / 60)
   if (hours > 0) return `${hours} ч ${minutes} мин`
@@ -117,7 +118,9 @@ onMounted(async () => {
       </button>
 
       <!-- Total duration -->
-      <p class="mt-2 border-t border-white/[0.04] pt-3 text-[12px] text-[--t3]">Всего: {{ totalDuration }}</p>
+      <p v-if="totalDuration" class="mt-2 border-t border-white/[0.04] pt-3 text-[12px] text-[--t3]">
+        Всего: {{ totalDuration }}
+      </p>
     </div>
   </div>
 </template>
