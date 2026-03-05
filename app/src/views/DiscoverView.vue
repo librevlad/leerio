@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useLibriVox } from '../composables/useLibriVox'
+import { librivoxCoverUrl } from '../api'
 import SearchInput from '../components/shared/SearchInput.vue'
+import BookCard from '../components/shared/BookCard.vue'
 import EmptyState from '../components/shared/EmptyState.vue'
-import { IconClock, IconMusic } from '../components/shared/icons'
+import type { Book } from '../types'
 
-const { books, loading, hasMore, search, loadMore } = useLibriVox()
+const { books, loading, hasMore, search: lvSearch, loadMore } = useLibriVox()
 
 const title = ref('')
 const language = ref('')
@@ -24,44 +26,62 @@ const languages = [
 
 function doSearch() {
   if (!title.value.trim() && !language.value) return
-  search(title.value.trim(), language.value)
+  lvSearch(title.value.trim(), language.value)
 }
 
 const debouncedSearch = useDebounceFn(doSearch, 400)
 watch(title, () => debouncedSearch())
 watch(language, () => doSearch())
 
-function formatDuration(secs: number): string {
-  if (!secs) return ''
-  const h = Math.floor(secs / 3600)
-  const m = Math.floor((secs % 3600) / 60)
-  if (h > 0) return `${h}ч ${m}м`
-  return `${m}м`
+/** Map LibriVox book to Book interface for BookCard */
+function toBook(lv: (typeof books.value)[number]): Book {
+  return {
+    id: lv.id,
+    folder: '',
+    category: lv.language || '',
+    author: lv.author,
+    title: lv.title,
+    reader: '',
+    path: '',
+    progress: 0,
+    tags: [],
+    note: '',
+    has_cover: true,
+    duration_fmt: lv.total_time || undefined,
+  }
 }
+
+const mapped = computed(() => books.value.map(toBook))
+
+const hasSearched = computed(() => title.value.trim() !== '' || language.value !== '')
 </script>
 
 <template>
   <div>
-    <div class="mb-6">
-      <h1 class="text-[20px] font-bold text-[--t1]">LibriVox</h1>
-      <p class="mt-1 text-[13px] text-[--t3]">Бесплатные аудиокниги</p>
+    <!-- Header -->
+    <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+      <div>
+        <h1 class="page-title">LibriVox</h1>
+        <p class="mt-1 text-[13px] text-[--t3]">
+          <template v-if="books.length">
+            <span class="font-bold text-[--accent]">{{ books.length }}</span> книг
+          </template>
+          <template v-else>Бесплатные аудиокниги</template>
+        </p>
+      </div>
+      <SearchInput v-model="title" placeholder="Поиск по названию..." class="w-full sm:w-56" />
     </div>
 
-    <!-- Search -->
-    <div class="mb-4">
-      <SearchInput v-model="title" placeholder="Поиск по названию..." />
-    </div>
-
-    <!-- Language filter -->
-    <div class="mb-6 flex flex-wrap gap-2">
+    <!-- Language pills (same style as category pills in catalog) -->
+    <div class="scrollbar-hide fade-mask-r mb-6 flex gap-2 overflow-x-auto pb-0.5">
       <button
         v-for="lang in languages"
         :key="lang.value"
-        class="cursor-pointer rounded-full border px-3 py-1.5 text-[12px] font-medium transition-all"
+        class="flex-shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
         :class="
           language === lang.value
-            ? 'border-teal-500/40 bg-teal-500/15 text-teal-300'
-            : 'border-[--border] bg-transparent text-[--t3] hover:border-[--t3] hover:text-[--t2]'
+            ? 'border-white/10 bg-white/[0.08] text-[--t1]'
+            : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
         "
         @click="language = lang.value"
       >
@@ -70,43 +90,27 @@ function formatDuration(secs: number): string {
     </div>
 
     <!-- Loading skeletons -->
-    <div v-if="loading && books.length === 0" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <div v-for="i in 6" :key="i" class="skeleton h-44 rounded-2xl" />
+    <div
+      v-if="loading && books.length === 0"
+      class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+    >
+      <div v-for="i in 8" :key="i">
+        <div class="skeleton h-28 rounded-t-xl rounded-b-none" />
+        <div class="skeleton h-44 rounded-t-none rounded-b-xl border-t-0" />
+      </div>
     </div>
 
     <!-- Results -->
-    <div v-else-if="books.length > 0">
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <router-link
-          v-for="book in books"
+    <div v-else-if="mapped.length">
+      <div class="fade-in grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <BookCard
+          v-for="(book, i) in mapped"
           :key="book.id"
-          :to="`/discover/${book.librivox_id}`"
-          class="card group cursor-pointer overflow-hidden rounded-2xl border border-[--border] no-underline transition-all hover:border-teal-500/30 hover:shadow-lg"
-          style="background: linear-gradient(135deg, rgba(20, 184, 166, 0.06) 0%, rgba(7, 7, 14, 0.4) 100%)"
-        >
-          <div class="p-4">
-            <h3 class="mb-1.5 line-clamp-2 text-[14px] leading-snug font-semibold text-[--t1]">
-              {{ book.title }}
-            </h3>
-            <p class="mb-3 truncate text-[12px] text-[--t3]">{{ book.author }}</p>
-            <div class="flex flex-wrap items-center gap-2">
-              <span
-                v-if="book.language"
-                class="rounded-md bg-teal-500/10 px-2 py-0.5 text-[10px] font-medium text-teal-400"
-              >
-                {{ book.language }}
-              </span>
-              <span v-if="book.total_time_secs" class="flex items-center gap-1 text-[11px] text-[--t3]">
-                <IconClock :size="12" />
-                {{ formatDuration(book.total_time_secs) }}
-              </span>
-              <span v-if="book.num_sections" class="flex items-center gap-1 text-[11px] text-[--t3]">
-                <IconMusic :size="12" />
-                {{ book.num_sections }} глав
-              </span>
-            </div>
-          </div>
-        </router-link>
+          :book="book"
+          source="librivox"
+          :to="`/discover/${books[i]!.librivox_id}`"
+          :cover-src="librivoxCoverUrl(books[i]!.librivox_id)"
+        />
       </div>
 
       <!-- Load more -->
@@ -117,9 +121,9 @@ function formatDuration(secs: number): string {
       </div>
     </div>
 
-    <!-- Empty state -->
+    <!-- Empty state after search -->
     <EmptyState
-      v-else-if="!loading && title.trim()"
+      v-else-if="!loading && hasSearched"
       title="Ничего не найдено"
       description="Попробуйте другой запрос или язык"
     />
@@ -128,7 +132,7 @@ function formatDuration(secs: number): string {
     <EmptyState
       v-else-if="!loading"
       title="Откройте мир бесплатных аудиокниг"
-      description="Введите название для поиска в каталоге LibriVox"
+      description="Введите название или выберите язык для поиска в каталоге LibriVox"
     />
   </div>
 </template>

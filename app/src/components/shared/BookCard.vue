@@ -12,6 +12,8 @@ import { useDownloads } from '../../composables/useDownloads'
 const props = defineProps<{
   book: Book
   source?: 'library' | 'librivox' | 'user' | 'local'
+  to?: string
+  coverSrc?: string
 }>()
 const dl = useDownloads()
 const downloaded = computed(() => dl.isNative.value && dl.isBookDownloaded(props.book.id))
@@ -38,15 +40,15 @@ const fallbackPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1
 </script>
 
 <template>
-  <router-link :to="`/book/${book.id}`" class="card card-hover group relative block overflow-hidden no-underline">
+  <router-link :to="to || `/book/${book.id}`" class="card card-hover group relative block overflow-hidden no-underline">
     <!-- Gradient backdrop (shorter) -->
     <div
       class="relative h-28 overflow-hidden"
       :style="{ background: coverGradient[book.category] || fallbackGradient }"
     >
       <img
-        v-if="book.has_cover"
-        :src="coverUrl(book.id)"
+        v-if="book.has_cover || coverSrc"
+        :src="coverSrc || coverUrl(book.id)"
         :alt="book.title"
         class="absolute inset-0 h-full w-full object-cover transition-opacity duration-300"
         :class="coverLoaded ? 'opacity-100 blur-[1px] brightness-75' : 'opacity-0'"
@@ -76,7 +78,12 @@ const fallbackPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1
     <div class="relative px-4">
       <div class="-mt-10 mb-3 flex items-end gap-3">
         <div class="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg shadow-lg ring-2 ring-[--card-solid]">
-          <img v-if="book.has_cover" :src="coverUrl(book.id)" :alt="book.title" class="h-full w-full object-cover" />
+          <img
+            v-if="book.has_cover || coverSrc"
+            :src="coverSrc || coverUrl(book.id)"
+            :alt="book.title"
+            class="h-full w-full object-cover"
+          />
           <div
             v-else
             class="flex h-full w-full items-center justify-center"
