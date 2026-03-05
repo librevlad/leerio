@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import type { Book } from '../../types'
 import { coverUrl } from '../../api'
 import CategoryBadge from '../shared/CategoryBadge.vue'
-import StatusBadge from '../shared/StatusBadge.vue'
 import ProgressRing from '../shared/ProgressRing.vue'
-import { IconStar, IconStarOutline, IconHardDrive, IconMusic, IconClock } from '../shared/icons'
+import { IconStar, IconStarOutline, IconHardDrive, IconMusic, IconClock, IconHeadphones } from '../shared/icons'
 
 const props = defineProps<{ book: Book }>()
 const coverLoaded = ref(false)
@@ -35,93 +34,223 @@ const coverPattern: Record<string, string> = {
 
 const fallbackGradient = 'linear-gradient(135deg, #78350f 0%, #b45309 50%, #d97706 100%)'
 const fallbackPattern = 'radial-gradient(circle at 50% 30%, rgba(255,255,255,0.12) 0%, transparent 50%)'
+
+const listenedHours = computed(() => {
+  if (!props.book.progress || !props.book.duration_hours) return null
+  return Math.round(((props.book.progress * props.book.duration_hours) / 100) * 10) / 10
+})
+
+const remainingHours = computed(() => {
+  if (!props.book.progress || !props.book.duration_hours) return null
+  return Math.round(props.book.duration_hours * (1 - props.book.progress / 100) * 10) / 10
+})
+
+const startDate = computed(() => {
+  if (!props.book.timeline?.length) return null
+  const first = props.book.timeline[props.book.timeline.length - 1]
+  if (!first?.ts) return null
+  try {
+    return new Date(first.ts).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })
+  } catch {
+    return null
+  }
+})
 </script>
 
 <template>
   <div class="card overflow-hidden">
-    <!-- Hero gradient banner -->
+    <!-- Gradient backdrop -->
     <div
-      class="relative h-40 overflow-hidden sm:h-48"
+      class="relative h-[100px] overflow-hidden"
       :style="{ background: coverGradient[book.category] || fallbackGradient }"
     >
-      <img
-        v-if="book.has_cover"
-        :src="coverUrl(book.id)"
-        :alt="book.title"
-        class="absolute inset-0 h-full w-full object-cover transition-opacity duration-300"
-        :class="coverLoaded ? 'opacity-100' : 'opacity-0'"
-        @load="coverLoaded = true"
-      />
-      <div
-        v-if="!coverLoaded"
-        class="absolute inset-0"
-        :style="{ background: coverPattern[book.category] || fallbackPattern }"
-      />
+      <div class="absolute inset-0" :style="{ background: coverPattern[book.category] || fallbackPattern }" />
+      <div class="absolute inset-0" style="backdrop-filter: blur(2px)" />
       <div
         class="absolute inset-0"
-        style="background: linear-gradient(to bottom, transparent 30%, rgba(0, 0, 0, 0.5) 100%)"
+        style="background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.6) 100%)"
       />
-
-      <!-- Badges on banner -->
-      <div class="absolute top-4 right-5 left-5 flex items-start justify-between gap-2">
-        <CategoryBadge :category="book.category" />
-        <StatusBadge v-if="book.book_status" :book-status="book.book_status" />
-      </div>
-
-      <!-- Progress ring on banner (if progress > 0) -->
-      <div v-if="book.progress > 0" class="absolute right-5 bottom-4">
-        <ProgressRing :percent="book.progress" :size="56" :stroke="4" />
-      </div>
-
-      <!-- Title/author on banner bottom -->
-      <div class="absolute right-24 bottom-4 left-5">
-        <h1
-          class="text-[22px] leading-tight font-bold tracking-tight text-white drop-shadow-lg sm:text-[26px]"
-          :title="book.title"
-        >
-          {{ book.title }}
-        </h1>
-        <p class="mt-1 text-[14px] text-white/70 drop-shadow" :title="book.author">
-          {{ book.author }}
-          <span v-if="book.reader" class="text-white/50"> · {{ book.reader }}</span>
-        </p>
-      </div>
     </div>
 
-    <!-- Metadata row -->
-    <div v-if="hasMetadata()" class="flex flex-wrap items-center gap-5 border-t border-white/[0.04] px-5 py-4">
-      <div v-if="book.size_mb" class="flex items-center gap-2.5">
-        <span class="stat-icon" style="background: rgba(232, 146, 58, 0.1)">
-          <IconHardDrive :size="14" class="text-[--accent-2]" />
-        </span>
-        <div>
-          <span class="text-[12px] font-semibold text-[--t1]">{{ book.size_mb }} МБ</span>
-          <p class="text-[10px] text-[--t3]">Размер</p>
+    <!-- Content area -->
+    <div class="relative px-5 pb-5">
+      <!-- Mobile layout (<md) -->
+      <div class="md:hidden">
+        <!-- Cover + title row -->
+        <div class="-mt-16 flex gap-4">
+          <!-- Cover -->
+          <div
+            class="relative h-[140px] w-[140px] shrink-0 overflow-hidden rounded-2xl shadow-xl"
+            :style="!book.has_cover ? { background: coverGradient[book.category] || fallbackGradient } : {}"
+          >
+            <img
+              v-if="book.has_cover"
+              :src="coverUrl(book.id)"
+              :alt="book.title"
+              class="h-full w-full object-cover transition-opacity duration-300"
+              :class="coverLoaded ? 'opacity-100' : 'opacity-0'"
+              @load="coverLoaded = true"
+            />
+            <div
+              v-if="!book.has_cover"
+              class="absolute inset-0"
+              :style="{ background: coverPattern[book.category] || fallbackPattern }"
+            />
+          </div>
+          <!-- Title info -->
+          <div class="flex min-w-0 flex-col justify-end pt-16 pb-1">
+            <CategoryBadge :category="book.category" class="mb-2 self-start" />
+            <h1 class="text-[20px] leading-tight font-extrabold tracking-tight text-[--t1]" :title="book.title">
+              {{ book.title }}
+            </h1>
+            <p class="mt-1 text-[13px] text-[--t2]" :title="book.author">{{ book.author }}</p>
+            <p v-if="book.reader" class="mt-0.5 flex items-center gap-1.5 text-[12px] text-[--t3]">
+              <IconHeadphones :size="12" />
+              {{ book.reader }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Progress stats (mobile) -->
+        <div v-if="book.progress > 0" class="mt-4 flex flex-wrap items-center gap-3 text-[12px]">
+          <ProgressRing :percent="book.progress" :size="48" :stroke="3" />
+          <div class="flex flex-wrap gap-x-4 gap-y-1">
+            <span v-if="listenedHours !== null" class="text-[--t2]">
+              Прослушано <span class="font-semibold text-[--t1]">{{ listenedHours }}</span> из
+              {{ book.duration_hours }} ч
+            </span>
+            <span v-if="remainingHours !== null" class="text-[--t3]"> Осталось ~{{ remainingHours }} ч </span>
+            <span v-if="startDate" class="text-[--t3]"> Начато: {{ startDate }} </span>
+          </div>
         </div>
       </div>
-      <div v-if="book.mp3_count" class="flex items-center gap-2.5">
-        <span class="stat-icon" style="background: rgba(6, 182, 212, 0.1)">
-          <IconMusic :size="14" class="text-cyan-400" />
-        </span>
-        <div>
-          <span class="text-[12px] font-semibold text-[--t1]">{{ book.mp3_count }}</span>
-          <p class="text-[10px] text-[--t3]">Файлов</p>
+
+      <!-- Desktop layout (>=md) -->
+      <div class="hidden md:block">
+        <div class="-mt-24 flex gap-6">
+          <!-- Cover -->
+          <div
+            class="relative h-[200px] w-[200px] shrink-0 overflow-hidden rounded-2xl shadow-xl"
+            :style="!book.has_cover ? { background: coverGradient[book.category] || fallbackGradient } : {}"
+          >
+            <img
+              v-if="book.has_cover"
+              :src="coverUrl(book.id)"
+              :alt="book.title"
+              class="h-full w-full object-cover transition-opacity duration-300"
+              :class="coverLoaded ? 'opacity-100' : 'opacity-0'"
+              @load="coverLoaded = true"
+            />
+            <div
+              v-if="!book.has_cover"
+              class="absolute inset-0"
+              :style="{ background: coverPattern[book.category] || fallbackPattern }"
+            />
+          </div>
+          <!-- Info -->
+          <div class="flex min-w-0 flex-1 flex-col justify-end pt-24 pb-1">
+            <CategoryBadge :category="book.category" class="mb-2.5 self-start" />
+            <h1 class="text-[28px] leading-tight font-extrabold tracking-tight text-[--t1]" :title="book.title">
+              {{ book.title }}
+            </h1>
+            <p class="mt-1.5 text-[14px] text-[--t2]" :title="book.author">{{ book.author }}</p>
+            <p v-if="book.reader" class="mt-1 flex items-center gap-1.5 text-[13px] text-[--t3]">
+              <IconHeadphones :size="13" />
+              {{ book.reader }}
+            </p>
+
+            <!-- Metadata + progress + rating row -->
+            <div class="mt-4 flex flex-wrap items-center gap-5">
+              <div v-if="book.size_mb" class="flex items-center gap-2.5">
+                <span class="stat-icon" style="background: rgba(232, 146, 58, 0.1)">
+                  <IconHardDrive :size="14" class="text-[--accent-2]" />
+                </span>
+                <div>
+                  <span class="text-[12px] font-semibold text-[--t1]">{{ book.size_mb }} МБ</span>
+                  <p class="text-[10px] text-[--t3]">Размер</p>
+                </div>
+              </div>
+              <div v-if="book.mp3_count" class="flex items-center gap-2.5">
+                <span class="stat-icon" style="background: rgba(6, 182, 212, 0.1)">
+                  <IconMusic :size="14" class="text-cyan-400" />
+                </span>
+                <div>
+                  <span class="text-[12px] font-semibold text-[--t1]">{{ book.mp3_count }}</span>
+                  <p class="text-[10px] text-[--t3]">Файлов</p>
+                </div>
+              </div>
+              <div v-if="book.duration_fmt" class="flex items-center gap-2.5">
+                <span class="stat-icon" style="background: rgba(245, 158, 11, 0.1)">
+                  <IconClock :size="14" class="text-amber-400" />
+                </span>
+                <div>
+                  <span class="text-[12px] font-semibold text-[--t1]">{{ book.duration_fmt }}</span>
+                  <p class="text-[10px] text-[--t3]">Длительность</p>
+                </div>
+              </div>
+              <div v-if="book.progress > 0" class="ml-1">
+                <ProgressRing :percent="book.progress" :size="64" :stroke="4" />
+              </div>
+              <div v-if="book.rating" class="ml-auto flex items-center gap-2.5">
+                <div class="flex gap-0.5 text-amber-400">
+                  <template v-for="s in 5" :key="s">
+                    <component :is="s <= book.rating ? IconStar : IconStarOutline" :size="16" />
+                  </template>
+                </div>
+              </div>
+            </div>
+
+            <!-- Listening stats -->
+            <div v-if="book.progress > 0" class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[12px]">
+              <span v-if="listenedHours !== null" class="text-[--t2]">
+                Прослушано <span class="font-semibold text-[--t1]">{{ listenedHours }}</span> из
+                {{ book.duration_hours }} ч
+              </span>
+              <span v-if="remainingHours !== null" class="text-[--t3]"> Осталось ~{{ remainingHours }} ч </span>
+              <span v-if="startDate" class="text-[--t3]"> Начато: {{ startDate }} </span>
+            </div>
+          </div>
         </div>
       </div>
-      <div v-if="book.duration_fmt" class="flex items-center gap-2.5">
-        <span class="stat-icon" style="background: rgba(245, 158, 11, 0.1)">
-          <IconClock :size="14" class="text-amber-400" />
-        </span>
-        <div>
-          <span class="text-[12px] font-semibold text-[--t1]">{{ book.duration_fmt }}</span>
-          <p class="text-[10px] text-[--t3]">Длительность</p>
+
+      <!-- Metadata row (mobile only — desktop has it inline) -->
+      <div
+        v-if="hasMetadata()"
+        class="mt-4 flex flex-wrap items-center gap-5 border-t border-white/[0.04] pt-4 md:hidden"
+      >
+        <div v-if="book.size_mb" class="flex items-center gap-2.5">
+          <span class="stat-icon" style="background: rgba(232, 146, 58, 0.1)">
+            <IconHardDrive :size="14" class="text-[--accent-2]" />
+          </span>
+          <div>
+            <span class="text-[12px] font-semibold text-[--t1]">{{ book.size_mb }} МБ</span>
+            <p class="text-[10px] text-[--t3]">Размер</p>
+          </div>
         </div>
-      </div>
-      <div v-if="book.rating" class="ml-auto flex items-center gap-2.5">
-        <div class="flex gap-0.5 text-amber-400">
-          <template v-for="s in 5" :key="s">
-            <component :is="s <= book.rating ? IconStar : IconStarOutline" :size="16" />
-          </template>
+        <div v-if="book.mp3_count" class="flex items-center gap-2.5">
+          <span class="stat-icon" style="background: rgba(6, 182, 212, 0.1)">
+            <IconMusic :size="14" class="text-cyan-400" />
+          </span>
+          <div>
+            <span class="text-[12px] font-semibold text-[--t1]">{{ book.mp3_count }}</span>
+            <p class="text-[10px] text-[--t3]">Файлов</p>
+          </div>
+        </div>
+        <div v-if="book.duration_fmt" class="flex items-center gap-2.5">
+          <span class="stat-icon" style="background: rgba(245, 158, 11, 0.1)">
+            <IconClock :size="14" class="text-amber-400" />
+          </span>
+          <div>
+            <span class="text-[12px] font-semibold text-[--t1]">{{ book.duration_fmt }}</span>
+            <p class="text-[10px] text-[--t3]">Длительность</p>
+          </div>
+        </div>
+        <div v-if="book.rating" class="ml-auto flex items-center gap-2.5">
+          <div class="flex gap-0.5 text-amber-400">
+            <template v-for="s in 5" :key="s">
+              <component :is="s <= book.rating ? IconStar : IconStarOutline" :size="16" />
+            </template>
+          </div>
         </div>
       </div>
     </div>

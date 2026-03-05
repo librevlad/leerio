@@ -11,6 +11,7 @@ import BookSimilar from '../components/book/BookSimilar.vue'
 import BookActions from '../components/book/BookActions.vue'
 import BookQuotes from '../components/book/BookQuotes.vue'
 import BookFolder from '../components/book/BookFolder.vue'
+import BookChapters from '../components/book/BookChapters.vue'
 import AudioPlayer from '../components/player/AudioPlayer.vue'
 import { IconArrowLeft, IconPlay, IconDownload, IconTrash, IconCheck, IconX } from '../components/shared/icons'
 import ProgressBar from '../components/shared/ProgressBar.vue'
@@ -91,10 +92,11 @@ onMounted(loadBook)
     <!-- Skeleton -->
     <div v-if="loading">
       <div class="skeleton mb-0 h-48 rounded-t-[20px] rounded-b-none" />
-      <div class="skeleton mb-5 h-16 rounded-t-none rounded-b-[20px] border-t-0" />
+      <div class="skeleton mb-5 h-24 rounded-t-none rounded-b-[20px] border-t-0" />
+      <div class="skeleton mb-5 h-14" />
+      <div class="skeleton mb-5 h-40" />
       <div class="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <div class="space-y-5 lg:col-span-2">
-          <div class="skeleton h-14" />
           <div class="skeleton h-24" />
           <div class="skeleton h-28" />
         </div>
@@ -106,74 +108,92 @@ onMounted(loadBook)
     </div>
 
     <div v-else-if="book" class="fade-in">
-      <!-- Hero card spans full width -->
+      <!-- 1. Hero card -->
       <BookInfo :book="book" class="mb-5" />
 
-      <!-- Listen button + Status + Download -->
-      <div class="mb-5 flex flex-wrap items-center gap-3">
-        <button v-if="book.mp3_count && book.mp3_count > 0" class="btn btn-primary" @click="startListening">
-          <IconPlay :size="16" />
-          {{ isCurrentBook ? 'Продолжить' : 'Слушать' }}
-        </button>
-
-        <BookActions :book-id="book.id" :book-status="book.book_status" @status-changed="loadBook" />
-
-        <!-- Download button (native only) -->
-        <template v-if="dl.isNative.value && book.mp3_count && book.mp3_count > 0">
-          <!-- Not downloaded -->
-          <button v-if="!isDownloaded && !isDownloading" class="btn btn-ghost" @click="startDownload">
-            <IconDownload :size="16" />
-            Скачать
+      <!-- 2. Action bar: CTA + status pills + download -->
+      <div class="mb-5 space-y-3">
+        <!-- Mobile: CTA full width -->
+        <div class="flex flex-wrap items-center gap-3">
+          <button
+            v-if="book.mp3_count && book.mp3_count > 0"
+            class="btn btn-primary px-7 py-3 text-[15px]"
+            style="
+              box-shadow:
+                0 6px 28px rgba(232, 146, 58, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            "
+            @click="startListening"
+          >
+            <IconPlay :size="16" />
+            {{ isCurrentBook ? 'Продолжить' : 'Слушать' }}
           </button>
 
-          <!-- Downloading -->
-          <div v-else-if="isDownloading" class="flex min-w-[200px] flex-1 items-center gap-3">
-            <div class="flex-1">
-              <div class="mb-1 flex items-center justify-between">
-                <span class="text-[11px] text-[--t3]">
-                  Трек {{ (dlProgress?.currentTrack ?? 0) + 1 }} из {{ dlProgress?.totalTracks ?? 0 }}
-                </span>
-                <span class="text-[11px] font-bold text-[--accent]">{{ dlPercent }}%</span>
-              </div>
-              <ProgressBar :percent="dlPercent" height="h-1.5" />
-            </div>
-            <button
-              class="shrink-0 cursor-pointer border-0 bg-transparent p-1.5 text-[--t3] transition-colors hover:text-red-400"
-              title="Отменить"
-              @click="cancelDl"
-            >
-              <IconX :size="16" />
-            </button>
-          </div>
+          <!-- Download controls (native only) — pushed right -->
+          <template v-if="dl.isNative.value && book.mp3_count && book.mp3_count > 0">
+            <div class="ml-auto flex items-center">
+              <!-- Not downloaded -->
+              <button v-if="!isDownloaded && !isDownloading" class="btn btn-ghost" @click="startDownload">
+                <IconDownload :size="16" />
+                Скачать
+              </button>
 
-          <!-- Downloaded -->
-          <div v-else class="flex items-center gap-2">
-            <span class="flex items-center gap-1.5 text-[13px] font-medium text-emerald-400">
-              <IconCheck :size="16" />
-              Загружено
-            </span>
-            <button
-              class="shrink-0 cursor-pointer border-0 bg-transparent p-1.5 text-[--t3] transition-colors hover:text-red-400"
-              title="Удалить загрузку"
-              @click="removeDl"
-            >
-              <IconTrash :size="15" />
-            </button>
-          </div>
-        </template>
+              <!-- Downloading -->
+              <div v-else-if="isDownloading" class="flex min-w-[200px] items-center gap-3">
+                <div class="flex-1">
+                  <div class="mb-1 flex items-center justify-between">
+                    <span class="text-[11px] text-[--t3]">
+                      Трек {{ (dlProgress?.currentTrack ?? 0) + 1 }} из {{ dlProgress?.totalTracks ?? 0 }}
+                    </span>
+                    <span class="text-[11px] font-bold text-[--accent]">{{ dlPercent }}%</span>
+                  </div>
+                  <ProgressBar :percent="dlPercent" height="h-1.5" />
+                </div>
+                <button
+                  class="shrink-0 cursor-pointer border-0 bg-transparent p-1.5 text-[--t3] transition-colors hover:text-red-400"
+                  title="Отменить"
+                  @click="cancelDl"
+                >
+                  <IconX :size="16" />
+                </button>
+              </div>
+
+              <!-- Downloaded -->
+              <div v-else class="flex items-center gap-2">
+                <span class="flex items-center gap-1.5 text-[13px] font-medium text-emerald-400">
+                  <IconCheck :size="16" />
+                  Загружено
+                </span>
+                <button
+                  class="shrink-0 cursor-pointer border-0 bg-transparent p-1.5 text-[--t3] transition-colors hover:text-red-400"
+                  title="Удалить загрузку"
+                  @click="removeDl"
+                >
+                  <IconTrash :size="15" />
+                </button>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <!-- Status pills row -->
+        <BookActions :book-id="book.id" :book-status="book.book_status" @status-changed="loadBook" />
       </div>
 
-      <!-- Audio player (when this book is loaded) -->
+      <!-- 3. Audio player (when this book is loaded) -->
       <AudioPlayer v-if="isCurrentBook" class="mb-5" />
 
-      <!-- Two-column layout -->
+      <!-- 4. Chapters -->
+      <BookChapters v-if="book.mp3_count && book.mp3_count > 0" :book="book" class="mb-5" />
+
+      <!-- 5. Two-column layout -->
       <div class="grid grid-cols-1 gap-5 lg:grid-cols-3">
         <div class="space-y-5 lg:col-span-2">
           <BookNotes :title="book.title" :note="book.note" />
           <BookQuotes :book-title="book.title" :book-author="book.author" />
-          <BookTags :title="book.title" :tags="book.tags" @updated="(t) => (book!.tags = t)" />
         </div>
         <div class="space-y-5">
+          <BookTags :title="book.title" :tags="book.tags" @updated="(t) => (book!.tags = t)" />
           <BookTimeline :entries="book.timeline || []" />
           <BookSimilar :book-id="book.id" />
           <BookFolder v-if="book.folder" :folder="book.folder" :path="book.path" />
