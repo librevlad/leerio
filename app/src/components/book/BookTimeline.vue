@@ -5,13 +5,13 @@ import { dotColor } from '../../composables/useStatusColors'
 defineProps<{ entries: HistoryEntry[] }>()
 
 const glowColor: Record<string, string> = {
-  'В телефоне': 'rgba(96,165,250,0.3)',
-  'В процессе': 'rgba(168,85,247,0.3)',
-  'На Паузе': 'rgba(250,204,21,0.3)',
-  Прочитано: 'rgba(74,222,128,0.3)',
-  Забраковано: 'rgba(248,113,113,0.3)',
-  Прочесть: 'rgba(148,163,184,0.2)',
-  Скачать: 'rgba(148,163,184,0.2)',
+  phone: 'rgba(96,165,250,0.3)',
+  listen: 'rgba(168,85,247,0.3)',
+  pause: 'rgba(250,204,21,0.3)',
+  done: 'rgba(74,222,128,0.3)',
+  reject: 'rgba(248,113,113,0.3)',
+  inbox: 'rgba(148,163,184,0.2)',
+  download: 'rgba(148,163,184,0.2)',
 }
 
 function formatDate(ts: string): string {
