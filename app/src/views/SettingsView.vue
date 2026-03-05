@@ -6,7 +6,7 @@ import { useDownloads } from '../composables/useDownloads'
 import { useLocalBooks } from '../composables/useLocalBooks'
 import { useOfflineCache } from '../composables/useOfflineCache'
 import { useAuth } from '../composables/useAuth'
-import type { Constants, SessionStats } from '../types'
+import type { SessionStats } from '../types'
 import { IconTrash, IconDownload, IconHardDrive } from '../components/shared/icons'
 
 const router = useRouter()
@@ -15,14 +15,11 @@ const { localBooks } = useLocalBooks()
 const cache = useOfflineCache()
 const { user, isAdmin, logout } = useAuth()
 const cacheBytes = ref(cache.cacheSize())
-const constants = ref<Constants | null>(null)
 const sessionStats = ref<SessionStats | null>(null)
 
 onMounted(async () => {
   try {
-    const [c, s] = await Promise.all([api.getConstants(), api.getSessionStats(30)])
-    constants.value = c
-    sessionStats.value = s
+    sessionStats.value = await api.getSessionStats(30)
   } catch {
     /* ignore */
   }
@@ -49,16 +46,16 @@ async function handleLogout() {
   <div>
     <h1 class="page-title mb-8">Настройки</h1>
 
-    <div class="max-w-2xl space-y-6">
+    <div class="max-w-2xl space-y-5">
       <!-- Profile -->
-      <div class="card p-6">
+      <div class="card p-5">
         <h3 class="section-label mb-4">Профиль</h3>
         <div v-if="user" class="flex items-center gap-4">
           <img
             v-if="user.picture"
             :src="user.picture"
             :alt="user.name"
-            class="h-14 w-14 rounded-full object-cover"
+            class="h-14 w-14 rounded-full object-cover ring-2 ring-[--border]"
             referrerpolicy="no-referrer"
           />
           <div
@@ -71,7 +68,12 @@ async function handleLogout() {
           <div class="min-w-0 flex-1">
             <p class="text-[15px] font-semibold text-[--t1]">{{ user.name }}</p>
             <p class="text-[13px] text-[--t3]">{{ user.email }}</p>
-            <p v-if="isAdmin" class="mt-1 text-[11px] font-medium text-[--accent]">Администратор</p>
+            <span
+              v-if="isAdmin"
+              class="mt-1 inline-block rounded-full bg-[--accent-soft] px-2 py-0.5 text-[10px] font-semibold text-[--accent]"
+            >
+              Администратор
+            </span>
           </div>
         </div>
         <button class="btn btn-ghost mt-4 text-red-400 hover:text-red-300" @click="handleLogout">
@@ -93,50 +95,39 @@ async function handleLogout() {
         </button>
       </div>
 
-      <div v-if="sessionStats" class="card p-6">
-        <h3 class="section-label mb-5">Сессии</h3>
-        <div class="grid grid-cols-2 gap-6">
+      <!-- Listening stats -->
+      <div v-if="sessionStats" class="card p-5">
+        <h3 class="section-label mb-4">Статистика прослушивания</h3>
+        <div class="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
           <div>
-            <p class="mb-1.5 text-[12px] text-[--t3]">Всего часов</p>
-            <p class="text-[24px] leading-none font-bold tracking-tight text-[--t1]">
+            <p class="mb-1 text-[11px] font-semibold text-[--t3]">Всего часов</p>
+            <p class="text-[22px] leading-none font-bold tracking-tight text-[--t1]">
               {{ sessionStats.total_hours.toFixed(1) }}
             </p>
           </div>
           <div>
-            <p class="mb-1.5 text-[12px] text-[--t3]">Сегодня (мин)</p>
-            <p class="text-[24px] leading-none font-bold tracking-tight text-[--t1]">{{ sessionStats.today_min }}</p>
+            <p class="mb-1 text-[11px] font-semibold text-[--t3]">Сегодня</p>
+            <p class="text-[22px] leading-none font-bold tracking-tight text-[--t1]">
+              {{ sessionStats.today_min }}<span class="ml-0.5 text-[12px] text-[--t3]">мин</span>
+            </p>
           </div>
           <div>
-            <p class="mb-1.5 text-[12px] text-[--t3]">За неделю (ч)</p>
-            <p class="text-[24px] leading-none font-bold tracking-tight text-[--t1]">
-              {{ sessionStats.week_hours.toFixed(1) }}
+            <p class="mb-1 text-[11px] font-semibold text-[--t3]">За неделю</p>
+            <p class="text-[22px] leading-none font-bold tracking-tight text-[--t1]">
+              {{ sessionStats.week_hours.toFixed(1) }}<span class="ml-0.5 text-[12px] text-[--t3]">ч</span>
             </p>
           </div>
           <div v-if="sessionStats.peak_hour !== null">
-            <p class="mb-1.5 text-[12px] text-[--t3]">Пик</p>
-            <p class="gradient-text text-[24px] leading-none font-bold tracking-tight">
+            <p class="mb-1 text-[11px] font-semibold text-[--t3]">Пик активности</p>
+            <p class="gradient-text text-[22px] leading-none font-bold tracking-tight">
               {{ sessionStats.peak_hour }}:00
             </p>
           </div>
         </div>
       </div>
 
-      <div class="card p-6">
-        <h3 class="section-label mb-4">Категории</h3>
-        <div class="flex flex-wrap gap-2">
-          <span
-            v-for="cat in constants?.categories"
-            :key="cat"
-            class="rounded-full px-3.5 py-1.5 text-[13px] font-medium text-[--t2]"
-            style="background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border)"
-          >
-            {{ cat }}
-          </span>
-        </div>
-      </div>
-
       <!-- Downloads (native only) -->
-      <div v-if="dl.isNative.value" class="card p-6">
+      <div v-if="dl.isNative.value" class="card p-5">
         <h3 class="section-label mb-4">
           <span class="flex items-center gap-2">
             <IconDownload :size="16" />
@@ -144,83 +135,66 @@ async function handleLogout() {
           </span>
         </h3>
 
-        <div class="mb-4">
-          <p class="mb-1 text-[12px] text-[--t3]">Общий объём</p>
-          <p class="text-[20px] leading-none font-bold tracking-tight text-[--t1]">
-            {{ fmtSize(dl.totalDownloadedSize.value) }}
-          </p>
-        </div>
-
-        <div v-if="dl.downloadedBooks.value.length" class="mb-4 space-y-3">
+        <div v-if="dl.downloadedBooks.value.length" class="space-y-2">
           <div
             v-for="b in dl.downloadedBooks.value"
             :key="b.bookId"
-            class="flex items-center justify-between gap-3 rounded-xl px-3.5 py-3"
-            style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border)"
+            class="flex items-center justify-between gap-3 rounded-xl bg-white/[0.03] px-3.5 py-3"
           >
             <div class="min-w-0 flex-1">
               <p class="truncate text-[13px] font-medium text-[--t1]">{{ b.title }}</p>
               <p class="text-[11px] text-[--t3]">{{ b.tracks.length }} треков · {{ fmtSize(b.totalSize) }}</p>
             </div>
             <button
-              class="shrink-0 cursor-pointer rounded-lg border-0 bg-transparent p-2 text-[--t3] transition-colors hover:bg-white/5 hover:text-red-400"
+              class="shrink-0 rounded-full p-2 text-[--t3] transition-colors hover:bg-red-500/15 hover:text-red-400"
               title="Удалить"
               @click="dl.deleteBook(b.bookId)"
             >
-              <IconTrash :size="15" />
+              <IconTrash :size="14" />
             </button>
           </div>
+          <p class="pt-1 text-[12px] text-[--t3]">
+            Всего: <span class="font-semibold text-[--t2]">{{ fmtSize(dl.totalDownloadedSize.value) }}</span>
+          </p>
+          <button
+            v-if="dl.downloadedBooks.value.length > 1"
+            class="btn btn-ghost mt-2 text-red-400 hover:text-red-300"
+            @click="dl.deleteAllBooks()"
+          >
+            <IconTrash :size="14" />
+            Удалить все загрузки
+          </button>
         </div>
 
-        <p v-else class="mb-4 text-[12px] text-[--t3]">
-          Нет скачанных книг. Скачайте книгу на странице книги для офлайн-прослушивания.
-        </p>
-
-        <button
-          v-if="dl.downloadedBooks.value.length > 1"
-          class="btn btn-ghost text-red-400 hover:text-red-300"
-          @click="dl.deleteAllBooks()"
-        >
-          <IconTrash :size="14" />
-          Удалить все загрузки
-        </button>
+        <p v-else class="text-[12px] text-[--t3]">Нет скачанных книг</p>
       </div>
 
-      <!-- Storage -->
-      <div class="card p-6">
+      <!-- Storage & Cache -->
+      <div class="card p-5">
         <h3 class="section-label mb-4">
           <span class="flex items-center gap-2">
             <IconHardDrive :size="16" />
             Хранилище
           </span>
         </h3>
-        <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <div class="flex flex-wrap gap-x-8 gap-y-3">
           <div v-if="dl.isNative.value">
-            <p class="mb-1 text-[12px] text-[--t3]">Скачанные книги</p>
+            <p class="mb-1 text-[11px] font-semibold text-[--t3]">Скачанные</p>
             <p class="text-[18px] leading-none font-bold text-[--t1]">{{ fmtSize(dl.totalDownloadedSize.value) }}</p>
           </div>
           <div>
-            <p class="mb-1 text-[12px] text-[--t3]">Локальные книги</p>
-            <p class="text-[18px] leading-none font-bold text-[--t1]">{{ localBooks.length }} шт</p>
+            <p class="mb-1 text-[11px] font-semibold text-[--t3]">Локальные книги</p>
+            <p class="text-[18px] leading-none font-bold text-[--t1]">{{ localBooks.length }}</p>
           </div>
           <div>
-            <p class="mb-1 text-[12px] text-[--t3]">Кэш</p>
+            <p class="mb-1 text-[11px] font-semibold text-[--t3]">Кэш</p>
             <p class="text-[18px] leading-none font-bold text-[--t1]">{{ fmtSize(cacheBytes) }}</p>
           </div>
         </div>
-        <button class="btn btn-ghost mt-4" @click="clearCache">
+        <button v-if="cacheBytes > 0" class="btn btn-ghost mt-4" @click="clearCache">
           <IconTrash :size="14" />
           Очистить кэш
         </button>
-      </div>
-
-      <div class="card p-6">
-        <h3 class="section-label mb-3">О системе</h3>
-        <p class="text-[12px] leading-relaxed text-[--t3]">
-          Веб-интерфейс аудиокниготеки v1.0<br />
-          Backend: FastAPI / Frontend: Vue 3 + Tailwind<br />
-          Данные хранятся в JSON-файлах на диске.
-        </p>
       </div>
     </div>
   </div>
