@@ -54,7 +54,7 @@ async function clearStatus() {
 </script>
 
 <template>
-  <div class="scrollbar-hide flex items-center gap-2 overflow-x-auto">
+  <div class="scrollbar-hide fade-mask-r flex items-center gap-2 overflow-x-auto">
     <button
       v-for="s in statuses"
       :key="s.value"

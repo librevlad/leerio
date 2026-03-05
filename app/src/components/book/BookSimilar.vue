@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { api } from '../../api'
+import { api, coverUrl } from '../../api'
 import type { SimilarBook } from '../../types'
 import CategoryBadge from '../shared/CategoryBadge.vue'
 
@@ -49,11 +49,13 @@ onMounted(async () => {
         :to="`/book/${book.id}`"
         class="group flex items-center gap-3 rounded-xl px-3 py-2.5 no-underline transition-all hover:bg-white/[0.04]"
       >
-        <!-- Mini gradient swatch -->
+        <!-- Mini cover or gradient swatch -->
         <div
-          class="h-9 w-9 flex-shrink-0 rounded-lg"
-          :style="{ background: coverGradient[book.category] || fallbackGradient }"
-        />
+          class="h-9 w-9 flex-shrink-0 overflow-hidden rounded-lg"
+          :style="!book.has_cover ? { background: coverGradient[book.category] || fallbackGradient } : {}"
+        >
+          <img v-if="book.has_cover" :src="coverUrl(book.id)" :alt="book.title" class="h-full w-full object-cover" />
+        </div>
         <div class="min-w-0 flex-1">
           <p
             class="truncate text-[12px] font-semibold text-[--t2] transition-colors group-hover:text-[--t1]"
