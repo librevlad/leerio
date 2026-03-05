@@ -63,7 +63,7 @@ async function handleLogout() {
         <component :is="collapsed ? IconMenu : IconX" :size="18" />
       </button>
       <div v-if="!collapsed" class="flex items-center gap-2.5">
-        <img src="/logo.png" alt="Leerio" class="h-7 w-7 rounded-lg object-contain" />
+        <img src="/logo.svg" alt="Leerio" class="h-7 w-7 rounded-lg" />
         <span class="text-[14px] font-bold tracking-tight text-[--t1]">Leerio</span>
       </div>
     </div>

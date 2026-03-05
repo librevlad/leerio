@@ -104,7 +104,7 @@ async function handlePasswordLogin() {
     <div class="relative w-full max-w-sm">
       <!-- Logo -->
       <div class="mb-10 flex items-center justify-center gap-3">
-        <img src="/logo.png" alt="Leerio" class="h-11 w-11 rounded-xl object-contain" />
+        <img src="/logo.svg" alt="Leerio" class="h-11 w-11 rounded-xl" />
         <span class="text-[26px] font-bold tracking-tight text-[--t1]">Leerio</span>
       </div>
 
