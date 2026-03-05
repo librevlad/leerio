@@ -505,6 +505,33 @@ select option {
   transform: translateY(100%);
 }
 
+/* ── Bottom sheet transition ─────────────────────────────────────────── */
+
+.sheet-enter-active {
+  transition: opacity 0.25s ease;
+}
+.sheet-enter-active > :last-child {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sheet-leave-active {
+  transition: opacity 0.2s ease;
+}
+.sheet-leave-active > :last-child {
+  transition: transform 0.2s ease;
+}
+.sheet-enter-from {
+  opacity: 0;
+}
+.sheet-enter-from > :last-child {
+  transform: translateY(100%);
+}
+.sheet-leave-to {
+  opacity: 0;
+}
+.sheet-leave-to > :last-child {
+  transform: translateY(100%);
+}
+
 /* Mini-player positioning — above bottom nav + safe area on mobile */
 .mini-player-position {
   bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
