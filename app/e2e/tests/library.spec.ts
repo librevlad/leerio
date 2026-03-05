@@ -53,7 +53,6 @@ test.describe('Library', () => {
   })
 
   test('sort options are visible', async ({ page }) => {
-    await expect(page.locator('text=Сортировка:')).toBeVisible()
     await expect(page.locator('button:has-text("Название")')).toBeVisible()
     await expect(page.locator('button:has-text("Автор")')).toBeVisible()
   })

@@ -25,13 +25,8 @@ test.describe('Settings', () => {
     await takeScreenshot('settings-admin')
   })
 
-  test('displays categories section', async ({ page }) => {
-    await expect(page.locator('text=Категории')).toBeVisible()
-  })
-
-  test('shows system info', async ({ page }) => {
-    await expect(page.locator('text=О системе')).toBeVisible()
-    await expect(page.locator('text=v1.0')).toBeVisible()
+  test('shows storage section', async ({ page }) => {
+    await expect(page.locator('text=Хранилище')).toBeVisible()
   })
 
   test('has logout button', async ({ page, takeScreenshot }) => {

@@ -29,7 +29,7 @@ test.describe('Navigation', () => {
     test('highlights active link', async ({ page }) => {
       // Dashboard should be active on /
       const dashLink = page.locator('aside a[href="/"]')
-      await expect(dashLink).toHaveClass(/text-white/)
+      await expect(dashLink).toHaveClass(/text-\[--t1\]/)
     })
 
     test('navigates to library', async ({ page }) => {
@@ -75,7 +75,7 @@ test.describe('Navigation', () => {
     test('highlights active tab', async ({ page }) => {
       // On dashboard, "Главная" should be active
       const homeTab = page.locator('nav.fixed.bottom-0 a[href="/"]')
-      await expect(homeTab).toHaveClass(/text-\[--accent-2\]/)
+      await expect(homeTab).toHaveClass(/text-\[--accent\]/)
     })
 
     test('navigates via bottom nav', async ({ page }) => {
