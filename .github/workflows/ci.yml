@@ -160,7 +160,8 @@ jobs:
             PREV_SHA=$(git rev-parse HEAD)
             git pull origin main
             sed -i 's|CORS_ORIGINS=https://leerio.app|CORS_ORIGINS=https://app.leerio.app|' .env
-            docker compose up --build -d
+            docker compose build --pull
+            docker compose up -d
             echo "Waiting for services to start..."
             sleep 15
             for i in 1 2 3; do
@@ -173,5 +174,6 @@ jobs:
             done
             echo "All health checks failed — rolling back to $PREV_SHA"
             git checkout "$PREV_SHA"
-            docker compose up --build -d
+            docker compose build --pull
+            docker compose up -d
             exit 1
