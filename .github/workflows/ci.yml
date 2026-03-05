@@ -164,7 +164,10 @@ jobs:
           script: |
             cd /opt/leerio
             PREV_SHA=$(git rev-parse HEAD)
-            git pull origin main
+            echo "Previous SHA: $PREV_SHA"
+            git fetch origin main
+            git reset --hard origin/main
+            echo "Current SHA: $(git rev-parse HEAD)"
             rm -f docker-compose.override.yml
             sed -i 's|CORS_ORIGINS=https://leerio.app|CORS_ORIGINS=https://app.leerio.app|' .env
             # Ensure S3 config in .env (overwrite if exists)
