@@ -15,7 +15,7 @@ const stats = [
 </script>
 
 <template>
-  <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+  <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
     <router-link
       v-for="s in stats"
       :key="s.key"
