@@ -9,6 +9,7 @@ import { useNetwork } from '@/composables/useNetwork'
 import ProgressBar from '@/components/shared/ProgressBar.vue'
 import { IconUpload, IconMicrophone, IconMusic, IconX, IconSmartphone, IconCheck } from '@/components/shared/icons'
 import type { TTSVoice, TTSEngine } from '@/types'
+import { plural } from '@/utils/plural'
 
 const router = useRouter()
 const toast = useToast()
@@ -334,7 +335,9 @@ const tabDefs = [
 
         <!-- File list -->
         <div v-if="uploadFiles.length" class="mt-4 space-y-1.5">
-          <div class="mb-2 text-[11px] font-semibold text-[--t3]">{{ uploadFiles.length }} файлов</div>
+          <div class="mb-2 text-[11px] font-semibold text-[--t3]">
+            {{ uploadFiles.length }} {{ plural(uploadFiles.length, 'файл', 'файла', 'файлов') }}
+          </div>
           <div
             v-for="(file, i) in uploadFiles"
             :key="i"
@@ -584,7 +587,9 @@ const tabDefs = [
 
         <!-- File list -->
         <div v-if="localFiles.length" class="mt-4 space-y-1.5">
-          <div class="mb-2 text-[11px] font-semibold text-[--t3]">{{ localFiles.length }} файлов</div>
+          <div class="mb-2 text-[11px] font-semibold text-[--t3]">
+            {{ localFiles.length }} {{ plural(localFiles.length, 'файл', 'файла', 'файлов') }}
+          </div>
           <div
             v-for="(file, i) in localFiles"
             :key="i"

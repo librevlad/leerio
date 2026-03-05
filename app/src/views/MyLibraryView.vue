@@ -292,7 +292,7 @@ const coverPatterns: Record<string, string> = {
             <div class="flex items-center justify-between">
               <span v-if="item.trackCount" class="flex items-center gap-1 text-[11px] text-[--t3]">
                 <IconMusic :size="12" />
-                {{ item.trackCount }} треков
+                {{ item.trackCount }} {{ plural(item.trackCount, 'трек', 'трека', 'треков') }}
               </span>
               <button
                 class="rounded-full p-1.5 text-[--t3] opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/15 hover:text-red-400"

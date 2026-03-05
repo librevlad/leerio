@@ -18,6 +18,7 @@ import {
   IconDownload,
 } from '../components/shared/icons'
 import { usePullToRefresh } from '../composables/usePullToRefresh'
+import { plural } from '../utils/plural'
 
 const entries = ref<HistoryEntry[]>([])
 const loading = ref(true)
@@ -113,7 +114,8 @@ function formatTime(ts: string): string {
       <div>
         <h1 class="page-title">История</h1>
         <p v-if="!loading" class="mt-1 text-[13px] text-[--t3]">
-          <span class="font-bold text-[--accent]">{{ entries.length }}</span> записей
+          <span class="font-bold text-[--accent]">{{ entries.length }}</span>
+          {{ plural(entries.length, 'запись', 'записи', 'записей') }}
         </p>
       </div>
       <SearchInput v-model="search" placeholder="Поиск по книге..." class="w-full sm:w-56" />

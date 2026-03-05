@@ -8,6 +8,7 @@ import { useOfflineCache } from '../composables/useOfflineCache'
 import { useAuth } from '../composables/useAuth'
 import type { SessionStats } from '../types'
 import { IconTrash, IconDownload, IconHardDrive } from '../components/shared/icons'
+import { plural } from '../utils/plural'
 
 const router = useRouter()
 const dl = useDownloads()
@@ -143,7 +144,10 @@ async function handleLogout() {
           >
             <div class="min-w-0 flex-1">
               <p class="truncate text-[13px] font-medium text-[--t1]">{{ b.title }}</p>
-              <p class="text-[11px] text-[--t3]">{{ b.tracks.length }} треков · {{ fmtSize(b.totalSize) }}</p>
+              <p class="text-[11px] text-[--t3]">
+                {{ b.tracks.length }} {{ plural(b.tracks.length, 'трек', 'трека', 'треков') }} ·
+                {{ fmtSize(b.totalSize) }}
+              </p>
             </div>
             <button
               class="shrink-0 rounded-full p-2 text-[--t3] transition-colors hover:bg-red-500/15 hover:text-red-400"
