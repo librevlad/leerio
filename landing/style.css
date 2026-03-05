@@ -12,7 +12,6 @@
   --accent: #e8923a;
   --accent-2: #f0a85c;
   --accent-soft: rgba(232, 146, 58, 0.12);
-  --accent-glow: rgba(232, 146, 58, 0.15);
   --gradient-accent: linear-gradient(135deg, #e8923a 0%, #c87830 100%);
   --gradient-bar: linear-gradient(90deg, #e8923a, #f0a85c, #f8c98a);
 }
@@ -82,7 +81,7 @@ section {
   transform: translateX(-50%);
   width: 140%;
   height: 70%;
-  background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(232, 146, 58, 0.08) 0%, transparent 70%);
+  background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(232, 146, 58, 0.07) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -102,7 +101,7 @@ section {
 .hero-logo {
   width: 48px;
   height: 48px;
-  border-radius: 14px;
+  border-radius: 12px;
 }
 
 .hero-wordmark {
@@ -156,33 +155,29 @@ section {
   gap: 8px;
   border: none;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  border-radius: 50px;
-  padding: 14px 32px;
-  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.4, 1);
+  border-radius: 8px;
+  padding: 14px 28px;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.4, 1);
   letter-spacing: -0.01em;
   white-space: nowrap;
 }
 
 .btn:active {
-  transform: scale(0.96);
+  transform: scale(0.97);
 }
 
 .btn-primary {
   background: var(--gradient-accent);
   color: #fff;
-  box-shadow:
-    0 4px 24px rgba(232, 146, 58, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 12px rgba(232, 146, 58, 0.25);
 }
 
 .btn-primary:hover {
-  box-shadow:
-    0 8px 32px rgba(232, 146, 58, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  filter: brightness(1.08);
-  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(232, 146, 58, 0.35);
+  filter: brightness(1.06);
+  transform: translateY(-1px);
 }
 
 .btn-ghost {
@@ -193,13 +188,13 @@ section {
 
 .btn-ghost:hover {
   color: var(--t1);
-  border-color: var(--accent);
-  background: var(--accent-soft);
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .btn svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
 }
 
@@ -210,9 +205,7 @@ section {
   border-radius: 12px;
   border: 1px solid var(--border-light);
   overflow: hidden;
-  box-shadow:
-    0 24px 80px rgba(0, 0, 0, 0.4),
-    0 0 60px rgba(232, 146, 58, 0.06);
+  box-shadow: 0 16px 64px rgba(0, 0, 0, 0.4);
 }
 
 .browser-frame-bar {
@@ -253,12 +246,10 @@ section {
 
 .phone-frame {
   background: #1a1a24;
-  border-radius: 28px;
+  border-radius: 24px;
   border: 3px solid #2a2a36;
   overflow: hidden;
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
 }
 
 .phone-frame-notch {
@@ -292,17 +283,6 @@ section {
 .hero-screenshot-desktop {
   transform: perspective(1200px) rotateX(4deg) rotateY(-2deg);
   transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.4, 1);
-  position: relative;
-}
-
-.hero-screenshot-desktop::after {
-  content: '';
-  position: absolute;
-  inset: -40px;
-  background: radial-gradient(ellipse at center, rgba(232, 146, 58, 0.06) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: -1;
-  border-radius: 20px;
 }
 
 .hero-screenshot-desktop:hover {
@@ -316,7 +296,7 @@ section {
 /* ── Features ─────────────────────────────────────────────────────────── */
 
 .features {
-  background: linear-gradient(180deg, transparent 0%, rgba(232, 146, 58, 0.02) 50%, transparent 100%);
+  background: linear-gradient(180deg, transparent 0%, rgba(232, 146, 58, 0.015) 50%, transparent 100%);
 }
 
 .section-header {
@@ -332,57 +312,51 @@ section {
 }
 
 .section-header p {
-  font-size: 18px;
+  font-size: 17px;
   color: var(--t2);
 }
 
 .features-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  gap: 16px;
 }
 
 .feature-card {
   background: var(--card);
   backdrop-filter: blur(12px);
-  border-radius: 20px;
+  border-radius: 12px;
   border: 1px solid var(--border);
-  padding: 32px 28px;
-  transition:
-    transform 0.3s cubic-bezier(0.2, 0.8, 0.4, 1),
-    box-shadow 0.3s ease,
-    border-color 0.3s ease;
+  padding: 28px 24px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
 .feature-card:hover {
-  transform: translateY(-4px);
-  box-shadow:
-    0 16px 48px rgba(0, 0, 0, 0.3),
-    0 0 0 1px rgba(232, 146, 58, 0.1);
-  border-color: rgba(232, 146, 58, 0.15);
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .feature-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
   background: var(--accent-soft);
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .feature-icon svg {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   color: var(--accent);
 }
 
 .feature-card h3 {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   letter-spacing: -0.02em;
 }
 
@@ -401,20 +375,17 @@ section {
 .gallery-desktop {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
+  gap: 20px;
   align-items: start;
   margin-bottom: 48px;
 }
 
 .gallery-desktop .browser-frame {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.2s ease;
 }
 
 .gallery-desktop .browser-frame:hover {
-  transform: translateY(-6px);
-  box-shadow:
-    0 32px 80px rgba(0, 0, 0, 0.5),
-    0 0 60px rgba(232, 146, 58, 0.08);
+  transform: translateY(-4px);
 }
 
 .gallery-mobile {
@@ -453,7 +424,7 @@ section {
   transform: translate(-50%, -50%);
   width: 600px;
   height: 400px;
-  background: radial-gradient(ellipse at center, rgba(232, 146, 58, 0.06) 0%, transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(232, 146, 58, 0.05) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -493,8 +464,9 @@ footer {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-weight: 600;
-  color: var(--t2);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--t3);
 }
 
 .footer-brand img {
@@ -527,8 +499,8 @@ footer {
 
 .reveal {
   opacity: 0;
-  transform: translateY(32px);
-  transition: opacity 0.7s cubic-bezier(0.2, 0.8, 0.4, 1), transform 0.7s cubic-bezier(0.2, 0.8, 0.4, 1);
+  transform: translateY(24px);
+  transition: opacity 0.6s cubic-bezier(0.2, 0.8, 0.4, 1), transform 0.6s cubic-bezier(0.2, 0.8, 0.4, 1);
 }
 
 .reveal.visible {
@@ -572,11 +544,11 @@ footer {
 
   .features-grid {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 12px;
   }
 
   .feature-card {
-    padding: 24px 20px;
+    padding: 22px 18px;
   }
 
   .gallery-desktop {
