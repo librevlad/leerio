@@ -750,10 +750,22 @@ def get_book_cover(book_id: str):
     b = db.get_book_by_id(bid)
     if not b:
         raise HTTPException(404, "Book not found")
-    cover = _book_path(b) / "cover.jpg"
-    if not cover.exists():
-        raise HTTPException(404, "No cover")
-    return FileResponse(str(cover), media_type="image/jpeg")
+
+    # Try local filesystem first
+    book_path = _book_path(b)
+    for ext in ("jpg", "jpeg", "png", "webp"):
+        cover = book_path / f"cover.{ext}"
+        if cover.exists():
+            return FileResponse(str(cover), media_type=f"image/{ext}")
+
+    # Fallback to S3 — redirect to presigned URL
+    s3_prefix = b.get("s3_prefix", "")
+    if s3_prefix and b.get("has_cover"):
+        url = get_presigned_url(f"{s3_prefix}/cover.jpg", expires=86400)
+        if url:
+            return RedirectResponse(url)
+
+    raise HTTPException(404, "No cover")
 
 
 @app.get("/api/audio/{book_id}/{track_index}")
