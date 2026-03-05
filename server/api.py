@@ -51,7 +51,7 @@ from .core import (
     normalize,
     reading_velocity,
 )
-from .storage import get_presigned_url
+from .storage import get_presigned_url, get_s3_object
 from .tts_api import router as tts_router
 from .upload import router as upload_router
 
@@ -783,12 +783,26 @@ def stream_audio(book_id: str, track_index: int, request: Request):
 
     track = db_tracks[track_index]
 
-    # Try S3 presigned URL
+    # Try S3 streaming proxy
     s3_key = track.get("s3_key", "")
     if s3_key:
-        url = get_presigned_url(s3_key)
-        if url:
-            return RedirectResponse(url=url, status_code=302)
+        range_header = request.headers.get("range")
+        s3_resp = get_s3_object(s3_key, range_header=range_header)
+        if s3_resp:
+            headers: dict[str, str] = {
+                "Content-Type": s3_resp["content_type"],
+                "Accept-Ranges": "bytes",
+            }
+            if s3_resp["content_range"]:
+                headers["Content-Range"] = s3_resp["content_range"]
+            if s3_resp["content_length"]:
+                headers["Content-Length"] = str(s3_resp["content_length"])
+            status = 206 if range_header and s3_resp["status"] == 206 else 200
+            return StreamingResponse(
+                s3_resp["body"].iter_chunks(chunk_size=64 * 1024),
+                status_code=status,
+                headers=headers,
+            )
 
     # Fallback to filesystem
     b = db.get_book_by_id(bid)

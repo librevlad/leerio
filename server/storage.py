@@ -30,6 +30,29 @@ def _get_client():
     return _client
 
 
+def get_s3_object(s3_key: str, range_header: str | None = None):
+    """Get an S3 object (or range) for streaming. Returns (body, content_type, content_length, status, content_range) or None."""
+    client = _get_client()
+    if not client:
+        return None
+    bucket = os.environ.get("S3_BUCKET", "leerio-books")
+    try:
+        kwargs = {"Bucket": bucket, "Key": s3_key}
+        if range_header:
+            kwargs["Range"] = range_header
+        resp = client.get_object(**kwargs)
+        return {
+            "body": resp["Body"],
+            "content_type": resp.get("ContentType", "audio/mpeg"),
+            "content_length": resp.get("ContentLength", 0),
+            "status": resp.get("ResponseMetadata", {}).get("HTTPStatusCode", 200),
+            "content_range": resp.get("ContentRange"),
+        }
+    except Exception as e:
+        logger.error("S3 get_object failed for %s: %s", s3_key, e)
+        return None
+
+
 def get_presigned_url(s3_key: str, expires: int = 3600) -> str | None:
     client = _get_client()
     if not client:
