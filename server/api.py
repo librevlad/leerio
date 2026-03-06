@@ -469,19 +469,21 @@ def get_dashboard(user: dict = Depends(get_current_user)):
                 }
             )
 
-    # Recent activity
+    # Recent activity — resolve real title from books table
     recent = []
     for h in hist[:8]:
+        bid = h.get("book_id")
+        book_title = book_by_id[bid]["title"] if bid and bid in book_by_id else h.get("book_title", "")
         recent.append(
             {
                 "ts": h.get("ts", ""),
                 "action": h.get("action", ""),
-                "book": h.get("book_title", ""),
+                "book": book_title,
                 "detail": h.get("detail", ""),
                 "rating": h.get("rating", 0),
                 "action_label": ACTION_LABELS.get(h.get("action", ""), h.get("action", "")),
                 "action_style": ACTION_STYLES.get(h.get("action", ""), "white"),
-                "book_id": str(h["book_id"]) if h.get("book_id") else None,
+                "book_id": str(bid) if bid else None,
             }
         )
 
@@ -1089,7 +1091,7 @@ def set_book_status(book_id: str, req: BookStatusRequest, user: dict = Depends(g
         uid,
         action=action_map.get(req.status, "move"),
         book_id=bid,
-        book_title=b["folder"] if b else str(bid),
+        book_title=b["title"] if b else str(bid),
         detail=status_labels.get(req.status, req.status),
     )
 

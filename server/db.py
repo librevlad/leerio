@@ -273,6 +273,7 @@ def init_db():
 
         conn.commit()
         _migrate_password_column(conn)
+        _migrate_history_titles(conn)
         _ensure_seed_user(conn)
         _seed_allowed_emails(conn)
     finally:
@@ -283,6 +284,23 @@ def init_db():
 # ---------------------------------------------------------------------------
 # Auth helpers (unchanged)
 # ---------------------------------------------------------------------------
+
+
+def _migrate_history_titles(conn: sqlite3.Connection):
+    """Fix history entries where book_title was stored as folder/slug instead of real title."""
+    updated = conn.execute(
+        """
+        UPDATE user_history SET book_title = (
+            SELECT b.title FROM books b WHERE b.id = user_history.book_id
+        )
+        WHERE book_id IS NOT NULL
+          AND book_id IN (SELECT id FROM books)
+          AND book_title != (SELECT b.title FROM books b WHERE b.id = user_history.book_id)
+        """
+    ).rowcount
+    if updated:
+        conn.commit()
+        logger.info("Fixed %d history entries with incorrect book_title", updated)
 
 
 def _migrate_password_column(conn: sqlite3.Connection):
