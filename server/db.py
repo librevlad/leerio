@@ -273,6 +273,7 @@ def init_db():
 
         conn.commit()
         _migrate_password_column(conn)
+        _migrate_categories(conn)
         _migrate_history_titles(conn)
         _ensure_seed_user(conn)
         _seed_allowed_emails(conn)
@@ -284,6 +285,22 @@ def init_db():
 # ---------------------------------------------------------------------------
 # Auth helpers (unchanged)
 # ---------------------------------------------------------------------------
+
+
+def _migrate_categories(conn: sqlite3.Connection):
+    """Normalize bad category values from S3 sync (e.g. 'books' -> 'Художественная', '.' -> 'Другое')."""
+    mapping = {
+        "books": "Художественная",
+        ".": "Другое",
+        "": "Другое",
+    }
+    total = 0
+    for old_cat, new_cat in mapping.items():
+        updated = conn.execute("UPDATE books SET category = ? WHERE category = ?", (new_cat, old_cat)).rowcount
+        total += updated
+    if total:
+        conn.commit()
+        logger.info("Fixed %d books with bad category values", total)
 
 
 def _migrate_history_titles(conn: sqlite3.Connection):
@@ -521,6 +538,13 @@ def _sync_books_from_s3(client):
         cat_resp = client.list_objects_v2(Bucket=bucket, Delimiter="/")
         categories = [p["Prefix"].rstrip("/") for p in cat_resp.get("CommonPrefixes", [])]
 
+        # Normalize category names from S3 prefixes
+        cat_norm = {
+            "books": "Художественная",
+            ".": "Другое",
+            "": "Другое",
+        }
+
         for cat in categories:
             # List all objects in category, collect mp3s and covers per folder
             paginator = client.get_paginator("list_objects_v2")
@@ -541,6 +565,8 @@ def _sync_books_from_s3(client):
                     elif filename.startswith("cover"):
                         book_covers.add(folder)
 
+            display_cat = cat_norm.get(cat, cat)
+
             for folder, mp3_keys in sorted(book_mp3s.items()):
                 author, title, reader = parse_folder_name(folder)
                 slug = make_slug(title, author)
@@ -560,7 +586,7 @@ def _sync_books_from_s3(client):
                     """INSERT INTO books (slug, title, author, reader, category, folder,
                        s3_prefix, has_cover, mp3_count)
                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                    (slug, title, author, reader or "", cat, folder, s3_prefix, has_cover, len(mp3_keys)),
+                    (slug, title, author, reader or "", display_cat, folder, s3_prefix, has_cover, len(mp3_keys)),
                 )
                 existing_slugs.add(slug)
                 inserted += 1

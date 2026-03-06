@@ -102,6 +102,7 @@ def _resolve_user_book_path(book_id: str, user: dict | None = None) -> Path | No
 
 _CATEGORY_MAP = {
     "books": "Художественная",
+    ".": "Другое",
     "": "Другое",
 }
 
