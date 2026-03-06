@@ -34,7 +34,7 @@ test.describe('Dashboard', () => {
     await expect(page.locator('text=Активность').first()).toBeVisible()
   })
 
-  test('displays category shelves', async ({ page, takeScreenshot }) => {
+  test('displays category shelves', { tag: '@needs-books' }, async ({ page, takeScreenshot }) => {
     await expect(page.locator('.fade-in').first()).toBeVisible({ timeout: 15_000 })
     // Should have at least one "Показать все" link from category shelves
     await expect(page.locator('text=Показать все').first()).toBeVisible()
