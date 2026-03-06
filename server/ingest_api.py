@@ -91,6 +91,22 @@ def run_migration(user: dict = Depends(require_admin)):
         conn.close()
 
 
+@router.post("/recover")
+def recover_stalled(user: dict = Depends(require_admin)):
+    """Reset stalled processing jobs back to pending."""
+    conn = db._get_conn()
+    try:
+        cur = conn.execute("""
+            UPDATE ingestion_jobs
+            SET status = 'pending', retries = retries + 1, updated_at = datetime('now')
+            WHERE status = 'processing'
+        """)
+        conn.commit()
+        return {"recovered": cur.rowcount}
+    finally:
+        conn.close()
+
+
 @router.get("/stats")
 def ingest_stats(user: dict = Depends(require_admin)):
     conn = db._get_conn()
