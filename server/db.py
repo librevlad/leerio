@@ -1376,3 +1376,70 @@ def recover_stalled_jobs() -> int:
         return cur.rowcount
     finally:
         conn.close()
+
+
+# ── Ingestion Pipeline helpers ────────────────────────────────────────────
+
+
+def insert_book_for_ingest(
+    *,
+    slug,
+    title,
+    author,
+    reader,
+    category,
+    language,
+    source,
+    fingerprint,
+    mp3_count,
+    duration_hours,
+    size_mb,
+    has_cover,
+) -> int:
+    conn = _get_conn()
+    try:
+        cur = conn.execute(
+            """INSERT INTO books
+            (slug, title, author, reader, category, folder, s3_prefix,
+             language, source, fingerprint, has_cover, mp3_count, duration_hours, size_mb)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                slug,
+                title,
+                author,
+                reader,
+                category,
+                slug,
+                f"books/{slug}",
+                language,
+                source,
+                fingerprint,
+                has_cover,
+                mp3_count,
+                duration_hours,
+                size_mb,
+            ),
+        )
+        conn.commit()
+        return cur.lastrowid
+    finally:
+        conn.close()
+
+
+def insert_tracks_for_ingest(book_id: int, tracks: list[dict]) -> None:
+    conn = _get_conn()
+    try:
+        for t in tracks:
+            conn.execute(
+                "INSERT INTO tracks (book_id, idx, filename, s3_key, duration) VALUES (?, ?, ?, ?, ?)",
+                (
+                    book_id,
+                    t["track"],
+                    t["file"],
+                    f"books/{book_id}/audio/{t['file']}",
+                    t["duration"],
+                ),
+            )
+        conn.commit()
+    finally:
+        conn.close()
