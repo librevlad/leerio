@@ -112,6 +112,8 @@ async function handleLogout() {
       </div>
       <button
         class="flex w-full cursor-pointer items-center gap-3 rounded-xl border-0 bg-transparent px-3 py-2 text-[--t3] transition-colors hover:bg-white/[0.03] hover:text-[--t2]"
+        :title="collapsed ? 'Выйти' : undefined"
+        aria-label="Выйти"
         @click="handleLogout"
       >
         <svg
