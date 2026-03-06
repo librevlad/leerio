@@ -85,6 +85,7 @@ def init_db():
                 mp3_count INTEGER DEFAULT 0,
                 duration_hours REAL DEFAULT 0,
                 size_mb REAL DEFAULT 0,
+                description TEXT DEFAULT '',
                 language TEXT DEFAULT 'ru',
                 source TEXT DEFAULT 'manual',
                 external_id TEXT,
@@ -96,6 +97,7 @@ def init_db():
 
         # Migrate: add columns for ingestion pipeline (safe to re-run)
         for col, default in [
+            ("description TEXT DEFAULT ''", None),
             ("language TEXT DEFAULT 'ru'", None),
             ("source TEXT DEFAULT 'manual'", None),
             ("external_id TEXT", None),
@@ -1435,6 +1437,26 @@ def insert_book_for_ingest(
         )
         conn.commit()
         return cur.lastrowid
+    finally:
+        conn.close()
+
+
+def update_book_description(book_id: int, description: str) -> None:
+    conn = _get_conn()
+    try:
+        conn.execute("UPDATE books SET description = ? WHERE id = ?", (description, book_id))
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_books_without_description() -> list[dict]:
+    conn = _get_conn()
+    try:
+        rows = conn.execute(
+            "SELECT id, title, author, category FROM books WHERE description IS NULL OR description = '' ORDER BY id"
+        ).fetchall()
+        return [dict(r) for r in rows]
     finally:
         conn.close()
 

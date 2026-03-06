@@ -2,12 +2,16 @@
 
 import asyncio
 import json
+import logging
+import os
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel
 
 from . import db
 from .auth import get_current_user
+
+logger = logging.getLogger("leerio.ingest_api")
 
 router = APIRouter(prefix="/api/admin/ingest", tags=["ingest"])
 
@@ -72,6 +76,7 @@ def run_migration(user: dict = Depends(require_admin)):
     results = []
     try:
         for col in [
+            "description TEXT DEFAULT ''",
             "language TEXT DEFAULT 'ru'",
             "source TEXT DEFAULT 'manual'",
             "external_id TEXT",
@@ -190,3 +195,113 @@ def process_queue_endpoint(background_tasks: BackgroundTasks, user: dict = Depen
 
     background_tasks.add_task(_run_queue_sync)
     return {"message": f"Processing {len(pending)} jobs in background", "pending": len(pending)}
+
+
+# --- Book description generation ---
+
+_desc_status: dict = {"running": False, "total": 0, "done": 0, "error": None}
+
+
+def _generate_descriptions_task():
+    """Background task: generate short descriptions for all books missing one."""
+    import httpx
+
+    api_key = os.environ.get("OPENAI_API_KEY", "")
+    base_url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
+    model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+
+    if not api_key:
+        _desc_status["error"] = "OPENAI_API_KEY not set"
+        _desc_status["running"] = False
+        return
+
+    books = db.get_books_without_description()
+    _desc_status["total"] = len(books)
+    _desc_status["done"] = 0
+    _desc_status["running"] = True
+    _desc_status["error"] = None
+
+    # Process in batches of 10 for efficiency
+    batch_size = 10
+    for i in range(0, len(books), batch_size):
+        batch = books[i : i + batch_size]
+        books_text = "\n".join(f"ID:{b['id']} | {b['title']} | {b['author']} | {b['category']}" for b in batch)
+        prompt = (
+            "Для каждой книги напиши краткое описание на русском языке (2-3 предложения, до 200 символов). "
+            "Описание должно передать суть книги и заинтересовать читателя. "
+            'Формат ответа — JSON массив: [{"id": <id>, "description": "<текст>"}]\n\n'
+            f"Книги:\n{books_text}"
+        )
+
+        try:
+            resp = httpx.post(
+                f"{base_url}/chat/completions",
+                headers={"Authorization": f"Bearer {api_key}"},
+                json={
+                    "model": model,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0.7,
+                    "response_format": {"type": "json_object"},
+                },
+                timeout=60,
+            )
+            resp.raise_for_status()
+            content = resp.json()["choices"][0]["message"]["content"]
+            # Parse JSON from response
+            data = json.loads(content)
+            # Handle both {"descriptions": [...]} and [...] formats
+            if isinstance(data, dict):
+                items = data.get("descriptions", data.get("books", list(data.values())[0] if data else []))
+            else:
+                items = data
+
+            for item in items:
+                if isinstance(item, dict) and "id" in item and "description" in item:
+                    db.update_book_description(int(item["id"]), item["description"])
+                    _desc_status["done"] += 1
+        except Exception as e:
+            logger.error("Description generation batch failed: %s", e)
+            _desc_status["error"] = str(e)
+
+    _desc_status["running"] = False
+
+
+@router.post("/descriptions/generate")
+def generate_descriptions(
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(require_admin),
+):
+    """Generate short descriptions for all books that don't have one."""
+    if _desc_status["running"]:
+        return {"message": "Already running", "status": _desc_status}
+
+    books = db.get_books_without_description()
+    if not books:
+        return {"message": "All books have descriptions", "total": 0}
+
+    background_tasks.add_task(_generate_descriptions_task)
+    return {"message": f"Generating descriptions for {len(books)} books", "total": len(books)}
+
+
+@router.get("/descriptions/status")
+def descriptions_status(user: dict = Depends(require_admin)):
+    """Check status of description generation."""
+    return _desc_status
+
+
+class UpdateDescriptionRequest(BaseModel):
+    description: str
+
+
+@router.put("/books/{book_id}/description")
+def update_description(
+    book_id: int,
+    req: UpdateDescriptionRequest,
+    user: dict = Depends(require_admin),
+):
+    """Manually set a book's description."""
+    book = db.get_book_by_id(book_id)
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+    db.update_book_description(book_id, req.description)
+    return {"id": book_id, "description": req.description}

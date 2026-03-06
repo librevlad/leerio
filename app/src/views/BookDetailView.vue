@@ -11,7 +11,7 @@ import BookSimilar from '../components/book/BookSimilar.vue'
 import BookActions from '../components/book/BookActions.vue'
 import BookQuotes from '../components/book/BookQuotes.vue'
 import BookChapters from '../components/book/BookChapters.vue'
-import { IconArrowLeft, IconPlay, IconDownload, IconTrash, IconCheck, IconX } from '../components/shared/icons'
+import { IconArrowLeft, IconDownload, IconTrash, IconCheck, IconX } from '../components/shared/icons'
 import ProgressBar from '../components/shared/ProgressBar.vue'
 import { usePlayer } from '../composables/usePlayer'
 import { useDownloads } from '../composables/useDownloads'
@@ -109,25 +109,12 @@ watch(() => route.params.id, loadBook)
 
     <div v-else-if="book" class="fade-in">
       <!-- 1. Hero card -->
-      <BookInfo :book="book" class="mb-5" />
+      <BookInfo :book="book" :is-current-book="isCurrentBook" class="mb-5" @listen="startListening" />
 
-      <!-- 2. Action bar: CTA + status pills + download -->
+      <!-- 2. Action bar: status pills + download -->
       <div class="mb-5 space-y-3">
-        <!-- Mobile: CTA full width -->
         <div class="flex flex-wrap items-center gap-3">
-          <button
-            v-if="book.mp3_count && book.mp3_count > 0"
-            class="btn btn-primary px-7 py-3 text-[15px]"
-            style="
-              box-shadow:
-                0 6px 28px rgba(232, 146, 58, 0.3),
-                inset 0 1px 0 rgba(255, 255, 255, 0.15);
-            "
-            @click="startListening"
-          >
-            <IconPlay :size="16" />
-            {{ isCurrentBook ? 'Продолжить' : 'Слушать' }}
-          </button>
+          <BookActions :book-id="book.id" :book-status="book.book_status" @status-changed="loadBook" />
 
           <!-- Download controls (native only) — pushed right -->
           <template v-if="dl.isNative.value && book.mp3_count && book.mp3_count > 0">
@@ -175,9 +162,6 @@ watch(() => route.params.id, loadBook)
             </div>
           </template>
         </div>
-
-        <!-- Status pills row -->
-        <BookActions :book-id="book.id" :book-status="book.book_status" @status-changed="loadBook" />
       </div>
 
       <!-- 3. Chapters -->

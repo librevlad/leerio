@@ -127,6 +127,7 @@ def _enrich_catalog_book(
         "note": note,
         "has_cover": bool(b.get("has_cover")),
         "mp3_count": b.get("mp3_count", 0),
+        "description": b.get("description", ""),
     }
 
     if rating:
@@ -681,6 +682,7 @@ def get_book(book_id: str, user: dict = Depends(get_current_user)):
         "mp3_count": b.get("mp3_count", 0),
         "duration_hours": b.get("duration_hours", 0),
         "duration_fmt": fmt_duration(b.get("duration_hours", 0)),
+        "description": b.get("description", ""),
     }
 
     if rating:

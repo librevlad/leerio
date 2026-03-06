@@ -4,9 +4,12 @@ import type { Book } from '../../types'
 import { coverUrl } from '../../api'
 import CategoryBadge from '../shared/CategoryBadge.vue'
 import ProgressRing from '../shared/ProgressRing.vue'
-import { IconStar, IconStarOutline, IconHardDrive, IconMusic, IconClock, IconHeadphones } from '../shared/icons'
+import { IconStar, IconStarOutline, IconHardDrive, IconMusic, IconClock, IconHeadphones, IconPlay } from '../shared/icons'
 
-const props = defineProps<{ book: Book }>()
+const props = defineProps<{ book: Book; isCurrentBook?: boolean }>()
+const emit = defineEmits<{ listen: [] }>()
+
+const descExpanded = ref(false)
 const coverLoaded = ref(false)
 const coverError = ref(false)
 const hasCover = computed(() => props.book.has_cover && !coverError.value)
@@ -120,6 +123,21 @@ const startDate = computed(() => {
           </div>
         </div>
 
+        <!-- Listen button (mobile) -->
+        <button
+          v-if="book.mp3_count && book.mp3_count > 0"
+          class="btn btn-primary mt-4 w-full px-7 py-3 text-[15px]"
+          style="
+            box-shadow:
+              0 6px 28px rgba(232, 146, 58, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.15);
+          "
+          @click="emit('listen')"
+        >
+          <IconPlay :size="16" />
+          {{ isCurrentBook ? 'Продолжить' : 'Слушать' }}
+        </button>
+
         <!-- Progress stats (mobile) -->
         <div v-if="book.progress > 0" class="mt-4 flex flex-wrap items-center gap-3 text-[12px]">
           <ProgressRing :percent="book.progress" :size="48" :stroke="3" />
@@ -224,8 +242,40 @@ const startDate = computed(() => {
               <span v-if="remainingHours !== null" class="text-[--t3]"> Осталось ~{{ remainingHours }} ч </span>
               <span v-if="startDate" class="text-[--t3]"> Начато: {{ startDate }} </span>
             </div>
+
+            <!-- Listen button (desktop) -->
+            <button
+              v-if="book.mp3_count && book.mp3_count > 0"
+              class="btn btn-primary mt-4 self-start px-7 py-3 text-[15px]"
+              style="
+                box-shadow:
+                  0 6px 28px rgba(232, 146, 58, 0.3),
+                  inset 0 1px 0 rgba(255, 255, 255, 0.15);
+              "
+              @click="emit('listen')"
+            >
+              <IconPlay :size="16" />
+              Слушать
+            </button>
           </div>
         </div>
+      </div>
+
+      <!-- Description -->
+      <div v-if="book.description" class="mt-4 border-t border-white/[0.04] px-1 pt-4">
+        <p
+          class="text-[13px] leading-relaxed text-[--t2]"
+          :class="{ 'line-clamp-3': !descExpanded }"
+        >
+          {{ book.description }}
+        </p>
+        <button
+          v-if="book.description.length > 200"
+          class="mt-1 cursor-pointer border-0 bg-transparent p-0 text-[12px] text-[--accent] hover:underline"
+          @click="descExpanded = !descExpanded"
+        >
+          {{ descExpanded ? 'Свернуть' : 'Читать далее' }}
+        </button>
       </div>
 
       <!-- Metadata row (mobile only — desktop has it inline) -->

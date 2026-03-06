@@ -31,6 +31,7 @@ export interface Book {
   tags: string[]
   note: string
   has_cover?: boolean
+  description?: string
   rating?: number
   book_status?: BookStatusValue
   // Detail fields
