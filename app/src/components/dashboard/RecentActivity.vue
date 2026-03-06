@@ -65,7 +65,10 @@ function timeAgo(ts: string): string {
   <div v-if="entries.length">
     <div class="mb-4 flex items-center justify-between">
       <h2 class="section-label">Последние действия</h2>
-      <router-link to="/history" class="text-[12px] font-medium text-[--accent] no-underline hover:underline">
+      <router-link
+        to="/history"
+        class="inline-flex min-h-[44px] items-center text-[12px] font-medium text-[--accent] no-underline hover:underline"
+      >
         Все действия
       </router-link>
     </div>
@@ -118,7 +121,7 @@ function timeAgo(ts: string): string {
           <router-link
             v-if="e.book_id"
             :to="`/book/${e.book_id}`"
-            class="mt-0.5 block truncate text-[13px] font-medium text-[--t2] no-underline transition-colors hover:text-[--t1]"
+            class="mt-0.5 block truncate py-1 text-[13px] font-medium text-[--t2] no-underline transition-colors hover:text-[--t1]"
           >
             {{ e.book }}
           </router-link>

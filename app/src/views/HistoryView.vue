@@ -197,7 +197,7 @@ function formatTime(ts: string): string {
               <router-link
                 v-if="e.book_id"
                 :to="`/book/${e.book_id}`"
-                class="block truncate text-[13px] font-medium text-[--t2] no-underline transition-colors hover:text-[--t1]"
+                class="block truncate py-1 text-[13px] font-medium text-[--t2] no-underline transition-colors hover:text-[--t1]"
               >
                 {{ e.book }}
               </router-link>
