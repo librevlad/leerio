@@ -15,6 +15,7 @@ const hasMetadata = () => props.book.size_mb || props.book.mp3_count || props.bo
 
 const coverGradient: Record<string, string> = {
   Бизнес: 'linear-gradient(135deg, #92400e 0%, #d97706 50%, #fbbf24 100%)',
+  Личные: 'linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #a78bfa 100%)',
   Отношения: 'linear-gradient(135deg, #9d174d 0%, #db2777 50%, #f472b6 100%)',
   Саморазвитие: 'linear-gradient(135deg, #9a5c16 0%, #E8923A 50%, #F0A85C 100%)',
   Художественная: 'linear-gradient(135deg, #155e75 0%, #0891b2 50%, #22d3ee 100%)',
@@ -24,6 +25,8 @@ const coverGradient: Record<string, string> = {
 const coverPattern: Record<string, string> = {
   Бизнес:
     'radial-gradient(circle at 80% 20%, rgba(255,255,255,0.18) 0%, transparent 50%), radial-gradient(circle at 20% 80%, rgba(0,0,0,0.15) 0%, transparent 50%)',
+  Личные:
+    'radial-gradient(circle at 60% 40%, rgba(255,255,255,0.15) 0%, transparent 50%), radial-gradient(circle at 40% 60%, rgba(0,0,0,0.12) 0%, transparent 50%)',
   Отношения:
     'radial-gradient(circle at 20% 30%, rgba(255,255,255,0.15) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(0,0,0,0.15) 0%, transparent 50%)',
   Саморазвитие:

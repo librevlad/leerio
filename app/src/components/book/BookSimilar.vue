@@ -12,8 +12,9 @@ const coverErrors = reactive(new Set<string>())
 
 const coverGradient: Record<string, string> = {
   Бизнес: 'linear-gradient(135deg, #92400e 0%, #d97706 100%)',
+  Личные: 'linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%)',
   Отношения: 'linear-gradient(135deg, #9d174d 0%, #db2777 100%)',
-  Саморазвитие: 'linear-gradient(135deg, #5b21b6 0%, #7c3aed 100%)',
+  Саморазвитие: 'linear-gradient(135deg, #9a5c16 0%, #E8923A 100%)',
   Художественная: 'linear-gradient(135deg, #155e75 0%, #0891b2 100%)',
   Языки: 'linear-gradient(135deg, #064e3b 0%, #059669 100%)',
 }
