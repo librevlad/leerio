@@ -10,7 +10,7 @@ test.describe('Library', () => {
   })
 
   test('shows page title and book count', async ({ page, takeScreenshot }) => {
-    await expect(page.locator('h1.page-title')).toContainText('Библиотека')
+    await expect(page.locator('h1.page-title')).toContainText('Каталог')
     await expect(page.locator('main').locator('text=/\\d+ кни/')).toBeVisible()
     await takeScreenshot('library-page')
   })
