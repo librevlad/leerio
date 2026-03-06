@@ -97,6 +97,22 @@ export interface DashboardData {
   category_counts: Record<string, number>
 }
 
+export interface ShelfBook {
+  id: string
+  title: string
+  author: string
+  category: string
+  has_cover?: boolean
+  progress: number
+  book_status?: BookStatusValue | null
+}
+
+export interface ShelfData {
+  category: string
+  count: number
+  books: ShelfBook[]
+}
+
 export interface Velocity {
   total: number
   span_days?: number

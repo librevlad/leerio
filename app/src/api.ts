@@ -45,7 +45,7 @@ async function requestFormData<T>(path: string, formData: FormData): Promise<T> 
 }
 
 // Cacheable GET paths (prefix match)
-const CACHEABLE = ['/books', '/dashboard', '/config/constants', '/progress', '/user/book-status']
+const CACHEABLE = ['/books', '/dashboard', '/config/constants', '/progress', '/user/book-status', '/books/shelves']
 
 function cacheKey(path: string): string {
   return path.replace(/[^a-zA-Z0-9_/-]/g, '_')
@@ -133,6 +133,7 @@ import type {
   TTSVoice,
   TTSEngine,
   TTSJob,
+  ShelfData,
 } from './types'
 
 export const api = {
@@ -141,6 +142,7 @@ export const api = {
 
   // Dashboard
   getDashboard: () => get<DashboardData>('/dashboard'),
+  getShelves: () => get<ShelfData[]>('/books/shelves'),
 
   // Books
   getBooks: (params?: Record<string, string>) => {

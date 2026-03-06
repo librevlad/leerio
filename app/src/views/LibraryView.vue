@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useBooks } from '../composables/useBooks'
 import SearchInput from '../components/shared/SearchInput.vue'
 import BookCard from '../components/shared/BookCard.vue'
@@ -9,10 +10,11 @@ import { usePullToRefresh } from '../composables/usePullToRefresh'
 import type { BookStatusValue } from '../types'
 import { plural } from '../utils/plural'
 
+const route = useRoute()
 const { books, loading, load, categories } = useBooks()
 
 const search = ref('')
-const category = ref('')
+const category = ref((route.query.category as string) || '')
 const sort = ref('title')
 const statusFilter = ref<BookStatusValue | ''>('')
 

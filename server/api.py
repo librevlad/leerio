@@ -502,6 +502,49 @@ def get_dashboard(user: dict = Depends(get_current_user)):
     }
 
 
+# ── Book Shelves (category carousels for home page) ────────────────────────
+
+
+@app.get("/api/books/shelves")
+def get_book_shelves(user: dict = Depends(get_current_user)):
+    uid = user["user_id"]
+    all_books = db.get_all_books()
+    statuses = db.get_all_user_book_statuses(uid)
+    progress = db.get_all_user_progress(uid)
+
+    # Group by category, pick up to 12 per category (random)
+    by_cat: dict[str, list[dict]] = {}
+    for b in all_books:
+        cat = b.get("category", "")
+        if cat not in by_cat:
+            by_cat[cat] = []
+        by_cat[cat].append(b)
+
+    shelves = []
+    for cat in sorted(by_cat.keys()):
+        books = by_cat[cat]
+        sample = random.sample(books, min(12, len(books)))
+        shelf_books = []
+        for b in sample:
+            bid = str(b["id"])
+            pct = progress.get(bid, {}).get("pct", 0)
+            st = statuses.get(bid, {}).get("status")
+            shelf_books.append(
+                {
+                    "id": bid,
+                    "title": b["title"],
+                    "author": b["author"],
+                    "category": b["category"],
+                    "has_cover": bool(b.get("has_cover")),
+                    "progress": pct,
+                    "book_status": st,
+                }
+            )
+        shelves.append({"category": cat, "count": len(books), "books": shelf_books})
+
+    return shelves
+
+
 # ── Books ───────────────────────────────────────────────────────────────────
 
 
