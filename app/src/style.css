@@ -196,6 +196,14 @@ body {
   box-shadow: 0 0 0 2px rgba(232, 146, 58, 0.1);
   outline: none;
 }
+.input-field:-webkit-autofill,
+.input-field:-webkit-autofill:hover,
+.input-field:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px rgba(20, 20, 30, 1) inset !important;
+  -webkit-text-fill-color: var(--t1) !important;
+  border-color: var(--border);
+  transition: background-color 5000s ease-in-out 0s;
+}
 
 /* ── Dialog ───────────────────────────────────────────────────────────── */
 
