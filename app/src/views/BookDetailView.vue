@@ -53,6 +53,7 @@ async function loadBook() {
   loading.value = true
   try {
     book.value = await api.getBook(route.params.id as string)
+    if (book.value) document.title = `${book.value.title} — Leerio`
   } catch {
     router.push('/library')
   } finally {

@@ -85,7 +85,7 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
     <!-- Header -->
     <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
       <div>
-        <h1 class="page-title">Библиотека</h1>
+        <h1 class="page-title">Каталог</h1>
         <p class="mt-1 text-[13px] text-[--t3]">
           <span class="font-bold text-[--accent]">{{ filtered.length }}</span>
           {{ plural(filtered.length, 'книга', 'книги', 'книг') }}
