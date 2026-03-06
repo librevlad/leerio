@@ -6,7 +6,7 @@ test.describe('Dashboard', () => {
   })
 
   test('shows page title', async ({ page, takeScreenshot }) => {
-    await expect(page.locator('h1.page-title')).toContainText('Дашборд')
+    await expect(page.locator('h1.page-title')).toContainText('Главная')
     await takeScreenshot('dashboard-title')
   })
 
@@ -19,13 +19,12 @@ test.describe('Dashboard', () => {
     })
   })
 
-  test('displays hero stats after loading', async ({ page, takeScreenshot }) => {
+  test('displays inline stats after loading', async ({ page, takeScreenshot }) => {
     await expect(page.locator('.fade-in').first()).toBeVisible({ timeout: 15_000 })
 
-    // Should have stat cards with labels
-    await expect(page.locator('text=Всего книг')).toBeVisible()
-    await expect(page.locator('text=Прослушано')).toBeVisible()
-    await expect(page.locator('span.text-\\[12px\\]:has-text("В процессе")')).toBeVisible()
+    // Should have inline stats text
+    await expect(page.locator('text=книг в библиотеке')).toBeVisible()
+    await expect(page.locator('text=прослушано')).toBeVisible()
     await takeScreenshot('dashboard-stats')
   })
 
@@ -35,8 +34,10 @@ test.describe('Dashboard', () => {
     await expect(page.locator('text=Активность').first()).toBeVisible()
   })
 
-  test('displays recent activity section', async ({ page, takeScreenshot }) => {
+  test('displays category shelves', async ({ page, takeScreenshot }) => {
     await expect(page.locator('.fade-in').first()).toBeVisible({ timeout: 15_000 })
-    await takeScreenshot('dashboard-loaded')
+    // Should have at least one "Показать все" link from category shelves
+    await expect(page.locator('text=Показать все').first()).toBeVisible()
+    await takeScreenshot('dashboard-shelves')
   })
 })
