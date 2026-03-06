@@ -41,7 +41,7 @@ const stats = [
       v-for="s in stats"
       :key="s.key"
       :to="s.to"
-      class="card relative overflow-hidden px-5 py-5 no-underline transition-colors hover:border-white/10"
+      class="card relative overflow-hidden px-5 py-5 no-underline transition-colors last:col-span-2 hover:border-white/10 sm:last:col-span-1"
     >
       <div class="mb-4 flex items-center justify-between">
         <span class="text-[12px] font-semibold text-[--t3]">{{ s.label }}</span>

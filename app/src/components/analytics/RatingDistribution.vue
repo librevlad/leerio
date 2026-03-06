@@ -7,6 +7,8 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip)
 
 const props = defineProps<{ data: Record<string, number> }>()
 
+const hasData = computed(() => Object.values(props.data).some((v) => v > 0))
+
 const chartData = computed(() => {
   const labels = ['1', '2', '3', '4', '5']
   return {
@@ -44,8 +46,11 @@ const options = {
 <template>
   <div class="card p-6">
     <h3 class="section-label mb-4">Оценки</h3>
-    <div class="h-[200px] sm:h-[250px]">
+    <div class="relative h-[200px] sm:h-[250px]">
       <Bar :data="chartData" :options="options" />
+      <div v-if="!hasData" class="absolute inset-0 flex items-center justify-center">
+        <p class="text-[13px] text-[--t3]">Оценивайте книги после прослушивания</p>
+      </div>
     </div>
   </div>
 </template>
