@@ -37,6 +37,17 @@ function formatDuration(sec: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
+function trackName(track: Track, index: number): string {
+  const fn = track.filename
+  // If filename looks like a raw file (e.g. "0101.mp3", "003.mp3"), show "Глава N"
+  if (/^\d+\.mp3$/i.test(fn)) return `Глава ${index + 1}`
+  // Strip .mp3 extension for display
+  const name = fn.replace(/\.mp3$/i, '')
+  // If it's still just digits, show "Глава N"
+  if (/^\d+$/.test(name)) return `Глава ${index + 1}`
+  return name
+}
+
 async function handleTrackClick(index: number) {
   if (isCurrentBook.value) {
     player.playTrack(index)
@@ -94,8 +105,8 @@ onMounted(async () => {
             />
             <span v-else>{{ track.index + 1 }}</span>
           </span>
-          <!-- Filename -->
-          <span class="min-w-0 flex-1 truncate text-[13px]">{{ track.filename }}</span>
+          <!-- Track name -->
+          <span class="min-w-0 flex-1 truncate text-[13px]">{{ trackName(track, track.index) }}</span>
           <!-- Duration -->
           <span v-if="track.duration" class="shrink-0 font-mono text-[12px] text-[--t3]">{{
             formatDuration(track.duration)

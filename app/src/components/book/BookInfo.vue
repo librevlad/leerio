@@ -31,6 +31,7 @@ const coverGradient: Record<string, string> = {
   Саморазвитие: 'linear-gradient(135deg, #9a5c16 0%, #E8923A 50%, #F0A85C 100%)',
   Художественная: 'linear-gradient(135deg, #155e75 0%, #0891b2 50%, #22d3ee 100%)',
   Языки: 'linear-gradient(135deg, #064e3b 0%, #059669 50%, #34d399 100%)',
+  Другое: 'linear-gradient(135deg, #334155 0%, #475569 50%, #64748b 100%)',
 }
 
 const coverPattern: Record<string, string> = {

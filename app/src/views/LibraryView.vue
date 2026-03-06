@@ -17,10 +17,19 @@ const search = ref('')
 const category = ref((route.query.category as string) || '')
 const sort = ref('title')
 const statusFilter = ref<BookStatusValue | ''>('')
+const visibleCount = ref(40)
+
+const PAGE_SIZE = 40
 
 onMounted(() => loadBooks())
 
-watch([category, sort], () => loadBooks())
+watch([category, sort], () => {
+  visibleCount.value = PAGE_SIZE
+  loadBooks()
+})
+watch([statusFilter, search], () => {
+  visibleCount.value = PAGE_SIZE
+})
 
 function loadBooks() {
   const params: Record<string, string> = {}
@@ -43,6 +52,9 @@ const filtered = computed(() => {
   }
   return result
 })
+
+const visibleBooks = computed(() => filtered.value.slice(0, visibleCount.value))
+const hasMore = computed(() => visibleCount.value < filtered.value.length)
 
 const sortOptions = [
   { value: 'title', label: 'Название' },
@@ -75,6 +87,11 @@ function resetFilters() {
   category.value = ''
   sort.value = 'title'
   statusFilter.value = ''
+  visibleCount.value = PAGE_SIZE
+}
+
+function showMore() {
+  visibleCount.value += PAGE_SIZE
 }
 
 const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
@@ -172,11 +189,15 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
       </div>
     </div>
 
-    <div
-      v-else-if="filtered.length"
-      class="fade-in grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-    >
-      <BookCard v-for="book in filtered" :key="book.id" :book="book" />
+    <div v-else-if="filtered.length" class="fade-in">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <BookCard v-for="book in visibleBooks" :key="book.id" :book="book" />
+      </div>
+      <div v-if="hasMore" class="mt-6 flex justify-center">
+        <button class="btn btn-ghost px-8 py-2.5 text-[13px] font-semibold" @click="showMore">
+          Показать ещё {{ Math.min(PAGE_SIZE, filtered.length - visibleCount) }} из {{ filtered.length - visibleCount }}
+        </button>
+      </div>
     </div>
 
     <EmptyState

@@ -16,6 +16,7 @@ const categoryColors: Record<string, string> = {
   Саморазвитие: '#7c5bf0',
   Художественная: '#0e8a99',
   Языки: '#0f8660',
+  Другое: '#64748b',
 }
 
 const chartData = computed(() => ({

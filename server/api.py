@@ -100,6 +100,16 @@ def _resolve_user_book_path(book_id: str, user: dict | None = None) -> Path | No
     return book_dir if book_dir.exists() else None
 
 
+_CATEGORY_MAP = {
+    "books": "Художественная",
+    "": "Другое",
+}
+
+
+def _normalize_category(cat: str) -> str:
+    return _CATEGORY_MAP.get(cat, cat) if cat in _CATEGORY_MAP else cat
+
+
 def _enrich_catalog_book(
     b: dict,
     *,
@@ -118,7 +128,7 @@ def _enrich_catalog_book(
     result = {
         "id": str(book_id),
         "folder": b["folder"],
-        "category": b["category"],
+        "category": _normalize_category(b["category"]),
         "author": b["author"],
         "title": b["title"],
         "reader": b.get("reader", ""),
@@ -488,7 +498,7 @@ def get_dashboard(user: dict = Depends(get_current_user)):
     year = str(datetime.now().year)
     this_year_done = sum(1 for h in done if (h.get("ts") or "").startswith(year))
 
-    cat_counts = Counter(b["category"] for b in all_books)
+    cat_counts = Counter(_normalize_category(b["category"]) for b in all_books)
 
     return {
         "total_books": len(all_books) + user_books_count,
@@ -670,7 +680,7 @@ def get_book(book_id: str, user: dict = Depends(get_current_user)):
     enriched = {
         "id": str(bid),
         "folder": b["folder"],
-        "category": b["category"],
+        "category": _normalize_category(b["category"]),
         "author": b["author"],
         "title": b["title"],
         "reader": b.get("reader", ""),
@@ -891,11 +901,14 @@ def get_history(
     user: dict = Depends(get_current_user),
 ):
     hist = db.get_user_history(user["user_id"], action=action, search=search, limit=limit)
+    # Build book title lookup from DB for accurate display
+    all_books = db.search_books()
+    title_by_id = {b["id"]: b["title"] for b in all_books}
     return [
         {
             "ts": h.get("ts", ""),
             "action": h.get("action", ""),
-            "book": h.get("book_title", ""),
+            "book": title_by_id.get(h.get("book_id"), h.get("book_title", "")),
             "detail": h.get("detail", ""),
             "rating": h.get("rating", 0),
             "action_label": ACTION_LABELS.get(h.get("action", ""), h.get("action", "")),
@@ -1134,7 +1147,7 @@ def get_analytics(user: dict = Depends(get_current_user)):
     done = [h for h in hist if h.get("action") == "done"]
     velocity = reading_velocity(legacy_hist)
 
-    cat_counts = Counter(b["category"] for b in all_books)
+    cat_counts = Counter(_normalize_category(b["category"]) for b in all_books)
 
     # Done by category
     book_by_id = {b["id"]: b for b in all_books}
@@ -1142,7 +1155,7 @@ def get_analytics(user: dict = Depends(get_current_user)):
     for h in done:
         b = book_by_id.get(h.get("book_id"))
         if b:
-            done_by_cat[b["category"]] += 1
+            done_by_cat[_normalize_category(b["category"])] += 1
 
     # Monthly trend
     monthly: dict[str, int] = Counter()

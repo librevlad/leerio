@@ -20,6 +20,7 @@ const categoryColors: Record<string, string> = {
   Саморазвитие: '#E8923A',
   Художественная: '#0e8a99',
   Языки: '#0f8660',
+  Другое: '#64748b',
 }
 
 const coverGradient: Record<string, string> = {
@@ -29,6 +30,7 @@ const coverGradient: Record<string, string> = {
   Саморазвитие: 'linear-gradient(135deg, #9a5c16 0%, #E8923A 100%)',
   Художественная: 'linear-gradient(135deg, #155e75 0%, #0891b2 100%)',
   Языки: 'linear-gradient(135deg, #064e3b 0%, #059669 100%)',
+  Другое: 'linear-gradient(135deg, #334155 0%, #64748b 100%)',
 }
 
 const fallbackGradient = 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)'
