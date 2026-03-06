@@ -89,13 +89,42 @@ class LibriVoxImportRequest(BaseModel):
     scan_all: bool = True
 
 
-@router.post("/librivox")
-def import_librivox(req: LibriVoxImportRequest, user: dict = Depends(require_admin)):
-    """Scan LibriVox catalog and create ingestion jobs for all books in the given language."""
+# Track background import status
+_import_status: dict = {"running": False, "jobs_created": 0, "error": None}
+
+
+def _run_librivox_import(lang: str, scan_all: bool):
+    """Background task to scan LibriVox and create jobs."""
     from .ingest.sources.librivox import create_ingestion_jobs
 
-    job_ids = create_ingestion_jobs(lang=req.lang, scan_all=req.scan_all)
-    return {"jobs_created": len(job_ids), "job_ids": job_ids}
+    _import_status["running"] = True
+    _import_status["error"] = None
+    try:
+        job_ids = create_ingestion_jobs(lang=lang, scan_all=scan_all)
+        _import_status["jobs_created"] = len(job_ids)
+    except Exception as e:
+        _import_status["error"] = str(e)
+    finally:
+        _import_status["running"] = False
+
+
+@router.post("/librivox")
+def import_librivox(
+    req: LibriVoxImportRequest,
+    background_tasks: BackgroundTasks,
+    user: dict = Depends(require_admin),
+):
+    """Scan LibriVox catalog and create ingestion jobs (runs in background)."""
+    if _import_status["running"]:
+        return {"message": "Import already running", "status": _import_status}
+    background_tasks.add_task(_run_librivox_import, req.lang, req.scan_all)
+    return {"message": "LibriVox scan started in background", "status": "started"}
+
+
+@router.get("/librivox/status")
+def librivox_status(user: dict = Depends(require_admin)):
+    """Check status of background LibriVox import."""
+    return _import_status
 
 
 def _run_queue_sync():
