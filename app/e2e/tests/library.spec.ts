@@ -42,7 +42,7 @@ test.describe('Library', () => {
   })
 
   test('category pills are displayed', { tag: '@needs-books' }, async ({ page }) => {
-    await expect(page.locator('button:has-text("Все")')).toBeVisible()
+    await expect(page.locator('button:has-text("Все")').first()).toBeVisible()
     // Check for at least one category
     const categories = ['Бизнес', 'Отношения', 'Саморазвитие', 'Художественная', 'Языки']
     let found = 0
