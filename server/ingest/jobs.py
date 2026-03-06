@@ -34,6 +34,21 @@ async def heartbeat_loop(job_id: int, interval: float = 10) -> None:
         pass
 
 
+def _download_mp3_urls(mp3_urls: list[str], work_dir: Path, job_id: int) -> None:
+    """Download MP3 files from URLs into work_dir."""
+    from .sources.url import download_file
+
+    for i, url in enumerate(mp3_urls, 1):
+        dest = work_dir / f"{i:03d}.mp3"
+        logger.info("Job %d: downloading %d/%d: %s", job_id, i, len(mp3_urls), url[:100])
+        try:
+            download_file(url, dest, timeout=120)
+        except Exception as e:
+            logger.warning("Job %d: failed to download %s: %s", job_id, url[:80], e)
+            # Skip failed downloads but continue
+        db.heartbeat_ingestion_job(job_id)
+
+
 async def run_job(job_id: int) -> dict:
     """Execute a single ingestion job."""
     job = db.get_ingestion_job(job_id)
@@ -51,6 +66,24 @@ async def run_job(job_id: int) -> dict:
         # Create temp work directory
         work_dir = Path(tempfile.mkdtemp(prefix=f"leerio-ingest-{job_id}-"))
 
+        # Download source files if needed
+        mp3_urls = input_data.get("mp3_urls", [])
+        source_url = input_data.get("source_url", "")
+
+        if mp3_urls:
+            # LibriVox / Archive.org — multiple MP3 URLs
+            await asyncio.get_event_loop().run_in_executor(
+                None, _download_mp3_urls, mp3_urls, work_dir, job_id
+            )
+        elif source_url:
+            # Single URL source
+            from .sources.url import download_from_source
+
+            source_type = input_data.get("source_type", "direct")
+            await asyncio.get_event_loop().run_in_executor(
+                None, download_from_source, source_url, source_type, work_dir
+            )
+
         # Lazy import to avoid circular imports
         from .pipeline import IngestPipeline
 
@@ -62,7 +95,7 @@ async def run_job(job_id: int) -> dict:
             category=input_data.get("category", ""),
             language=input_data.get("language", "ru"),
             source=job["source"],
-            fast=input_data.get("fast", False),
+            fast=input_data.get("fast", True),
         )
 
         def on_progress(current: int, total: int, phase: str) -> None:

@@ -10,13 +10,15 @@ import httpx
 logger = logging.getLogger("leerio.ingest")
 
 
-def download_file(url: str, dest: Path, timeout: int = 60) -> Path:
+def download_file(url: str, dest: Path, timeout: int = 300) -> Path:
     """Download a file from URL to dest path."""
     logger.info("Downloading: %s -> %s", url, dest.name)
-    with httpx.stream("GET", url, timeout=timeout, follow_redirects=True) as resp:
+    # Use separate connect/read timeouts so large files don't time out
+    t = httpx.Timeout(connect=30, read=timeout, write=30, pool=30)
+    with httpx.stream("GET", url, timeout=t, follow_redirects=True) as resp:
         resp.raise_for_status()
         with open(dest, "wb") as f:
-            for chunk in resp.iter_bytes(chunk_size=8192):
+            for chunk in resp.iter_bytes(chunk_size=65536):
                 f.write(chunk)
     return dest
 

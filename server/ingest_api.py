@@ -1,8 +1,9 @@
 """Admin API endpoints for content ingestion."""
 
+import asyncio
 import json
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel
 
 from . import db
@@ -81,3 +82,40 @@ def ingest_stats(user: dict = Depends(require_admin)):
         return dict(stats)
     finally:
         conn.close()
+
+
+class LibriVoxImportRequest(BaseModel):
+    lang: str = "Russian"
+    scan_all: bool = True
+
+
+@router.post("/librivox")
+def import_librivox(req: LibriVoxImportRequest, user: dict = Depends(require_admin)):
+    """Scan LibriVox catalog and create ingestion jobs for all books in the given language."""
+    from .ingest.sources.librivox import create_ingestion_jobs
+
+    job_ids = create_ingestion_jobs(lang=req.lang, scan_all=req.scan_all)
+    return {"jobs_created": len(job_ids), "job_ids": job_ids}
+
+
+def _run_queue_sync():
+    """Run the job queue in a new event loop (for background tasks)."""
+    from .ingest.jobs import process_queue
+
+    loop = asyncio.new_event_loop()
+    try:
+        processed = loop.run_until_complete(process_queue())
+        return processed
+    finally:
+        loop.close()
+
+
+@router.post("/process")
+def process_queue_endpoint(background_tasks: BackgroundTasks, user: dict = Depends(require_admin)):
+    """Start processing all pending ingestion jobs in the background."""
+    pending = db.list_ingestion_jobs(status="pending")
+    if not pending:
+        return {"message": "No pending jobs", "pending": 0}
+
+    background_tasks.add_task(_run_queue_sync)
+    return {"message": f"Processing {len(pending)} jobs in background", "pending": len(pending)}
