@@ -72,9 +72,7 @@ async def run_job(job_id: int) -> dict:
 
         if mp3_urls:
             # LibriVox / Archive.org — multiple MP3 URLs
-            await asyncio.get_event_loop().run_in_executor(
-                None, _download_mp3_urls, mp3_urls, work_dir, job_id
-            )
+            await asyncio.get_event_loop().run_in_executor(None, _download_mp3_urls, mp3_urls, work_dir, job_id)
         elif source_url:
             # Single URL source
             from .sources.url import download_from_source
