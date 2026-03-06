@@ -11,6 +11,7 @@ const hasData = computed(() => Object.values(props.data).some((v) => v > 0))
 
 const categoryColors: Record<string, string> = {
   Бизнес: '#d4940c',
+  Личные: '#7c3aed',
   Отношения: '#c9366d',
   Саморазвитие: '#7c5bf0',
   Художественная: '#0e8a99',
