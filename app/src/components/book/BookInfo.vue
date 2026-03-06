@@ -4,7 +4,15 @@ import type { Book } from '../../types'
 import { coverUrl } from '../../api'
 import CategoryBadge from '../shared/CategoryBadge.vue'
 import ProgressRing from '../shared/ProgressRing.vue'
-import { IconStar, IconStarOutline, IconHardDrive, IconMusic, IconClock, IconHeadphones, IconPlay } from '../shared/icons'
+import {
+  IconStar,
+  IconStarOutline,
+  IconHardDrive,
+  IconMusic,
+  IconClock,
+  IconHeadphones,
+  IconPlay,
+} from '../shared/icons'
 
 const props = defineProps<{ book: Book; isCurrentBook?: boolean }>()
 const emit = defineEmits<{ listen: [] }>()
@@ -263,10 +271,7 @@ const startDate = computed(() => {
 
       <!-- Description -->
       <div v-if="book.description" class="mt-4 border-t border-white/[0.04] px-1 pt-4">
-        <p
-          class="text-[13px] leading-relaxed text-[--t2]"
-          :class="{ 'line-clamp-3': !descExpanded }"
-        >
+        <p class="text-[13px] leading-relaxed text-[--t2]" :class="{ 'line-clamp-3': !descExpanded }">
           {{ book.description }}
         </p>
         <button
