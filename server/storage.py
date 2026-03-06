@@ -1,5 +1,6 @@
 """S3 presigned URL generation for audio streaming."""
 
+import json
 import logging
 import os
 
@@ -63,3 +64,38 @@ def get_presigned_url(s3_key: str, expires: int = 3600) -> str | None:
         Params={"Bucket": bucket, "Key": s3_key},
         ExpiresIn=expires,
     )
+
+
+def upload_file_to_s3(local_path: str, s3_key: str) -> None:
+    """Upload a local file to S3."""
+    client = _get_client()
+    if not client:
+        raise RuntimeError("S3 not configured")
+    bucket = os.environ.get("S3_BUCKET", "leerio-books")
+    client.upload_file(local_path, bucket, s3_key)
+
+
+def upload_json_to_s3(data: dict | list, s3_key: str) -> None:
+    """Upload a JSON object to S3."""
+    client = _get_client()
+    if not client:
+        raise RuntimeError("S3 not configured")
+    bucket = os.environ.get("S3_BUCKET", "leerio-books")
+    body = json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8")
+    client.put_object(Bucket=bucket, Key=s3_key, Body=body, ContentType="application/json")
+
+
+def delete_s3_prefix(prefix: str) -> int:
+    """Delete all objects under a prefix. Returns count deleted."""
+    client = _get_client()
+    if not client:
+        return 0
+    bucket = os.environ.get("S3_BUCKET", "leerio-books")
+    paginator = client.get_paginator("list_objects_v2")
+    deleted = 0
+    for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
+        objects = [{"Key": obj["Key"]} for obj in page.get("Contents", [])]
+        if objects:
+            client.delete_objects(Bucket=bucket, Delete={"Objects": objects})
+            deleted += len(objects)
+    return deleted
