@@ -7,6 +7,8 @@ ChartJS.register(ArcElement, Tooltip, Legend)
 
 const props = defineProps<{ data: Record<string, number> }>()
 
+const hasData = computed(() => Object.values(props.data).some((v) => v > 0))
+
 const categoryColors: Record<string, string> = {
   Бизнес: '#d4940c',
   Отношения: '#c9366d',
@@ -42,8 +44,11 @@ const options = {
 <template>
   <div class="card p-6">
     <h3 class="section-label mb-4">По категориям</h3>
-    <div class="h-[200px] sm:h-[250px]">
+    <div class="relative h-[200px] sm:h-[250px]">
       <Doughnut :data="chartData" :options="options" />
+      <div v-if="!hasData" class="absolute inset-0 flex items-center justify-center">
+        <p class="text-[13px] text-[--t3]">Начните слушать книги</p>
+      </div>
     </div>
   </div>
 </template>

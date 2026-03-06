@@ -315,14 +315,17 @@
 
       // Gallery tabs
       var tabs = document.querySelectorAll('.gallery-tab');
+      function activateGalleryTab(target) {
+        tabs.forEach(function (t) { t.classList.remove('active'); });
+        document.querySelector('.gallery-tab[data-target="' + target + '"]').classList.add('active');
+        document.querySelectorAll('.gallery-panel').forEach(function (p) { p.classList.remove('active'); });
+        document.getElementById('gallery-' + target).classList.add('active');
+      }
       tabs.forEach(function (tab) {
-        tab.addEventListener('click', function () {
-          tabs.forEach(function (t) { t.classList.remove('active'); });
-          tab.classList.add('active');
-          document.querySelectorAll('.gallery-panel').forEach(function (p) { p.classList.remove('active'); });
-          document.getElementById('gallery-' + tab.dataset.target).classList.add('active');
-        });
+        tab.addEventListener('click', function () { activateGalleryTab(tab.dataset.target); });
       });
+      // Default to mobile gallery on small screens
+      if (window.innerWidth < 768) { activateGalleryTab('mobile'); }
 
       // Shrink nav on scroll
       var nav = document.querySelector('.site-nav');
