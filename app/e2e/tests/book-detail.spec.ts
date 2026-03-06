@@ -36,9 +36,10 @@ test.describe('Book detail', { tag: '@needs-books' }, () => {
     expect(text).toMatch(/Слушать|Продолжить/)
   })
 
-  test('shows status selector', async ({ page, takeScreenshot }) => {
-    const select = page.locator('select.input-field').first()
-    await expect(select).toBeVisible()
+  test('shows status pills', async ({ page, takeScreenshot }) => {
+    // Status is now shown as pill buttons (e.g. "Хочу прочесть", "Слушаю", etc.)
+    const statusPill = page.locator('button:has-text("Хочу прочесть"), button:has-text("Слушаю")')
+    await expect(statusPill.first()).toBeVisible()
     await takeScreenshot('book-detail-actions')
   })
 

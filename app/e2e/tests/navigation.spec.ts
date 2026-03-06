@@ -20,7 +20,7 @@ test.describe('Navigation', () => {
     })
 
     test('shows all nav links', async ({ page }) => {
-      const links = ['Дашборд', 'Каталог', 'Моя библиотека', 'Загрузить', 'История', 'Аналитика', 'Настройки']
+      const links = ['Главная', 'Каталог', 'Моя библиотека', 'Загрузить', 'Коллекции', 'История', 'Аналитика', 'Настройки']
       for (const label of links) {
         await expect(page.locator(`aside a:has-text("${label}")`)).toBeVisible()
       }
