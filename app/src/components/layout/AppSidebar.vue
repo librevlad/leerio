@@ -71,6 +71,7 @@ async function handleLogout() {
         v-for="link in links"
         :key="link.path"
         :to="link.path"
+        :title="collapsed ? link.label : undefined"
         class="group relative flex items-center gap-3 rounded-xl px-3 py-2.5 no-underline transition-all duration-200"
         :class="
           isActive(link.path)
