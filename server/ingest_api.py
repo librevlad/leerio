@@ -65,6 +65,32 @@ def retry_ingest_job(job_id: int, user: dict = Depends(require_admin)):
     return {"id": job_id, "status": "pending"}
 
 
+@router.post("/migrate")
+def run_migration(user: dict = Depends(require_admin)):
+    """Force-run DB migration for ingestion columns."""
+    conn = db._get_conn()
+    results = []
+    try:
+        for col in [
+            "language TEXT DEFAULT 'ru'",
+            "source TEXT DEFAULT 'manual'",
+            "external_id TEXT",
+            "fingerprint TEXT",
+        ]:
+            try:
+                conn.execute(f"ALTER TABLE books ADD COLUMN {col}")
+                results.append(f"Added: {col}")
+            except Exception as e:
+                results.append(f"Skipped: {col} ({e})")
+        conn.commit()
+
+        # Verify
+        cols = [r[1] for r in conn.execute("PRAGMA table_info(books)").fetchall()]
+        return {"results": results, "columns": cols}
+    finally:
+        conn.close()
+
+
 @router.get("/stats")
 def ingest_stats(user: dict = Depends(require_admin)):
     conn = db._get_conn()
