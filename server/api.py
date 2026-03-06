@@ -37,7 +37,6 @@ from .core import (
     ACTION_STYLES,
     BOOK_STATUSES,
     BOOKS_DIR,
-    CATEGORIES,
     FOLDER_TO_LABEL,
     LABEL_TO_FOLDER,
     LIST_TO_STATUS,
@@ -126,10 +125,15 @@ def _enrich_catalog_book(
     tags = (tags_map or {}).get(book_id, []) if tags_map else []
     note = (notes_map or {}).get(book_id, "") if notes_map else ""
 
+    cat_name = _normalize_category(b["category"])
+    cat_info = db.get_category_by_name(cat_name)
+
     result = {
         "id": str(book_id),
         "folder": b["folder"],
-        "category": _normalize_category(b["category"]),
+        "category": cat_name,
+        "category_color": cat_info["color"] if cat_info else "#94a3b8",
+        "category_gradient": cat_info["gradient"] if cat_info else "linear-gradient(135deg, #334155 0%, #64748b 100%)",
         "author": b["author"],
         "title": b["title"],
         "reader": b.get("reader", ""),
@@ -293,6 +297,24 @@ class AllowedEmailRequest(BaseModel):
     email: str
 
 
+class CategoryUpdateRequest(BaseModel):
+    name: str | None = None
+    color: str | None = None
+    gradient: str | None = None
+    sort_order: int | None = None
+
+
+class CategoryCreateRequest(BaseModel):
+    name: str
+    color: str = "#94a3b8"
+    gradient: str = "linear-gradient(135deg, #334155 0%, #64748b 100%)"
+    sort_order: int = 0
+
+
+class BookCategoryRequest(BaseModel):
+    category: str
+
+
 # ── App lifecycle ──────────────────────────────────────────────────────────
 
 
@@ -412,13 +434,69 @@ def delete_email(email: str, user: dict = Depends(get_current_user)):
     return {"ok": True}
 
 
+# ── Categories ─────────────────────────────────────────────────────────────
+
+
+@app.get("/api/categories")
+def list_categories():
+    """Public: returns all categories with their styling info."""
+    return db.get_all_categories()
+
+
+@app.post("/api/admin/categories")
+def create_category(req: CategoryCreateRequest, user: dict = Depends(get_current_user)):
+    """Admin only: create a new category."""
+    require_admin(user)
+    try:
+        cat = db.create_category(req.name, req.color, req.gradient, req.sort_order)
+    except Exception:
+        raise HTTPException(409, "Category with this name already exists")
+    return cat
+
+
+@app.put("/api/admin/categories/{cat_id}")
+def update_category(cat_id: int, req: CategoryUpdateRequest, user: dict = Depends(get_current_user)):
+    """Admin only: update a category's name, color, gradient, sort_order."""
+    require_admin(user)
+    updated = db.update_category_by_id(
+        cat_id,
+        name=req.name,
+        color=req.color,
+        gradient=req.gradient,
+        sort_order=req.sort_order,
+    )
+    if not updated:
+        raise HTTPException(404, "Category not found")
+    return updated
+
+
+@app.delete("/api/admin/categories/{cat_id}")
+def delete_category_endpoint(cat_id: int, user: dict = Depends(get_current_user)):
+    """Admin only: delete a category."""
+    require_admin(user)
+    deleted = db.delete_category(cat_id)
+    if not deleted:
+        raise HTTPException(404, "Category not found")
+    return {"ok": True}
+
+
+@app.put("/api/admin/books/{book_id}/category")
+def update_book_category(book_id: int, req: BookCategoryRequest, user: dict = Depends(get_current_user)):
+    """Admin only: reassign a book to a different category."""
+    require_admin(user)
+    updated = db.update_book_category(book_id, req.category)
+    if not updated:
+        raise HTTPException(404, "Book not found")
+    return {"ok": True}
+
+
 # ── Config endpoint ─────────────────────────────────────────────────────────
 
 
 @app.get("/api/config/constants")
 def get_constants():
     return {
-        "categories": CATEGORIES,
+        "categories": db.get_all_categories(),
         "status_style": STATUS_STYLE,
         "action_styles": ACTION_STYLES,
         "action_labels": ACTION_LABELS,
@@ -680,10 +758,15 @@ def get_book(book_id: str, user: dict = Depends(get_current_user)):
     rating = db.get_user_rating(uid, bid)
     status = db.get_user_book_status(uid, bid)
 
+    cat_name = _normalize_category(b["category"])
+    cat_info = db.get_category_by_name(cat_name)
+
     enriched = {
         "id": str(bid),
         "folder": b["folder"],
-        "category": _normalize_category(b["category"]),
+        "category": cat_name,
+        "category_color": cat_info["color"] if cat_info else "#94a3b8",
+        "category_gradient": cat_info["gradient"] if cat_info else "linear-gradient(135deg, #334155 0%, #64748b 100%)",
         "author": b["author"],
         "title": b["title"],
         "reader": b.get("reader", ""),

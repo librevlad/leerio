@@ -125,6 +125,7 @@ import type {
   Collection,
   SessionStats,
   Constants,
+  Category,
   TrackList,
   PlaybackPosition,
   BookStatusMap,
@@ -139,6 +140,7 @@ import type {
 export const api = {
   // Config
   getConstants: () => get<Constants>('/config/constants'),
+  getCategories: () => get<Category[]>('/categories'),
 
   // Dashboard
   getDashboard: () => get<DashboardData>('/dashboard'),

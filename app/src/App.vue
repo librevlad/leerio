@@ -10,6 +10,7 @@ import { usePlayer } from './composables/usePlayer'
 import { useDownloads } from './composables/useDownloads'
 import { useAuth } from './composables/useAuth'
 import { useNetwork } from './composables/useNetwork'
+import { useCategories } from './composables/useCategories'
 import { IconWifiOff } from './components/shared/icons'
 
 const sidebarCollapsed = ref(false)
@@ -17,6 +18,7 @@ const { isPlayerVisible } = usePlayer()
 const downloads = useDownloads()
 const { loading: authLoading, isLoggedIn } = useAuth()
 const { isOnline } = useNetwork()
+const { load: loadCategories } = useCategories()
 const route = useRoute()
 
 const isLoginPage = computed(() => route.name === 'login')
@@ -24,6 +26,7 @@ const showApp = computed(() => !authLoading.value && isLoggedIn.value && !isLogi
 
 onMounted(() => {
   downloads.init()
+  loadCategories()
 })
 </script>
 

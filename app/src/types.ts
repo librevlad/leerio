@@ -204,8 +204,16 @@ export interface SessionStats {
   peak_hour: number | null
 }
 
+export interface Category {
+  id: number
+  name: string
+  color: string
+  gradient: string
+  sort_order: number
+}
+
 export interface Constants {
-  categories: string[]
+  categories: Category[]
   status_style: Record<string, string>
   action_styles: Record<string, string>
   action_labels: Record<string, string>

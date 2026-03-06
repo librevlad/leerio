@@ -4,6 +4,7 @@ import type { ShelfBook } from '../../types'
 import { coverUrl } from '../../api'
 import { IconMusic } from '../shared/icons'
 import ProgressBar from '../shared/ProgressBar.vue'
+import { useCategories } from '../../composables/useCategories'
 
 defineProps<{
   category: string
@@ -12,38 +13,14 @@ defineProps<{
 }>()
 
 const coverErrors = reactive(new Set<string>())
-
-const categoryColors: Record<string, string> = {
-  Бизнес: '#d4940c',
-  Личные: '#7c3aed',
-  Отношения: '#c9366d',
-  Саморазвитие: '#E8923A',
-  Художественная: '#0e8a99',
-  Языки: '#0f8660',
-  Другое: '#64748b',
-}
-
-const coverGradient: Record<string, string> = {
-  Бизнес: 'linear-gradient(135deg, #92400e 0%, #d97706 100%)',
-  Личные: 'linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%)',
-  Отношения: 'linear-gradient(135deg, #9d174d 0%, #db2777 100%)',
-  Саморазвитие: 'linear-gradient(135deg, #9a5c16 0%, #E8923A 100%)',
-  Художественная: 'linear-gradient(135deg, #155e75 0%, #0891b2 100%)',
-  Языки: 'linear-gradient(135deg, #064e3b 0%, #059669 100%)',
-  Другое: 'linear-gradient(135deg, #334155 0%, #64748b 100%)',
-}
-
-const fallbackGradient = 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)'
+const { color: catColor, gradient: catGradient } = useCategories()
 </script>
 
 <template>
   <div>
     <div class="mb-3 flex items-center justify-between">
       <h2 class="section-label flex items-center gap-2">
-        <span
-          class="inline-block h-2 w-2 rounded-full"
-          :style="{ background: categoryColors[category] || '#94a3b8' }"
-        />
+        <span class="inline-block h-2 w-2 rounded-full" :style="{ background: catColor(category) }" />
         {{ category }}
         <span class="font-normal text-[--t3]">({{ count }})</span>
       </h2>
@@ -75,7 +52,7 @@ const fallbackGradient = 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)'
             <div
               v-else
               class="flex h-full w-full items-center justify-center"
-              :style="{ background: coverGradient[book.category] || fallbackGradient }"
+              :style="{ background: catGradient(book.category) }"
             >
               <IconMusic :size="28" class="text-white/40" />
             </div>

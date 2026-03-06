@@ -14,7 +14,7 @@ export function useConstants() {
     } catch {
       // Fallback defaults
       constants.value = {
-        categories: ['Бизнес', 'Отношения', 'Саморазвитие', 'Художественная', 'Языки'],
+        categories: [],
         status_style: {},
         action_styles: {},
         action_labels: {},

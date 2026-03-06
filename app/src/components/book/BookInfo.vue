@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import type { Book } from '../../types'
 import { coverUrl } from '../../api'
 import CategoryBadge from '../shared/CategoryBadge.vue'
+import { useCategories } from '../../composables/useCategories'
 import ProgressRing from '../shared/ProgressRing.vue'
 import {
   IconStar,
@@ -24,33 +25,8 @@ const hasCover = computed(() => props.book.has_cover && !coverError.value)
 
 const hasMetadata = () => props.book.size_mb || props.book.mp3_count || props.book.duration_fmt || props.book.rating
 
-const coverGradient: Record<string, string> = {
-  Бизнес: 'linear-gradient(135deg, #92400e 0%, #d97706 50%, #fbbf24 100%)',
-  Личные: 'linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #a78bfa 100%)',
-  Отношения: 'linear-gradient(135deg, #9d174d 0%, #db2777 50%, #f472b6 100%)',
-  Саморазвитие: 'linear-gradient(135deg, #9a5c16 0%, #E8923A 50%, #F0A85C 100%)',
-  Художественная: 'linear-gradient(135deg, #155e75 0%, #0891b2 50%, #22d3ee 100%)',
-  Языки: 'linear-gradient(135deg, #064e3b 0%, #059669 50%, #34d399 100%)',
-  Другое: 'linear-gradient(135deg, #334155 0%, #475569 50%, #64748b 100%)',
-}
-
-const coverPattern: Record<string, string> = {
-  Бизнес:
-    'radial-gradient(circle at 80% 20%, rgba(255,255,255,0.18) 0%, transparent 50%), radial-gradient(circle at 20% 80%, rgba(0,0,0,0.15) 0%, transparent 50%)',
-  Личные:
-    'radial-gradient(circle at 60% 40%, rgba(255,255,255,0.15) 0%, transparent 50%), radial-gradient(circle at 40% 60%, rgba(0,0,0,0.12) 0%, transparent 50%)',
-  Отношения:
-    'radial-gradient(circle at 20% 30%, rgba(255,255,255,0.15) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(0,0,0,0.15) 0%, transparent 50%)',
-  Саморазвитие:
-    'radial-gradient(circle at 70% 20%, rgba(255,255,255,0.15) 0%, transparent 50%), radial-gradient(circle at 30% 80%, rgba(0,0,0,0.15) 0%, transparent 50%)',
-  Художественная:
-    'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.18) 0%, transparent 50%), radial-gradient(circle at 70% 70%, rgba(0,0,0,0.15) 0%, transparent 50%)',
-  Языки:
-    'radial-gradient(circle at 80% 30%, rgba(255,255,255,0.15) 0%, transparent 50%), radial-gradient(circle at 20% 70%, rgba(0,0,0,0.15) 0%, transparent 50%)',
-}
-
-const fallbackGradient = 'linear-gradient(135deg, #78350f 0%, #b45309 50%, #d97706 100%)'
-const fallbackPattern = 'radial-gradient(circle at 50% 30%, rgba(255,255,255,0.12) 0%, transparent 50%)'
+const { gradient: catGradient } = useCategories()
+const coverPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0%, transparent 50%)'
 
 const listenedHours = computed(() => {
   if (!props.book.progress || !props.book.duration_hours) return null
@@ -77,11 +53,8 @@ const startDate = computed(() => {
 <template>
   <div class="card overflow-hidden">
     <!-- Gradient backdrop -->
-    <div
-      class="relative h-[100px] overflow-hidden"
-      :style="{ background: coverGradient[book.category] || fallbackGradient }"
-    >
-      <div class="absolute inset-0" :style="{ background: coverPattern[book.category] || fallbackPattern }" />
+    <div class="relative h-[100px] overflow-hidden" :style="{ background: catGradient(book.category) }">
+      <div class="absolute inset-0" :style="{ background: coverPattern }" />
       <div class="absolute inset-0" style="backdrop-filter: blur(2px)" />
       <div
         class="absolute inset-0"
@@ -98,7 +71,7 @@ const startDate = computed(() => {
           <!-- Cover -->
           <div
             class="relative h-[140px] w-[140px] shrink-0 overflow-hidden rounded-lg shadow-lg"
-            :style="!hasCover ? { background: coverGradient[book.category] || fallbackGradient } : {}"
+            :style="!hasCover ? { background: catGradient(book.category) } : {}"
           >
             <img
               v-if="hasCover"
@@ -109,11 +82,7 @@ const startDate = computed(() => {
               @load="coverLoaded = true"
               @error="coverError = true"
             />
-            <div
-              v-if="!hasCover"
-              class="absolute inset-0"
-              :style="{ background: coverPattern[book.category] || fallbackPattern }"
-            />
+            <div v-if="!hasCover" class="absolute inset-0" :style="{ background: coverPattern }" />
           </div>
           <!-- Title info -->
           <div class="flex min-w-0 flex-col justify-end pt-16 pb-1">
@@ -167,7 +136,7 @@ const startDate = computed(() => {
           <!-- Cover -->
           <div
             class="relative h-[200px] w-[200px] shrink-0 overflow-hidden rounded-lg shadow-lg"
-            :style="!hasCover ? { background: coverGradient[book.category] || fallbackGradient } : {}"
+            :style="!hasCover ? { background: catGradient(book.category) } : {}"
           >
             <img
               v-if="hasCover"
@@ -178,11 +147,7 @@ const startDate = computed(() => {
               @load="coverLoaded = true"
               @error="coverError = true"
             />
-            <div
-              v-if="!hasCover"
-              class="absolute inset-0"
-              :style="{ background: coverPattern[book.category] || fallbackPattern }"
-            />
+            <div v-if="!hasCover" class="absolute inset-0" :style="{ background: coverPattern }" />
           </div>
           <!-- Info -->
           <div class="flex min-w-0 flex-1 flex-col justify-end pt-24 pb-1">

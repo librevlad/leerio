@@ -4,21 +4,12 @@ import type { ActiveBook } from '../../types'
 import { coverUrl } from '../../api'
 import ProgressBar from '../shared/ProgressBar.vue'
 import { IconMusic, IconPlay } from '../shared/icons'
+import { useCategories } from '../../composables/useCategories'
 
 defineProps<{ books: ActiveBook[] }>()
 
 const coverErrors = reactive(new Set<string>())
-
-const coverGradient: Record<string, string> = {
-  Бизнес: 'linear-gradient(135deg, #92400e 0%, #d97706 100%)',
-  Личные: 'linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%)',
-  Отношения: 'linear-gradient(135deg, #9d174d 0%, #db2777 100%)',
-  Саморазвитие: 'linear-gradient(135deg, #9a5c16 0%, #E8923A 100%)',
-  Художественная: 'linear-gradient(135deg, #155e75 0%, #0891b2 100%)',
-  Языки: 'linear-gradient(135deg, #064e3b 0%, #059669 100%)',
-  Другое: 'linear-gradient(135deg, #334155 0%, #64748b 100%)',
-}
-const fallbackGradient = 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)'
+const { gradient: catGradient } = useCategories()
 </script>
 
 <template>
@@ -50,7 +41,7 @@ const fallbackGradient = 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)'
               <div
                 v-else
                 class="flex h-full w-full items-center justify-center"
-                :style="{ background: coverGradient[(book as any).category] || fallbackGradient }"
+                :style="{ background: catGradient((book as any).category) }"
               >
                 <IconMusic :size="24" class="text-white/40" />
               </div>

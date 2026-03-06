@@ -56,7 +56,9 @@ class TestConstants:
         assert r.status_code == 200
         data = r.json()
         assert "categories" in data
-        assert len(data["categories"]) == 5
+        assert len(data["categories"]) == 7
+        # Categories are now objects with name, color, gradient, sort_order
+        assert all("name" in c and "color" in c and "gradient" in c for c in data["categories"])
         assert "book_statuses" in data
 
 

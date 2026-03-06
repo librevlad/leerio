@@ -252,6 +252,19 @@ def init_db():
             """
         )
 
+        # --- Categories ---
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS categories (
+                id INTEGER PRIMARY KEY,
+                name TEXT UNIQUE NOT NULL,
+                color TEXT NOT NULL DEFAULT '#94a3b8',
+                gradient TEXT NOT NULL DEFAULT 'linear-gradient(135deg, #334155 0%, #64748b 100%)',
+                sort_order INTEGER NOT NULL DEFAULT 0
+            )
+            """
+        )
+
         # --- Ingestion pipeline ---
         conn.execute(
             """
@@ -277,6 +290,7 @@ def init_db():
         _migrate_history_titles(conn)
         _ensure_seed_user(conn)
         _seed_allowed_emails(conn)
+        _seed_categories(conn)
     finally:
         conn.close()
     logger.info("Database initialized at %s", DB_PATH)
@@ -1338,6 +1352,130 @@ def get_categories() -> list[str]:
     try:
         rows = conn.execute("SELECT DISTINCT category FROM books WHERE category != '' ORDER BY category").fetchall()
         return [r["category"] for r in rows]
+    finally:
+        conn.close()
+
+
+# ── Categories table helpers ──────────────────────────────────────────────
+
+
+def _seed_categories(conn: sqlite3.Connection):
+    """Insert default categories if the categories table is empty."""
+    count = conn.execute("SELECT COUNT(*) FROM categories").fetchone()[0]
+    if count > 0:
+        return
+    defaults = [
+        ("Бизнес", "#d4940c", "linear-gradient(135deg, #92400e 0%, #d97706 100%)", 1),
+        ("Отношения", "#c9366d", "linear-gradient(135deg, #9d174d 0%, #db2777 100%)", 2),
+        ("Саморазвитие", "#E8923A", "linear-gradient(135deg, #9a5c16 0%, #E8923A 100%)", 3),
+        ("Художественная", "#0e8a99", "linear-gradient(135deg, #155e75 0%, #0891b2 100%)", 4),
+        ("Языки", "#0f8660", "linear-gradient(135deg, #064e3b 0%, #059669 100%)", 5),
+        ("Личные", "#7c3aed", "linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%)", 6),
+        ("Другое", "#64748b", "linear-gradient(135deg, #334155 0%, #64748b 100%)", 7),
+    ]
+    conn.executemany(
+        "INSERT INTO categories (name, color, gradient, sort_order) VALUES (?, ?, ?, ?)",
+        defaults,
+    )
+    conn.commit()
+    logger.info("Seeded %d default categories", len(defaults))
+
+
+def get_all_categories() -> list[dict]:
+    """Return all categories ordered by sort_order."""
+    conn = _get_conn()
+    try:
+        rows = conn.execute("SELECT * FROM categories ORDER BY sort_order").fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+def get_category_by_name(name: str) -> dict | None:
+    """Return a single category by name."""
+    conn = _get_conn()
+    try:
+        row = conn.execute("SELECT * FROM categories WHERE name = ?", (name,)).fetchone()
+        return dict(row) if row else None
+    finally:
+        conn.close()
+
+
+def upsert_category(name: str, color: str, gradient: str, sort_order: int) -> dict:
+    """Insert or update a category. Returns the category dict."""
+    conn = _get_conn()
+    try:
+        conn.execute(
+            """
+            INSERT INTO categories (name, color, gradient, sort_order)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(name) DO UPDATE SET
+                color = excluded.color,
+                gradient = excluded.gradient,
+                sort_order = excluded.sort_order
+            """,
+            (name, color, gradient, sort_order),
+        )
+        conn.commit()
+        row = conn.execute("SELECT * FROM categories WHERE name = ?", (name,)).fetchone()
+        return dict(row)
+    finally:
+        conn.close()
+
+
+def update_category_by_id(cat_id: int, **fields) -> dict | None:
+    """Update specific fields of a category by ID. Returns updated dict or None."""
+    conn = _get_conn()
+    try:
+        existing = conn.execute("SELECT * FROM categories WHERE id = ?", (cat_id,)).fetchone()
+        if not existing:
+            return None
+        updates = {k: v for k, v in fields.items() if v is not None}
+        if not updates:
+            return dict(existing)
+        set_clause = ", ".join(f"{k} = ?" for k in updates)
+        values = list(updates.values()) + [cat_id]
+        conn.execute(f"UPDATE categories SET {set_clause} WHERE id = ?", values)
+        conn.commit()
+        row = conn.execute("SELECT * FROM categories WHERE id = ?", (cat_id,)).fetchone()
+        return dict(row)
+    finally:
+        conn.close()
+
+
+def create_category(name: str, color: str, gradient: str, sort_order: int) -> dict:
+    """Create a new category. Returns the category dict."""
+    conn = _get_conn()
+    try:
+        cur = conn.execute(
+            "INSERT INTO categories (name, color, gradient, sort_order) VALUES (?, ?, ?, ?)",
+            (name, color, gradient, sort_order),
+        )
+        conn.commit()
+        row = conn.execute("SELECT * FROM categories WHERE id = ?", (cur.lastrowid,)).fetchone()
+        return dict(row)
+    finally:
+        conn.close()
+
+
+def delete_category(cat_id: int) -> bool:
+    """Delete a category by ID. Returns True if deleted."""
+    conn = _get_conn()
+    try:
+        deleted = conn.execute("DELETE FROM categories WHERE id = ?", (cat_id,)).rowcount
+        conn.commit()
+        return deleted > 0
+    finally:
+        conn.close()
+
+
+def update_book_category(book_id: int, category: str) -> bool:
+    """Update a book's category. Returns True if updated."""
+    conn = _get_conn()
+    try:
+        updated = conn.execute("UPDATE books SET category = ? WHERE id = ?", (category, book_id)).rowcount
+        conn.commit()
+        return updated > 0
     finally:
         conn.close()
 

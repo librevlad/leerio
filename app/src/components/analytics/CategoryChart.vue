@@ -2,29 +2,22 @@
 import { computed } from 'vue'
 import { Doughnut } from 'vue-chartjs'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
+import { useCategories } from '../../composables/useCategories'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
 
 const props = defineProps<{ data: Record<string, number> }>()
 
-const hasData = computed(() => Object.values(props.data).some((v) => v > 0))
+const { color: catColor } = useCategories()
 
-const categoryColors: Record<string, string> = {
-  Бизнес: '#d4940c',
-  Личные: '#7c3aed',
-  Отношения: '#c9366d',
-  Саморазвитие: '#7c5bf0',
-  Художественная: '#0e8a99',
-  Языки: '#0f8660',
-  Другое: '#64748b',
-}
+const hasData = computed(() => Object.values(props.data).some((v) => v > 0))
 
 const chartData = computed(() => ({
   labels: Object.keys(props.data),
   datasets: [
     {
       data: Object.values(props.data),
-      backgroundColor: Object.keys(props.data).map((k) => categoryColors[k] || '#3e3e50'),
+      backgroundColor: Object.keys(props.data).map((k) => catColor(k)),
       borderWidth: 0,
       hoverOffset: 6,
     },

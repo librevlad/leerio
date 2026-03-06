@@ -3,23 +3,14 @@ import { ref, reactive, onMounted } from 'vue'
 import { api, coverUrl } from '../../api'
 import type { SimilarBook } from '../../types'
 import CategoryBadge from '../shared/CategoryBadge.vue'
+import { useCategories } from '../../composables/useCategories'
 
 const props = defineProps<{ bookId: string }>()
 
 const similar = ref<SimilarBook[]>([])
 const loading = ref(true)
 const coverErrors = reactive(new Set<string>())
-
-const coverGradient: Record<string, string> = {
-  Бизнес: 'linear-gradient(135deg, #92400e 0%, #d97706 100%)',
-  Личные: 'linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%)',
-  Отношения: 'linear-gradient(135deg, #9d174d 0%, #db2777 100%)',
-  Саморазвитие: 'linear-gradient(135deg, #9a5c16 0%, #E8923A 100%)',
-  Художественная: 'linear-gradient(135deg, #155e75 0%, #0891b2 100%)',
-  Языки: 'linear-gradient(135deg, #064e3b 0%, #059669 100%)',
-  Другое: 'linear-gradient(135deg, #334155 0%, #64748b 100%)',
-}
-const fallbackGradient = 'linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%)'
+const { gradient: catGradient } = useCategories()
 
 onMounted(async () => {
   if (props.bookId.startsWith('ub:') || props.bookId.startsWith('lb:')) {
@@ -55,11 +46,7 @@ onMounted(async () => {
         <!-- Mini cover or gradient swatch -->
         <div
           class="h-9 w-9 flex-shrink-0 overflow-hidden rounded-lg"
-          :style="
-            !(book.has_cover && !coverErrors.has(book.id))
-              ? { background: coverGradient[book.category] || fallbackGradient }
-              : {}
-          "
+          :style="!(book.has_cover && !coverErrors.has(book.id)) ? { background: catGradient(book.category) } : {}"
         >
           <img
             v-if="book.has_cover && !coverErrors.has(book.id)"
