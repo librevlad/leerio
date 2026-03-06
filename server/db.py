@@ -93,6 +93,19 @@ def init_db():
             )
             """
         )
+
+        # Migrate: add columns for ingestion pipeline (safe to re-run)
+        for col, default in [
+            ("language TEXT DEFAULT 'ru'", None),
+            ("source TEXT DEFAULT 'manual'", None),
+            ("external_id TEXT", None),
+            ("fingerprint TEXT", None),
+        ]:
+            try:
+                conn.execute(f"ALTER TABLE books ADD COLUMN {col}")
+            except Exception:
+                pass  # Column already exists
+
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS tracks (
