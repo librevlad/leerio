@@ -17,6 +17,9 @@ const colorMap: Record<string, { bg: string; text: string }> = {
   'В процессе': { bg: 'bg-[--accent-soft]', text: 'text-[--accent]' },
   Прочитано: { bg: 'bg-emerald-500/10', text: 'text-emerald-400' },
   Прослушано: { bg: 'bg-emerald-500/10', text: 'text-emerald-400' },
+  'Хочу прочесть': { bg: 'bg-sky-500/10', text: 'text-sky-400' },
+  'На паузе': { bg: 'bg-amber-500/10', text: 'text-amber-400' },
+  Забраковано: { bg: 'bg-red-500/10', text: 'text-red-400' },
 }
 
 const fallback = { bg: 'bg-white/[0.06]', text: 'text-[--t2]' }
