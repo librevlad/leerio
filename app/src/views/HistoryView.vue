@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { api, coverUrl } from '../api'
 import type { HistoryEntry } from '../types'
 import SearchInput from '../components/shared/SearchInput.vue'
@@ -16,6 +16,7 @@ import {
   IconSync,
   IconTrash,
   IconDownload,
+  IconMusic,
 } from '../components/shared/icons'
 import { usePullToRefresh } from '../composables/usePullToRefresh'
 import { plural } from '../utils/plural'
@@ -24,6 +25,7 @@ const entries = ref<HistoryEntry[]>([])
 const loading = ref(true)
 const search = ref('')
 const actionFilter = ref('')
+const coverErrors = reactive(new Set<string>())
 
 const actions: { value: string; label: string }[] = [
   { value: '', label: 'Все' },
@@ -167,11 +169,19 @@ function formatTime(ts: string): string {
             <!-- Book cover -->
             <div v-if="e.book_id" class="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg">
               <img
+                v-if="!coverErrors.has(e.book_id)"
                 :src="coverUrl(e.book_id)"
                 :alt="e.book"
                 class="h-full w-full object-cover"
-                @error="($event.target as HTMLImageElement).style.display = 'none'"
+                @error="coverErrors.add(e.book_id)"
               />
+              <div
+                v-else
+                class="flex h-full w-full items-center justify-center"
+                style="background: rgba(232, 146, 58, 0.1)"
+              >
+                <IconMusic :size="14" class="text-[--t3]" />
+              </div>
             </div>
 
             <!-- Content -->

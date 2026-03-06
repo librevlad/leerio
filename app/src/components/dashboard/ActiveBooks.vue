@@ -1,10 +1,14 @@
 <script setup lang="ts">
+import { reactive } from 'vue'
 import type { ActiveBook } from '../../types'
 import { coverUrl } from '../../api'
 import ProgressRing from '../shared/ProgressRing.vue'
 import StatusBadge from '../shared/StatusBadge.vue'
+import { IconMusic } from '../shared/icons'
 
 defineProps<{ books: ActiveBook[] }>()
+
+const coverErrors = reactive(new Set<string>())
 </script>
 
 <template>
@@ -28,12 +32,20 @@ defineProps<{ books: ActiveBook[] }>()
           </div>
           <div class="flex items-start gap-3">
             <img
+              v-if="!coverErrors.has(book.id)"
               :src="coverUrl(book.id)"
               :alt="book.title"
               class="h-12 w-12 shrink-0 rounded-lg object-cover"
               loading="lazy"
-              @error="($event.target as HTMLImageElement).style.display = 'none'"
+              @error="coverErrors.add(book.id)"
             />
+            <div
+              v-else
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg"
+              style="background: rgba(232, 146, 58, 0.1)"
+            >
+              <IconMusic :size="16" class="text-[--t3]" />
+            </div>
             <div class="min-w-0">
               <h4 class="line-clamp-2 text-[13px] leading-snug font-semibold text-[--t1]" :title="book.title">
                 {{ book.title }}

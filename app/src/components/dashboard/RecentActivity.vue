@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { reactive } from 'vue'
 import type { HistoryEntry } from '../../types'
 import { coverUrl } from '../../api'
 import {
@@ -12,9 +13,12 @@ import {
   IconSync,
   IconTrash,
   IconDownload,
+  IconMusic,
 } from '../shared/icons'
 
 defineProps<{ entries: HistoryEntry[] }>()
+
+const coverErrors = reactive(new Set<string>())
 
 const actionIcon: Record<string, unknown> = {
   inbox: IconInbox,
@@ -85,11 +89,19 @@ function timeAgo(ts: string): string {
         <!-- Book cover (if available) -->
         <div v-if="e.book_id" class="h-9 w-9 flex-shrink-0 overflow-hidden rounded-lg">
           <img
+            v-if="!coverErrors.has(e.book_id)"
             :src="coverUrl(e.book_id)"
             :alt="e.book"
             class="h-full w-full object-cover"
-            @error="($event.target as HTMLImageElement).style.display = 'none'"
+            @error="coverErrors.add(e.book_id)"
           />
+          <div
+            v-else
+            class="flex h-full w-full items-center justify-center"
+            style="background: rgba(232, 146, 58, 0.1)"
+          >
+            <IconMusic :size="14" class="text-[--t3]" />
+          </div>
         </div>
 
         <!-- Content -->

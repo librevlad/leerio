@@ -169,8 +169,6 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
             echo "Current SHA: $(git rev-parse HEAD)"
-            echo "BookInfo coverError check:"
-            grep -c "coverError" app/src/components/book/BookInfo.vue || echo "NOT FOUND"
             rm -f docker-compose.override.yml
             sed -i 's|CORS_ORIGINS=https://leerio.app|CORS_ORIGINS=https://app.leerio.app|' .env
             # Ensure S3 config in .env (overwrite if exists)
