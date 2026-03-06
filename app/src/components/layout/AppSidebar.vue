@@ -21,7 +21,7 @@ const router = useRouter()
 const { user, logout } = useAuth()
 
 const links = [
-  { path: '/', label: 'Дашборд', icon: IconHome },
+  { path: '/', label: 'Главная', icon: IconHome },
   { path: '/library', label: 'Каталог', icon: IconLibrary },
   { path: '/my-library', label: 'Моя библиотека', icon: IconFolder },
   { path: '/upload', label: 'Загрузить', icon: IconUpload },

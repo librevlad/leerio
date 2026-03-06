@@ -155,7 +155,7 @@ onMounted(async () => {
 
     <!-- Collections list -->
     <div v-else-if="!showCreate" class="space-y-4">
-      <div v-for="(col, idx) in collections" :key="col.id" class="card overflow-hidden">
+      <div v-for="(col, idx) in collections" :key="col.id" class="card card-hover overflow-hidden">
         <!-- Collection header — clickable to expand -->
         <button
           class="flex w-full cursor-pointer items-center gap-4 border-0 bg-transparent p-4 text-left transition-colors hover:bg-white/[0.02]"
@@ -298,8 +298,12 @@ onMounted(async () => {
           class="dialog-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
           @click.self="closeForm"
         >
-          <div class="dialog-panel w-full max-w-lg p-6" @click.stop>
-            <div class="mb-5 flex items-center justify-between">
+          <div
+            class="dialog-panel flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden sm:max-h-[90vh]"
+            @click.stop
+          >
+            <!-- Sticky header -->
+            <div class="flex items-center justify-between px-6 pt-6 pb-4 sm:px-6 sm:pt-6">
               <h2 class="text-[18px] font-bold text-[--t1]">
                 {{ editId !== null ? 'Редактировать' : 'Новая коллекция' }}
               </h2>
@@ -311,111 +315,115 @@ onMounted(async () => {
               </button>
             </div>
 
-            <div class="mb-4">
-              <label class="mb-1.5 block text-[12px] font-medium text-[--t2]">Название *</label>
-              <input
-                v-model="formName"
-                class="input-field w-full px-3.5 py-2.5"
-                placeholder="Моя подборка..."
-                @keyup.enter="save"
-              />
-            </div>
-
-            <div class="mb-4">
-              <label class="mb-1.5 block text-[12px] font-medium text-[--t2]">Описание</label>
-              <input v-model="formDesc" class="input-field w-full px-3.5 py-2.5" placeholder="Необязательно..." />
-            </div>
-
-            <div class="mb-5">
-              <label class="mb-2 block text-[12px] font-medium text-[--t2]">
-                Книги
-                <span v-if="formBooks.length" class="text-[--accent]">({{ formBooks.length }})</span>
-              </label>
-
-              <!-- Search -->
-              <div class="relative mb-2">
-                <IconSearch
-                  :size="14"
-                  class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-[--t3]"
-                />
+            <!-- Scrollable body -->
+            <div class="flex-1 overflow-y-auto px-6">
+              <div class="mb-4">
+                <label class="mb-1.5 block text-[12px] font-medium text-[--t2]">Название *</label>
                 <input
-                  v-model="bookSearch"
-                  class="input-field w-full py-2 pr-3 pl-8 text-[13px]"
-                  placeholder="Поиск по книгам..."
+                  v-model="formName"
+                  class="input-field w-full px-3.5 py-2.5"
+                  placeholder="Моя подборка..."
+                  @keyup.enter="save"
                 />
               </div>
 
-              <!-- Selected books preview -->
-              <div v-if="formBooks.length && !bookSearch" class="mb-2 flex flex-wrap gap-1.5">
-                <span
-                  v-for="bookId in formBooks"
-                  :key="bookId"
-                  class="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-[--accent]"
-                  style="background: var(--accent-soft)"
-                >
-                  {{
-                    (() => {
-                      const t = bookById(bookId)?.title ?? 'Книга #' + bookId
-                      return t.length > 25 ? t.slice(0, 25) + '...' : t
-                    })()
-                  }}
-                  <button
-                    class="ml-0.5 cursor-pointer border-0 bg-transparent p-0 text-[--accent] hover:text-white"
-                    @click="toggleBook(bookId)"
-                  >
-                    <IconX :size="10" />
-                  </button>
-                </span>
+              <div class="mb-4">
+                <label class="mb-1.5 block text-[12px] font-medium text-[--t2]">Описание</label>
+                <input v-model="formDesc" class="input-field w-full px-3.5 py-2.5" placeholder="Необязательно..." />
               </div>
 
-              <!-- Book list -->
-              <div
-                class="max-h-56 space-y-0.5 overflow-y-auto rounded-lg border p-1"
-                style="border-color: var(--border)"
-              >
-                <button
-                  v-for="book in filteredBooks"
-                  :key="book.id"
-                  class="flex w-full cursor-pointer items-center gap-2.5 rounded-lg border-0 bg-transparent px-2.5 py-2 text-left transition-colors hover:bg-white/[0.04]"
-                  :class="formBooks.includes(Number(book.id)) ? 'text-[--accent]' : 'text-[--t2]'"
-                  @click="toggleBook(Number(book.id))"
-                >
+              <div class="mb-2">
+                <label class="mb-2 block text-[12px] font-medium text-[--t2]">
+                  Книги
+                  <span v-if="formBooks.length" class="text-[--accent]">({{ formBooks.length }})</span>
+                </label>
+
+                <!-- Search -->
+                <div class="relative mb-2">
+                  <IconSearch
+                    :size="14"
+                    class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-[--t3]"
+                  />
+                  <input
+                    v-model="bookSearch"
+                    class="input-field w-full py-2 pr-3 pl-8 text-[13px]"
+                    placeholder="Поиск по книгам..."
+                  />
+                </div>
+
+                <!-- Selected books preview -->
+                <div v-if="formBooks.length && !bookSearch" class="mb-2 flex flex-wrap gap-1.5">
                   <span
-                    class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded border"
-                    :class="
-                      formBooks.includes(Number(book.id))
-                        ? 'border-[--accent] bg-[--accent]'
-                        : 'border-[--border] bg-transparent'
-                    "
+                    v-for="bookId in formBooks"
+                    :key="bookId"
+                    class="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-[--accent]"
+                    style="background: var(--accent-soft)"
                   >
-                    <IconCheck v-if="formBooks.includes(Number(book.id))" :size="10" class="text-black" />
-                  </span>
-                  <div class="h-7 w-7 flex-shrink-0 overflow-hidden rounded">
-                    <img
-                      v-if="book.has_cover && !coverErrors.has(book.id)"
-                      :src="coverUrl(book.id)"
-                      :alt="book.title"
-                      class="h-full w-full object-cover"
-                      @error="coverErrors.add(book.id)"
-                    />
-                    <div
-                      v-else
-                      class="flex h-full w-full items-center justify-center text-[9px] font-bold text-white/40"
-                      style="background: rgba(255, 255, 255, 0.06)"
+                    {{
+                      (() => {
+                        const t = bookById(bookId)?.title ?? 'Книга #' + bookId
+                        return t.length > 25 ? t.slice(0, 25) + '...' : t
+                      })()
+                    }}
+                    <button
+                      class="ml-0.5 cursor-pointer border-0 bg-transparent p-0 text-[--accent] hover:text-white"
+                      @click="toggleBook(bookId)"
                     >
-                      {{ book.title.charAt(0) }}
+                      <IconX :size="10" />
+                    </button>
+                  </span>
+                </div>
+
+                <!-- Book list -->
+                <div
+                  class="max-h-48 space-y-0.5 overflow-y-auto rounded-lg border p-1 sm:max-h-56"
+                  style="border-color: var(--border)"
+                >
+                  <button
+                    v-for="book in filteredBooks"
+                    :key="book.id"
+                    class="flex w-full cursor-pointer items-center gap-2.5 rounded-lg border-0 bg-transparent px-2.5 py-2 text-left transition-colors hover:bg-white/[0.04]"
+                    :class="formBooks.includes(Number(book.id)) ? 'text-[--accent]' : 'text-[--t2]'"
+                    @click="toggleBook(Number(book.id))"
+                  >
+                    <span
+                      class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded border"
+                      :class="
+                        formBooks.includes(Number(book.id))
+                          ? 'border-[--accent] bg-[--accent]'
+                          : 'border-[--border] bg-transparent'
+                      "
+                    >
+                      <IconCheck v-if="formBooks.includes(Number(book.id))" :size="10" class="text-black" />
+                    </span>
+                    <div class="h-7 w-7 flex-shrink-0 overflow-hidden rounded">
+                      <img
+                        v-if="book.has_cover && !coverErrors.has(book.id)"
+                        :src="coverUrl(book.id)"
+                        :alt="book.title"
+                        class="h-full w-full object-cover"
+                        @error="coverErrors.add(book.id)"
+                      />
+                      <div
+                        v-else
+                        class="flex h-full w-full items-center justify-center text-[9px] font-bold text-white/40"
+                        style="background: rgba(255, 255, 255, 0.06)"
+                      >
+                        {{ book.title.charAt(0) }}
+                      </div>
                     </div>
-                  </div>
-                  <span class="min-w-0 flex-1 truncate text-[13px]">{{ book.title }}</span>
-                  <span v-if="book.author" class="ml-auto flex-shrink-0 text-[11px] text-[--t3]">{{
-                    book.author
-                  }}</span>
-                </button>
-                <p v-if="!filteredBooks.length" class="py-4 text-center text-[12px] text-[--t3]">Ничего не найдено</p>
+                    <span class="min-w-0 flex-1 truncate text-[13px]">{{ book.title }}</span>
+                    <span v-if="book.author" class="ml-auto hidden flex-shrink-0 text-[11px] text-[--t3] sm:inline">{{
+                      book.author
+                    }}</span>
+                  </button>
+                  <p v-if="!filteredBooks.length" class="py-4 text-center text-[12px] text-[--t3]">Ничего не найдено</p>
+                </div>
               </div>
             </div>
 
-            <div class="flex gap-2">
+            <!-- Sticky footer -->
+            <div class="flex gap-2 px-6 pt-4 pb-6">
               <button class="btn btn-primary flex-1" @click="save">
                 {{ editId !== null ? 'Сохранить' : 'Создать' }}
               </button>

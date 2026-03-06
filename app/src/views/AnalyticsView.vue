@@ -7,6 +7,7 @@ import RatingDistribution from '../components/analytics/RatingDistribution.vue'
 import VelocityStats from '../components/analytics/VelocityStats.vue'
 import AchievementGrid from '../components/analytics/AchievementGrid.vue'
 import ActivityHeatmap from '../components/dashboard/ActivityHeatmap.vue'
+import EmptyState from '../components/shared/EmptyState.vue'
 
 const { data, achievements, loading, load } = useAnalytics()
 
@@ -44,12 +45,7 @@ onMounted(load)
       <div v-if="data.top_authors.length" class="card p-6">
         <h3 class="section-label mb-5">Топ авторов</h3>
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          <div
-            v-for="a in data.top_authors"
-            :key="a.author"
-            class="rounded-2xl p-4 text-center transition-all duration-200 hover:scale-[1.03]"
-            style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border)"
-          >
+          <div v-for="a in data.top_authors" :key="a.author" class="card card-hover rounded-2xl p-4 text-center">
             <p class="truncate text-[12px] font-medium text-[--t2]">{{ a.author }}</p>
             <p class="mt-1 text-[20px] font-bold tracking-tight text-[--t1]">{{ a.count }}</p>
           </div>
@@ -58,5 +54,7 @@ onMounted(load)
 
       <AchievementGrid :achievements="achievements" />
     </div>
+
+    <EmptyState v-else title="Нет данных" description="Начните слушать книги, чтобы увидеть аналитику" />
   </div>
 </template>

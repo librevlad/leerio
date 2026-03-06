@@ -17,12 +17,15 @@ const cache = useOfflineCache()
 const { user, isAdmin, logout } = useAuth()
 const cacheBytes = ref(cache.cacheSize())
 const sessionStats = ref<SessionStats | null>(null)
+const statsLoading = ref(true)
 
 onMounted(async () => {
   try {
     sessionStats.value = await api.getSessionStats(30)
   } catch {
     /* ignore */
+  } finally {
+    statsLoading.value = false
   }
 })
 
@@ -96,8 +99,19 @@ async function handleLogout() {
         </button>
       </div>
 
+      <!-- Listening stats: skeleton -->
+      <div v-if="statsLoading" class="card p-5">
+        <div class="skeleton mb-4 h-4 w-48 rounded" />
+        <div class="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+          <div v-for="i in 4" :key="i">
+            <div class="skeleton mb-2 h-3 w-16 rounded" />
+            <div class="skeleton h-7 w-14 rounded" />
+          </div>
+        </div>
+      </div>
+
       <!-- Listening stats -->
-      <div v-if="sessionStats" class="card p-5">
+      <div v-else-if="sessionStats" class="card p-5">
         <h3 class="section-label mb-4">Статистика прослушивания</h3>
         <div class="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
           <div>
