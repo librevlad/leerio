@@ -6,6 +6,7 @@ playback, notes, tags, history, quotes, sessions, bookmarks, collections).
 """
 
 import hashlib
+import json
 import logging
 import os
 import secrets
@@ -84,6 +85,10 @@ def init_db():
                 mp3_count INTEGER DEFAULT 0,
                 duration_hours REAL DEFAULT 0,
                 size_mb REAL DEFAULT 0,
+                language TEXT DEFAULT 'ru',
+                source TEXT DEFAULT 'manual',
+                external_id TEXT,
+                fingerprint TEXT,
                 created_at TEXT DEFAULT (datetime('now'))
             )
             """
@@ -228,6 +233,25 @@ def init_db():
                 collection_id INTEGER REFERENCES user_collections(id) ON DELETE CASCADE,
                 book_id INTEGER REFERENCES books(id),
                 PRIMARY KEY(collection_id, book_id)
+            )
+            """
+        )
+
+        # --- Ingestion pipeline ---
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS ingestion_jobs (
+                id INTEGER PRIMARY KEY,
+                source TEXT NOT NULL,
+                status TEXT DEFAULT 'pending',
+                input_data TEXT,
+                result TEXT,
+                retries INTEGER DEFAULT 0,
+                timeout_seconds INTEGER DEFAULT 600,
+                started_at TEXT,
+                heartbeat_at TEXT,
+                created_at TEXT DEFAULT (datetime('now')),
+                updated_at TEXT DEFAULT (datetime('now'))
             )
             """
         )
@@ -1255,5 +1279,100 @@ def get_categories() -> list[str]:
     try:
         rows = conn.execute("SELECT DISTINCT category FROM books WHERE category != '' ORDER BY category").fetchall()
         return [r["category"] for r in rows]
+    finally:
+        conn.close()
+
+
+# ── Ingestion Jobs ─────────────────────────────────────────────────────────
+
+
+def create_ingestion_job(source: str, input_data: dict, timeout_seconds: int = 600) -> int:
+    conn = _get_conn()
+    try:
+        cur = conn.execute(
+            "INSERT INTO ingestion_jobs (source, input_data, timeout_seconds) VALUES (?, ?, ?)",
+            (source, json.dumps(input_data, ensure_ascii=False), timeout_seconds),
+        )
+        conn.commit()
+        return cur.lastrowid
+    finally:
+        conn.close()
+
+
+def get_ingestion_job(job_id: int) -> dict | None:
+    conn = _get_conn()
+    try:
+        row = conn.execute("SELECT * FROM ingestion_jobs WHERE id = ?", (job_id,)).fetchone()
+        return dict(row) if row else None
+    finally:
+        conn.close()
+
+
+def list_ingestion_jobs(status: str | None = None, limit: int = 100) -> list[dict]:
+    conn = _get_conn()
+    try:
+        if status:
+            rows = conn.execute(
+                "SELECT * FROM ingestion_jobs WHERE status = ? ORDER BY created_at DESC LIMIT ?",
+                (status, limit),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                "SELECT * FROM ingestion_jobs ORDER BY created_at DESC LIMIT ?",
+                (limit,),
+            ).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+def update_ingestion_job(job_id: int, status: str | None = None, result: dict | None = None) -> None:
+    conn = _get_conn()
+    try:
+        parts = ["updated_at = datetime('now')"]
+        params: list = []
+        if status:
+            parts.append("status = ?")
+            params.append(status)
+            if status == "processing":
+                parts.append("started_at = datetime('now')")
+                parts.append("heartbeat_at = datetime('now')")
+        if result is not None:
+            parts.append("result = ?")
+            params.append(json.dumps(result, ensure_ascii=False))
+        params.append(job_id)
+        conn.execute(
+            f"UPDATE ingestion_jobs SET {', '.join(parts)} WHERE id = ?",
+            params,
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def heartbeat_ingestion_job(job_id: int) -> None:
+    conn = _get_conn()
+    try:
+        conn.execute(
+            "UPDATE ingestion_jobs SET heartbeat_at = datetime('now') WHERE id = ?",
+            (job_id,),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def recover_stalled_jobs() -> int:
+    conn = _get_conn()
+    try:
+        cur = conn.execute("""
+            UPDATE ingestion_jobs
+            SET status = 'pending', retries = retries + 1, updated_at = datetime('now')
+            WHERE status = 'processing'
+              AND heartbeat_at IS NOT NULL
+              AND (julianday('now') - julianday(heartbeat_at)) * 86400 > timeout_seconds
+        """)
+        conn.commit()
+        return cur.rowcount
     finally:
         conn.close()
