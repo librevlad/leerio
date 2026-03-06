@@ -70,6 +70,7 @@ async function removeQuote(quoteId: number) {
         >
           <button
             class="absolute top-2 right-2 cursor-pointer border-0 bg-transparent p-0.5 text-[--t3] opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
+            aria-label="Удалить цитату"
             @click="removeQuote(q.id)"
           >
             <IconX :size="12" />

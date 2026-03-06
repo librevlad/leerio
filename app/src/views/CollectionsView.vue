@@ -219,12 +219,14 @@ onMounted(async () => {
           <div class="ml-2 flex flex-shrink-0 gap-1" @click.stop>
             <button
               class="rounded-lg p-2 text-[--t3] transition-colors hover:bg-white/5 hover:text-[--t2]"
+              aria-label="Редактировать коллекцию"
               @click="openEdit(col)"
             >
               <IconEdit :size="14" />
             </button>
             <button
               class="rounded-lg p-2 text-[--t3] transition-colors hover:bg-red-500/15 hover:text-red-400"
+              aria-label="Удалить коллекцию"
               @click="remove(col)"
             >
               <IconTrash :size="14" />

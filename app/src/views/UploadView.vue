@@ -350,6 +350,7 @@ const tabDefs = [
             </div>
             <button
               class="flex-shrink-0 rounded-full p-1 text-[--t3] transition-all hover:bg-red-500/15 hover:text-red-400"
+              aria-label="Удалить файл"
               @click="removeFile(i)"
             >
               <IconX :size="14" />
@@ -602,6 +603,7 @@ const tabDefs = [
             </div>
             <button
               class="flex-shrink-0 rounded-full p-1 text-[--t3] transition-all hover:bg-red-500/15 hover:text-red-400"
+              aria-label="Удалить файл"
               @click="removeLocalFile(i)"
             >
               <IconX :size="14" />

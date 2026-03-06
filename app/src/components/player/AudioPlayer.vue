@@ -151,6 +151,7 @@ const SLEEP_OPTIONS = [
 
       <button
         class="flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-2.5 text-[--t2] transition-colors hover:text-[--t1]"
+        aria-label="Предыдущий трек"
         @click="prevTrack"
       >
         <IconSkipBack :size="20" />
@@ -159,6 +160,7 @@ const SLEEP_OPTIONS = [
       <button
         class="flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-0 transition-all"
         style="background: var(--gradient-accent); box-shadow: 0 4px 20px rgba(232, 146, 58, 0.3)"
+        :aria-label="isPlaying ? 'Пауза' : 'Воспроизвести'"
         @click="togglePlay"
       >
         <component :is="isPlaying ? IconPause : IconPlay" :size="22" style="color: #fff" />
@@ -166,6 +168,7 @@ const SLEEP_OPTIONS = [
 
       <button
         class="flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-2.5 text-[--t2] transition-colors hover:text-[--t1]"
+        aria-label="Следующий трек"
         @click="nextTrack"
       >
         <IconSkipForward :size="20" />
@@ -207,6 +210,7 @@ const SLEEP_OPTIONS = [
       <div class="flex items-center gap-2">
         <button
           class="cursor-pointer border-0 bg-transparent p-1 text-[--t3] transition-colors hover:text-[--t1]"
+          :aria-label="volume > 0 ? 'Выключить звук' : 'Включить звук'"
           @click="setVolume(volume > 0 ? 0 : 1)"
         >
           <component :is="volume > 0 ? IconVolume : IconVolumeMute" :size="16" />
@@ -256,6 +260,7 @@ const SLEEP_OPTIONS = [
         <button
           class="relative cursor-pointer border-0 bg-transparent p-1 text-[--t3] transition-colors hover:text-[--t1]"
           :class="sleepTimer !== null ? 'text-[--accent]' : ''"
+          aria-label="Таймер сна"
           @click="showSleepMenu = !showSleepMenu"
         >
           <IconMoon :size="16" />
@@ -335,6 +340,7 @@ const SLEEP_OPTIONS = [
           </button>
           <button
             class="shrink-0 cursor-pointer border-0 bg-transparent p-1 text-[--t3] transition-colors hover:text-red-400"
+            aria-label="Удалить закладку"
             @click="removeBookmark(bm.id)"
           >
             <IconTrash :size="13" />

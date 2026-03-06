@@ -182,6 +182,7 @@ function closeOverlays() {
       <div class="safe-top flex items-center justify-between px-4 py-3">
         <button
           class="flex h-10 w-10 items-center justify-center rounded-full border-0 bg-transparent text-[--t2] transition-colors hover:text-[--t1]"
+          aria-label="Свернуть плеер"
           @click="closeFullscreen"
         >
           <IconChevronDown :size="24" />
@@ -191,6 +192,7 @@ function closeOverlays() {
         </div>
         <button
           class="flex h-10 w-10 items-center justify-center rounded-full border-0 bg-transparent text-[--t2] transition-colors hover:text-[--t1]"
+          aria-label="Страница книги"
           @click="goToBook"
         >
           <IconList :size="20" />

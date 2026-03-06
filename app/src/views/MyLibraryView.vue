@@ -296,6 +296,7 @@ const coverPatterns: Record<string, string> = {
               </span>
               <button
                 class="rounded-full p-1.5 text-[--t3] opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/15 hover:text-red-400"
+                aria-label="Удалить книгу"
                 @click.stop="handleDelete(item)"
               >
                 <IconTrash :size="14" />

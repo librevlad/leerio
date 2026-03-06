@@ -57,6 +57,7 @@ const {
         <button
           class="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 transition-all"
           style="background: var(--gradient-accent); box-shadow: 0 2px 12px rgba(232, 146, 58, 0.25)"
+          :aria-label="isPlaying ? 'Пауза' : 'Воспроизвести'"
           @click="togglePlay"
         >
           <component :is="isPlaying ? IconPause : IconPlay" :size="16" style="color: #fff" />
@@ -65,6 +66,7 @@ const {
         <!-- +15s skip -->
         <button
           class="shrink-0 cursor-pointer border-0 bg-transparent p-1.5 text-[--t3] transition-colors hover:text-[--t1]"
+          aria-label="Вперёд 15 сек"
           @click="skipForward()"
         >
           <IconForward15 :size="18" />
@@ -73,6 +75,7 @@ const {
         <!-- Close -->
         <button
           class="shrink-0 cursor-pointer border-0 bg-transparent p-1.5 text-[--t3] transition-colors hover:text-[--t1]"
+          aria-label="Закрыть плеер"
           @click="closePlayer"
         >
           <IconXCircle :size="18" />
