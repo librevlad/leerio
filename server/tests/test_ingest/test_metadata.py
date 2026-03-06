@@ -1,10 +1,11 @@
 """Tests for metadata extraction."""
+
 from pathlib import Path
 from unittest.mock import patch
 
 from server.ingest.extract_metadata import (
-    build_tracks_json,
     build_metadata_json,
+    build_tracks_json,
 )
 
 

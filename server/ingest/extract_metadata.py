@@ -1,4 +1,5 @@
 """Metadata extraction from audio files."""
+
 import logging
 from pathlib import Path
 
@@ -21,6 +22,7 @@ def extract_cover_from_mp3(path: Path) -> bytes | None:
     """Extract embedded cover art from MP3 ID3 tags."""
     try:
         from mutagen.id3 import ID3
+
         tags = ID3(str(path))
         for key in tags:
             if key.startswith("APIC"):

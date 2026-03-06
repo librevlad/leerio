@@ -12,10 +12,13 @@ def client(api_client):
 
 
 def test_create_job(client):
-    resp = client.post("/api/admin/ingest", json={
-        "source": "librivox",
-        "input_data": {"lang": "ru"},
-    })
+    resp = client.post(
+        "/api/admin/ingest",
+        json={
+            "source": "librivox",
+            "input_data": {"lang": "ru"},
+        },
+    )
     assert resp.status_code == 200
     data = resp.json()
     assert data["id"] > 0

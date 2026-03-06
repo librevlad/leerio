@@ -1,4 +1,5 @@
 """Tests for chapter detection."""
+
 from server.ingest.chapters import detect_chapters_fallback, parse_embedded_chapters
 
 

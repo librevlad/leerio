@@ -1,4 +1,5 @@
 """Chapter detection for audiobooks."""
+
 import json
 import logging
 import subprocess
@@ -9,20 +10,20 @@ logger = logging.getLogger("leerio.ingest")
 DEFAULT_INTERVAL = 600  # 10 minutes
 
 
-def detect_chapters_fallback(
-    tracks: list[dict], interval_seconds: int = DEFAULT_INTERVAL
-) -> list[dict]:
+def detect_chapters_fallback(tracks: list[dict], interval_seconds: int = DEFAULT_INTERVAL) -> list[dict]:
     """Split tracks into chapters by cumulative duration."""
     chapters = []
     cumulative = 0
     next_split = 0
     for i, t in enumerate(tracks):
         if cumulative >= next_split:
-            chapters.append({
-                "title": f"Часть {len(chapters) + 1}",
-                "start": int(cumulative),
-                "track": i,
-            })
+            chapters.append(
+                {
+                    "title": f"Часть {len(chapters) + 1}",
+                    "start": int(cumulative),
+                    "track": i,
+                }
+            )
             next_split = cumulative + interval_seconds
         cumulative += t["duration"]
     if not chapters and tracks:
@@ -45,12 +46,17 @@ def detect_chapters_from_file(file_path: Path) -> list[dict]:
     try:
         result = subprocess.run(
             [
-                "ffprobe", "-v", "quiet",
-                "-print_format", "json",
+                "ffprobe",
+                "-v",
+                "quiet",
+                "-print_format",
+                "json",
                 "-show_chapters",
                 str(file_path),
             ],
-            capture_output=True, text=True, timeout=30,
+            capture_output=True,
+            text=True,
+            timeout=30,
         )
         if result.returncode == 0:
             data = json.loads(result.stdout)

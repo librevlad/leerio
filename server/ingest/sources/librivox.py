@@ -52,8 +52,7 @@ def parse_book(raw: dict) -> dict:
     return {
         "title": raw.get("title", "Unknown"),
         "author": ", ".join(
-            f"{a.get('first_name', '')} {a.get('last_name', '')}".strip()
-            for a in raw.get("authors", [])
+            f"{a.get('first_name', '')} {a.get('last_name', '')}".strip() for a in raw.get("authors", [])
         )
         or "Unknown",
         "reader": "",

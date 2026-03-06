@@ -1,4 +1,5 @@
 """Tests for deduplication fingerprinting."""
+
 from server.ingest.dedup import make_fingerprint, normalize_text
 
 

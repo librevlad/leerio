@@ -1,8 +1,9 @@
 """Tests for audio normalization via ffmpeg."""
-from pathlib import Path
-from unittest.mock import patch, MagicMock
 
-from server.ingest.normalize import build_ffmpeg_cmd, normalize_file, is_mp3
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+from server.ingest.normalize import build_ffmpeg_cmd, is_mp3, normalize_file
 
 
 def test_build_ffmpeg_cmd_default():
@@ -47,5 +48,6 @@ def test_normalize_file_calls_ffmpeg(mock_run):
 def test_normalize_file_raises_on_failure(mock_run):
     mock_run.return_value = MagicMock(returncode=1, stderr="codec error")
     import pytest
+
     with pytest.raises(RuntimeError, match="ffmpeg"):
         normalize_file(Path("/tmp/in.mp3"), Path("/tmp/out.mp3"))

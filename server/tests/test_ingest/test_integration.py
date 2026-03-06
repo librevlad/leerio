@@ -1,7 +1,6 @@
 """Integration test — full pipeline with mocked S3 and real SQLite."""
 
 import json
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -115,6 +114,7 @@ def test_pipeline_dedup_skips_duplicate(setup_db, tmp_path):
         patch("server.storage.upload_file_to_s3"),
         patch("server.storage.upload_json_to_s3"),
     ):
+
         def fake_normalize(src, out, *, fast=False, timeout=300):
             out.parent.mkdir(parents=True, exist_ok=True)
             out.write_bytes(src.read_bytes())
@@ -145,6 +145,7 @@ def test_pipeline_dedup_skips_duplicate(setup_db, tmp_path):
 def test_job_runner_integration(setup_db):
     """Create a job and run it through the runner."""
     import asyncio
+
     from server.ingest.jobs import run_job
 
     job_id = db.create_ingestion_job("url", {"title": "Test", "author": "Auth"})

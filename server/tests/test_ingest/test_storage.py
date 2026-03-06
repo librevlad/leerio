@@ -1,5 +1,7 @@
 """Tests for S3 upload functions."""
-from unittest.mock import patch, MagicMock
+
+from unittest.mock import MagicMock, patch
+
 from server.storage import upload_file_to_s3, upload_json_to_s3
 
 
@@ -8,9 +10,7 @@ def test_upload_file_to_s3(mock_client_fn):
     mock_client = MagicMock()
     mock_client_fn.return_value = mock_client
     upload_file_to_s3("/tmp/test.mp3", "books/1/audio/01.mp3")
-    mock_client.upload_file.assert_called_once_with(
-        "/tmp/test.mp3", "leerio-books", "books/1/audio/01.mp3"
-    )
+    mock_client.upload_file.assert_called_once_with("/tmp/test.mp3", "leerio-books", "books/1/audio/01.mp3")
 
 
 @patch("server.storage._get_client")

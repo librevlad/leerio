@@ -58,5 +58,5 @@ def test_new_layout_book_cover_prefix(setup_db):
     )
 
     book = db.get_book_by_id(book_id)
-    assert book["s3_prefix"] == f"books/cover-test"
+    assert book["s3_prefix"] == "books/cover-test"
     assert book["has_cover"] == 1

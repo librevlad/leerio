@@ -1,5 +1,7 @@
 """Tests for ingestion job queue."""
+
 import json
+
 from server import db
 
 
@@ -18,9 +20,7 @@ def test_books_table_has_language_column(tmp_data_dir):
 def test_ingestion_jobs_table_exists(tmp_data_dir):
     db.init_db()
     conn = db._get_conn()
-    row = conn.execute(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='ingestion_jobs'"
-    ).fetchone()
+    row = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='ingestion_jobs'").fetchone()
     assert row is not None
     conn.close()
 
