@@ -198,6 +198,12 @@ export const api = {
   startSession: (book: string) => post<{ book: string; start: string }>('/sessions/start', { book }),
   stopSession: (book: string) => post<{ minutes: number }>('/sessions/stop', { book }),
 
+  // User Settings
+  getUserSettings: () => get<{ yearly_goal: number; playback_speed: number }>('/user/settings'),
+  updateUserSettings: (data: { yearly_goal?: number; playback_speed?: number }) =>
+    put<{ yearly_goal: number; playback_speed: number }>('/user/settings', data),
+  getStreak: () => get<{ current: number; best: number }>('/user/streak'),
+
   // Analytics
   getAnalytics: () => get<AnalyticsData>('/analytics'),
   getAchievements: () => get<Achievement[]>('/analytics/achievements'),

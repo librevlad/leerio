@@ -252,6 +252,17 @@ def init_db():
             """
         )
 
+        # --- User settings ---
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS user_settings (
+                user_id TEXT PRIMARY KEY,
+                yearly_goal INTEGER DEFAULT 24,
+                playback_speed REAL DEFAULT 1.0
+            )
+            """
+        )
+
         # --- Categories ---
         conn.execute(
             """
@@ -698,15 +709,63 @@ def _sync_books_from_filesystem():
 
 
 # ===========================================================================
+# User Settings
+# ===========================================================================
+
+
+def get_user_settings(user_id: str) -> dict:
+    """Return user settings, creating defaults if missing."""
+    conn = _get_conn()
+    try:
+        row = conn.execute("SELECT * FROM user_settings WHERE user_id = ?", (user_id,)).fetchone()
+        if row:
+            return dict(row)
+        # Create defaults
+        conn.execute("INSERT INTO user_settings (user_id) VALUES (?)", (user_id,))
+        conn.commit()
+        return {"user_id": user_id, "yearly_goal": 24, "playback_speed": 1.0}
+    finally:
+        conn.close()
+
+
+def update_user_settings(user_id: str, **kwargs) -> dict:
+    """Update specific user settings fields."""
+    allowed = {"yearly_goal", "playback_speed"}
+    fields = {k: v for k, v in kwargs.items() if k in allowed}
+    if not fields:
+        return get_user_settings(user_id)
+    conn = _get_conn()
+    try:
+        # Ensure row exists
+        conn.execute(
+            "INSERT OR IGNORE INTO user_settings (user_id) VALUES (?)", (user_id,)
+        )
+        sets = ", ".join(f"{k} = ?" for k in fields)
+        vals = list(fields.values()) + [user_id]
+        conn.execute(f"UPDATE user_settings SET {sets} WHERE user_id = ?", vals)
+        conn.commit()
+        return get_user_settings(user_id)
+    finally:
+        conn.close()
+
+
+# ===========================================================================
 # Books CRUD
 # ===========================================================================
 
 
+def _ghost_filter() -> str:
+    """SQL clause to exclude ghost books (numeric-only title, no author)."""
+    return "NOT (author = '' AND title GLOB '[0-9]*' AND length(title) <= 4)"
+
+
 def get_all_books() -> list[dict]:
-    """Return all books."""
+    """Return all books (excluding ghost books)."""
     conn = _get_conn()
     try:
-        rows = conn.execute("SELECT * FROM books ORDER BY title").fetchall()
+        rows = conn.execute(
+            f"SELECT * FROM books WHERE {_ghost_filter()} ORDER BY title"
+        ).fetchall()
         return [dict(r) for r in rows]
     finally:
         conn.close()
@@ -736,6 +795,8 @@ def search_books(category: str | None = None, search: str | None = None, sort: s
     try:
         clauses: list[str] = []
         params: list[str] = []
+        # Exclude ghost books: numeric-only title with no author
+        clauses.append(_ghost_filter())
         if category:
             clauses.append("category = ?")
             params.append(category)

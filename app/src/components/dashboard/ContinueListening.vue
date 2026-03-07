@@ -65,9 +65,12 @@ const { gradient: catGradient } = useCategories()
               <p v-if="book.author" class="mt-1 line-clamp-1 text-[12px] text-[--t3]">
                 {{ book.author }}
               </p>
-              <div v-if="book.progress > 0" class="mt-2.5">
+              <div class="mt-2.5">
                 <div class="mb-1 flex items-center justify-between">
                   <span class="text-[11px] text-[--t3]">{{ book.progress }}%</span>
+                  <span v-if="book.book_status" class="text-[10px] font-medium text-[--accent]">
+                    {{ book.book_status === 'reading' ? 'Слушаю' : '' }}
+                  </span>
                 </div>
                 <ProgressBar :percent="book.progress" height="h-1" />
               </div>

@@ -591,7 +591,7 @@ def get_dashboard(user: dict = Depends(get_current_user)):
         "heatmap": dict(day_counts),
         "quote": quote,
         "this_year_done": this_year_done,
-        "yearly_goal": 24,
+        "yearly_goal": db.get_user_settings(uid).get("yearly_goal", 24),
         "category_counts": dict(cat_counts),
     }
 
@@ -1132,6 +1132,65 @@ def start_session(req: SessionStartRequest, user: dict = Depends(get_current_use
 def stop_session(req: SessionStartRequest, user: dict = Depends(get_current_user)):
     minutes = db.stop_user_session(user["user_id"], req.book)
     return {"minutes": minutes}
+
+
+# ── User Settings ──────────────────────────────────────────────────────────
+
+
+@app.get("/api/user/settings")
+def get_settings(user: dict = Depends(get_current_user)):
+    return db.get_user_settings(user["user_id"])
+
+
+@app.put("/api/user/settings")
+def update_settings(req: dict, user: dict = Depends(get_current_user)):
+    return db.update_user_settings(user["user_id"], **req)
+
+
+@app.get("/api/user/streak")
+def get_streak(user: dict = Depends(get_current_user)):
+    """Return current listening streak (consecutive days with history entries)."""
+    uid = user["user_id"]
+    history = db.get_user_history(uid)
+    if not history:
+        return {"current": 0, "best": 0}
+    # Collect unique dates with activity
+    from datetime import date, timedelta
+
+    active_dates: set[date] = set()
+    for h in history:
+        ts = h.get("ts", "")
+        if ts:
+            try:
+                active_dates.add(date.fromisoformat(ts[:10]))
+            except ValueError:
+                pass
+    if not active_dates:
+        return {"current": 0, "best": 0}
+    # Calculate current streak from today backwards
+    today = date.today()
+    current = 0
+    d = today
+    while d in active_dates:
+        current += 1
+        d -= timedelta(days=1)
+    # If today has no activity yet, check from yesterday
+    if current == 0:
+        d = today - timedelta(days=1)
+        while d in active_dates:
+            current += 1
+            d -= timedelta(days=1)
+    # Best streak
+    sorted_dates = sorted(active_dates)
+    best = 1
+    run = 1
+    for i in range(1, len(sorted_dates)):
+        if sorted_dates[i] - sorted_dates[i - 1] == timedelta(days=1):
+            run += 1
+            best = max(best, run)
+        else:
+            run = 1
+    return {"current": current, "best": best}
 
 
 # ── Book Status ─────────────────────────────────────────────────────────────

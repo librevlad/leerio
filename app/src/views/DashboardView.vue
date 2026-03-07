@@ -10,16 +10,23 @@ import RecentActivity from '../components/dashboard/RecentActivity.vue'
 import PullIndicator from '../components/shared/PullIndicator.vue'
 import EmptyState from '../components/shared/EmptyState.vue'
 import { usePullToRefresh } from '../composables/usePullToRefresh'
+import { plural } from '../utils/plural'
 
 const data = ref<DashboardData | null>(null)
 const shelves = ref<ShelfData[]>([])
+const streak = ref({ current: 0, best: 0 })
 const loading = ref(true)
 
 async function loadData() {
   try {
-    const [d, s] = await Promise.all([api.getDashboard(), api.getShelves()])
-    data.value = d
-    shelves.value = s
+    const [d, s, st] = await Promise.allSettled([
+      api.getDashboard(),
+      api.getShelves(),
+      api.getStreak(),
+    ])
+    if (d.status === 'fulfilled') data.value = d.value
+    if (s.status === 'fulfilled') shelves.value = s.value
+    if (st.status === 'fulfilled') streak.value = st.value
   } finally {
     loading.value = false
   }
@@ -56,6 +63,26 @@ onMounted(loadData)
           <span class="font-bold text-[--accent]">{{ data.total_books }}</span> книг в библиотеке ·
           <span class="font-bold text-emerald-400">{{ data.total_done }}</span> прослушано
         </p>
+      </div>
+
+      <!-- Streak banner -->
+      <div
+        v-if="streak.current > 0"
+        class="flex items-center gap-4 rounded-2xl px-5 py-4"
+        style="
+          background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(245, 158, 11, 0.04) 100%);
+          border: 1px solid rgba(245, 158, 11, 0.15);
+        "
+      >
+        <span class="text-[28px]">&#x1F525;</span>
+        <div>
+          <p class="text-[15px] font-bold text-[--accent]">
+            {{ streak.current }} {{ plural(streak.current, 'день', 'дня', 'дней') }} подряд!
+          </p>
+          <p class="text-[12px] text-[--t3]">
+            Лучшая серия: {{ streak.best }} {{ plural(streak.best, 'день', 'дня', 'дней') }}
+          </p>
+        </div>
       </div>
 
       <!-- Continue Listening (hero) -->

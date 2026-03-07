@@ -18,16 +18,43 @@ const { user, isAdmin, logout } = useAuth()
 const cacheBytes = ref(cache.cacheSize())
 const sessionStats = ref<SessionStats | null>(null)
 const statsLoading = ref(true)
+const yearlyGoal = ref(24)
+const playbackSpeed = ref(1.0)
+const streak = ref({ current: 0, best: 0 })
+const goalSaving = ref(false)
+
+const speeds = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
 
 onMounted(async () => {
-  try {
-    sessionStats.value = await api.getSessionStats(30)
-  } catch {
-    /* ignore */
-  } finally {
-    statsLoading.value = false
+  const [, settings, streakData] = await Promise.allSettled([
+    api.getSessionStats(30).then((s) => (sessionStats.value = s)),
+    api.getUserSettings(),
+    api.getStreak(),
+  ])
+  if (settings.status === 'fulfilled') {
+    yearlyGoal.value = settings.value.yearly_goal
+    playbackSpeed.value = settings.value.playback_speed
   }
+  if (streakData.status === 'fulfilled') {
+    streak.value = streakData.value
+  }
+  statsLoading.value = false
 })
+
+async function saveGoal() {
+  goalSaving.value = true
+  try {
+    await api.updateUserSettings({ yearly_goal: yearlyGoal.value })
+  } finally {
+    goalSaving.value = false
+  }
+}
+
+async function setSpeed(speed: number) {
+  playbackSpeed.value = speed
+  localStorage.setItem('leerio_playback_rate', String(speed))
+  await api.updateUserSettings({ playback_speed: speed }).catch(() => {})
+}
 
 function fmtSize(bytes: number): string {
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' КБ'
@@ -187,6 +214,79 @@ async function handleLogout() {
         <p v-else class="text-[12px] text-[--t3]">Нет скачанных книг</p>
       </div>
 
+      <!-- Listening Streak -->
+      <div class="card p-5">
+        <h3 class="section-label mb-4">Серия прослушивания</h3>
+        <div class="flex items-center gap-6">
+          <div class="text-center">
+            <p
+              class="text-[32px] leading-none font-bold tracking-tight"
+              :class="streak.current > 0 ? 'text-[--accent]' : 'text-[--t3]'"
+            >
+              {{ streak.current }}
+            </p>
+            <p class="mt-1 text-[11px] font-semibold text-[--t3]">
+              {{ plural(streak.current, 'день', 'дня', 'дней') }} подряд
+            </p>
+          </div>
+          <div
+            class="h-10 w-px"
+            style="background: var(--border)"
+          />
+          <div class="text-center">
+            <p class="text-[22px] leading-none font-bold tracking-tight text-[--t2]">
+              {{ streak.best }}
+            </p>
+            <p class="mt-1 text-[11px] font-semibold text-[--t3]">лучшая серия</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Playback Preferences -->
+      <div class="card p-5">
+        <h3 class="section-label mb-4">Воспроизведение</h3>
+
+        <div class="space-y-5">
+          <!-- Default playback speed -->
+          <div>
+            <p class="mb-2.5 text-[12px] font-semibold text-[--t3]">Скорость по умолчанию</p>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="s in speeds"
+                :key="s"
+                class="rounded-lg px-3 py-1.5 text-[13px] font-semibold transition-colors"
+                :class="
+                  playbackSpeed === s
+                    ? 'bg-[--accent] text-white'
+                    : 'bg-white/[0.06] text-[--t2] hover:bg-white/[0.1]'
+                "
+                @click="setSpeed(s)"
+              >
+                {{ s }}x
+              </button>
+            </div>
+          </div>
+
+          <!-- Yearly goal -->
+          <div>
+            <p class="mb-2.5 text-[12px] font-semibold text-[--t3]">Годовая цель (книг)</p>
+            <div class="flex items-center gap-3">
+              <input
+                v-model.number="yearlyGoal"
+                type="range"
+                min="1"
+                max="100"
+                class="flex-1 accent-[--accent]"
+                @change="saveGoal"
+              />
+              <span class="min-w-[2.5rem] text-center text-[16px] font-bold text-[--t1]">
+                {{ yearlyGoal }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Storage & Cache -->
       <div class="card p-5">
         <h3 class="section-label mb-4">
@@ -213,6 +313,25 @@ async function handleLogout() {
           <IconTrash :size="14" />
           Очистить кэш
         </button>
+      </div>
+
+      <!-- About -->
+      <div class="card p-5">
+        <h3 class="section-label mb-4">О приложении</h3>
+        <div class="space-y-2 text-[13px]">
+          <div class="flex justify-between">
+            <span class="text-[--t3]">Версия</span>
+            <span class="font-medium text-[--t2]">2.0.0</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-[--t3]">Книг в каталоге</span>
+            <span class="font-medium text-[--t2]">343</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-[--t3]">Платформа</span>
+            <span class="font-medium text-[--t2]">Web</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
