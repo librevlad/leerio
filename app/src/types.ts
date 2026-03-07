@@ -72,6 +72,7 @@ export interface ActiveBook {
   author: string
   list: string
   progress: number
+  book_status?: string
 }
 
 export interface NowPlaying {
