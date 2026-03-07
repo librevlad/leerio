@@ -23,8 +23,8 @@ test.describe('Dashboard', () => {
     await expect(page.locator('.fade-in').first()).toBeVisible({ timeout: 15_000 })
 
     // Should have stat cards with uppercase labels
-    await expect(page.locator('text=Книг')).toBeVisible()
-    await expect(page.locator('text=Прослушано')).toBeVisible()
+    await expect(page.getByText('Книг', { exact: true })).toBeVisible()
+    await expect(page.getByText('Прослушано', { exact: true })).toBeVisible()
     await takeScreenshot('dashboard-stats')
   })
 

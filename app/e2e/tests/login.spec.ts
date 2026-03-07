@@ -56,7 +56,7 @@ test.describe('Login page', () => {
   })
 
   test('unauthenticated user is redirected to login', async ({ page }) => {
-    await page.goto('/library')
+    await page.goto('/settings')
     await expect(page).toHaveURL(/\/login/, { timeout: 10_000 })
   })
 })
