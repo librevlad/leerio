@@ -5,6 +5,7 @@ import AppSidebar from './components/layout/AppSidebar.vue'
 import BottomNav from './components/layout/BottomNav.vue'
 import AppToast from './components/layout/AppToast.vue'
 import MiniPlayer from './components/player/MiniPlayer.vue'
+import ScrollToTop from './components/shared/ScrollToTop.vue'
 import FullscreenPlayer from './components/player/FullscreenPlayer.vue'
 import { usePlayer } from './composables/usePlayer'
 import { useDownloads } from './composables/useDownloads'
@@ -114,6 +115,7 @@ onUnmounted(() => {
       <FullscreenPlayer />
     </Teleport>
     <BottomNav />
+    <ScrollToTop />
     <AppToast />
   </div>
 </template>
