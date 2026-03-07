@@ -88,11 +88,16 @@ onUnmounted(() => {
       class="flex-1 overflow-y-auto scroll-smooth transition-all duration-300"
       :class="[sidebarCollapsed ? 'md:ml-16' : 'md:ml-60']"
     >
-      <!-- Global search header -->
+      <!-- Global search header (desktop) -->
       <div
         class="sticky top-0 z-30 hidden items-center justify-end px-8 py-3 md:flex"
         style="background: rgba(11, 11, 15, 0.8); backdrop-filter: blur(12px)"
       >
+        <GlobalSearch />
+      </div>
+
+      <!-- Mobile search -->
+      <div class="px-4 pt-3 md:hidden">
         <GlobalSearch />
       </div>
 
