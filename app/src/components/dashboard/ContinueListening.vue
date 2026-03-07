@@ -31,7 +31,7 @@ const { gradient: catGradient } = useCategories()
             <!-- Cover -->
             <div class="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl shadow-lg">
               <img
-                v-if="!coverErrors.has(book.id)"
+                v-if="(book as any).has_cover !== false && !coverErrors.has(book.id)"
                 :src="coverUrl(book.id)"
                 :alt="book.title"
                 class="h-full w-full object-cover"

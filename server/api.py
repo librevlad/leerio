@@ -606,7 +606,11 @@ def get_book_shelves(user: dict = Depends(get_current_user)):
     statuses = db.get_all_user_book_statuses(uid)
     progress = db.get_all_user_progress(uid)
 
-    # Group by category, pick up to 12 per category (random)
+    # Build category sort_order map from DB
+    cats_db = db.get_all_categories()
+    cat_order = {c["name"]: c["sort_order"] for c in cats_db}
+
+    # Group by category
     by_cat: dict[str, list[dict]] = {}
     for b in all_books:
         cat = b.get("category", "")
@@ -614,10 +618,31 @@ def get_book_shelves(user: dict = Depends(get_current_user)):
             by_cat[cat] = []
         by_cat[cat].append(b)
 
+    # Count active books per category (reading/paused)
+    active_cats: set[str] = set()
+    for b in all_books:
+        bid = str(b["id"])
+        st = statuses.get(bid, {}).get("status")
+        if st in ("reading", "paused"):
+            active_cats.add(b.get("category", ""))
+
+    # Sort: categories with active books first, then by sort_order
+    sorted_cats = sorted(
+        by_cat.keys(),
+        key=lambda c: (0 if c in active_cats else 1, cat_order.get(c, 99)),
+    )
+
     shelves = []
-    for cat in sorted(by_cat.keys()):
+    for cat in sorted_cats:
         books = by_cat[cat]
-        sample = random.sample(books, min(12, len(books)))
+        # Prefer books with covers in sample
+        with_cover = [b for b in books if b.get("has_cover")]
+        without_cover = [b for b in books if not b.get("has_cover")]
+        n = min(12, len(books))
+        if len(with_cover) >= n:
+            sample = random.sample(with_cover, n)
+        else:
+            sample = with_cover + random.sample(without_cover, min(n - len(with_cover), len(without_cover)))
         shelf_books = []
         for b in sample:
             bid = str(b["id"])
