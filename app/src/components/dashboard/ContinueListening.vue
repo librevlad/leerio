@@ -9,7 +9,7 @@ import { usePlayer } from '../../composables/usePlayer'
 
 defineProps<{ books: ActiveBook[] }>()
 
-const { currentBook } = usePlayer()
+const { currentBook, loadBook, togglePlay } = usePlayer()
 const nowPlayingId = computed(() => currentBook.value?.id ?? null)
 
 const coverErrors = reactive(new Set<string>())
@@ -21,7 +21,15 @@ function formatRemaining(totalHours: number, progress: number): string {
   if (remaining < 1) return `${Math.round(remaining * 60)} мин`
   const h = Math.floor(remaining)
   const m = Math.round((remaining - h) * 60)
-  return m > 0 ? `${h} ч ${m} мин` : `${h} ч`
+  return m > 0 ? `${h}ч ${m}м` : `${h}ч`
+}
+
+function playBook(bookId: string) {
+  if (nowPlayingId.value === bookId) {
+    togglePlay()
+  } else {
+    loadBook(bookId)
+  }
 }
 </script>
 
@@ -29,20 +37,15 @@ function formatRemaining(totalHours: number, progress: number): string {
   <div v-if="books.length">
     <h2 class="section-label mb-4">Продолжить слушать</h2>
     <div class="fade-mask-r">
-      <div class="flex gap-3 overflow-x-auto pb-2">
-        <router-link
+      <div class="flex gap-4 overflow-x-auto pb-2">
+        <div
           v-for="book in books"
           :key="book.id"
-          :to="`/book/${book.id}`"
-          class="group relative max-w-[300px] min-w-[260px] flex-shrink-0 overflow-hidden rounded-2xl no-underline sm:min-w-[300px]"
-          style="
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-          "
+          class="card group relative max-w-[320px] min-w-[280px] flex-shrink-0 overflow-hidden sm:min-w-[320px]"
         >
-          <div class="flex items-center gap-4 p-4">
+          <router-link :to="`/book/${book.id}`" class="flex items-center gap-4 p-4 no-underline">
             <!-- Cover -->
-            <div class="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl shadow-lg">
+            <div class="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl shadow-md">
               <img
                 v-if="book.has_cover !== false && !coverErrors.has(book.id)"
                 :src="coverUrl(book.id)"
@@ -58,21 +61,11 @@ function formatRemaining(totalHours: number, progress: number): string {
               >
                 <IconMusic :size="24" class="text-white/40" />
               </div>
-              <!-- Play button overlay -->
-              <div
-                class="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity group-hover:opacity-100"
-              >
-                <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[--accent] text-white shadow-lg">
-                  <IconPlay :size="18" />
-                </div>
-              </div>
             </div>
 
             <!-- Info -->
             <div class="min-w-0 flex-1">
-              <h3
-                class="line-clamp-2 text-[14px] leading-snug font-semibold text-[--t1] transition-colors group-hover:text-white"
-              >
+              <h3 class="line-clamp-2 text-[14px] leading-snug font-semibold text-[--t1]">
                 <span
                   v-if="nowPlayingId === book.id"
                   class="mr-1 inline-flex items-center gap-1 align-middle text-[10px] font-bold tracking-wide text-[--accent]"
@@ -81,21 +74,29 @@ function formatRemaining(totalHours: number, progress: number): string {
                 </span>
                 {{ book.title }}
               </h3>
-              <p v-if="book.author" class="mt-1 line-clamp-1 text-[12px] text-[--t3]">
-                {{ book.author }}
-              </p>
+              <p v-if="book.author" class="mt-1 line-clamp-1 text-[12px] text-[--t3]">{{ book.author }}</p>
               <div class="mt-2.5">
                 <div class="mb-1 flex items-center justify-between">
                   <span class="text-[11px] text-[--t3]">{{ book.progress }}%</span>
                   <span v-if="book.duration_hours && book.progress < 100" class="text-[10px] text-[--t3]">
-                    ~{{ formatRemaining(book.duration_hours, book.progress) }}
+                    {{ formatRemaining(book.duration_hours, book.progress) }} осталось
                   </span>
                 </div>
                 <ProgressBar :percent="book.progress" height="h-1" />
               </div>
             </div>
-          </div>
-        </router-link>
+          </router-link>
+
+          <!-- Play button -->
+          <button
+            class="absolute right-3 bottom-3 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-0 shadow-lg transition-transform duration-150 hover:scale-110"
+            style="background: var(--gradient-accent)"
+            :aria-label="nowPlayingId === book.id ? 'Пауза' : 'Продолжить'"
+            @click.prevent="playBook(book.id)"
+          >
+            <IconPlay :size="14" style="color: #fff" />
+          </button>
+        </div>
       </div>
     </div>
   </div>

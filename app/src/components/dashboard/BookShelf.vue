@@ -24,7 +24,7 @@ const statusBadge: Record<string, { icon: unknown; bg: string; fg: string }> = {
 
 <template>
   <div>
-    <div class="mb-3 flex items-center justify-between">
+    <div class="mb-4 flex items-center justify-between">
       <h2 class="section-label flex items-center gap-2">
         <span class="inline-block h-2 w-2 rounded-full" :style="{ background: catColor(category) }" />
         {{ category }}
@@ -38,20 +38,20 @@ const statusBadge: Record<string, { icon: unknown; bg: string; fg: string }> = {
       </router-link>
     </div>
     <div class="fade-mask-r">
-      <div class="flex gap-3 overflow-x-auto pb-2">
+      <div class="flex gap-4 overflow-x-auto pb-2">
         <router-link
           v-for="book in books"
           :key="book.id"
           :to="`/book/${book.id}`"
-          class="group max-w-[130px] min-w-[130px] flex-shrink-0 no-underline"
+          class="group max-w-[160px] min-w-[160px] flex-shrink-0 no-underline"
         >
           <!-- Cover -->
-          <div class="relative mb-2 aspect-square overflow-hidden rounded-xl shadow-lg">
+          <div class="relative aspect-square overflow-hidden rounded-2xl shadow-md">
             <img
               v-if="book.has_cover && !coverErrors.has(book.id)"
               :src="coverUrl(book.id)"
               :alt="book.title"
-              class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              class="h-full w-full object-cover transition-transform duration-150 group-hover:scale-[1.03]"
               loading="lazy"
               @error="coverErrors.add(book.id)"
             />
@@ -65,7 +65,7 @@ const statusBadge: Record<string, { icon: unknown; bg: string; fg: string }> = {
             <!-- Status badge -->
             <div
               v-if="book.book_status && statusBadge[book.book_status]"
-              class="absolute top-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded-full shadow-sm"
+              class="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full shadow-sm"
               :style="{ background: statusBadge[book.book_status]!.bg }"
             >
               <component
@@ -77,14 +77,14 @@ const statusBadge: Record<string, { icon: unknown; bg: string; fg: string }> = {
             <!-- Progress overlay -->
             <div
               v-if="book.progress > 0"
-              class="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-black/70 to-transparent px-2 pt-4 pb-2"
+              class="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-black/70 to-transparent px-2.5 pt-5 pb-2.5"
             >
               <ProgressBar :percent="book.progress" height="h-1" />
             </div>
           </div>
           <!-- Title / Author -->
           <h4
-            class="line-clamp-2 text-[12px] leading-tight font-medium text-[--t2] transition-colors group-hover:text-[--t1]"
+            class="mt-2.5 line-clamp-2 text-[13px] leading-tight font-medium text-[--t2] transition-colors group-hover:text-[--t1]"
           >
             {{ book.title }}
           </h4>

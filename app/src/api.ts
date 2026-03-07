@@ -135,6 +135,7 @@ import type {
   TTSEngine,
   TTSJob,
   ShelfData,
+  ShelfBook,
 } from './types'
 
 export const api = {
