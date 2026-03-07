@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '../../composables/useAuth'
+import { usePlayer } from '../../composables/usePlayer'
 import {
   IconHome,
   IconLibrary,
@@ -19,6 +20,7 @@ const emit = defineEmits<{ 'update:collapsed': [val: boolean] }>()
 const route = useRoute()
 const router = useRouter()
 const { user, logout } = useAuth()
+const { currentBook, isPlayerVisible, openFullscreen } = usePlayer()
 
 const links = [
   { path: '/', label: 'Главная', icon: IconHome },
@@ -87,6 +89,20 @@ async function handleLogout() {
         }}</span>
       </router-link>
     </nav>
+
+    <!-- Now Playing (sidebar) -->
+    <button
+      v-if="isPlayerVisible && currentBook"
+      class="mx-2.5 mb-2 flex cursor-pointer items-center gap-2.5 rounded-xl border-0 px-3 py-2.5 text-left transition-colors hover:bg-white/[0.06]"
+      style="background: rgba(232, 146, 58, 0.06); border: 1px solid rgba(232, 146, 58, 0.1)"
+      @click="openFullscreen"
+    >
+      <span class="now-playing-bars inline-flex shrink-0 items-end gap-px"> <span /><span /><span /> </span>
+      <span v-if="!collapsed" class="min-w-0 flex-1">
+        <span class="block truncate text-[12px] font-semibold text-[--t1]">{{ currentBook.title }}</span>
+        <span class="block truncate text-[10px] text-[--t3]">{{ currentBook.author }}</span>
+      </span>
+    </button>
 
     <!-- User section at bottom -->
     <div class="border-t px-3 py-3" style="border-color: var(--border)">

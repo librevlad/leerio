@@ -45,10 +45,15 @@ onMounted(load)
       <div v-if="data.top_authors.length" class="card p-6">
         <h3 class="section-label mb-5">Топ авторов</h3>
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          <div v-for="a in data.top_authors" :key="a.author" class="card card-hover rounded-2xl p-4 text-center">
+          <router-link
+            v-for="a in data.top_authors"
+            :key="a.author"
+            :to="`/library?q=${encodeURIComponent(a.author)}`"
+            class="card card-hover rounded-2xl p-4 text-center no-underline transition-transform hover:scale-[1.03]"
+          >
             <p class="truncate text-[12px] font-medium text-[--t2]">{{ a.author }}</p>
             <p class="mt-1 text-[20px] font-bold tracking-tight text-[--t1]">{{ a.count }}</p>
-          </div>
+          </router-link>
         </div>
       </div>
 
