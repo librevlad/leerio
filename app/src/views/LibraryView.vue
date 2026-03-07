@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useBooks } from '../composables/useBooks'
 import SearchInput from '../components/shared/SearchInput.vue'
 import BookCard from '../components/shared/BookCard.vue'
 import EmptyState from '../components/shared/EmptyState.vue'
 import PullIndicator from '../components/shared/PullIndicator.vue'
 import { usePullToRefresh } from '../composables/usePullToRefresh'
+import { IconShuffle } from '../components/shared/icons'
 import type { BookStatusValue } from '../types'
 import { plural } from '../utils/plural'
 
 const route = useRoute()
+const router = useRouter()
 const { books, loading, load, categories } = useBooks()
 
 const search = ref('')
@@ -94,6 +96,13 @@ const statusPills = computed(() => [
   { value: 'paused' as BookStatusValue | '', label: 'На паузе' },
 ])
 
+function randomBook() {
+  const pool = filtered.value
+  if (!pool.length) return
+  const pick = pool[Math.floor(Math.random() * pool.length)]
+  router.push(`/book/${pick.id}`)
+}
+
 function resetFilters() {
   search.value = ''
   category.value = ''
@@ -122,7 +131,16 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
           {{ plural(filtered.length, 'книга', 'книги', 'книг') }}
         </p>
       </div>
-      <SearchInput v-model="search" placeholder="Поиск..." class="w-full sm:w-56" />
+      <div class="flex items-center gap-2">
+        <SearchInput v-model="search" placeholder="Поиск..." class="w-full sm:w-56" />
+        <button
+          class="flex h-[42px] w-[42px] flex-shrink-0 cursor-pointer items-center justify-center rounded-xl border border-white/[0.06] bg-white/[0.03] text-[--t3] transition-colors hover:bg-white/[0.08] hover:text-[--accent]"
+          title="Случайная книга"
+          @click="randomBook"
+        >
+          <IconShuffle :size="16" />
+        </button>
+      </div>
     </div>
 
     <!-- Category pills -->
