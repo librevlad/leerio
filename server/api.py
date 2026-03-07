@@ -1360,7 +1360,7 @@ def get_analytics(user: dict = Depends(get_current_user)):
     # Heatmap
     day_counts: dict[str, int] = Counter()
     for h in hist:
-        if h.get("action") in ("listen", "phone", "done", "inbox"):
+        if h.get("action") in ("listen", "phone", "done", "inbox", "rated"):
             day = (h.get("ts") or "")[:10]
             if day:
                 day_counts[day] += 1

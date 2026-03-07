@@ -107,6 +107,7 @@ ACTION_STYLES = {
     "delete": "red",
     "download": "dim",
     "bulk": "white",
+    "rated": "yellow",
 }
 ACTION_LABELS = {
     "inbox": "Добавлено",
@@ -120,6 +121,7 @@ ACTION_LABELS = {
     "undo": "Отменено",
     "delete": "Удалено",
     "bulk": "Массовое",
+    "rated": "Оценено",
 }
 
 TRELLO_BOARD_URL = "https://trello.com/b/62d4e115/библиотека"

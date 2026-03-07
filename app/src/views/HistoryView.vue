@@ -35,6 +35,7 @@ const actions: { value: string; label: string }[] = [
   { value: 'done', label: 'Прослушано' },
   { value: 'pause', label: 'На паузе' },
   { value: 'reject', label: 'Забраковано' },
+  { value: 'rated', label: 'Оценено' },
   { value: 'move', label: 'Перемещено' },
 ]
 
@@ -45,6 +46,7 @@ const actionIcon: Record<string, unknown> = {
   done: IconCheck,
   pause: IconPause,
   reject: IconXCircle,
+  rated: IconStar,
   relisten: IconSync,
   move: IconInbox,
   undo: IconSync,
@@ -59,6 +61,7 @@ const actionColor: Record<string, { bg: string; fg: string }> = {
   done: { bg: 'rgba(52, 211, 153, 0.1)', fg: '#34d399' },
   pause: { bg: 'rgba(250, 204, 21, 0.1)', fg: '#facc15' },
   reject: { bg: 'rgba(248, 113, 113, 0.1)', fg: '#f87171' },
+  rated: { bg: 'rgba(251, 191, 36, 0.1)', fg: '#fbbf24' },
   relisten: { bg: 'rgba(34, 211, 238, 0.1)', fg: '#22d3ee' },
   move: { bg: 'rgba(148, 163, 184, 0.1)', fg: '#94a3b8' },
   undo: { bg: 'rgba(148, 163, 184, 0.1)', fg: '#94a3b8' },
