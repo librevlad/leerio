@@ -13,10 +13,12 @@ import {
   IconSettings,
 } from '../shared/icons'
 import BottomSheet from './BottomSheet.vue'
+import { usePlayer } from '../../composables/usePlayer'
 
 const route = useRoute()
 const router = useRouter()
 const showMore = ref(false)
+const { isPlayerVisible } = usePlayer()
 
 const tabs = [
   { path: '/', label: 'Главная', icon: IconHome },
@@ -62,7 +64,14 @@ function goTo(path: string) {
         class="relative flex flex-1 flex-col items-center justify-center gap-0.5 no-underline transition-colors duration-200"
         :class="isActive(tab.path) ? 'text-[--accent]' : 'text-[--t3]'"
       >
-        <component :is="tab.icon" :size="20" />
+        <span class="relative">
+          <component :is="tab.icon" :size="20" />
+          <span
+            v-if="tab.path === '/' && isPlayerVisible"
+            class="absolute -top-0.5 -right-1 h-2 w-2 rounded-full bg-[--accent]"
+            style="box-shadow: 0 0 6px rgba(232, 146, 58, 0.5)"
+          />
+        </span>
         <span class="text-[10px] leading-none font-medium">{{ tab.label }}</span>
       </router-link>
 
