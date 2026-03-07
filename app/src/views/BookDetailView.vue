@@ -11,7 +11,7 @@ import BookSimilar from '../components/book/BookSimilar.vue'
 import BookActions from '../components/book/BookActions.vue'
 import BookQuotes from '../components/book/BookQuotes.vue'
 import BookChapters from '../components/book/BookChapters.vue'
-import { IconArrowLeft, IconDownload, IconTrash, IconCheck, IconX } from '../components/shared/icons'
+import { IconArrowLeft, IconDownload, IconTrash, IconCheck, IconX, IconShare } from '../components/shared/icons'
 import ProgressBar from '../components/shared/ProgressBar.vue'
 import { usePlayer } from '../composables/usePlayer'
 import { useDownloads } from '../composables/useDownloads'
@@ -63,6 +63,17 @@ async function loadBook() {
   }
 }
 
+async function shareBook() {
+  if (!book.value) return
+  const url = window.location.href
+  if (navigator.share) {
+    navigator.share({ title: book.value.title, url }).catch(() => {})
+  } else {
+    await navigator.clipboard.writeText(url)
+    toast.success('Ссылка скопирована')
+  }
+}
+
 async function onRatingChanged(rating: number) {
   if (!book.value) return
   try {
@@ -94,13 +105,23 @@ watch(() => route.params.id, loadBook)
 
 <template>
   <div>
-    <button
-      class="mb-4 -ml-3 flex min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border-0 bg-transparent px-3 py-2.5 text-[13px] text-[--t3] transition-all hover:bg-white/5 hover:text-[--t1] active:bg-white/8 md:mb-6"
-      @click="router.back()"
-    >
-      <IconArrowLeft :size="15" />
-      <span class="font-medium">Назад</span>
-    </button>
+    <div class="mb-4 flex items-center justify-between md:mb-6">
+      <button
+        class="-ml-3 flex min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border-0 bg-transparent px-3 py-2.5 text-[13px] text-[--t3] transition-all hover:bg-white/5 hover:text-[--t1] active:bg-white/8"
+        @click="router.back()"
+      >
+        <IconArrowLeft :size="15" />
+        <span class="font-medium">Назад</span>
+      </button>
+      <button
+        v-if="book"
+        class="flex min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border-0 bg-transparent px-3 py-2.5 text-[13px] text-[--t3] transition-all hover:bg-white/5 hover:text-[--t1] active:bg-white/8"
+        @click="shareBook"
+      >
+        <IconShare :size="15" />
+        <span class="hidden font-medium sm:inline">Поделиться</span>
+      </button>
+    </div>
 
     <!-- Skeleton -->
     <div v-if="loading">
