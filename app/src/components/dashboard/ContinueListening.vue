@@ -31,7 +31,7 @@ const { gradient: catGradient } = useCategories()
             <!-- Cover -->
             <div class="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl shadow-lg">
               <img
-                v-if="(book as any).has_cover !== false && !coverErrors.has(book.id)"
+                v-if="book.has_cover !== false && !coverErrors.has(book.id)"
                 :src="coverUrl(book.id)"
                 :alt="book.title"
                 class="h-full w-full object-cover"
@@ -41,7 +41,7 @@ const { gradient: catGradient } = useCategories()
               <div
                 v-else
                 class="flex h-full w-full items-center justify-center"
-                :style="{ background: catGradient((book as any).category) }"
+                :style="{ background: catGradient(book.category) }"
               >
                 <IconMusic :size="24" class="text-white/40" />
               </div>

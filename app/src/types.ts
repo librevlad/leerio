@@ -73,6 +73,8 @@ export interface ActiveBook {
   list: string
   progress: number
   book_status?: string
+  has_cover?: boolean
+  category?: string
 }
 
 export interface NowPlaying {
