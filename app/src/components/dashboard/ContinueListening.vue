@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive, computed } from 'vue'
 import type { ActiveBook } from '../../types'
 import { coverUrl } from '../../api'
 import ProgressBar from '../shared/ProgressBar.vue'
 import { IconMusic, IconPlay } from '../shared/icons'
 import { useCategories } from '../../composables/useCategories'
+import { usePlayer } from '../../composables/usePlayer'
 
 defineProps<{ books: ActiveBook[] }>()
+
+const { currentBook } = usePlayer()
+const nowPlayingId = computed(() => currentBook.value?.id ?? null)
 
 const coverErrors = reactive(new Set<string>())
 const { gradient: catGradient } = useCategories()
@@ -69,6 +73,12 @@ function formatRemaining(totalHours: number, progress: number): string {
               <h3
                 class="line-clamp-2 text-[14px] leading-snug font-semibold text-[--t1] transition-colors group-hover:text-white"
               >
+                <span
+                  v-if="nowPlayingId === book.id"
+                  class="mr-1 inline-flex items-center gap-1 align-middle text-[10px] font-bold tracking-wide text-[--accent]"
+                >
+                  <span class="now-playing-bars inline-flex items-end gap-px"> <span /><span /><span /> </span>
+                </span>
                 {{ book.title }}
               </h3>
               <p v-if="book.author" class="mt-1 line-clamp-1 text-[12px] text-[--t3]">

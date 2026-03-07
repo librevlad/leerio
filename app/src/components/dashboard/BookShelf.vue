@@ -2,7 +2,7 @@
 import { reactive } from 'vue'
 import type { ShelfBook } from '../../types'
 import { coverUrl } from '../../api'
-import { IconMusic } from '../shared/icons'
+import { IconMusic, IconCheck, IconPause, IconPlay } from '../shared/icons'
 import ProgressBar from '../shared/ProgressBar.vue'
 import { useCategories } from '../../composables/useCategories'
 
@@ -14,6 +14,12 @@ defineProps<{
 
 const coverErrors = reactive(new Set<string>())
 const { color: catColor, gradient: catGradient } = useCategories()
+
+const statusBadge: Record<string, { icon: unknown; bg: string; fg: string }> = {
+  done: { icon: IconCheck, bg: 'rgba(52, 211, 153, 0.85)', fg: '#fff' },
+  reading: { icon: IconPlay, bg: 'rgba(192, 132, 252, 0.85)', fg: '#fff' },
+  paused: { icon: IconPause, bg: 'rgba(250, 204, 21, 0.85)', fg: '#fff' },
+}
 </script>
 
 <template>
@@ -55,6 +61,18 @@ const { color: catColor, gradient: catGradient } = useCategories()
               :style="{ background: catGradient(book.category) }"
             >
               <IconMusic :size="28" class="text-white/40" />
+            </div>
+            <!-- Status badge -->
+            <div
+              v-if="book.book_status && statusBadge[book.book_status]"
+              class="absolute top-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded-full shadow-sm"
+              :style="{ background: statusBadge[book.book_status]!.bg }"
+            >
+              <component
+                :is="statusBadge[book.book_status]!.icon"
+                :size="10"
+                :style="{ color: statusBadge[book.book_status]!.fg }"
+              />
             </div>
             <!-- Progress overlay -->
             <div

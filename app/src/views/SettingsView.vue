@@ -315,6 +315,33 @@ async function handleLogout() {
         </button>
       </div>
 
+      <!-- Keyboard Shortcuts -->
+      <div class="card p-5">
+        <h3 class="section-label mb-4">Горячие клавиши</h3>
+        <div class="space-y-2 text-[13px]">
+          <div class="flex items-center justify-between">
+            <span class="text-[--t3]">Пауза / воспроизведение</span>
+            <kbd class="rounded bg-white/[0.06] px-2 py-0.5 font-mono text-[11px] text-[--t2]">Space</kbd>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-[--t3]">Перемотка +15 сек</span>
+            <kbd class="rounded bg-white/[0.06] px-2 py-0.5 font-mono text-[11px] text-[--t2]">&rarr;</kbd>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-[--t3]">Перемотка -15 сек</span>
+            <kbd class="rounded bg-white/[0.06] px-2 py-0.5 font-mono text-[11px] text-[--t2]">&larr;</kbd>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-[--t3]">Следующий трек</span>
+            <kbd class="rounded bg-white/[0.06] px-2 py-0.5 font-mono text-[11px] text-[--t2]">Shift + &rarr;</kbd>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-[--t3]">Предыдущий трек</span>
+            <kbd class="rounded bg-white/[0.06] px-2 py-0.5 font-mono text-[11px] text-[--t2]">Shift + &larr;</kbd>
+          </div>
+        </div>
+      </div>
+
       <!-- About -->
       <div class="card p-5">
         <h3 class="section-label mb-4">О приложении</h3>
