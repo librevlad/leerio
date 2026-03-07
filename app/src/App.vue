@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import AppSidebar from './components/layout/AppSidebar.vue'
 import BottomNav from './components/layout/BottomNav.vue'
@@ -14,7 +14,8 @@ import { useCategories } from './composables/useCategories'
 import { IconWifiOff } from './components/shared/icons'
 
 const sidebarCollapsed = ref(false)
-const { isPlayerVisible } = usePlayer()
+const player = usePlayer()
+const { isPlayerVisible } = player
 const downloads = useDownloads()
 const { loading: authLoading, isLoggedIn } = useAuth()
 const { isOnline } = useNetwork()
@@ -24,9 +25,41 @@ const route = useRoute()
 const isLoginPage = computed(() => route.name === 'login')
 const showApp = computed(() => !authLoading.value && isLoggedIn.value && !isLoginPage.value)
 
+function onKeydown(e: KeyboardEvent) {
+  const tag = (e.target as HTMLElement)?.tagName
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) return
+  if (!player.currentBook.value) return
+
+  switch (e.code) {
+    case 'Space':
+      e.preventDefault()
+      player.togglePlay()
+      break
+    case 'ArrowRight':
+      if (e.shiftKey) {
+        player.nextTrack()
+      } else {
+        player.skipForward()
+      }
+      break
+    case 'ArrowLeft':
+      if (e.shiftKey) {
+        player.prevTrack()
+      } else {
+        player.skipBackward()
+      }
+      break
+  }
+}
+
 onMounted(() => {
   downloads.init()
   loadCategories()
+  window.addEventListener('keydown', onKeydown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', onKeydown)
 })
 </script>
 
