@@ -6,13 +6,11 @@ import {
   IconHome,
   IconLibrary,
   IconHistory,
-  IconChart,
   IconSettings,
   IconMenu,
   IconX,
   IconFolder,
   IconUpload,
-  IconBookmark,
 } from '../shared/icons'
 
 defineProps<{ collapsed: boolean }>()
@@ -22,15 +20,12 @@ const router = useRouter()
 const { user, logout } = useAuth()
 const { currentBook, isPlayerVisible, openFullscreen } = usePlayer()
 
-const links = [
+const mainLinks = [
   { path: '/', label: 'Главная', icon: IconHome },
   { path: '/library', label: 'Каталог', icon: IconLibrary },
-  { path: '/my-library', label: 'Моя библиотека', icon: IconFolder },
-  { path: '/upload', label: 'Загрузить', icon: IconUpload },
-  { path: '/collections', label: 'Коллекции', icon: IconBookmark },
+  { path: '/my-library', label: 'Библиотека', icon: IconFolder },
   { path: '/history', label: 'История', icon: IconHistory },
-  { path: '/analytics', label: 'Аналитика', icon: IconChart },
-  { path: '/settings', label: 'Настройки', icon: IconSettings },
+  { path: '/upload', label: 'Загрузить', icon: IconUpload },
 ]
 
 const isActive = (path: string) => {
@@ -47,12 +42,8 @@ async function handleLogout() {
 <template>
   <aside
     class="fixed top-0 left-0 z-40 flex h-screen flex-col transition-all duration-300"
-    :class="collapsed ? 'w-16' : 'w-56'"
-    style="
-      background: linear-gradient(180deg, rgba(14, 14, 22, 0.97) 0%, rgba(7, 7, 14, 0.99) 100%);
-      backdrop-filter: blur(20px);
-      border-right: 1px solid var(--border);
-    "
+    :class="collapsed ? 'w-16' : 'w-60'"
+    style="background: #0e0e14; border-right: 1px solid var(--border)"
   >
     <div class="flex h-16 items-center gap-3 px-4">
       <button
@@ -70,15 +61,13 @@ async function handleLogout() {
 
     <nav class="flex flex-1 flex-col gap-0.5 px-2.5 py-3">
       <router-link
-        v-for="link in links"
+        v-for="link in mainLinks"
         :key="link.path"
         :to="link.path"
         :title="collapsed ? link.label : undefined"
-        class="group relative flex items-center gap-3 rounded-xl px-3 py-2.5 no-underline transition-all duration-200"
+        class="group relative flex items-center gap-3 rounded-xl px-3 py-2.5 no-underline transition-all duration-150"
         :class="
-          isActive(link.path)
-            ? 'bg-white/[0.08] text-[--t1] shadow-[inset_3px_0_0_var(--accent)]'
-            : 'text-[--t3] hover:bg-white/[0.03] hover:text-[--t2]'
+          isActive(link.path) ? 'bg-[--card] text-[--accent]' : 'text-[--t3] hover:bg-[--card-hover] hover:text-[--t2]'
         "
       >
         <span class="flex w-5 flex-shrink-0 items-center justify-center">
@@ -93,8 +82,8 @@ async function handleLogout() {
     <!-- Now Playing (sidebar) -->
     <button
       v-if="isPlayerVisible && currentBook"
-      class="mx-2.5 mb-2 flex cursor-pointer items-center gap-2.5 rounded-xl border-0 px-3 py-2.5 text-left transition-colors hover:bg-white/[0.06]"
-      style="background: rgba(232, 146, 58, 0.06); border: 1px solid rgba(232, 146, 58, 0.1)"
+      class="mx-2.5 mb-2 flex cursor-pointer items-center gap-2.5 rounded-xl border-0 px-3 py-2.5 text-left transition-colors hover:bg-[--card-hover]"
+      style="background: rgba(255, 138, 0, 0.06); border: 1px solid rgba(255, 138, 0, 0.1)"
       @click="openFullscreen"
     >
       <span class="now-playing-bars inline-flex shrink-0 items-end gap-px"> <span /><span /><span /> </span>
@@ -104,9 +93,27 @@ async function handleLogout() {
       </span>
     </button>
 
-    <!-- User section at bottom -->
-    <div class="border-t px-3 py-3" style="border-color: var(--border)">
-      <div v-if="user && !collapsed" class="mb-2 flex items-center gap-2.5 px-1">
+    <!-- Secondary section -->
+    <div class="border-t px-2.5 pt-2 pb-3" style="border-color: var(--border)">
+      <router-link
+        to="/settings"
+        :title="collapsed ? 'Настройки' : undefined"
+        class="flex items-center gap-3 rounded-xl px-3 py-2.5 no-underline transition-all duration-150"
+        :class="
+          isActive('/settings')
+            ? 'bg-[--card] text-[--accent]'
+            : 'text-[--t3] hover:bg-[--card-hover] hover:text-[--t2]'
+        "
+      >
+        <span class="flex w-5 flex-shrink-0 items-center justify-center">
+          <IconSettings :size="18" />
+        </span>
+        <span v-if="!collapsed" class="text-[13px]" :class="isActive('/settings') ? 'font-semibold' : ''">
+          Настройки
+        </span>
+      </router-link>
+
+      <div v-if="user && !collapsed" class="mt-2 flex items-center gap-2.5 px-3">
         <img
           v-if="user.picture"
           :src="user.picture"
@@ -123,11 +130,11 @@ async function handleLogout() {
         </div>
         <div class="min-w-0 flex-1">
           <p class="truncate text-[12px] font-medium text-[--t2]">{{ user.name }}</p>
-          <p class="truncate text-[10px] text-[--t3]">{{ user.email }}</p>
         </div>
       </div>
+
       <button
-        class="flex w-full cursor-pointer items-center gap-3 rounded-xl border-0 bg-transparent px-3 py-2 text-[--t3] transition-colors hover:bg-white/[0.03] hover:text-[--t2]"
+        class="mt-1 flex w-full cursor-pointer items-center gap-3 rounded-xl border-0 bg-transparent px-3 py-2 text-[--t3] transition-colors hover:bg-[--card-hover] hover:text-[--t2]"
         :title="collapsed ? 'Выйти' : undefined"
         aria-label="Выйти"
         @click="handleLogout"

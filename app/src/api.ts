@@ -145,6 +145,7 @@ export const api = {
   // Dashboard
   getDashboard: () => get<DashboardData>('/dashboard'),
   getShelves: () => get<ShelfData[]>('/books/shelves'),
+  getRecommendations: () => get<ShelfBook[]>('/recommendations'),
 
   // Books
   getBooks: (params?: Record<string, string>) => {

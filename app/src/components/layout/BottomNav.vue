@@ -1,17 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import {
-  IconHome,
-  IconLibrary,
-  IconFolder,
-  IconMenu,
-  IconUpload,
-  IconBookmark,
-  IconHistory,
-  IconChart,
-  IconSettings,
-} from '../shared/icons'
+import { IconHome, IconLibrary, IconFolder, IconMenu, IconUpload, IconHistory, IconSettings } from '../shared/icons'
 import BottomSheet from './BottomSheet.vue'
 import { usePlayer } from '../../composables/usePlayer'
 
@@ -27,10 +17,8 @@ const tabs = [
 ]
 
 const moreLinks = [
-  { path: '/upload', label: 'Загрузить', icon: IconUpload },
-  { path: '/collections', label: 'Коллекции', icon: IconBookmark },
   { path: '/history', label: 'История', icon: IconHistory },
-  { path: '/analytics', label: 'Аналитика', icon: IconChart },
+  { path: '/upload', label: 'Загрузить', icon: IconUpload },
   { path: '/settings', label: 'Настройки', icon: IconSettings },
 ]
 

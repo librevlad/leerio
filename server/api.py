@@ -669,6 +669,56 @@ def get_book_shelves(user: dict = Depends(get_current_user)):
     return shelves
 
 
+# ── Recommendations ─────────────────────────────────────────────────────────
+
+
+@app.get("/api/recommendations")
+def get_recommendations(user: dict = Depends(get_current_user)):
+    """Return 6 recommended books based on user's listening history."""
+    uid = user["user_id"]
+    all_books = db.get_all_books()
+    statuses = db.get_all_user_book_statuses(uid)
+
+    # Gather user's active/done categories for preference weighting
+    user_cats: Counter = Counter()
+    user_book_ids: set[str] = set()
+    for bid, info in statuses.items():
+        user_book_ids.add(bid)
+        if info["status"] in ("reading", "done"):
+            for b in all_books:
+                if str(b["id"]) == bid:
+                    user_cats[b["category"]] += 1
+                    break
+
+    # Candidate books: not already in user's library (no status set)
+    candidates = []
+    for b in all_books:
+        bid = str(b["id"])
+        if bid not in user_book_ids and b.get("has_cover"):
+            # Score: prefer user's favorite categories, then random
+            cat_score = user_cats.get(b["category"], 0)
+            candidates.append((b, cat_score + random.random()))
+
+    # Sort by score desc, pick top 6
+    candidates.sort(key=lambda x: x[1], reverse=True)
+    recs = []
+    for b, _ in candidates[:6]:
+        bid = str(b["id"])
+        recs.append(
+            {
+                "id": bid,
+                "title": b["title"],
+                "author": b["author"],
+                "category": b["category"],
+                "has_cover": bool(b.get("has_cover")),
+                "progress": 0,
+                "book_status": None,
+                "duration_hours": b.get("duration_hours"),
+            }
+        )
+    return recs
+
+
 # ── Books ───────────────────────────────────────────────────────────────────
 
 

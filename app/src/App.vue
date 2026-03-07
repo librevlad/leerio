@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import AppSidebar from './components/layout/AppSidebar.vue'
 import BottomNav from './components/layout/BottomNav.vue'
+import GlobalSearch from './components/layout/GlobalSearch.vue'
 import AppToast from './components/layout/AppToast.vue'
 import MiniPlayer from './components/player/MiniPlayer.vue'
 import ScrollToTop from './components/shared/ScrollToTop.vue'
@@ -85,8 +86,16 @@ onUnmounted(() => {
     <AppSidebar v-model:collapsed="sidebarCollapsed" class="hidden md:flex" />
     <main
       class="flex-1 overflow-y-auto scroll-smooth transition-all duration-300"
-      :class="[sidebarCollapsed ? 'md:ml-16' : 'md:ml-56']"
+      :class="[sidebarCollapsed ? 'md:ml-16' : 'md:ml-60']"
     >
+      <!-- Global search header -->
+      <div
+        class="sticky top-0 z-30 hidden items-center justify-end px-8 py-3 md:flex"
+        style="background: rgba(11, 11, 15, 0.8); backdrop-filter: blur(12px)"
+      >
+        <GlobalSearch />
+      </div>
+
       <!-- Offline banner -->
       <transition name="toast">
         <div
@@ -100,7 +109,8 @@ onUnmounted(() => {
       </transition>
 
       <div
-        class="mx-auto max-w-7xl px-4 py-5 md:px-8 md:py-8 md:pb-8"
+        class="mx-auto px-4 py-5 md:px-8 md:py-8 md:pb-8"
+        style="max-width: 1400px"
         :class="isPlayerVisible ? 'mobile-bottom-pad-player' : 'mobile-bottom-pad'"
       >
         <router-view v-slot="{ Component }">

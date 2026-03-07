@@ -3,23 +3,23 @@
 /* ── Tokens ───────────────────────────────────────────────────────────── */
 
 :root {
-  --bg: #07070e;
-  --bg-glow: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(232, 146, 58, 0.07) 0%, transparent 70%);
-  --card: rgba(255, 255, 255, 0.035);
-  --card-solid: #111119;
-  --card-hover: rgba(255, 255, 255, 0.06);
+  --bg: #0b0b0f;
+  --bg-glow: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(255, 138, 0, 0.06) 0%, transparent 70%);
+  --card: #121218;
+  --card-solid: #121218;
+  --card-hover: #16161d;
   --pill: rgba(255, 255, 255, 0.06);
-  --border: rgba(255, 255, 255, 0.06);
+  --border: #1f1f26;
   --border-light: rgba(255, 255, 255, 0.1);
-  --t1: #eeeef3;
-  --t2: #9e9eb2;
+  --t1: #ffffff;
+  --t2: #a1a1aa;
   --t3: #505068;
-  --accent: #e8923a;
-  --accent-2: #f0a85c;
-  --accent-soft: rgba(232, 146, 58, 0.12);
-  --accent-glow: rgba(232, 146, 58, 0.15);
-  --gradient-accent: linear-gradient(135deg, #e8923a 0%, #c87830 100%);
-  --gradient-bar: linear-gradient(90deg, #e8923a, #f0a85c, #f8c98a);
+  --accent: #ff8a00;
+  --accent-2: #ffaa40;
+  --accent-soft: rgba(255, 138, 0, 0.12);
+  --accent-glow: rgba(255, 138, 0, 0.15);
+  --gradient-accent: linear-gradient(135deg, #ff8a00 0%, #e07000 100%);
+  --gradient-bar: linear-gradient(90deg, #ff8a00, #ffaa40, #ffc878);
 }
 
 /* ── Base ──────────────────────────────────────────────────────────────── */
@@ -95,19 +95,16 @@ body {
 
 .card {
   background: var(--card);
-  backdrop-filter: blur(12px);
-  border-radius: 12px;
+  border-radius: 16px;
   border: 1px solid var(--border);
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.3),
-    0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 .card-hover {
   transition:
-    transform 0.3s cubic-bezier(0.2, 0.8, 0.4, 1),
-    box-shadow 0.3s ease,
-    border-color 0.3s ease;
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    border-color 150ms ease;
 }
 .card-hover:hover {
   transform: translateY(-2px);
@@ -131,7 +128,7 @@ body {
   cursor: pointer;
   font-size: 13px;
   font-weight: 600;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 10px 22px;
   transition: all 0.2s cubic-bezier(0.2, 0.8, 0.4, 1);
   letter-spacing: -0.01em;
@@ -348,20 +345,20 @@ body {
   background: rgba(255, 255, 255, 0.03);
 }
 .heatmap-1 {
-  fill: rgba(232, 146, 58, 0.18);
-  background: rgba(232, 146, 58, 0.18);
+  fill: rgba(255, 138, 0, 0.18);
+  background: rgba(255, 138, 0, 0.18);
 }
 .heatmap-2 {
-  fill: rgba(232, 146, 58, 0.35);
-  background: rgba(232, 146, 58, 0.35);
+  fill: rgba(255, 138, 0, 0.35);
+  background: rgba(255, 138, 0, 0.35);
 }
 .heatmap-3 {
-  fill: rgba(232, 146, 58, 0.55);
-  background: rgba(232, 146, 58, 0.55);
+  fill: rgba(255, 138, 0, 0.55);
+  background: rgba(255, 138, 0, 0.55);
 }
 .heatmap-4 {
-  fill: rgba(232, 146, 58, 0.75);
-  background: rgba(232, 146, 58, 0.75);
+  fill: rgba(255, 138, 0, 0.75);
+  background: rgba(255, 138, 0, 0.75);
 }
 
 /* ── Range ────────────────────────────────────────────────────────────── */
