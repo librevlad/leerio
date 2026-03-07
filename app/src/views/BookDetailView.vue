@@ -15,6 +15,7 @@ import { IconArrowLeft, IconDownload, IconTrash, IconCheck, IconX } from '../com
 import ProgressBar from '../components/shared/ProgressBar.vue'
 import { usePlayer } from '../composables/usePlayer'
 import { useDownloads } from '../composables/useDownloads'
+import { useToast } from '../composables/useToast'
 
 const route = useRoute()
 const router = useRouter()
@@ -23,6 +24,7 @@ const loading = ref(true)
 
 const player = usePlayer()
 const dl = useDownloads()
+const toast = useToast()
 
 const isCurrentBook = computed(() => player.currentBook.value?.id === book.value?.id)
 
@@ -66,8 +68,9 @@ async function onRatingChanged(rating: number) {
   try {
     await api.setRating(book.value.id, rating)
     book.value.rating = rating
+    toast.success(rating ? `Оценка: ${rating} из 5` : 'Оценка убрана')
   } catch {
-    /* non-critical */
+    toast.error('Не удалось сохранить оценку')
   }
 }
 

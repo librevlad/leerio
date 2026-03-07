@@ -1349,12 +1349,13 @@ def get_analytics(user: dict = Depends(get_current_user)):
             monthly[ts[:7]] += 1
     monthly_sorted = sorted(monthly.items())
 
-    # Rating distribution
+    # Rating distribution (from both 'done' and standalone 'rated' entries)
     ratings: dict[int, int] = Counter()
-    for h in done:
-        r = h.get("rating", 0)
-        if r:
-            ratings[r] += 1
+    for h in hist:
+        if h.get("action") in ("done", "rated"):
+            r = h.get("rating", 0)
+            if r:
+                ratings[r] += 1
 
     # Heatmap
     day_counts: dict[str, int] = Counter()
