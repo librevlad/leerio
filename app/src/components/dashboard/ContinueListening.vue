@@ -10,6 +10,15 @@ defineProps<{ books: ActiveBook[] }>()
 
 const coverErrors = reactive(new Set<string>())
 const { gradient: catGradient } = useCategories()
+
+function formatRemaining(totalHours: number, progress: number): string {
+  const remaining = totalHours * (1 - progress / 100)
+  if (remaining < 1 / 60) return '< 1 мин'
+  if (remaining < 1) return `${Math.round(remaining * 60)} мин`
+  const h = Math.floor(remaining)
+  const m = Math.round((remaining - h) * 60)
+  return m > 0 ? `${h} ч ${m} мин` : `${h} ч`
+}
 </script>
 
 <template>
@@ -68,8 +77,11 @@ const { gradient: catGradient } = useCategories()
               <div class="mt-2.5">
                 <div class="mb-1 flex items-center justify-between">
                   <span class="text-[11px] text-[--t3]">{{ book.progress }}%</span>
-                  <span v-if="book.book_status" class="text-[10px] font-medium text-[--accent]">
-                    {{ book.book_status === 'reading' ? 'Слушаю' : '' }}
+                  <span
+                    v-if="book.duration_hours && book.progress < 100"
+                    class="text-[10px] text-[--t3]"
+                  >
+                    ~{{ formatRemaining(book.duration_hours, book.progress) }}
                   </span>
                 </div>
                 <ProgressBar :percent="book.progress" height="h-1" />

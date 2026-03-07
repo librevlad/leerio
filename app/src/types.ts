@@ -75,6 +75,7 @@ export interface ActiveBook {
   book_status?: string
   has_cover?: boolean
   category?: string
+  duration_hours?: number
 }
 
 export interface NowPlaying {

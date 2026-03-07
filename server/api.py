@@ -543,6 +543,7 @@ def get_dashboard(user: dict = Depends(get_current_user)):
                     "reader": b.get("reader", ""),
                     "progress": pct,
                     "has_cover": bool(b.get("has_cover")),
+                    "duration_hours": b.get("duration_hours", 0),
                     "list": "В процессе",
                     "name": b["folder"],
                 }

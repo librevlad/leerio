@@ -38,9 +38,11 @@ onMounted(() => loadBooks())
 watch([category, sort], () => {
   visibleCount.value = PAGE_SIZE
   loadBooks()
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 })
 watch([statusFilter, search], () => {
   visibleCount.value = PAGE_SIZE
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 })
 
 function loadBooks() {
