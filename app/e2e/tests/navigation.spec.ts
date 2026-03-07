@@ -20,7 +20,7 @@ test.describe('Navigation', () => {
     })
 
     test('shows all nav links', async ({ page }) => {
-      const links = ['Главная', 'Каталог', 'Моя библиотека', 'Загрузить', 'Коллекции', 'История', 'Аналитика', 'Настройки']
+      const links = ['Главная', 'Каталог', 'Библиотека', 'История', 'Загрузить', 'Настройки']
       for (const label of links) {
         await expect(page.locator(`aside a:has-text("${label}")`)).toBeVisible()
       }
@@ -29,7 +29,7 @@ test.describe('Navigation', () => {
     test('highlights active link', async ({ page }) => {
       // Dashboard should be active on /
       const dashLink = page.locator('aside a[href="/"]')
-      await expect(dashLink).toHaveClass(/text-\[--t1\]/)
+      await expect(dashLink).toHaveClass(/text-\[--accent\]/)
     })
 
     test('navigates to library', async ({ page }) => {
@@ -47,8 +47,8 @@ test.describe('Navigation', () => {
     })
 
     test('shows user info', async ({ page }) => {
-      // User section in sidebar
-      const userSection = page.locator('aside').locator('text=@').first()
+      // User avatar or initials in sidebar
+      const userSection = page.locator('aside img[alt], aside .rounded-full').first()
       await expect(userSection).toBeVisible()
     })
   })

@@ -26,7 +26,7 @@ test.describe('Library', () => {
   })
 
   test('search input filters books', async ({ page, takeScreenshot }) => {
-    const search = page.locator('input.input-field[type="text"]')
+    const search = page.getByPlaceholder('Поиск...')
     await expect(search).toBeVisible()
 
     const cardsBefore = await page.locator('a.card.card-hover').count()
@@ -68,7 +68,7 @@ test.describe('Library', () => {
   })
 
   test('empty state shows reset button', async ({ page, takeScreenshot }) => {
-    const search = page.locator('input.input-field[type="text"]')
+    const search = page.getByPlaceholder('Поиск...')
     await search.fill('zzzznonexistent12345')
     await page.waitForTimeout(500)
 

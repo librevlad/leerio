@@ -19,12 +19,12 @@ test.describe('Dashboard', () => {
     })
   })
 
-  test('displays inline stats after loading', async ({ page, takeScreenshot }) => {
+  test('displays stat cards after loading', async ({ page, takeScreenshot }) => {
     await expect(page.locator('.fade-in').first()).toBeVisible({ timeout: 15_000 })
 
-    // Should have inline stats text
-    await expect(page.locator('text=книг в библиотеке')).toBeVisible()
-    await expect(page.locator('text=прослушано')).toBeVisible()
+    // Should have stat cards with uppercase labels
+    await expect(page.locator('text=Книг')).toBeVisible()
+    await expect(page.locator('text=Прослушано')).toBeVisible()
     await takeScreenshot('dashboard-stats')
   })
 
