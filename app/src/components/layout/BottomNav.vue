@@ -4,17 +4,23 @@ import { useRoute, useRouter } from 'vue-router'
 import { IconHome, IconLibrary, IconFolder, IconMenu, IconUpload, IconHistory, IconSettings } from '../shared/icons'
 import BottomSheet from './BottomSheet.vue'
 import { usePlayer } from '../../composables/usePlayer'
+import { useAuth } from '../../composables/useAuth'
 
 const route = useRoute()
 const router = useRouter()
 const showMore = ref(false)
 const { isPlayerVisible } = usePlayer()
+const { isLoggedIn } = useAuth()
 
-const tabs = [
+const authTabs = [
   { path: '/', label: 'Главная', icon: IconHome },
   { path: '/library', label: 'Каталог', icon: IconLibrary },
   { path: '/my-library', label: 'Моя', icon: IconFolder },
 ]
+
+const guestTabs = [{ path: '/library', label: 'Каталог', icon: IconLibrary }]
+
+const tabs = computed(() => (isLoggedIn.value ? authTabs : guestTabs))
 
 const moreLinks = [
   { path: '/history', label: 'История', icon: IconHistory },
@@ -63,8 +69,9 @@ function goTo(path: string) {
         <span class="text-[10px] leading-none font-medium">{{ tab.label }}</span>
       </router-link>
 
-      <!-- More button -->
+      <!-- More button (auth) -->
       <button
+        v-if="isLoggedIn"
         class="relative flex flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 border-0 bg-transparent transition-colors duration-200"
         :class="showMore || isMoreActive ? 'text-[--accent]' : 'text-[--t3]'"
         @click="showMore = !showMore"
@@ -72,6 +79,28 @@ function goTo(path: string) {
         <IconMenu :size="20" />
         <span class="text-[10px] leading-none font-medium">Ещё</span>
       </button>
+      <!-- Login button (guest) -->
+      <router-link
+        v-else
+        to="/login"
+        class="relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[--accent] no-underline"
+      >
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+          <polyline points="10 17 15 12 10 7" />
+          <line x1="15" y1="12" x2="3" y2="12" />
+        </svg>
+        <span class="text-[10px] leading-none font-medium">Войти</span>
+      </router-link>
     </div>
   </nav>
 

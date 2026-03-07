@@ -71,6 +71,18 @@ def get_current_user(request: Request) -> dict:
     return user
 
 
+def get_optional_user(request: Request) -> dict | None:
+    """FastAPI dependency: extract user from JWT cookie. Returns None if not authenticated."""
+    token = request.cookies.get(COOKIE_NAME)
+    if not token:
+        return None
+    user_id = decode_jwt(token)
+    if not user_id:
+        return None
+    user = get_user_by_id(user_id)
+    return user
+
+
 def require_admin(user: dict) -> dict:
     """Check that user has admin role. Raises 403 if not."""
     if user.get("role") != "admin":

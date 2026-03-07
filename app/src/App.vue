@@ -25,7 +25,10 @@ const { load: loadCategories } = useCategories()
 const route = useRoute()
 
 const isLoginPage = computed(() => route.name === 'login')
-const showApp = computed(() => !authLoading.value && isLoggedIn.value && !isLoginPage.value)
+const isPublicPage = computed(() => !!route.meta.public)
+const showApp = computed(
+  () => (!authLoading.value || isPublicPage.value) && (isLoggedIn.value || isPublicPage.value) && !isLoginPage.value,
+)
 
 function onKeydown(e: KeyboardEvent) {
   const tag = (e.target as HTMLElement)?.tagName
@@ -66,9 +69,9 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <!-- Auth loading spinner -->
+  <!-- Auth loading spinner (skip for public pages) -->
   <div
-    v-if="authLoading && !isLoginPage"
+    v-if="authLoading && !isLoginPage && !isPublicPage"
     class="flex min-h-dvh min-h-screen items-center justify-center"
     style="background: var(--bg)"
   >

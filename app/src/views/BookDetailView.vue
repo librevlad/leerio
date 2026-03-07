@@ -16,6 +16,7 @@ import ProgressBar from '../components/shared/ProgressBar.vue'
 import { usePlayer } from '../composables/usePlayer'
 import { useDownloads } from '../composables/useDownloads'
 import { useToast } from '../composables/useToast'
+import { useAuth } from '../composables/useAuth'
 
 const route = useRoute()
 const router = useRouter()
@@ -25,6 +26,7 @@ const loading = ref(true)
 const player = usePlayer()
 const dl = useDownloads()
 const toast = useToast()
+const { isLoggedIn } = useAuth()
 
 const isCurrentBook = computed(() => player.currentBook.value?.id === book.value?.id)
 
@@ -76,6 +78,10 @@ async function shareBook() {
 
 async function onRatingChanged(rating: number) {
   if (!book.value) return
+  if (!isLoggedIn.value) {
+    router.push('/login')
+    return
+  }
   try {
     await api.setRating(book.value.id, rating)
     book.value.rating = rating
@@ -87,6 +93,10 @@ async function onRatingChanged(rating: number) {
 
 async function startListening() {
   if (!book.value) return
+  if (!isLoggedIn.value) {
+    router.push('/login')
+    return
+  }
   player.loadBook(book.value)
   // Auto-set status to "reading" if not already in a terminal state
   if (!book.value.book_status || book.value.book_status === 'want_to_read') {
@@ -151,8 +161,22 @@ watch(() => route.params.id, loadBook)
         @rating-changed="onRatingChanged"
       />
 
-      <!-- 2. Action bar: status pills + download -->
-      <div class="mb-5 space-y-3">
+      <!-- Login prompt for guests -->
+      <div
+        v-if="!isLoggedIn"
+        class="card mb-5 flex flex-col items-center gap-3 px-6 py-6 text-center sm:flex-row sm:text-left"
+      >
+        <div class="flex-1">
+          <p class="text-[14px] font-semibold text-[--t1]">Войдите, чтобы слушать и отслеживать прогресс</p>
+          <p class="mt-1 text-[12px] text-[--t3]">Заметки, закладки, история прослушивания и другое</p>
+        </div>
+        <router-link to="/login" class="btn btn-primary inline-flex items-center gap-2 whitespace-nowrap no-underline">
+          Войти
+        </router-link>
+      </div>
+
+      <!-- 2. Action bar: status pills + download (auth only) -->
+      <div v-if="isLoggedIn" class="mb-5 space-y-3">
         <div class="flex flex-wrap items-center gap-3">
           <BookActions :book-id="book.id" :book-status="book.book_status" @status-changed="loadBook" />
 
@@ -204,18 +228,24 @@ watch(() => route.params.id, loadBook)
         </div>
       </div>
 
-      <!-- 3. Chapters -->
-      <BookChapters v-if="book.mp3_count && book.mp3_count > 0" :book="book" class="mb-5" />
+      <!-- 3. Chapters (auth only) -->
+      <BookChapters v-if="isLoggedIn && book.mp3_count && book.mp3_count > 0" :book="book" class="mb-5" />
 
       <!-- 5. Two-column layout -->
       <div class="grid grid-cols-1 gap-5 lg:grid-cols-3">
-        <div class="space-y-5 lg:col-span-2">
+        <div v-if="isLoggedIn" class="space-y-5 lg:col-span-2">
           <BookNotes :book-id="book.id" :title="book.title" :note="book.note" />
           <BookQuotes :book-title="book.title" :book-author="book.author" />
         </div>
-        <div class="space-y-5">
-          <BookTags :book-id="book.id" :title="book.title" :tags="book.tags" @updated="(t) => (book!.tags = t)" />
-          <BookTimeline :entries="book.timeline || []" />
+        <div :class="isLoggedIn ? 'space-y-5' : 'space-y-5 lg:col-span-3'">
+          <BookTags
+            v-if="isLoggedIn"
+            :book-id="book.id"
+            :title="book.title"
+            :tags="book.tags"
+            @updated="(t) => (book!.tags = t)"
+          />
+          <BookTimeline v-if="isLoggedIn" :entries="book.timeline || []" />
           <BookSimilar :book-id="book.id" />
         </div>
       </div>

@@ -20,12 +20,13 @@ const router = createRouter({
       path: '/library',
       name: 'library',
       component: () => import('./views/LibraryView.vue'),
-      meta: { title: 'Каталог' },
+      meta: { title: 'Каталог', public: true },
     },
     {
       path: '/book/:id',
       name: 'book',
       component: () => import('./views/BookDetailView.vue'),
+      meta: { public: true },
     },
     {
       path: '/history',
@@ -75,11 +76,15 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
-  if (to.meta.public) return true
-
   const { checkAuth } = useAuth()
-  const authed = await checkAuth()
 
+  if (to.meta.public) {
+    // Still check auth in background to populate user state
+    checkAuth()
+    return true
+  }
+
+  const authed = await checkAuth()
   if (!authed) {
     return { name: 'login' }
   }

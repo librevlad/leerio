@@ -28,6 +28,7 @@ from . import db
 from .auth import (
     clear_auth_cookie,
     get_current_user,
+    get_optional_user,
     require_admin,
     set_auth_cookie,
     verify_google_token,
@@ -728,14 +729,21 @@ def get_books(
     search: str | None = Query(None),
     tag: str | None = Query(None),
     sort: str = Query("title"),
-    user: dict = Depends(get_current_user),
+    user: dict | None = Depends(get_optional_user),
 ):
-    uid = user["user_id"]
+    uid = user["user_id"] if user else None
     books = db.search_books(category=category, search=search, sort=sort)
-    statuses = db.get_all_user_book_statuses(uid)
-    progress = db.get_all_user_progress(uid)
-    tags_map = db.get_all_user_tags_map(uid)
-    notes_map = db.get_all_user_notes_map(uid)
+
+    if uid:
+        statuses = db.get_all_user_book_statuses(uid)
+        progress = db.get_all_user_progress(uid)
+        tags_map = db.get_all_user_tags_map(uid)
+        notes_map = db.get_all_user_notes_map(uid)
+    else:
+        statuses = {}
+        progress = {}
+        tags_map = {}
+        notes_map = {}
 
     result = []
     for b in books:
@@ -750,39 +758,40 @@ def get_books(
             continue
         result.append(enriched)
 
-    # Add personal user books
-    from .core import UserData
+    # Add personal user books (only for authenticated users)
+    if uid:
+        from .core import UserData
 
-    ud = UserData(uid)
-    user_books = ud.user_books_list()
-    for ub in user_books:
-        book_id = f"ub:{uid}:{ub['slug']}"
-        ub_title = ub.get("title", "")
-        ub_author = ub.get("author", "")
-        if category and category != "Личные":
-            continue
-        if search:
-            q = search.lower()
-            if q not in ub_title.lower() and q not in ub_author.lower():
+        ud = UserData(uid)
+        user_books = ud.user_books_list()
+        for ub in user_books:
+            book_id = f"ub:{uid}:{ub['slug']}"
+            ub_title = ub.get("title", "")
+            ub_author = ub.get("author", "")
+            if category and category != "Личные":
                 continue
-        book_dir = Path(ub["path"])
-        enriched = {
-            "id": book_id,
-            "folder": ub["slug"],
-            "category": "Личные",
-            "author": ub_author,
-            "title": ub_title,
-            "reader": ub.get("reader", ""),
-            "path": ub["path"],
-            "progress": 0,
-            "tags": [],
-            "note": "",
-            "has_cover": (book_dir / "cover.jpg").exists(),
-            "is_personal": True,
-            "source": ub.get("source", "upload"),
-            "mp3_count": count_mp3(book_dir),
-        }
-        result.append(enriched)
+            if search:
+                q = search.lower()
+                if q not in ub_title.lower() and q not in ub_author.lower():
+                    continue
+            book_dir = Path(ub["path"])
+            enriched = {
+                "id": book_id,
+                "folder": ub["slug"],
+                "category": "Личные",
+                "author": ub_author,
+                "title": ub_title,
+                "reader": ub.get("reader", ""),
+                "path": ub["path"],
+                "progress": 0,
+                "tags": [],
+                "note": "",
+                "has_cover": (book_dir / "cover.jpg").exists(),
+                "is_personal": True,
+                "source": ub.get("source", "upload"),
+                "mp3_count": count_mp3(book_dir),
+            }
+            result.append(enriched)
 
     if sort == "progress":
         result.sort(key=lambda x: -x["progress"])
@@ -793,50 +802,54 @@ def get_books(
 
 
 @app.get("/api/books/{book_id}")
-def get_book(book_id: str, user: dict = Depends(get_current_user)):
-    uid = user["user_id"]
+def get_book(book_id: str, user: dict | None = Depends(get_optional_user)):
+    uid = user["user_id"] if user else None
 
-    # Handle user book IDs
-    ub_path = _resolve_user_book_path(book_id, user)
-    if ub_path:
-        from .core import _load_json
+    # Handle user book IDs (requires auth)
+    if book_id.startswith("ub:") and user:
+        ub_path = _resolve_user_book_path(book_id, user)
+        if ub_path:
+            from .core import _load_json
 
-        meta = _load_json(ub_path / "meta.json", dict)
-        slug = ub_path.name
-        enriched = {
-            "id": book_id,
-            "slug": slug,
-            "folder": slug,
-            "category": "Личные",
-            "author": meta.get("author", ""),
-            "title": meta.get("title", ""),
-            "reader": meta.get("reader", ""),
-            "path": str(ub_path),
-            "progress": 0,
-            "tags": [],
-            "note": "",
-            "has_cover": (ub_path / "cover.jpg").exists(),
-            "is_personal": True,
-            "source": meta.get("source", "upload"),
-            "created_at": meta.get("created_at", ""),
-            "size_mb": round(folder_size_mb(ub_path), 1),
-            "mp3_count": count_mp3(ub_path),
-            "duration_hours": estimate_duration_hours(ub_path),
-            "duration_fmt": fmt_duration(estimate_duration_hours(ub_path)),
-            "timeline": [],
-        }
-        return enriched
+            meta = _load_json(ub_path / "meta.json", dict)
+            slug = ub_path.name
+            enriched = {
+                "id": book_id,
+                "slug": slug,
+                "folder": slug,
+                "category": "Личные",
+                "author": meta.get("author", ""),
+                "title": meta.get("title", ""),
+                "reader": meta.get("reader", ""),
+                "path": str(ub_path),
+                "progress": 0,
+                "tags": [],
+                "note": "",
+                "has_cover": (ub_path / "cover.jpg").exists(),
+                "is_personal": True,
+                "source": meta.get("source", "upload"),
+                "created_at": meta.get("created_at", ""),
+                "size_mb": round(folder_size_mb(ub_path), 1),
+                "mp3_count": count_mp3(ub_path),
+                "duration_hours": estimate_duration_hours(ub_path),
+                "duration_fmt": fmt_duration(estimate_duration_hours(ub_path)),
+                "timeline": [],
+            }
+            return enriched
+    elif book_id.startswith("ub:"):
+        raise HTTPException(401, "Not authenticated")
 
     bid = _parse_book_id(book_id)
     b = db.get_book_by_id(bid)
     if not b:
         raise HTTPException(404, "Book not found")
 
-    tags = db.get_user_tags(uid, bid)
-    note = db.get_user_note(uid, bid)
-    pct = db.get_user_progress(uid, bid)
-    rating = db.get_user_rating(uid, bid)
-    status = db.get_user_book_status(uid, bid)
+    # User-specific data (only if authenticated)
+    tags = db.get_user_tags(uid, bid) if uid else []
+    note = db.get_user_note(uid, bid) if uid else ""
+    pct = db.get_user_progress(uid, bid) if uid else 0
+    rating = db.get_user_rating(uid, bid) if uid else None
+    status = db.get_user_book_status(uid, bid) if uid else None
 
     cat_name = _normalize_category(b["category"])
     cat_info = db.get_category_by_name(cat_name)
@@ -866,32 +879,35 @@ def get_book(book_id: str, user: dict = Depends(get_current_user)):
     if status:
         enriched["book_status"] = status["status"]
 
-    # Timeline from history
-    timeline_entries = db.get_user_history_for_book(uid, bid)
-    enriched["timeline"] = [
-        {
-            "ts": h.get("ts", ""),
-            "action": h.get("action", ""),
-            "detail": h.get("detail", ""),
-            "rating": h.get("rating", 0),
-            "action_label": ACTION_LABELS.get(h.get("action", ""), h.get("action", "")),
-        }
-        for h in timeline_entries
-    ]
+    # Timeline from history (only if authenticated)
+    if uid:
+        timeline_entries = db.get_user_history_for_book(uid, bid)
+        enriched["timeline"] = [
+            {
+                "ts": h.get("ts", ""),
+                "action": h.get("action", ""),
+                "detail": h.get("detail", ""),
+                "rating": h.get("rating", 0),
+                "action_label": ACTION_LABELS.get(h.get("action", ""), h.get("action", "")),
+            }
+            for h in timeline_entries
+        ]
+    else:
+        enriched["timeline"] = []
 
     return enriched
 
 
 @app.get("/api/books/{book_id}/similar")
-def get_similar(book_id: str, user: dict = Depends(get_current_user)):
-    uid = user["user_id"]
+def get_similar(book_id: str, user: dict | None = Depends(get_optional_user)):
+    uid = user["user_id"] if user else None
     bid = _parse_book_id(book_id)
     b = db.get_book_by_id(bid)
     if not b:
         raise HTTPException(404, "Book not found")
 
     all_books = db.get_all_books()
-    hist = db.get_user_history(uid, limit=500)
+    hist = db.get_user_history(uid, limit=500) if uid else []
 
     target = {
         "path": _book_path(b),

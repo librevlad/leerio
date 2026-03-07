@@ -63,7 +63,7 @@ def api_client(tmp_data_dir, monkeypatch):
 
     import server.api as api_mod
     import server.db as db_mod
-    from server.auth import get_current_user
+    from server.auth import get_current_user, get_optional_user
 
     # Ensure tables exist
     db_mod.init_db()
@@ -73,6 +73,7 @@ def api_client(tmp_data_dir, monkeypatch):
         return TEST_USER
 
     api_mod.app.dependency_overrides[get_current_user] = _mock_user
+    api_mod.app.dependency_overrides[get_optional_user] = _mock_user
 
     client = TestClient(api_mod.app)
     yield client
