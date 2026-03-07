@@ -582,9 +582,13 @@ def get_dashboard(user: dict = Depends(get_current_user)):
 
     cat_counts = Counter(_normalize_category(b["category"]) for b in all_books)
 
+    # Total listening hours
+    total_hours = db.get_total_listening_hours(uid)
+
     return {
         "total_books": len(all_books) + user_books_count,
         "total_done": len(done),
+        "total_hours": total_hours,
         "active_count": len(active_cards),
         "active_books": active_cards,
         "now_playing": None,

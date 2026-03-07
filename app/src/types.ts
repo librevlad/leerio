@@ -91,6 +91,7 @@ export interface NowPlaying {
 export interface DashboardData {
   total_books: number
   total_done: number
+  total_hours: number
   active_count: number
   active_books: ActiveBook[]
   now_playing: NowPlaying | null

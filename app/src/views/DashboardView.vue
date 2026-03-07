@@ -67,6 +67,9 @@ onMounted(loadData)
         <p class="mt-1 text-[13px] text-[--t3]">
           <span class="font-bold text-[--accent]">{{ data.total_books }}</span> книг в библиотеке ·
           <span class="font-bold text-emerald-400">{{ data.total_done }}</span> прослушано
+          <template v-if="data.total_hours > 0">
+            · <span class="font-bold text-purple-400">{{ data.total_hours }}</span> ч прослушано
+          </template>
         </p>
       </div>
 

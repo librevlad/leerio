@@ -1180,6 +1180,19 @@ def stop_user_session(user_id: str, book_title: str) -> float:
         conn.close()
 
 
+def get_total_listening_hours(user_id: str) -> float:
+    """Return total listening hours for a user."""
+    conn = _get_conn()
+    try:
+        row = conn.execute(
+            "SELECT COALESCE(SUM(duration_min), 0) as total FROM user_sessions WHERE user_id = ? AND duration_min > 0",
+            (user_id,),
+        ).fetchone()
+        return round(row["total"] / 60.0, 1)
+    finally:
+        conn.close()
+
+
 def get_session_stats(user_id: str, days: int = 7) -> dict:
     """Return {total_hours, today_min, week_hours, peak_hour}."""
     conn = _get_conn()
