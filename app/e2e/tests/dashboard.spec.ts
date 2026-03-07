@@ -6,7 +6,7 @@ test.describe('Dashboard', () => {
   })
 
   test('shows page title', async ({ page, takeScreenshot }) => {
-    await expect(page.locator('h1.page-title')).toContainText('Главная')
+    await expect(page.locator('h1.page-title')).toContainText(/Добр(ое|ый|ой)/)
     await takeScreenshot('dashboard-title')
   })
 
