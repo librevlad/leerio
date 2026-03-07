@@ -22,14 +22,16 @@ const yearlyGoal = ref(24)
 const playbackSpeed = ref(1.0)
 const streak = ref({ current: 0, best: 0 })
 const goalSaving = ref(false)
+const totalBooks = ref<number | null>(null)
 
 const speeds = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
 
 onMounted(async () => {
-  const [, settings, streakData] = await Promise.allSettled([
+  const [, settings, streakData, dash] = await Promise.allSettled([
     api.getSessionStats(30).then((s) => (sessionStats.value = s)),
     api.getUserSettings(),
     api.getStreak(),
+    api.getDashboard(),
   ])
   if (settings.status === 'fulfilled') {
     yearlyGoal.value = settings.value.yearly_goal
@@ -37,6 +39,9 @@ onMounted(async () => {
   }
   if (streakData.status === 'fulfilled') {
     streak.value = streakData.value
+  }
+  if (dash.status === 'fulfilled') {
+    totalBooks.value = dash.value.total_books
   }
   statsLoading.value = false
 })
@@ -320,7 +325,7 @@ async function handleLogout() {
           </div>
           <div class="flex justify-between">
             <span class="text-[--t3]">Книг в каталоге</span>
-            <span class="font-medium text-[--t2]">343</span>
+            <span class="font-medium text-[--t2]">{{ totalBooks ?? '—' }}</span>
           </div>
           <div class="flex justify-between">
             <span class="text-[--t3]">Платформа</span>
