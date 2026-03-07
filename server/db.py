@@ -557,6 +557,7 @@ def _sync_books_from_s3(client):
     conn = _get_conn()
     try:
         existing_slugs = {r[0] for r in conn.execute("SELECT slug FROM books").fetchall()}
+        existing_prefixes = {r[0] for r in conn.execute("SELECT s3_prefix FROM books WHERE s3_prefix IS NOT NULL AND s3_prefix != ''").fetchall()}
         inserted = 0
 
         # List top-level prefixes (categories)
@@ -600,13 +601,17 @@ def _sync_books_from_s3(client):
                 s3_prefix = f"{cat}/{folder}"
                 has_cover = int(folder in book_covers)
 
-                if slug in existing_slugs:
+                if s3_prefix in existing_prefixes:
                     # Update has_cover for existing books (may have been wrong on first sync)
                     conn.execute(
-                        "UPDATE books SET has_cover = ? WHERE slug = ?",
-                        (has_cover, slug),
+                        "UPDATE books SET has_cover = ? WHERE s3_prefix = ?",
+                        (has_cover, s3_prefix),
                     )
                     continue
+
+                # For same title+author with different reader, append reader to slug
+                if slug in existing_slugs and reader:
+                    slug = f"{slug}-{make_slug(reader)}"
 
                 conn.execute(
                     """INSERT INTO books (slug, title, author, reader, category, folder,
@@ -615,6 +620,7 @@ def _sync_books_from_s3(client):
                     (slug, title, author, reader or "", display_cat, folder, s3_prefix, has_cover, len(mp3_keys)),
                 )
                 existing_slugs.add(slug)
+                existing_prefixes.add(s3_prefix)
                 inserted += 1
 
                 # Insert tracks
@@ -660,6 +666,9 @@ def _sync_books_from_filesystem():
                 folder = book_dir.name
                 author, title, reader = parse_folder_name(folder)
                 slug = make_slug(title, author)
+                # Deduplicate: append reader to slug if same title+author already exists
+                if slug in existing_slugs and reader:
+                    slug = f"{slug}-{make_slug(reader)}"
 
                 if slug in existing_slugs:
                     continue
