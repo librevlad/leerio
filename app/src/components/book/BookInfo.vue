@@ -250,7 +250,7 @@ const startDate = computed(() => {
               @click="emit('listen')"
             >
               <IconPlay :size="16" />
-              Слушать
+              {{ isCurrentBook ? 'Продолжить' : 'Слушать' }}
             </button>
           </div>
         </div>
