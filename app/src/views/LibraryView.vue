@@ -29,9 +29,7 @@ const categoryCounts = computed(() => {
   return counts
 })
 
-const hasActiveFilters = computed(
-  () => search.value !== '' || category.value !== '' || statusFilter.value !== '',
-)
+const hasActiveFilters = computed(() => search.value !== '' || category.value !== '' || statusFilter.value !== '')
 
 onMounted(() => loadBooks())
 
@@ -197,10 +195,7 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
     </div>
 
     <!-- Active filter summary -->
-    <div
-      v-if="hasActiveFilters && !loading"
-      class="mb-4 flex items-center gap-2 text-[12px] text-[--t3]"
-    >
+    <div v-if="hasActiveFilters && !loading" class="mb-4 flex items-center gap-2 text-[12px] text-[--t3]">
       <span>
         Найдено <span class="font-bold text-[--t1]">{{ filtered.length }}</span>
         {{ plural(filtered.length, 'книга', 'книги', 'книг') }}
@@ -210,9 +205,7 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
         {{ statusPills.find((p) => p.value === statusFilter)?.label }}
       </span>
       <span v-if="search" class="rounded-full bg-white/[0.06] px-2 py-0.5">&laquo;{{ search }}&raquo;</span>
-      <button class="ml-1 cursor-pointer text-[--accent] hover:underline" @click="resetFilters">
-        Сбросить
-      </button>
+      <button class="ml-1 cursor-pointer text-[--accent] hover:underline" @click="resetFilters">Сбросить</button>
     </div>
 
     <!-- Loading skeletons -->

@@ -77,10 +77,7 @@ function formatRemaining(totalHours: number, progress: number): string {
               <div class="mt-2.5">
                 <div class="mb-1 flex items-center justify-between">
                   <span class="text-[11px] text-[--t3]">{{ book.progress }}%</span>
-                  <span
-                    v-if="book.duration_hours && book.progress < 100"
-                    class="text-[10px] text-[--t3]"
-                  >
+                  <span v-if="book.duration_hours && book.progress < 100" class="text-[10px] text-[--t3]">
                     ~{{ formatRemaining(book.duration_hours, book.progress) }}
                   </span>
                 </div>
