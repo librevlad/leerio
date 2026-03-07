@@ -229,10 +229,7 @@ async function handleLogout() {
               {{ plural(streak.current, 'день', 'дня', 'дней') }} подряд
             </p>
           </div>
-          <div
-            class="h-10 w-px"
-            style="background: var(--border)"
-          />
+          <div class="h-10 w-px" style="background: var(--border)" />
           <div class="text-center">
             <p class="text-[22px] leading-none font-bold tracking-tight text-[--t2]">
               {{ streak.best }}
@@ -256,9 +253,7 @@ async function handleLogout() {
                 :key="s"
                 class="rounded-lg px-3 py-1.5 text-[13px] font-semibold transition-colors"
                 :class="
-                  playbackSpeed === s
-                    ? 'bg-[--accent] text-white'
-                    : 'bg-white/[0.06] text-[--t2] hover:bg-white/[0.1]'
+                  playbackSpeed === s ? 'bg-[--accent] text-white' : 'bg-white/[0.06] text-[--t2] hover:bg-white/[0.1]'
                 "
                 @click="setSpeed(s)"
               >

@@ -19,11 +19,7 @@ const loading = ref(true)
 
 async function loadData() {
   try {
-    const [d, s, st] = await Promise.allSettled([
-      api.getDashboard(),
-      api.getShelves(),
-      api.getStreak(),
-    ])
+    const [d, s, st] = await Promise.allSettled([api.getDashboard(), api.getShelves(), api.getStreak()])
     if (d.status === 'fulfilled') data.value = d.value
     if (s.status === 'fulfilled') shelves.value = s.value
     if (st.status === 'fulfilled') streak.value = st.value

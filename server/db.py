@@ -737,9 +737,7 @@ def update_user_settings(user_id: str, **kwargs) -> dict:
     conn = _get_conn()
     try:
         # Ensure row exists
-        conn.execute(
-            "INSERT OR IGNORE INTO user_settings (user_id) VALUES (?)", (user_id,)
-        )
+        conn.execute("INSERT OR IGNORE INTO user_settings (user_id) VALUES (?)", (user_id,))
         sets = ", ".join(f"{k} = ?" for k in fields)
         vals = list(fields.values()) + [user_id]
         conn.execute(f"UPDATE user_settings SET {sets} WHERE user_id = ?", vals)
@@ -763,9 +761,7 @@ def get_all_books() -> list[dict]:
     """Return all books (excluding ghost books)."""
     conn = _get_conn()
     try:
-        rows = conn.execute(
-            f"SELECT * FROM books WHERE {_ghost_filter()} ORDER BY title"
-        ).fetchall()
+        rows = conn.execute(f"SELECT * FROM books WHERE {_ghost_filter()} ORDER BY title").fetchall()
         return [dict(r) for r in rows]
     finally:
         conn.close()
