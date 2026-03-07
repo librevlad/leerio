@@ -6,6 +6,7 @@ import ProgressBar from '../shared/ProgressBar.vue'
 import { IconMusic, IconPlay } from '../shared/icons'
 import { useCategories } from '../../composables/useCategories'
 import { usePlayer } from '../../composables/usePlayer'
+import { api } from '../../api'
 
 defineProps<{ books: ActiveBook[] }>()
 
@@ -24,11 +25,12 @@ function formatRemaining(totalHours: number, progress: number): string {
   return m > 0 ? `${h}ч ${m}м` : `${h}ч`
 }
 
-function playBook(bookId: string) {
+async function playBook(bookId: string) {
   if (nowPlayingId.value === bookId) {
     togglePlay()
   } else {
-    loadBook(bookId)
+    const book = await api.getBook(bookId)
+    loadBook(book)
   }
 }
 </script>
