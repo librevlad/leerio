@@ -51,7 +51,7 @@ from .core import (
     reading_velocity,
 )
 from .ingest_api import router as ingest_router
-from .storage import get_presigned_url, get_s3_object
+from .storage import get_presigned_url, get_s3_object, s3_object_exists
 from .tts_api import router as tts_router
 from .upload import router as upload_router
 
@@ -935,9 +935,12 @@ def get_book_cover(book_id: str):
     # Fallback to S3 — redirect to presigned URL
     s3_prefix = b.get("s3_prefix", "")
     if s3_prefix and b.get("has_cover"):
-        url = get_presigned_url(f"{s3_prefix}/cover.jpg", expires=86400)
-        if url:
-            return RedirectResponse(url)
+        for cover_ext in ("jpg", "jpeg", "png", "webp"):
+            cover_key = f"{s3_prefix}/cover.{cover_ext}"
+            if s3_object_exists(cover_key):
+                url = get_presigned_url(cover_key, expires=86400)
+                if url:
+                    return RedirectResponse(url)
 
     raise HTTPException(404, "No cover")
 

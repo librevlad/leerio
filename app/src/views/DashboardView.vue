@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { api } from '../api'
+import { useAuth } from '../composables/useAuth'
 import type { DashboardData, ShelfData } from '../types'
 import ContinueListening from '../components/dashboard/ContinueListening.vue'
 import BookShelf from '../components/dashboard/BookShelf.vue'
@@ -12,10 +13,18 @@ import EmptyState from '../components/shared/EmptyState.vue'
 import { usePullToRefresh } from '../composables/usePullToRefresh'
 import { plural } from '../utils/plural'
 
+const { user } = useAuth()
 const data = ref<DashboardData | null>(null)
 const shelves = ref<ShelfData[]>([])
 const streak = ref({ current: 0, best: 0 })
 const loading = ref(true)
+
+const greeting = computed(() => {
+  const h = new Date().getHours()
+  const base = h < 6 ? 'Доброй ночи' : h < 12 ? 'Доброе утро' : h < 18 ? 'Добрый день' : 'Добрый вечер'
+  const name = user.value?.name?.split(' ')[0]
+  return name ? `${base}, ${name}` : base
+})
 
 async function loadData() {
   try {
@@ -54,7 +63,7 @@ onMounted(loadData)
     <div v-else-if="data" class="fade-in space-y-8">
       <!-- Greeting -->
       <div>
-        <h1 class="page-title">Главная</h1>
+        <h1 class="page-title">{{ greeting }}</h1>
         <p class="mt-1 text-[13px] text-[--t3]">
           <span class="font-bold text-[--accent]">{{ data.total_books }}</span> книг в библиотеке ·
           <span class="font-bold text-emerald-400">{{ data.total_done }}</span> прослушано

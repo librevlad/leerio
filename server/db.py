@@ -574,7 +574,8 @@ def _sync_books_from_s3(client):
             # List all objects in category, collect mp3s and covers per folder
             paginator = client.get_paginator("list_objects_v2")
             book_mp3s: dict[str, list[str]] = {}  # folder -> [mp3 keys]
-            book_covers: set[str] = set()  # folders that have a cover file
+            book_covers: dict[str, str] = {}  # folder -> cover S3 key
+            _cover_names = {"cover.jpg", "cover.jpeg", "cover.png", "cover.webp"}
 
             for page in paginator.paginate(Bucket=bucket, Prefix=f"{cat}/"):
                 for obj in page.get("Contents", []):
@@ -587,8 +588,8 @@ def _sync_books_from_s3(client):
                     filename = parts[2].lower()
                     if filename.endswith(".mp3"):
                         book_mp3s.setdefault(folder, []).append(key)
-                    elif filename.startswith("cover"):
-                        book_covers.add(folder)
+                    elif filename in _cover_names:
+                        book_covers[folder] = key
 
             display_cat = cat_norm.get(cat, cat)
 

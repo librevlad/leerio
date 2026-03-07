@@ -54,6 +54,19 @@ def get_s3_object(s3_key: str, range_header: str | None = None):
         return None
 
 
+def s3_object_exists(s3_key: str) -> bool:
+    """Check if an object exists in S3 via HEAD request."""
+    client = _get_client()
+    if not client:
+        return False
+    bucket = os.environ.get("S3_BUCKET", "leerio-books")
+    try:
+        client.head_object(Bucket=bucket, Key=s3_key)
+        return True
+    except Exception:
+        return False
+
+
 def get_presigned_url(s3_key: str, expires: int = 3600) -> str | None:
     client = _get_client()
     if not client:
