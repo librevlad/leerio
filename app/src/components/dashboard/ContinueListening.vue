@@ -41,7 +41,7 @@ const { gradient: catGradient } = useCategories()
               <div
                 v-else
                 class="flex h-full w-full items-center justify-center"
-                :style="{ background: catGradient(book.category) }"
+                :style="{ background: catGradient(book.category ?? '') }"
               >
                 <IconMusic :size="24" class="text-white/40" />
               </div>
