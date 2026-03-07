@@ -1392,14 +1392,43 @@ def get_user_history_for_book(user_id: str, book_id: int) -> list[dict]:
 
 
 def get_user_rating(user_id: str, book_id: int) -> int:
-    """Return the rating from the most recent 'done' history entry for a book."""
+    """Return the rating from the most recent 'rated' or 'done' history entry for a book."""
     conn = _get_conn()
     try:
         row = conn.execute(
-            "SELECT rating FROM user_history WHERE user_id = ? AND book_id = ? AND action = 'done' AND rating > 0 ORDER BY ts DESC LIMIT 1",
+            "SELECT rating FROM user_history WHERE user_id = ? AND book_id = ? AND action IN ('rated', 'done') AND rating > 0 ORDER BY ts DESC LIMIT 1",
             (user_id, book_id),
         ).fetchone()
         return row["rating"] if row else 0
+    finally:
+        conn.close()
+
+
+def set_user_rating(user_id: str, book_id: int, rating: int) -> None:
+    """Set or update a standalone rating for a book (1-5, or 0 to remove)."""
+    conn = _get_conn()
+    try:
+        if rating == 0:
+            conn.execute(
+                "DELETE FROM user_history WHERE user_id = ? AND book_id = ? AND action = 'rated'",
+                (user_id, book_id),
+            )
+        else:
+            existing = conn.execute(
+                "SELECT id FROM user_history WHERE user_id = ? AND book_id = ? AND action = 'rated' LIMIT 1",
+                (user_id, book_id),
+            ).fetchone()
+            if existing:
+                conn.execute(
+                    "UPDATE user_history SET rating = ?, ts = datetime('now') WHERE id = ?",
+                    (rating, existing["id"]),
+                )
+            else:
+                conn.execute(
+                    "INSERT INTO user_history (user_id, book_id, action, rating, ts) VALUES (?, ?, 'rated', ?, datetime('now'))",
+                    (user_id, book_id, rating),
+                )
+        conn.commit()
     finally:
         conn.close()
 

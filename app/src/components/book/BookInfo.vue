@@ -16,7 +16,7 @@ import {
 } from '../shared/icons'
 
 const props = defineProps<{ book: Book; isCurrentBook?: boolean }>()
-const emit = defineEmits<{ listen: [] }>()
+const emit = defineEmits<{ listen: []; ratingChanged: [rating: number] }>()
 
 const descExpanded = ref(false)
 const coverLoaded = ref(false)
@@ -27,6 +27,12 @@ const hasMetadata = () => props.book.size_mb || props.book.mp3_count || props.bo
 
 const { gradient: catGradient } = useCategories()
 const coverPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0%, transparent 50%)'
+const hoverStar = ref(0)
+
+function onStarClick(star: number) {
+  const newRating = star === props.book.rating ? 0 : star
+  emit('ratingChanged', newRating)
+}
 
 const listenedHours = computed(() => {
   if (!props.book.progress || !props.book.duration_hours) return null
@@ -198,11 +204,26 @@ const startDate = computed(() => {
               <div v-if="book.progress > 0" class="ml-1">
                 <ProgressRing :percent="book.progress" :size="64" :stroke="4" />
               </div>
-              <div v-if="book.rating" class="ml-auto flex items-center gap-2.5">
-                <div class="flex gap-0.5 text-amber-400">
-                  <template v-for="s in 5" :key="s">
-                    <component :is="s <= book.rating ? IconStar : IconStarOutline" :size="16" />
-                  </template>
+              <div class="ml-auto flex items-center gap-2.5" @mouseleave="hoverStar = 0">
+                <div class="flex gap-0.5">
+                  <button
+                    v-for="s in 5"
+                    :key="s"
+                    class="cursor-pointer border-0 bg-transparent p-0.5 transition-transform hover:scale-110"
+                    :class="
+                      (hoverStar ? s <= hoverStar : s <= (book.rating || 0))
+                        ? 'text-amber-400'
+                        : 'text-white/15 hover:text-amber-400/50'
+                    "
+                    :title="`${s} из 5`"
+                    @mouseenter="hoverStar = s"
+                    @click="onStarClick(s)"
+                  >
+                    <component
+                      :is="(hoverStar ? s <= hoverStar : s <= (book.rating || 0)) ? IconStar : IconStarOutline"
+                      :size="18"
+                    />
+                  </button>
                 </div>
               </div>
             </div>
@@ -283,11 +304,25 @@ const startDate = computed(() => {
             <p class="text-[10px] text-[--t3]">Длительность</p>
           </div>
         </div>
-        <div v-if="book.rating" class="ml-auto flex items-center gap-2.5">
-          <div class="flex gap-0.5 text-amber-400">
-            <template v-for="s in 5" :key="s">
-              <component :is="s <= book.rating ? IconStar : IconStarOutline" :size="16" />
-            </template>
+        <div class="ml-auto flex items-center gap-2.5" @mouseleave="hoverStar = 0">
+          <div class="flex gap-0.5">
+            <button
+              v-for="s in 5"
+              :key="s"
+              class="cursor-pointer border-0 bg-transparent p-0.5 transition-transform hover:scale-110"
+              :class="
+                (hoverStar ? s <= hoverStar : s <= (book.rating || 0))
+                  ? 'text-amber-400'
+                  : 'text-white/15 hover:text-amber-400/50'
+              "
+              @mouseenter="hoverStar = s"
+              @click="onStarClick(s)"
+            >
+              <component
+                :is="(hoverStar ? s <= hoverStar : s <= (book.rating || 0)) ? IconStar : IconStarOutline"
+                :size="16"
+              />
+            </button>
           </div>
         </div>
       </div>

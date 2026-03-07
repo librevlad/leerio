@@ -220,6 +220,9 @@ export const api = {
   setBookStatus: (bookId: string, status: string) => put<{ ok: boolean }>(`/user/book-status/${bookId}`, { status }),
   removeBookStatus: (bookId: string) => del<{ ok: boolean }>(`/user/book-status/${bookId}`),
 
+  // Rating
+  setRating: (bookId: string, rating: number) => put<{ ok: boolean }>(`/user/rating/${bookId}`, { rating }),
+
   // Auth
   getMe: () => get<{ user_id: string; email: string; name: string; picture: string; role: string }>('/auth/me'),
   logout: () => post<{ ok: boolean }>('/auth/logout'),

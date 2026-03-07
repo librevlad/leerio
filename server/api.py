@@ -17,7 +17,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import Body, Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -1278,6 +1278,16 @@ def remove_book_status(book_id: str, user: dict = Depends(get_current_user)):
     bid = _parse_book_id(book_id)
     db.remove_user_book_status(user["user_id"], bid)
     return {"ok": True}
+
+
+# ── Rating ─────────────────────────────────────────────────────────────────
+
+
+@app.put("/api/user/rating/{book_id}")
+def set_rating(book_id: str, rating: int = Body(..., ge=0, le=5, embed=True), user: dict = Depends(get_current_user)):
+    bid = _parse_book_id(book_id)
+    db.set_user_rating(user["user_id"], bid, rating)
+    return {"ok": True, "rating": rating}
 
 
 # ── Bookmarks ──────────────────────────────────────────────────────────────

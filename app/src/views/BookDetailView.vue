@@ -61,6 +61,16 @@ async function loadBook() {
   }
 }
 
+async function onRatingChanged(rating: number) {
+  if (!book.value) return
+  try {
+    await api.setRating(book.value.id, rating)
+    book.value.rating = rating
+  } catch {
+    /* non-critical */
+  }
+}
+
 async function startListening() {
   if (!book.value) return
   player.loadBook(book.value)
@@ -109,7 +119,13 @@ watch(() => route.params.id, loadBook)
 
     <div v-else-if="book" class="fade-in">
       <!-- 1. Hero card -->
-      <BookInfo :book="book" :is-current-book="isCurrentBook" class="mb-5" @listen="startListening" />
+      <BookInfo
+        :book="book"
+        :is-current-book="isCurrentBook"
+        class="mb-5"
+        @listen="startListening"
+        @rating-changed="onRatingChanged"
+      />
 
       <!-- 2. Action bar: status pills + download -->
       <div class="mb-5 space-y-3">
