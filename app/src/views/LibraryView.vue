@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { useBooks } from '../composables/useBooks'
 import SearchInput from '../components/shared/SearchInput.vue'
@@ -12,6 +13,7 @@ import type { BookStatusValue } from '../types'
 import { plural } from '../utils/plural'
 
 const route = useRoute()
+const { t } = useI18n()
 const router = useRouter()
 const { books, loading, load, categories } = useBooks()
 
@@ -81,13 +83,13 @@ const filtered = computed(() => {
 const visibleBooks = computed(() => filtered.value.slice(0, visibleCount.value))
 const hasMore = computed(() => visibleCount.value < filtered.value.length)
 
-const sortOptions = [
-  { value: 'title', label: 'Название' },
-  { value: 'author', label: 'Автор' },
-  { value: 'category', label: 'Категория' },
-  { value: 'progress', label: 'Прогресс' },
-  { value: 'rating', label: 'Оценка' },
-]
+const sortOptions = computed(() => [
+  { value: 'title', label: t('library.sortTitle') },
+  { value: 'author', label: t('library.sortAuthor') },
+  { value: 'category', label: t('library.sortCategory') },
+  { value: 'progress', label: t('library.sortProgress') },
+  { value: 'rating', label: t('library.sortRating') },
+])
 
 // Status counts from actual book_status field (consistent with filter)
 const statusCounts = computed(() => {
@@ -136,17 +138,17 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
     <!-- Header -->
     <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
       <div>
-        <h1 class="page-title">Каталог</h1>
+        <h1 class="page-title">{{ t('library.title') }}</h1>
         <p class="mt-1 text-[13px] text-[--t3]">
           <span class="font-bold text-[--accent]">{{ filtered.length }}</span>
           {{ plural(filtered.length, 'книга', 'книги', 'книг') }}
         </p>
       </div>
       <div class="flex items-center gap-2">
-        <SearchInput v-model="search" placeholder="Поиск..." class="w-full sm:w-56" />
+        <SearchInput v-model="search" :placeholder="t('library.search')" class="w-full sm:w-56" />
         <button
           class="flex h-[42px] w-[42px] flex-shrink-0 cursor-pointer items-center justify-center rounded-xl border border-white/[0.06] bg-white/[0.03] text-[--t3] transition-colors hover:bg-white/[0.08] hover:text-[--accent]"
-          title="Случайная книга"
+          :title="t('library.randomBook')"
           @click="randomBook"
         >
           <IconShuffle :size="16" />
@@ -234,7 +236,7 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
         {{ statusPills.find((p) => p.value === statusFilter)?.label }}
       </span>
       <span v-if="search" class="rounded-full bg-white/[0.06] px-2 py-0.5">&laquo;{{ search }}&raquo;</span>
-      <button class="ml-1 cursor-pointer text-[--accent] hover:underline" @click="resetFilters">Сбросить</button>
+      <button class="ml-1 cursor-pointer text-[--accent] hover:underline" @click="resetFilters">{{ t('library.reset') }}</button>
     </div>
 
     <!-- Loading skeletons -->
@@ -267,9 +269,9 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
 
     <EmptyState
       v-else
-      title="Книги не найдены"
-      description="Попробуйте изменить фильтры"
-      action-label="Сбросить фильтры"
+      :title="t('library.notFound')"
+      :description="t('library.notFoundDesc')"
+      :action-label="t('library.resetFilters')"
       @action="resetFilters"
     />
   </div>

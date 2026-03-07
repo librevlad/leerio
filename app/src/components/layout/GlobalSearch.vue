@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { api, coverUrl } from '../../api'
 import type { Book } from '../../types'
 import { IconSearch, IconMusic } from '../shared/icons'
 
+const { t } = useI18n()
 const router = useRouter()
 const query = ref('')
 const results = ref<Book[]>([])
@@ -78,7 +80,7 @@ function onBlur() {
         v-model="query"
         type="text"
         class="input-field w-full py-2.5 pr-4 pl-10 text-[13px]"
-        placeholder="Найти книгу или автора"
+        :placeholder="t('global.search')"
         @focus="query.trim() && results.length && (open = true)"
         @blur="onBlur"
         @keyup.enter="goToCatalog"
@@ -93,7 +95,7 @@ function onBlur() {
     >
       <!-- Authors -->
       <div v-if="authors.length" class="border-b border-[--border] px-3 py-2">
-        <p class="mb-1.5 text-[10px] font-bold tracking-wider text-[--t3] uppercase">Авторы</p>
+        <p class="mb-1.5 text-[10px] font-bold tracking-wider text-[--t3] uppercase">{{ t('global.authors') }}</p>
         <button
           v-for="a in authors"
           :key="a"

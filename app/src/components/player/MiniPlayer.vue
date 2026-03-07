@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { usePlayer } from '../../composables/usePlayer'
 import { IconPlay, IconPause, IconXCircle, IconForward15, IconRewind15 } from '../shared/icons'
 
+const { t } = useI18n()
 const {
   currentBook,
   isPlaying,
@@ -48,7 +50,7 @@ const {
               v-if="playingOffline"
               class="h-2 w-2 shrink-0 rounded-full bg-emerald-400"
               style="box-shadow: 0 0 6px rgba(52, 211, 153, 0.5)"
-              title="Офлайн"
+              :title="t('player.offline')"
             />
             {{ currentBook.title }}
           </p>
@@ -63,7 +65,7 @@ const {
         <!-- -15s skip -->
         <button
           class="hidden shrink-0 cursor-pointer border-0 bg-transparent p-1.5 text-[--t3] transition-colors hover:text-[--t1] sm:block"
-          aria-label="Назад 15 сек"
+          :aria-label="t('player.back15Aria')"
           @click="skipBackward()"
         >
           <IconRewind15 :size="18" />
@@ -73,7 +75,7 @@ const {
         <button
           class="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 transition-all"
           style="background: var(--gradient-accent); box-shadow: 0 2px 12px rgba(232, 146, 58, 0.25)"
-          :aria-label="isPlaying ? 'Пауза' : 'Воспроизвести'"
+          :aria-label="isPlaying ? t('player.pause') : t('player.play')"
           @click="togglePlay"
         >
           <component :is="isPlaying ? IconPause : IconPlay" :size="16" style="color: #fff" />
@@ -82,7 +84,7 @@ const {
         <!-- +15s skip -->
         <button
           class="shrink-0 cursor-pointer border-0 bg-transparent p-1.5 text-[--t3] transition-colors hover:text-[--t1]"
-          aria-label="Вперёд 15 сек"
+          :aria-label="t('player.forward15Aria')"
           @click="skipForward()"
         >
           <IconForward15 :size="18" />
@@ -91,7 +93,7 @@ const {
         <!-- Close -->
         <button
           class="shrink-0 cursor-pointer border-0 bg-transparent p-1.5 text-[--t3] transition-colors hover:text-[--t1]"
-          aria-label="Закрыть плеер"
+          :aria-label="t('player.closePlayer')"
           @click="closePlayer"
         >
           <IconXCircle :size="18" />

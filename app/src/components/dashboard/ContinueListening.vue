@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactive, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { ActiveBook } from '../../types'
 import { coverUrl } from '../../api'
 import ProgressBar from '../shared/ProgressBar.vue'
@@ -10,6 +11,7 @@ import { api } from '../../api'
 
 defineProps<{ books: ActiveBook[] }>()
 
+const { t } = useI18n()
 const { currentBook, loadBook, togglePlay } = usePlayer()
 const nowPlayingId = computed(() => currentBook.value?.id ?? null)
 
@@ -37,7 +39,7 @@ async function playBook(bookId: string) {
 
 <template>
   <div v-if="books.length">
-    <h2 class="section-label mb-4">Продолжить слушать</h2>
+    <h2 class="section-label mb-4">{{ t('dashboard.continueListening') }}</h2>
     <div class="fade-mask-r">
       <div class="flex gap-4 overflow-x-auto pb-2">
         <div
@@ -93,7 +95,7 @@ async function playBook(bookId: string) {
           <button
             class="absolute right-3 bottom-3 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border-0 shadow-lg transition-transform duration-150 hover:scale-110"
             style="background: var(--gradient-accent)"
-            :aria-label="nowPlayingId === book.id ? 'Пауза' : 'Продолжить'"
+            :aria-label="nowPlayingId === book.id ? t('book.pauseAria') : t('book.continueAria')"
             @click.prevent="playBook(book.id)"
           >
             <IconPlay :size="14" style="color: #fff" />

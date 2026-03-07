@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { IconLibrary, IconQueue, IconMusic } from '../shared/icons'
+const { t } = useI18n()
 
 defineProps<{
   totalBooks: number
@@ -10,7 +12,7 @@ defineProps<{
 const stats = [
   {
     key: 'totalBooks',
-    label: 'Всего книг',
+    label: t('dashboard.totalBooks'),
     icon: IconLibrary,
     to: '/library',
     color: 'rgba(232, 146, 58, 0.12)',
@@ -18,7 +20,7 @@ const stats = [
   },
   {
     key: 'totalDone',
-    label: 'Прослушано',
+    label: t('dashboard.statListened'),
     icon: IconQueue,
     to: '/history',
     color: 'rgba(52, 211, 153, 0.12)',
@@ -26,7 +28,7 @@ const stats = [
   },
   {
     key: 'activeCount',
-    label: 'В процессе',
+    label: t('dashboard.inProgress'),
     icon: IconMusic,
     to: '/library',
     color: 'rgba(129, 140, 248, 0.12)',

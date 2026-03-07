@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { api } from '../../api'
 import { useToast } from '../../composables/useToast'
 import { IconX } from '../shared/icons'
 
+const { t } = useI18n()
 const props = defineProps<{ bookId: string; title: string; tags: string[] }>()
 const emit = defineEmits<{ updated: [tags: string[]] }>()
 
@@ -59,7 +61,7 @@ async function save() {
 
 <template>
   <div class="card p-5">
-    <h3 class="section-label mb-3">Теги</h3>
+    <h3 class="section-label mb-3">{{ t('book.tags') }}</h3>
 
     <div v-if="currentTags.length" class="mb-3 flex flex-wrap gap-1.5">
       <span
@@ -82,7 +84,7 @@ async function save() {
       <input
         v-model="input"
         type="text"
-        placeholder="Добавить тег..."
+        :placeholder="t('book.addTag')"
         class="input-field w-full px-3.5 py-2 text-[12px]"
         @focus="showSuggestions = true"
         @blur="hideSuggestions"

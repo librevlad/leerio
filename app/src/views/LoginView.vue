@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuth } from '../composables/useAuth'
 
 const router = useRouter()
+const { t } = useI18n()
 const { loginWithGoogle, loginWithPassword } = useAuth()
 const error = ref('')
 const loading = ref(false)
@@ -64,7 +66,7 @@ async function handleCredentialResponse(response: { credential: string }) {
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Login failed'
     if (msg.includes('403')) {
-      error.value = 'Регистрация недоступна для этого аккаунта. Обратитесь к администратору.'
+      error.value = t('login.registrationClosed')
     } else {
       error.value = msg
     }
@@ -83,7 +85,7 @@ async function handlePasswordLogin() {
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'Login failed'
     if (msg.includes('401')) {
-      error.value = 'Неверный email или пароль'
+      error.value = t('login.invalidCredentials')
     } else {
       error.value = msg
     }
@@ -110,7 +112,7 @@ async function handlePasswordLogin() {
 
       <!-- Card -->
       <div class="card p-7 text-center">
-        <p class="mb-6 text-[14px] text-[--t2]">Войдите, чтобы продолжить</p>
+        <p class="mb-6 text-[14px] text-[--t2]">{{ t('login.subtitle') }}</p>
 
         <!-- Email/Password form -->
         <form class="mb-5 space-y-3" @submit.prevent="handlePasswordLogin">
@@ -124,7 +126,7 @@ async function handlePasswordLogin() {
           <input
             v-model="password"
             type="password"
-            placeholder="Пароль"
+            :placeholder="t('login.password')"
             autocomplete="current-password"
             class="input-field w-full px-4 py-2.5"
           />
@@ -133,13 +135,13 @@ async function handlePasswordLogin() {
             :disabled="loading || !email || !password"
             class="btn btn-primary w-full justify-center py-2.5"
           >
-            Войти
+            {{ t('login.signIn') }}
           </button>
         </form>
 
         <div class="mb-5 flex items-center gap-3">
           <div class="h-px flex-1 bg-[--border]" />
-          <span class="text-[11px] text-[--t3]">или</span>
+          <span class="text-[11px] text-[--t3]">{{ t('login.or') }}</span>
           <div class="h-px flex-1 bg-[--border]" />
         </div>
 
@@ -147,7 +149,7 @@ async function handlePasswordLogin() {
           <div id="google-signin-btn" />
         </div>
 
-        <div v-if="loading" class="mt-5 text-[13px] text-[--t3]">Вход...</div>
+        <div v-if="loading" class="mt-5 text-[13px] text-[--t3]">{{ t('login.loading') }}</div>
         <div v-if="error" class="mt-5 text-[13px] text-red-400">{{ error }}</div>
       </div>
 

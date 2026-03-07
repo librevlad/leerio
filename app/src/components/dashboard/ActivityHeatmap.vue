@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { plural } from '../../utils/plural'
 
+const { t } = useI18n()
 const props = defineProps<{ data: Record<string, number> }>()
 
 const stats = computed(() => {
@@ -61,7 +63,7 @@ function intensity(count: number): string {
 <template>
   <div class="card p-6">
     <div class="mb-5 flex items-center justify-between">
-      <h2 class="section-label">Активность</h2>
+      <h2 class="section-label">{{ t('dashboard.activity') }}</h2>
       <p class="text-[11px] text-[--t3]">
         <span class="font-bold text-[--accent]">{{ stats.activeDays }}</span>
         {{ plural(stats.activeDays, 'активный день', 'активных дня', 'активных дней') }}
@@ -90,13 +92,13 @@ function intensity(count: number): string {
     </div>
     <!-- Legend -->
     <div class="mt-3 flex items-center justify-end gap-1.5 text-[10px] text-[--t3]">
-      <span>Меньше</span>
+      <span>{{ t('dashboard.activityLess') }}</span>
       <span class="heatmap-0 inline-block h-[10px] w-[10px] rounded-sm" />
       <span class="heatmap-1 inline-block h-[10px] w-[10px] rounded-sm" />
       <span class="heatmap-2 inline-block h-[10px] w-[10px] rounded-sm" />
       <span class="heatmap-3 inline-block h-[10px] w-[10px] rounded-sm" />
       <span class="heatmap-4 inline-block h-[10px] w-[10px] rounded-sm" />
-      <span>Больше</span>
+      <span>{{ t('dashboard.activityMore') }}</span>
     </div>
   </div>
 </template>

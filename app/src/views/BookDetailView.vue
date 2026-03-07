@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api'
 import type { Book } from '../types'
@@ -28,6 +29,7 @@ import { useAuth } from '../composables/useAuth'
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 const book = ref<Book | null>(null)
 const loading = ref(true)
 
@@ -93,7 +95,7 @@ async function onRatingChanged(rating: number) {
   try {
     await api.setRating(book.value.id, rating)
     book.value.rating = rating
-    toast.success(rating ? `Оценка: ${rating} из 5` : 'Оценка убрана')
+    toast.success(rating ? t('book.ratingSet', { rating }) : t('book.ratingRemoved'))
   } catch {
     toast.error('Не удалось сохранить оценку')
   }
@@ -146,7 +148,7 @@ watch(() => route.params.id, loadBook)
         @click="router.back()"
       >
         <IconArrowLeft :size="15" />
-        <span class="font-medium">Назад</span>
+        <span class="font-medium">{{ t('book.back') }}</span>
       </button>
       <button
         v-if="book"
@@ -154,7 +156,7 @@ watch(() => route.params.id, loadBook)
         @click="shareBook"
       >
         <IconShare :size="15" />
-        <span class="font-medium">Поделиться</span>
+        <span class="font-medium">{{ t('book.share') }}</span>
       </button>
     </div>
 
@@ -192,8 +194,8 @@ watch(() => route.params.id, loadBook)
         class="card mb-5 flex flex-col items-center gap-3 px-6 py-6 text-center sm:flex-row sm:text-left"
       >
         <div class="flex-1">
-          <p class="text-[14px] font-semibold text-[--t1]">Войдите, чтобы слушать и отслеживать прогресс</p>
-          <p class="mt-1 text-[12px] text-[--t3]">Заметки, закладки, история прослушивания и другое</p>
+          <p class="text-[14px] font-semibold text-[--t1]">{{ t('book.loginToListen') }}</p>
+          <p class="mt-1 text-[12px] text-[--t3]">{{ t('book.loginFeatures') }}</p>
         </div>
         <router-link to="/login" class="btn btn-primary inline-flex items-center gap-2 whitespace-nowrap no-underline">
           Войти
@@ -237,7 +239,7 @@ watch(() => route.params.id, loadBook)
                 </div>
                 <button
                   class="shrink-0 cursor-pointer border-0 bg-transparent p-1.5 text-[--t3] transition-colors hover:text-red-400"
-                  title="Отменить"
+                  :title="t('book.cancelDownload')"
                   @click="cancelDl"
                 >
                   <IconX :size="16" />
@@ -252,7 +254,7 @@ watch(() => route.params.id, loadBook)
                 </span>
                 <button
                   class="shrink-0 cursor-pointer border-0 bg-transparent p-1.5 text-[--t3] transition-colors hover:text-red-400"
-                  title="Удалить загрузку"
+                  :title="t('book.deleteDownload')"
                   @click="removeDl"
                 >
                   <IconTrash :size="15" />

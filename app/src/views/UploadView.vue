@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { api } from '@/api'
 import { useToast } from '@/composables/useToast'
@@ -9,10 +10,10 @@ import { useNetwork } from '@/composables/useNetwork'
 import ProgressBar from '@/components/shared/ProgressBar.vue'
 import { IconUpload, IconMicrophone, IconMusic, IconX, IconSmartphone, IconCheck } from '@/components/shared/icons'
 import type { TTSVoice, TTSEngine } from '@/types'
-import { plural } from '@/utils/plural'
 
 const router = useRouter()
 const toast = useToast()
+const { t } = useI18n()
 const { pollJob } = useUserBooks()
 const { addLocalBook } = useLocalBooks()
 const { isOnline } = useNetwork()
@@ -50,11 +51,11 @@ function removeFile(index: number) {
 
 async function handleUpload() {
   if (!uploadTitle.value.trim()) {
-    toast.error('Укажите название книги')
+    toast.error(t('upload.errTitleRequired'))
     return
   }
   if (uploadFiles.value.length === 0) {
-    toast.error('Добавьте MP3 файлы')
+    toast.error(t('upload.errFilesRequired'))
     return
   }
 
@@ -74,10 +75,10 @@ async function handleUpload() {
     }
 
     await api.uploadBook(formData)
-    toast.success('Книга загружена!')
+    toast.success(t('upload.successUploaded'))
     router.push('/my-library')
   } catch (e: unknown) {
-    toast.error(`Ошибка: ${e instanceof Error ? e.message : 'Неизвестная ошибка'}`)
+    toast.error(t('common.errorPrefix', { msg: e instanceof Error ? e.message : t('common.unknownError') }))
   } finally {
     uploading.value = false
   }
@@ -186,11 +187,11 @@ function onLocalCoverChange(e: Event) {
 
 async function handleAddLocal() {
   if (!localTitle.value.trim()) {
-    toast.error('Укажите название книги')
+    toast.error(t('upload.errTitleRequired'))
     return
   }
   if (localFiles.value.length === 0) {
-    toast.error('Добавьте MP3 файлы')
+    toast.error(t('upload.errFilesRequired'))
     return
   }
 
@@ -201,10 +202,10 @@ async function handleAddLocal() {
       author: localAuthor.value.trim(),
       coverDataUrl: localCover.value,
     })
-    toast.success('Книга добавлена на устройство!')
+    toast.success(t('upload.successLocal'))
     router.push('/my-library')
   } catch (e: unknown) {
-    toast.error(`Ошибка: ${e instanceof Error ? e.message : 'Неизвестная ошибка'}`)
+    toast.error(t('common.errorPrefix', { msg: e instanceof Error ? e.message : t('common.unknownError') }))
   } finally {
     addingLocal.value = false
   }
@@ -212,11 +213,11 @@ async function handleAddLocal() {
 
 async function handleTTSConvert() {
   if (!ttsTitle.value.trim()) {
-    toast.error('Укажите название')
+    toast.error(t('upload.errTitleRequired'))
     return
   }
   if (!ttsFile.value) {
-    toast.error('Выберите файл')
+    toast.error(t('upload.errFileRequired'))
     return
   }
 
@@ -240,23 +241,23 @@ async function handleTTSConvert() {
       jobProgress.value = j.progress
       jobStatus.value = j.status
       if (j.status === 'done') {
-        toast.success('Аудиокнига создана!')
+        toast.success(t('upload.successTts'))
         converting.value = false
       } else if (j.status === 'error') {
-        toast.error(`Ошибка: ${j.error || 'Неизвестная ошибка'}`)
+        toast.error(t('common.errorPrefix', { msg: j.error || t('common.unknownError') }))
         converting.value = false
       }
     })
   } catch (e: unknown) {
-    toast.error(`Ошибка: ${e instanceof Error ? e.message : 'Неизвестная ошибка'}`)
+    toast.error(t('common.errorPrefix', { msg: e instanceof Error ? e.message : t('common.unknownError') }))
     converting.value = false
   }
 }
 
 const tabDefs = [
-  { key: 'upload' as const, label: 'Загрузить MP3', icon: IconUpload },
-  { key: 'tts' as const, label: 'Озвучить документ', icon: IconMicrophone },
-  { key: 'local' as const, label: 'С устройства', icon: IconSmartphone },
+  { key: 'upload' as const, label: t('upload.tabUpload'), icon: IconUpload },
+  { key: 'tts' as const, label: t('upload.tabTts'), icon: IconMicrophone },
+  { key: 'local' as const, label: t('upload.tabLocal'), icon: IconSmartphone },
 ]
 </script>
 
@@ -264,8 +265,8 @@ const tabDefs = [
   <div>
     <!-- Header -->
     <div class="mb-6">
-      <h1 class="page-title">Загрузить</h1>
-      <p class="mt-1 text-[13px] text-[--t3]">Загрузите MP3 или создайте аудиокнигу из документа</p>
+      <h1 class="page-title">{{ t('upload.title') }}</h1>
+      <p class="mt-1 text-[13px] text-[--t3]">{{ t('upload.subtitle') }}</p>
     </div>
 
     <!-- Tabs -->
@@ -291,39 +292,39 @@ const tabDefs = [
       <div class="card space-y-4 px-5 py-5">
         <!-- Title -->
         <div>
-          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">Название *</label>
-          <input v-model="uploadTitle" type="text" placeholder="Война и Мир" class="input-field w-full px-3.5 py-2.5" />
+          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelTitle') }}</label>
+          <input v-model="uploadTitle" type="text" :placeholder="t('upload.placeholderTitle')" class="input-field w-full px-3.5 py-2.5" />
         </div>
 
         <!-- Author -->
         <div>
-          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">Автор</label>
+          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelAuthor') }}</label>
           <input
             v-model="uploadAuthor"
             type="text"
-            placeholder="Лев Толстой"
+            :placeholder="t('upload.placeholderAuthor')"
             class="input-field w-full px-3.5 py-2.5"
           />
         </div>
 
         <!-- Reader -->
         <div>
-          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">Чтец</label>
-          <input v-model="uploadReader" type="text" placeholder="Иван Козий" class="input-field w-full px-3.5 py-2.5" />
+          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelReader') }}</label>
+          <input v-model="uploadReader" type="text" :placeholder="t('upload.placeholderReader')" class="input-field w-full px-3.5 py-2.5" />
         </div>
       </div>
 
       <!-- MP3 Files -->
       <div class="card px-5 py-5">
-        <label class="mb-3 block text-[12px] font-semibold text-[--t2]">MP3 файлы *</label>
+        <label class="mb-3 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelMp3') }}</label>
         <div
           class="rounded-xl border-2 border-dashed border-[--border] p-8 text-center transition-all hover:border-white/15 hover:bg-white/[0.02]"
         >
           <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-white/[0.06]">
             <IconMusic :size="24" class="text-[--t2]" />
           </div>
-          <p class="mb-1 text-[13px] font-medium text-[--t2]">Перетащите MP3 файлы сюда</p>
-          <p class="mb-3 text-[12px] text-[--t3]">или выберите с устройства</p>
+          <p class="mb-1 text-[13px] font-medium text-[--t2]">{{ t('upload.dragDrop') }}</p>
+          <p class="mb-3 text-[12px] text-[--t3]">{{ t('upload.orSelect') }}</p>
           <label
             class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-[--accent-soft] px-4 py-2 text-[12px] font-medium text-[--accent] transition-all hover:bg-[--accent]/20"
           >
@@ -336,7 +337,7 @@ const tabDefs = [
         <!-- File list -->
         <div v-if="uploadFiles.length" class="mt-4 space-y-1.5">
           <div class="mb-2 text-[11px] font-semibold text-[--t3]">
-            {{ uploadFiles.length }} {{ plural(uploadFiles.length, 'файл', 'файла', 'файлов') }}
+            {{ uploadFiles.length }} {{ t('plural.file', uploadFiles.length) }}
           </div>
           <div
             v-for="(file, i) in uploadFiles"
@@ -350,7 +351,7 @@ const tabDefs = [
             </div>
             <button
               class="flex-shrink-0 rounded-full p-1 text-[--t3] transition-all hover:bg-red-500/15 hover:text-red-400"
-              aria-label="Удалить файл"
+              :aria-label="t('upload.deleteFileAria')"
               @click="removeFile(i)"
             >
               <IconX :size="14" />
@@ -361,12 +362,12 @@ const tabDefs = [
 
       <!-- Cover -->
       <div class="card px-5 py-5">
-        <label class="mb-3 block text-[12px] font-semibold text-[--t2]">Обложка (опционально)</label>
+        <label class="mb-3 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelCover') }}</label>
         <label
           class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-[--border] px-4 py-3 text-[12px] text-[--t3] transition-all hover:border-white/15 hover:bg-white/[0.02]"
         >
           <IconUpload :size="14" />
-          {{ uploadCover ? uploadCover.name : 'Выбрать изображение' }}
+          {{ uploadCover ? uploadCover.name : t('upload.selectImage') }}
           <input type="file" accept="image/*" class="hidden" @change="onCoverChange" />
         </label>
         <div v-if="uploadCover" class="mt-2 flex items-center gap-1.5 text-[11px] text-emerald-400">
@@ -382,8 +383,8 @@ const tabDefs = [
         @click="handleUpload"
       >
         <IconUpload v-if="!uploading" :size="16" />
-        <span v-if="uploading">Загрузка... {{ uploadProgress }}%</span>
-        <span v-else>Загрузить</span>
+        <span v-if="uploading">{{ t('upload.uploading', { progress: uploadProgress }) }}</span>
+        <span v-else>{{ t('upload.uploadBtn') }}</span>
       </button>
     </div>
 
@@ -392,19 +393,19 @@ const tabDefs = [
       <div class="card space-y-4 px-5 py-5">
         <!-- Title -->
         <div>
-          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">Название *</label>
-          <input v-model="ttsTitle" type="text" placeholder="Название книги" class="input-field w-full px-3.5 py-2.5" />
+          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelTitle') }}</label>
+          <input v-model="ttsTitle" type="text" :placeholder="t('upload.placeholderBookTitle')" class="input-field w-full px-3.5 py-2.5" />
         </div>
 
         <!-- Author -->
         <div>
-          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">Автор</label>
-          <input v-model="ttsAuthor" type="text" placeholder="Автор" class="input-field w-full px-3.5 py-2.5" />
+          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelAuthor') }}</label>
+          <input v-model="ttsAuthor" type="text" :placeholder="t('upload.placeholderAuthor')" class="input-field w-full px-3.5 py-2.5" />
         </div>
 
         <!-- Document file -->
         <div>
-          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">Документ (PDF, EPUB, TXT, FB2) *</label>
+          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelDocument') }}</label>
           <label
             class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-[--border] px-4 py-3 text-[13px] transition-all hover:border-white/15 hover:bg-white/[0.02]"
             :class="ttsFile ? 'text-[--t1]' : 'text-[--t3]'"
@@ -418,11 +419,11 @@ const tabDefs = [
 
       <!-- Voice settings card -->
       <div class="card space-y-4 px-5 py-5">
-        <h3 class="section-label">Настройки голоса</h3>
+        <h3 class="section-label">{{ t('upload.labelVoiceSettings') }}</h3>
 
         <!-- Engine selector -->
         <div v-if="showEngineSelector">
-          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">Движок</label>
+          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelEngine') }}</label>
           <div class="flex gap-2">
             <button
               v-for="eng in engines.filter((e) => e.available)"
@@ -442,17 +443,17 @@ const tabDefs = [
 
         <!-- Voice selection -->
         <div>
-          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">Голос</label>
+          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelVoice') }}</label>
           <select v-model="ttsVoice" class="input-field w-full px-3.5 py-2.5">
             <option v-for="v in voices" :key="v.id" :value="v.id">
-              {{ v.name }} ({{ v.lang }}, {{ v.gender === 'male' ? 'муж.' : v.gender === 'female' ? 'жен.' : '' }})
+              {{ v.name }} ({{ v.lang }}, {{ v.gender === 'male' ? t('upload.genderMale') : v.gender === 'female' ? t('upload.genderFemale') : '' }})
             </option>
           </select>
         </div>
 
         <!-- Rate -->
         <div>
-          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">Скорость</label>
+          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelSpeed') }}</label>
           <div class="flex gap-2">
             <button
               v-for="opt in rateOptions"
@@ -478,8 +479,8 @@ const tabDefs = [
         @click="handleTTSConvert"
       >
         <IconMicrophone v-if="!converting || !conversionStarted" :size="16" />
-        <span v-if="converting && !conversionStarted">Загрузка...</span>
-        <span v-else>Создать аудиокнигу</span>
+        <span v-if="converting && !conversionStarted">{{ t('upload.creating') }}</span>
+        <span v-else>{{ t('upload.createBtn') }}</span>
       </button>
 
       <!-- Conversion progress -->
@@ -517,7 +518,7 @@ const tabDefs = [
                 <IconMicrophone v-else :size="16" class="text-violet-400" />
               </div>
               <span class="text-[13px] font-semibold text-[--t1]">
-                {{ jobStatus === 'done' ? 'Готово!' : jobStatus === 'error' ? 'Ошибка' : 'Конвертация...' }}
+                {{ jobStatus === 'done' ? t('upload.conversionDone') : jobStatus === 'error' ? t('upload.conversionError') : t('upload.conversionProgress') }}
               </span>
             </div>
             <span class="text-[12px] font-semibold" :class="jobStatus === 'done' ? 'text-emerald-400' : 'text-[--t3]'">
@@ -550,33 +551,33 @@ const tabDefs = [
       <div class="card space-y-4 px-5 py-5">
         <!-- Title -->
         <div>
-          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">Название *</label>
+          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelTitle') }}</label>
           <input
             v-model="localTitle"
             type="text"
-            placeholder="Название книги"
+            :placeholder="t('upload.placeholderBookTitle')"
             class="input-field w-full px-3.5 py-2.5"
           />
         </div>
 
         <!-- Author -->
         <div>
-          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">Автор</label>
-          <input v-model="localAuthor" type="text" placeholder="Автор" class="input-field w-full px-3.5 py-2.5" />
+          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelAuthor') }}</label>
+          <input v-model="localAuthor" type="text" :placeholder="t('upload.placeholderAuthor')" class="input-field w-full px-3.5 py-2.5" />
         </div>
       </div>
 
       <!-- MP3 Files -->
       <div class="card px-5 py-5">
-        <label class="mb-3 block text-[12px] font-semibold text-[--t2]">MP3 файлы *</label>
+        <label class="mb-3 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelMp3') }}</label>
         <div
           class="rounded-xl border-2 border-dashed border-[--border] p-8 text-center transition-all hover:border-white/15 hover:bg-white/[0.02]"
         >
           <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-white/[0.06]">
             <IconMusic :size="24" class="text-[--t2]" />
           </div>
-          <p class="mb-1 text-[13px] font-medium text-[--t2]">Выберите MP3 файлы с устройства</p>
-          <p class="mb-3 text-[12px] text-[--t3]">Поддерживаются MP3 и другие аудио форматы</p>
+          <p class="mb-1 text-[13px] font-medium text-[--t2]">{{ t('upload.selectDevice') }}</p>
+          <p class="mb-3 text-[12px] text-[--t3]">{{ t('upload.orSelect') }}</p>
           <label
             class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-[--accent-soft] px-4 py-2 text-[12px] font-medium text-[--accent] transition-all hover:bg-[--accent]/20"
           >
@@ -589,7 +590,7 @@ const tabDefs = [
         <!-- File list -->
         <div v-if="localFiles.length" class="mt-4 space-y-1.5">
           <div class="mb-2 text-[11px] font-semibold text-[--t3]">
-            {{ localFiles.length }} {{ plural(localFiles.length, 'файл', 'файла', 'файлов') }}
+            {{ localFiles.length }} {{ t('plural.file', localFiles.length) }}
           </div>
           <div
             v-for="(file, i) in localFiles"
@@ -603,7 +604,7 @@ const tabDefs = [
             </div>
             <button
               class="flex-shrink-0 rounded-full p-1 text-[--t3] transition-all hover:bg-red-500/15 hover:text-red-400"
-              aria-label="Удалить файл"
+              :aria-label="t('upload.deleteFileAria')"
               @click="removeLocalFile(i)"
             >
               <IconX :size="14" />
@@ -614,12 +615,12 @@ const tabDefs = [
 
       <!-- Cover -->
       <div class="card px-5 py-5">
-        <label class="mb-3 block text-[12px] font-semibold text-[--t2]">Обложка (опционально)</label>
+        <label class="mb-3 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelCover') }}</label>
         <label
           class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-[--border] px-4 py-3 text-[12px] text-[--t3] transition-all hover:border-white/15 hover:bg-white/[0.02]"
         >
           <IconUpload :size="14" />
-          {{ localCover ? 'Обложка выбрана' : 'Выбрать изображение' }}
+          {{ localCover ? t('upload.coverSelected') : t('upload.selectImage') }}
           <input type="file" accept="image/*" class="hidden" @change="onLocalCoverChange" />
         </label>
         <div v-if="localCover" class="mt-2 flex items-center gap-1.5 text-[11px] text-emerald-400">
@@ -635,8 +636,8 @@ const tabDefs = [
         @click="handleAddLocal"
       >
         <IconSmartphone v-if="!addingLocal" :size="16" />
-        <span v-if="addingLocal">Добавление...</span>
-        <span v-else>Добавить на устройство</span>
+        <span v-if="addingLocal">{{ t('upload.addingLocal') }}</span>
+        <span v-else>{{ t('upload.addLocalBtn') }}</span>
       </button>
     </div>
 

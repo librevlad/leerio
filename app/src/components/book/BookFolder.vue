@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useToast } from '../../composables/useToast'
 
+const { t } = useI18n()
 const props = defineProps<{ folder: string; path: string }>()
 const toast = useToast()
 const copied = ref(false)
@@ -24,7 +26,7 @@ function copyPath() {
 
 <template>
   <div class="card p-5">
-    <h3 class="section-label mb-3">Расположение</h3>
+    <h3 class="section-label mb-3">{{ t('book.location') }}</h3>
     <div
       class="group flex cursor-pointer items-center gap-3 rounded-xl px-3.5 py-3 transition-all hover:bg-white/[0.04]"
       :title="path"
@@ -55,7 +57,7 @@ function copyPath() {
           {{ folder }}
         </p>
         <p class="mt-0.5 text-[10px] text-[--t3]">
-          {{ copied ? 'Скопировано!' : 'Нажмите, чтобы скопировать путь' }}
+          {{ copied ? t('book.copied') : t('book.copyPath') }}
         </p>
       </div>
     </div>

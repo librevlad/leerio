@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { usePlayer } from '../../composables/usePlayer'
 import { useDownloads } from '../../composables/useDownloads'
@@ -23,6 +24,7 @@ import {
   IconMusic,
 } from '../shared/icons'
 
+const { t } = useI18n()
 const router = useRouter()
 const dl = useDownloads()
 const toast = useToast()
@@ -80,7 +82,7 @@ watch(currentBook, () => {
 
 const trackLabel = computed(() => {
   if (!currentTrack.value) return ''
-  return `Трек ${currentTrackIndex.value + 1} из ${tracks.value.length}`
+  return t('player.trackN', { n: currentTrackIndex.value + 1, total: tracks.value.length })
 })
 
 const seekPercent = computed(() => {
@@ -182,7 +184,7 @@ function closeOverlays() {
       <div class="safe-top flex items-center justify-between px-4 py-3">
         <button
           class="flex h-10 w-10 items-center justify-center rounded-full border-0 bg-transparent text-[--t2] transition-colors hover:text-[--t1]"
-          aria-label="Свернуть плеер"
+          :aria-label="t('player.minimizePlayer')"
           @click="closeFullscreen"
         >
           <IconChevronDown :size="24" />
@@ -192,7 +194,7 @@ function closeOverlays() {
         </div>
         <button
           class="flex h-10 w-10 items-center justify-center rounded-full border-0 bg-transparent text-[--t2] transition-colors hover:text-[--t1]"
-          aria-label="Страница книги"
+          :aria-label="t('player.bookPage')"
           @click="goToBook"
         >
           <IconList :size="20" />
@@ -405,7 +407,7 @@ function closeOverlays() {
           @click="showTrackList = !showTrackList"
         >
           <IconChevronUp :size="14" :class="showTrackList ? 'rotate-180' : ''" class="transition-transform" />
-          {{ showTrackList ? 'Скрыть треки' : 'Показать треки' }}
+          {{ showTrackList ? t('player.hideTracks') : t('player.showTracks') }}
         </button>
 
         <div v-if="showTrackList" class="scrollbar-hide max-h-48 overflow-y-auto px-4 pb-4">
@@ -421,7 +423,7 @@ function closeOverlays() {
             <span
               v-if="isTrackDownloaded(i)"
               class="h-2 w-2 flex-shrink-0 rounded-full bg-emerald-400"
-              title="Скачано"
+              :title="t('player.downloaded')"
             />
             <span v-if="track.duration" class="flex-shrink-0 text-[11px] text-[--t3]">{{
               formatTime(track.duration)

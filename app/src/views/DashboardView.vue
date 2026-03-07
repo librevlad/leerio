@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { api, coverUrl } from '../api'
 import { useAuth } from '../composables/useAuth'
 import type { DashboardData, ShelfData, ShelfBook } from '../types'
@@ -15,6 +16,7 @@ import { usePullToRefresh } from '../composables/usePullToRefresh'
 import { plural } from '../utils/plural'
 
 const router = useRouter()
+const { t } = useI18n()
 const { user } = useAuth()
 const data = ref<DashboardData | null>(null)
 const shelves = ref<ShelfData[]>([])
@@ -24,7 +26,7 @@ const loading = ref(true)
 
 const greeting = computed(() => {
   const h = new Date().getHours()
-  const base = h < 6 ? 'Доброй ночи' : h < 12 ? 'Доброе утро' : h < 18 ? 'Добрый день' : 'Добрый вечер'
+  const base = h < 6 ? t('dashboard.greetNight') : h < 12 ? t('dashboard.greetMorning') : h < 18 ? t('dashboard.greetDay') : t('dashboard.greetEvening')
   const name = user.value?.name?.split(' ')[0]
   return name ? `${base}, ${name}` : base
 })
@@ -81,21 +83,21 @@ onMounted(loadData)
         <!-- Stats cards -->
         <div class="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
           <div class="card px-5 py-4">
-            <p class="text-[11px] font-semibold tracking-wide text-[--t3] uppercase">Книг</p>
+            <p class="text-[11px] font-semibold tracking-wide text-[--t3] uppercase">{{ t('dashboard.statBooks') }}</p>
             <p class="mt-1 text-[28px] leading-none font-bold tracking-tight text-[--t1]">{{ data.total_books }}</p>
           </div>
           <div class="card px-5 py-4">
-            <p class="text-[11px] font-semibold tracking-wide text-[--t3] uppercase">Прослушано</p>
+            <p class="text-[11px] font-semibold tracking-wide text-[--t3] uppercase">{{ t('dashboard.statListened') }}</p>
             <p class="mt-1 text-[28px] leading-none font-bold tracking-tight text-emerald-400">{{ data.total_done }}</p>
           </div>
           <div class="card px-5 py-4">
-            <p class="text-[11px] font-semibold tracking-wide text-[--t3] uppercase">Часов</p>
+            <p class="text-[11px] font-semibold tracking-wide text-[--t3] uppercase">{{ t('dashboard.statHours') }}</p>
             <p class="mt-1 text-[28px] leading-none font-bold tracking-tight text-purple-400">
               {{ data.total_hours }}
             </p>
           </div>
           <div class="card px-5 py-4">
-            <p class="text-[11px] font-semibold tracking-wide text-[--t3] uppercase">Серия</p>
+            <p class="text-[11px] font-semibold tracking-wide text-[--t3] uppercase">{{ t('dashboard.statStreak') }}</p>
             <div class="mt-1 flex items-baseline gap-2">
               <p class="text-[28px] leading-none font-bold tracking-tight text-[--accent]">{{ streak.current }}</p>
               <p class="text-[12px] text-[--t3]">{{ plural(streak.current, 'день', 'дня', 'дней') }}</p>
@@ -144,21 +146,21 @@ onMounted(loadData)
       <!-- Welcome CTA if no active books -->
       <EmptyState
         v-if="!data.active_books.length && !data.recent.length"
-        title="Добро пожаловать!"
-        description="Начните с каталога — выберите книгу и поставьте статус «Слушаю»"
-        action-label="Открыть каталог"
+        title="{{ t('dashboard.welcomeTitle') }}"
+        :description="t('dashboard.welcomeDesc')"
+        :action-label="t('dashboard.welcomeAction')"
         @action="$router.push('/library')"
       />
 
       <!-- Recommendations -->
       <div v-if="recommendations.length">
         <div class="mb-4 flex items-center justify-between">
-          <h2 class="section-label">Сегодня для вас</h2>
+          <h2 class="section-label">{{ t('dashboard.todayForYou') }}</h2>
           <button
             class="inline-flex min-h-[44px] cursor-pointer items-center gap-1.5 border-0 bg-transparent text-[12px] font-medium text-[--accent] hover:underline"
             @click="randomBook"
           >
-            &#x1F3A7; Случайная книга
+            {{ t('dashboard.randomBook') }}
           </button>
         </div>
         <div class="grid grid-cols-3 gap-4 sm:grid-cols-6">

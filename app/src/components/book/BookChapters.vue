@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { api } from '../../api'
 import { usePlayer } from '../../composables/usePlayer'
 import { IconChevronDown, IconChevronUp, IconPlay } from '../shared/icons'
 import type { Book, Track } from '../../types'
 
+const { t } = useI18n()
 const props = defineProps<{ book: Book }>()
 
 const player = usePlayer()
@@ -40,11 +42,11 @@ function formatDuration(sec: number): string {
 function trackName(track: Track, index: number): string {
   const fn = track.filename
   // If filename looks like a raw file (e.g. "0101.mp3", "003.mp3"), show "Глава N"
-  if (/^\d+\.mp3$/i.test(fn)) return `Глава ${index + 1}`
+  if (/^\d+\.mp3$/i.test(fn)) return t('book.chapterN', { n: index + 1 })
   // Strip .mp3 extension for display
   const name = fn.replace(/\.mp3$/i, '')
   // If it's still just digits, show "Глава N"
-  if (/^\d+$/.test(name)) return `Глава ${index + 1}`
+  if (/^\d+$/.test(name)) return t('book.chapterN', { n: index + 1 })
   return name
 }
 
@@ -72,7 +74,7 @@ onMounted(async () => {
 
 <template>
   <div class="card px-5 py-4">
-    <p class="section-label mb-3">Содержание</p>
+    <p class="section-label mb-3">{{ t('book.contents') }}</p>
 
     <!-- Skeleton -->
     <div v-if="loading" class="space-y-2">
@@ -80,7 +82,7 @@ onMounted(async () => {
     </div>
 
     <!-- Empty -->
-    <p v-else-if="tracks.length === 0" class="text-[13px] text-[--t3]">Нет треков</p>
+    <p v-else-if="tracks.length === 0" class="text-[13px] text-[--t3]">{{ t('book.noTracks') }}</p>
 
     <!-- Track list -->
     <div v-else>

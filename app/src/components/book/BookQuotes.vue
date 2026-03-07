@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { api } from '../../api'
 import { useToast } from '../../composables/useToast'
 import type { Quote } from '../../types'
 import { IconX } from '../shared/icons'
 
+const { t } = useI18n()
 const props = defineProps<{ bookTitle: string; bookAuthor: string }>()
 const toast = useToast()
 
@@ -53,7 +55,7 @@ async function removeQuote(quoteId: number) {
 
 <template>
   <div class="card p-5">
-    <h3 class="section-label mb-3">Цитаты</h3>
+    <h3 class="section-label mb-3">{{ t('book.quotes') }}</h3>
 
     <div v-if="loading" class="space-y-2">
       <div class="skeleton h-12 rounded-xl" />
@@ -70,7 +72,7 @@ async function removeQuote(quoteId: number) {
         >
           <button
             class="absolute top-2 right-2 cursor-pointer border-0 bg-transparent p-0.5 text-[--t3] opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
-            aria-label="Удалить цитату"
+            :aria-label="t('book.deleteQuoteAria')"
             @click="removeQuote(q.id)"
           >
             <IconX :size="12" />
@@ -87,12 +89,12 @@ async function removeQuote(quoteId: number) {
         <textarea
           v-model="newText"
           rows="2"
-          placeholder="Добавить цитату..."
+          :placeholder="t('book.addQuote')"
           class="input-field flex-1 resize-none px-3.5 py-2.5 text-[12px]"
           @keydown.ctrl.enter="addQuote"
         />
         <button class="btn btn-ghost flex-shrink-0 self-end" :disabled="adding || !newText.trim()" @click="addQuote">
-          {{ adding ? '...' : 'Добавить' }}
+          {{ adding ? t('book.adding') : t('book.add') }}
         </button>
       </div>
     </div>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { api, coverUrl } from '../api'
 import type { HistoryEntry } from '../types'
 import SearchInput from '../components/shared/SearchInput.vue'
@@ -19,8 +20,8 @@ import {
   IconMusic,
 } from '../components/shared/icons'
 import { usePullToRefresh } from '../composables/usePullToRefresh'
-import { plural } from '../utils/plural'
 
+const { t } = useI18n()
 const entries = ref<HistoryEntry[]>([])
 const loading = ref(true)
 const search = ref('')
@@ -117,13 +118,13 @@ function formatTime(ts: string): string {
     <!-- Header -->
     <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
       <div>
-        <h1 class="page-title">История</h1>
+        <h1 class="page-title">{{ t('history.title') }}</h1>
         <p v-if="!loading" class="mt-1 text-[13px] text-[--t3]">
           <span class="font-bold text-[--accent]">{{ entries.length }}</span>
-          {{ plural(entries.length, 'запись', 'записи', 'записей') }}
+          {{ t('plural.entry', entries.length) }}
         </p>
       </div>
-      <SearchInput v-model="search" placeholder="Поиск по книге..." class="w-full sm:w-56" />
+      <SearchInput v-model="search" :placeholder="t('history.search')" class="w-full sm:w-56" />
     </div>
 
     <!-- Filters -->
@@ -215,6 +216,6 @@ function formatTime(ts: string): string {
       </div>
     </div>
 
-    <EmptyState v-else title="История пуста" description="Начните слушать книги, и они появятся здесь" />
+    <EmptyState v-else :title="t('history.emptyTitle')" :description="t('history.emptyDesc')" />
   </div>
 </template>

@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import type { HistoryEntry } from '../../types'
 import { dotColor } from '../../composables/useStatusColors'
 
 defineProps<{ entries: HistoryEntry[] }>()
 
+const { t } = useI18n()
 const glowColor: Record<string, string> = {
   phone: 'rgba(96,165,250,0.3)',
   listen: 'rgba(168,85,247,0.3)',
@@ -25,7 +27,7 @@ function formatDate(ts: string): string {
 
 <template>
   <div v-if="entries.length" class="card p-5">
-    <h3 class="section-label mb-5">Хронология</h3>
+    <h3 class="section-label mb-5">{{ t('book.timeline') }}</h3>
     <div class="relative">
       <div
         v-for="(e, i) in entries"

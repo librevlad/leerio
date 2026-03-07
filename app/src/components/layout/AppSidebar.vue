@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuth } from '../../composables/useAuth'
 import { usePlayer } from '../../composables/usePlayer'
 import {
@@ -18,20 +19,21 @@ defineProps<{ collapsed: boolean }>()
 const emit = defineEmits<{ 'update:collapsed': [val: boolean] }>()
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 const { user, isLoggedIn, logout } = useAuth()
 const { currentBook, isPlayerVisible, openFullscreen } = usePlayer()
 
-const publicLinks = [{ path: '/library', label: 'Каталог', icon: IconLibrary }]
+const publicLinks = computed(() => [{ path: '/library', label: t('nav.catalog'), icon: IconLibrary }])
 
-const mainLinks = [
-  { path: '/', label: 'Главная', icon: IconHome },
-  { path: '/library', label: 'Каталог', icon: IconLibrary },
-  { path: '/my-library', label: 'Библиотека', icon: IconFolder },
-  { path: '/history', label: 'История', icon: IconHistory },
-  { path: '/upload', label: 'Загрузить', icon: IconUpload },
-]
+const mainLinks = computed(() => [
+  { path: '/', label: t('nav.home'), icon: IconHome },
+  { path: '/library', label: t('nav.catalog'), icon: IconLibrary },
+  { path: '/my-library', label: t('nav.library'), icon: IconFolder },
+  { path: '/history', label: t('nav.history'), icon: IconHistory },
+  { path: '/upload', label: t('nav.upload'), icon: IconUpload },
+])
 
-const navLinks = computed(() => (isLoggedIn.value ? mainLinks : publicLinks))
+const navLinks = computed(() => (isLoggedIn.value ? mainLinks.value : publicLinks.value))
 
 const isActive = (path: string) => {
   if (path === '/') return route.path === '/'
@@ -53,7 +55,7 @@ async function handleLogout() {
     <div class="flex h-16 items-center gap-3 px-4">
       <button
         class="flex cursor-pointer items-center rounded-xl border-0 bg-transparent p-1.5 text-[--t3] transition-colors hover:text-[--t2]"
-        :aria-label="collapsed ? 'Развернуть' : 'Свернуть'"
+        :aria-label="collapsed ? t('nav.expand') : t('nav.collapse')"
         @click="emit('update:collapsed', !collapsed)"
       >
         <component :is="collapsed ? IconMenu : IconX" :size="18" />
@@ -104,7 +106,7 @@ async function handleLogout() {
       <template v-if="isLoggedIn">
         <router-link
           to="/settings"
-          :title="collapsed ? 'Настройки' : undefined"
+          :title="collapsed ? t('nav.settings') : undefined"
           class="flex items-center gap-3 rounded-xl px-3 py-2.5 no-underline transition-all duration-150"
           :class="
             isActive('/settings')
@@ -116,7 +118,7 @@ async function handleLogout() {
             <IconSettings :size="18" />
           </span>
           <span v-if="!collapsed" class="text-[13px]" :class="isActive('/settings') ? 'font-semibold' : ''">
-            Настройки
+            {{ t('nav.settings') }}
           </span>
         </router-link>
 
@@ -142,8 +144,8 @@ async function handleLogout() {
 
         <button
           class="mt-1 flex w-full cursor-pointer items-center gap-3 rounded-xl border-0 bg-transparent px-3 py-2 text-[--t3] transition-colors hover:bg-[--card-hover] hover:text-[--t2]"
-          :title="collapsed ? 'Выйти' : undefined"
-          aria-label="Выйти"
+          :title="collapsed ? t('nav.logout') : undefined"
+          :aria-label="t('nav.logout')"
           @click="handleLogout"
         >
           <svg
@@ -160,7 +162,7 @@ async function handleLogout() {
             <polyline points="16 17 21 12 16 7" />
             <line x1="21" y1="12" x2="9" y2="12" />
           </svg>
-          <span v-if="!collapsed" class="text-[12px]">Выйти</span>
+          <span v-if="!collapsed" class="text-[12px]">{{ t('nav.logout') }}</span>
         </button>
       </template>
 
@@ -186,7 +188,7 @@ async function handleLogout() {
             <line x1="15" y1="12" x2="3" y2="12" />
           </svg>
         </span>
-        <span v-if="!collapsed" class="text-[13px] font-semibold">Войти</span>
+        <span v-if="!collapsed" class="text-[13px] font-semibold">{{ t('nav.login') }}</span>
       </router-link>
     </div>
   </aside>

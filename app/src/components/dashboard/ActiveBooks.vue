@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { ActiveBook } from '../../types'
 import { coverUrl } from '../../api'
 import ProgressRing from '../shared/ProgressRing.vue'
@@ -8,12 +9,13 @@ import { IconMusic } from '../shared/icons'
 
 defineProps<{ books: ActiveBook[] }>()
 
+const { t } = useI18n()
 const coverErrors = reactive(new Set<string>())
 </script>
 
 <template>
   <div v-if="books.length">
-    <h2 class="section-label mb-4">Сейчас слушаю</h2>
+    <h2 class="section-label mb-4">{{ t('dashboard.currentlyListening') }}</h2>
     <div class="fade-mask-r">
       <div class="flex gap-3 overflow-x-auto pb-2">
         <router-link

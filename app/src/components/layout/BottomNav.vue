@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { IconHome, IconLibrary, IconFolder, IconMenu, IconUpload, IconHistory, IconSettings } from '../shared/icons'
 import BottomSheet from './BottomSheet.vue'
 import { usePlayer } from '../../composables/usePlayer'
@@ -8,32 +9,33 @@ import { useAuth } from '../../composables/useAuth'
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 const showMore = ref(false)
 const { isPlayerVisible } = usePlayer()
 const { isLoggedIn } = useAuth()
 
-const authTabs = [
-  { path: '/', label: 'Главная', icon: IconHome },
-  { path: '/library', label: 'Каталог', icon: IconLibrary },
-  { path: '/my-library', label: 'Моя', icon: IconFolder },
-]
+const authTabs = computed(() => [
+  { path: '/', label: t('nav.home'), icon: IconHome },
+  { path: '/library', label: t('nav.catalog'), icon: IconLibrary },
+  { path: '/my-library', label: t('nav.myLibrary'), icon: IconFolder },
+])
 
-const guestTabs = [{ path: '/library', label: 'Каталог', icon: IconLibrary }]
+const guestTabs = computed(() => [{ path: '/library', label: t('nav.catalog'), icon: IconLibrary }])
 
-const tabs = computed(() => (isLoggedIn.value ? authTabs : guestTabs))
+const tabs = computed(() => (isLoggedIn.value ? authTabs.value : guestTabs.value))
 
-const moreLinks = [
-  { path: '/history', label: 'История', icon: IconHistory },
-  { path: '/upload', label: 'Загрузить', icon: IconUpload },
-  { path: '/settings', label: 'Настройки', icon: IconSettings },
-]
+const moreLinks = computed(() => [
+  { path: '/history', label: t('nav.history'), icon: IconHistory },
+  { path: '/upload', label: t('nav.upload'), icon: IconUpload },
+  { path: '/settings', label: t('nav.settings'), icon: IconSettings },
+])
 
 const isActive = (path: string) => {
   if (path === '/') return route.path === '/'
   return route.path.startsWith(path)
 }
 
-const isMoreActive = computed(() => moreLinks.some((l) => isActive(l.path)))
+const isMoreActive = computed(() => moreLinks.value.some((l) => isActive(l.path)))
 
 function goTo(path: string) {
   showMore.value = false
@@ -77,7 +79,7 @@ function goTo(path: string) {
         @click="showMore = !showMore"
       >
         <IconMenu :size="20" />
-        <span class="text-[10px] leading-none font-medium">Ещё</span>
+        <span class="text-[10px] leading-none font-medium">{{ t('nav.more') }}</span>
       </button>
       <!-- Login button (guest) -->
       <router-link
@@ -99,7 +101,7 @@ function goTo(path: string) {
           <polyline points="10 17 15 12 10 7" />
           <line x1="15" y1="12" x2="3" y2="12" />
         </svg>
-        <span class="text-[10px] leading-none font-medium">Войти</span>
+        <span class="text-[10px] leading-none font-medium">{{ t('nav.login') }}</span>
       </router-link>
     </div>
   </nav>

@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import ProgressBar from '../shared/ProgressBar.vue'
 import { plural } from '../../utils/plural'
 
+const { t } = useI18n()
 const props = defineProps<{
   done: number
   goal: number
@@ -26,7 +28,7 @@ const pace = computed(() => {
 <template>
   <div class="card p-5">
     <div class="mb-4 flex items-center justify-between">
-      <span class="section-label">Годовая цель</span>
+      <span class="section-label">{{ t('dashboard.yearlyGoal') }}</span>
       <span class="text-[12px] font-medium text-[--t3]">{{ done }}/{{ goal }}</span>
     </div>
     <ProgressBar :percent="percent" height="h-1.5" />

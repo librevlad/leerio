@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { api, coverUrl } from '../../api'
 import type { SimilarBook } from '../../types'
 import { useCategories } from '../../composables/useCategories'
 
+const { t } = useI18n()
 const props = defineProps<{ bookId: string }>()
 
 const similar = ref<SimilarBook[]>([])
@@ -34,7 +36,7 @@ onMounted(async () => {
     </div>
   </div>
   <div v-else-if="similar.length" class="card p-5">
-    <h3 class="section-label mb-4">Похожие книги</h3>
+    <h3 class="section-label mb-4">{{ t('book.similarBooks') }}</h3>
     <div class="scrollbar-hide -mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
       <router-link
         v-for="book in similar"

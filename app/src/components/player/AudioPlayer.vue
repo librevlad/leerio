@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { usePlayer } from '../../composables/usePlayer'
 import { api } from '../../api'
 import type { Bookmark } from '../../types'
@@ -17,6 +18,7 @@ import {
   IconTrash,
 } from '../shared/icons'
 
+const { t } = useI18n()
 const {
   currentBook,
   tracks,
@@ -129,7 +131,7 @@ const SLEEP_OPTIONS = [
 
 <template>
   <div v-if="currentBook" class="card p-5">
-    <h3 class="section-label mb-4">Плеер</h3>
+    <h3 class="section-label mb-4">{{ t('player.title') }}</h3>
 
     <!-- Now playing -->
     <div class="mb-4">
@@ -143,7 +145,7 @@ const SLEEP_OPTIONS = [
     <div class="mb-5 flex items-center justify-center gap-3">
       <button
         class="flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-2 text-[--t2] transition-colors hover:text-[--t1]"
-        title="Назад 15 сек"
+        :title="t('player.back15')"
         @click="skipBackward()"
       >
         <IconRewind15 :size="22" />
@@ -151,7 +153,7 @@ const SLEEP_OPTIONS = [
 
       <button
         class="flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-2.5 text-[--t2] transition-colors hover:text-[--t1]"
-        aria-label="Предыдущий трек"
+        :aria-label="t('player.prevTrack')"
         @click="prevTrack"
       >
         <IconSkipBack :size="20" />
@@ -160,7 +162,7 @@ const SLEEP_OPTIONS = [
       <button
         class="flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-0 transition-all"
         style="background: var(--gradient-accent); box-shadow: 0 4px 20px rgba(232, 146, 58, 0.3)"
-        :aria-label="isPlaying ? 'Пауза' : 'Воспроизвести'"
+        :aria-label="isPlaying ? t('player.pause') : t('player.play')"
         @click="togglePlay"
       >
         <component :is="isPlaying ? IconPause : IconPlay" :size="22" style="color: #fff" />
@@ -168,7 +170,7 @@ const SLEEP_OPTIONS = [
 
       <button
         class="flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-2.5 text-[--t2] transition-colors hover:text-[--t1]"
-        aria-label="Следующий трек"
+        :aria-label="t('player.nextTrack')"
         @click="nextTrack"
       >
         <IconSkipForward :size="20" />
@@ -176,7 +178,7 @@ const SLEEP_OPTIONS = [
 
       <button
         class="flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-2 text-[--t2] transition-colors hover:text-[--t1]"
-        title="Вперёд 15 сек"
+        :title="t('player.forward15')"
         @click="skipForward()"
       >
         <IconForward15 :size="22" />
@@ -210,7 +212,7 @@ const SLEEP_OPTIONS = [
       <div class="flex items-center gap-2">
         <button
           class="cursor-pointer border-0 bg-transparent p-1 text-[--t3] transition-colors hover:text-[--t1]"
-          :aria-label="volume > 0 ? 'Выключить звук' : 'Включить звук'"
+          :aria-label="volume > 0 ? t('player.mute') : t('player.unmute')"
           @click="setVolume(volume > 0 ? 0 : 1)"
         >
           <component :is="volume > 0 ? IconVolume : IconVolumeMute" :size="16" />
@@ -260,7 +262,7 @@ const SLEEP_OPTIONS = [
         <button
           class="relative cursor-pointer border-0 bg-transparent p-1 text-[--t3] transition-colors hover:text-[--t1]"
           :class="sleepTimer !== null ? 'text-[--accent]' : ''"
-          aria-label="Таймер сна"
+          :aria-label="t('player.sleepTimer')"
           @click="showSleepMenu = !showSleepMenu"
         >
           <IconMoon :size="16" />
@@ -298,7 +300,7 @@ const SLEEP_OPTIONS = [
       <!-- Bookmark -->
       <button
         class="cursor-pointer border-0 bg-transparent p-1 text-[--t3] transition-colors hover:text-[--t1]"
-        title="Добавить закладку"
+        :title="t('player.addBookmark')"
         @click="showBookmarkInput = !showBookmarkInput"
       >
         <IconBookmark :size="16" />
@@ -310,10 +312,10 @@ const SLEEP_OPTIONS = [
       <input
         v-model="bookmarkNote"
         class="input-field flex-1 px-3 py-2 text-[13px]"
-        placeholder="Заметка (необязательно)"
+        :placeholder="t('player.bookmarkNote')"
         @keyup.enter="addBookmark"
       />
-      <button class="btn btn-primary shrink-0 text-[12px]" @click="addBookmark">Сохранить</button>
+      <button class="btn btn-primary shrink-0 text-[12px]" @click="addBookmark">{{ t('player.save') }}</button>
     </div>
 
     <!-- Bookmarks list -->
@@ -340,7 +342,7 @@ const SLEEP_OPTIONS = [
           </button>
           <button
             class="shrink-0 cursor-pointer border-0 bg-transparent p-1 text-[--t3] transition-colors hover:text-red-400"
-            aria-label="Удалить закладку"
+            :aria-label="t('player.deleteBookmark')"
             @click="removeBookmark(bm.id)"
           >
             <IconTrash :size="13" />
@@ -351,7 +353,7 @@ const SLEEP_OPTIONS = [
 
     <!-- Track list -->
     <div class="border-t border-[--border] pt-4">
-      <p class="section-label mb-3">Треки</p>
+      <p class="section-label mb-3">{{ t('player.tracks') }}</p>
       <div class="scrollbar-hide max-h-64 space-y-1 overflow-y-auto">
         <button
           v-for="track in tracks"

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { api } from '../../api'
 import { useToast } from '../../composables/useToast'
 import { IconX } from '../shared/icons'
@@ -12,15 +13,17 @@ const props = defineProps<{
 const emit = defineEmits<{ statusChanged: [] }>()
 
 const toast = useToast()
+const { t } = useI18n()
 const loading = ref(false)
 
-const statuses: { value: BookStatusValue; label: string }[] = [
-  { value: 'want_to_read', label: 'Хочу прочесть' },
-  { value: 'reading', label: 'Слушаю' },
-  { value: 'paused', label: 'На паузе' },
-  { value: 'done', label: 'Прослушано' },
-  { value: 'rejected', label: 'Не интересно' },
-]
+
+const statuses = computed<{ value: BookStatusValue; label: string }[]>(() => [
+  { value: 'want_to_read', label: t('book.actionWantToRead') },
+  { value: 'reading', label: t('book.actionListening') },
+  { value: 'paused', label: t('book.actionPaused') },
+  { value: 'done', label: t('book.actionDone') },
+  { value: 'rejected', label: t('book.actionRejected') },
+])
 
 async function selectStatus(value: BookStatusValue) {
   if (loading.value) return
@@ -33,7 +36,7 @@ async function selectStatus(value: BookStatusValue) {
     }
     emit('statusChanged')
   } catch (err: unknown) {
-    toast.error(err instanceof Error ? err.message : 'Ошибка')
+    toast.error(err instanceof Error ? err.message : t('common.error'))
   } finally {
     loading.value = false
   }
@@ -46,7 +49,7 @@ async function clearStatus() {
     await api.removeBookStatus(props.bookId)
     emit('statusChanged')
   } catch (err: unknown) {
-    toast.error(err instanceof Error ? err.message : 'Ошибка')
+    toast.error(err instanceof Error ? err.message : t('common.error'))
   } finally {
     loading.value = false
   }
@@ -73,7 +76,7 @@ async function clearStatus() {
       v-if="bookStatus"
       class="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-lg border border-transparent bg-white/[0.04] p-1.5 text-[--t3] transition-colors hover:bg-red-500/10 hover:text-red-400"
       :disabled="loading"
-      title="Убрать статус"
+      :title="t('book.removeStatus')"
       @click="clearStatus"
     >
       <IconX :size="14" />

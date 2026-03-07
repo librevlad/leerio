@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useAnalytics } from '../composables/useAnalytics'
 import CategoryChart from '../components/analytics/CategoryChart.vue'
 import MonthlyTrend from '../components/analytics/MonthlyTrend.vue'
@@ -9,6 +10,7 @@ import AchievementGrid from '../components/analytics/AchievementGrid.vue'
 import ActivityHeatmap from '../components/dashboard/ActivityHeatmap.vue'
 import EmptyState from '../components/shared/EmptyState.vue'
 
+const { t } = useI18n()
 const { data, achievements, loading, load } = useAnalytics()
 
 onMounted(load)
@@ -16,7 +18,7 @@ onMounted(load)
 
 <template>
   <div>
-    <h1 class="page-title mb-8">Аналитика</h1>
+    <h1 class="page-title mb-8">{{ t('analytics.title') }}</h1>
 
     <div v-if="loading" class="space-y-6">
       <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -43,7 +45,7 @@ onMounted(load)
       <ActivityHeatmap :data="data.heatmap" />
 
       <div v-if="data.top_authors.length" class="card p-6">
-        <h3 class="section-label mb-5">Топ авторов</h3>
+        <h3 class="section-label mb-5">{{ t('analytics.topAuthors') }}</h3>
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-5">
           <router-link
             v-for="a in data.top_authors"
@@ -60,6 +62,6 @@ onMounted(load)
       <AchievementGrid :achievements="achievements" />
     </div>
 
-    <EmptyState v-else title="Нет данных" description="Начните слушать книги, чтобы увидеть аналитику" />
+    <EmptyState v-else :title="t('analytics.emptyTitle')" :description="t('analytics.emptyDesc')" />
   </div>
 </template>

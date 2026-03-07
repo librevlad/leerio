@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { api, coverUrl } from '../api'
 import { useBooks } from '../composables/useBooks'
 import { useToast } from '../composables/useToast'
 import type { Collection, Book } from '../types'
-import { plural } from '../utils/plural'
 import { IconPlus, IconTrash, IconEdit, IconX, IconCheck, IconBookmark, IconSearch } from '../components/shared/icons'
 import EmptyState from '../components/shared/EmptyState.vue'
 
+const { t } = useI18n()
 const toast = useToast()
 const { books, load: loadBooks } = useBooks()
 
@@ -103,7 +104,7 @@ async function save() {
 }
 
 async function remove(col: Collection) {
-  if (!confirm(`Удалить коллекцию "${col.name}"?`)) return
+  if (!confirm(t('collections.deleteConfirm', { name: col.name }))) return
   try {
     await api.deleteCollection(col.id)
     toast.success('Удалено')
@@ -124,12 +125,12 @@ onMounted(async () => {
     <!-- Header -->
     <div class="mb-6 flex items-center justify-between">
       <div>
-        <h1 class="page-title">Коллекции</h1>
+        <h1 class="page-title">{{ t('collections.title') }}</h1>
         <p class="mt-1 text-[13px] text-[--t3]">
           {{
             collections.length > 0
-              ? `${collections.length} ${plural(collections.length, 'коллекция', 'коллекции', 'коллекций')}`
-              : 'Группируйте книги по темам'
+              ? `${collections.length} ${t('plural.collection', collections.length)}`
+              : t('collections.groupHint')
           }}
         </p>
       </div>
@@ -147,9 +148,9 @@ onMounted(async () => {
     <!-- Empty -->
     <EmptyState
       v-else-if="!collections.length && !showCreate"
-      title="Нет коллекций"
-      description="Создайте коллекцию, чтобы группировать книги по темам"
-      action-label="Создать коллекцию"
+      :title="t('collections.emptyTitle')"
+      :description="t('collections.emptyDesc')"
+      :action-label="t('collections.emptyAction')"
       @action="openCreate"
     />
 
@@ -219,14 +220,14 @@ onMounted(async () => {
           <div class="ml-2 flex flex-shrink-0 gap-1" @click.stop>
             <button
               class="rounded-lg p-2 text-[--t3] transition-colors hover:bg-white/5 hover:text-[--t2]"
-              aria-label="Редактировать коллекцию"
+              :aria-label="t('collections.editAriaLabel')"
               @click="openEdit(col)"
             >
               <IconEdit :size="14" />
             </button>
             <button
               class="rounded-lg p-2 text-[--t3] transition-colors hover:bg-red-500/15 hover:text-red-400"
-              aria-label="Удалить коллекцию"
+              :aria-label="t('collections.deleteAriaLabel')"
               @click="remove(col)"
             >
               <IconTrash :size="14" />
@@ -285,7 +286,7 @@ onMounted(async () => {
               </div>
             </router-link>
           </div>
-          <p v-else class="py-4 text-center text-[13px] text-[--t3]">Нет книг в коллекции</p>
+          <p v-else class="py-4 text-center text-[13px] text-[--t3]">{{ t('collections.noBooksInCollection') }}</p>
         </div>
       </div>
     </div>
@@ -305,7 +306,7 @@ onMounted(async () => {
             <!-- Sticky header -->
             <div class="flex items-center justify-between px-6 pt-6 pb-4 sm:px-6 sm:pt-6">
               <h2 class="text-[18px] font-bold text-[--t1]">
-                {{ editId !== null ? 'Редактировать' : 'Новая коллекция' }}
+                {{ editId !== null ? t('collections.editCollection') : t('collections.newCollection') }}
               </h2>
               <button
                 class="rounded-lg p-1.5 text-[--t3] transition-colors hover:bg-white/5 hover:text-[--t2]"
@@ -318,18 +319,18 @@ onMounted(async () => {
             <!-- Scrollable body -->
             <div class="flex-1 overflow-y-auto px-6">
               <div class="mb-4">
-                <label class="mb-1.5 block text-[12px] font-medium text-[--t2]">Название *</label>
+                <label class="mb-1.5 block text-[12px] font-medium text-[--t2]">{{ t('collections.labelName') }}</label>
                 <input
                   v-model="formName"
                   class="input-field w-full px-3.5 py-2.5"
-                  placeholder="Моя подборка..."
+                  :placeholder="t('collections.placeholderName')"
                   @keyup.enter="save"
                 />
               </div>
 
               <div class="mb-4">
-                <label class="mb-1.5 block text-[12px] font-medium text-[--t2]">Описание</label>
-                <input v-model="formDesc" class="input-field w-full px-3.5 py-2.5" placeholder="Необязательно..." />
+                <label class="mb-1.5 block text-[12px] font-medium text-[--t2]">{{ t('collections.labelDesc') }}</label>
+                <input v-model="formDesc" class="input-field w-full px-3.5 py-2.5" :placeholder="t('collections.placeholderDesc')" />
               </div>
 
               <div class="mb-2">
@@ -347,7 +348,7 @@ onMounted(async () => {
                   <input
                     v-model="bookSearch"
                     class="input-field w-full py-2 pr-3 pl-8 text-[13px]"
-                    placeholder="Поиск по книгам..."
+                    :placeholder="t('collections.searchBooks')"
                   />
                 </div>
 
@@ -425,9 +426,9 @@ onMounted(async () => {
             <!-- Sticky footer -->
             <div class="flex gap-2 px-6 pt-4 pb-6">
               <button class="btn btn-primary flex-1" @click="save">
-                {{ editId !== null ? 'Сохранить' : 'Создать' }}
+                {{ editId !== null ? t('collections.save') : t('collections.create') }}
               </button>
-              <button class="btn btn-ghost" @click="closeForm">Отмена</button>
+              <button class="btn btn-ghost" @click="closeForm">{{ t('collections.cancel') }}</button>
             </div>
           </div>
         </div>

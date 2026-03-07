@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { Book } from '../../types'
 import { coverUrl } from '../../api'
 import { useCategories } from '../../composables/useCategories'
@@ -10,6 +11,7 @@ import ProgressBar from './ProgressBar.vue'
 import { IconStar, IconStarOutline, IconCheck } from './icons'
 import { useDownloads } from '../../composables/useDownloads'
 
+const { t } = useI18n()
 const props = defineProps<{
   book: Book
   source?: 'library' | 'librivox' | 'user' | 'local'
@@ -108,7 +110,7 @@ const coverPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0
       <!-- Progress bar -->
       <div v-if="book.progress > 0" class="mb-2.5">
         <div class="mb-1 flex items-center justify-between">
-          <span class="text-[11px] font-medium text-[--t3]">Прогресс</span>
+          <span class="text-[11px] font-medium text-[--t3]">{{ t('library.sortProgress') }}</span>
           <span class="text-[11px] font-bold text-[--accent]">{{ book.progress }}%</span>
         </div>
         <ProgressBar :percent="book.progress" height="h-1.5" />

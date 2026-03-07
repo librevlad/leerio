@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { Book } from '../../types'
 import { coverUrl } from '../../api'
 import CategoryBadge from '../shared/CategoryBadge.vue'
@@ -16,6 +17,7 @@ import {
 } from '../shared/icons'
 const props = defineProps<{ book: Book; isCurrentBook?: boolean }>()
 const emit = defineEmits<{ listen: []; ratingChanged: [rating: number] }>()
+const { t } = useI18n()
 
 const descExpanded = ref(false)
 const coverLoaded = ref(false)
@@ -120,7 +122,7 @@ const lastPosition = computed(() => {
         <div v-if="book.progress > 0" class="mt-4">
           <div class="flex items-center justify-between text-[11px]">
             <span class="font-semibold text-[--accent]">{{ Math.round(book.progress) }}% прослушано</span>
-            <span v-if="remainingHours !== null" class="text-[--t3]">Осталось ~{{ remainingHours }} ч</span>
+            <span v-if="remainingHours !== null" class="text-[--t3]">{{ t('book.remainingH', { hours: remainingHours }) }}</span>
           </div>
           <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/[0.08]">
             <div
@@ -143,7 +145,7 @@ const lastPosition = computed(() => {
           @click="emit('listen')"
         >
           <IconPlay :size="16" />
-          {{ isCurrentBook ? 'Продолжить' : 'Слушать' }}
+          {{ isCurrentBook ? t('book.continue') : t('book.listen') }}
         </button>
         <p v-if="isCurrentBook && lastPosition" class="mt-2 text-center text-[11px] text-[--t3]">
           Последняя позиция: {{ lastPosition }}
@@ -154,10 +156,10 @@ const lastPosition = computed(() => {
           <ProgressRing :percent="book.progress" :size="48" :stroke="3" />
           <div class="flex flex-wrap gap-x-4 gap-y-1">
             <span v-if="listenedHours !== null" class="text-[--t2]">
-              Прослушано <span class="font-semibold text-[--t1]">{{ listenedHours }}</span> из
+              {{ t('book.listenedOf', { hours: listenedHours }) }}
               {{ book.duration_hours }} ч
             </span>
-            <span v-if="startDate" class="text-[--t3]"> Начато: {{ startDate }} </span>
+            <span v-if="startDate" class="text-[--t3]"> {{ t('book.startedAt', { date: startDate }) }} </span>
           </div>
         </div>
       </div>
@@ -206,7 +208,7 @@ const lastPosition = computed(() => {
                   <span class="text-[12px] font-semibold text-[--t1]"
                     >{{ typeof book.size_mb === 'number' ? book.size_mb.toFixed(1) : book.size_mb }} МБ</span
                   >
-                  <p class="text-[11px] text-[--t3]">Размер</p>
+                  <p class="text-[11px] text-[--t3]">{{ t('book.size') }}</p>
                 </div>
               </div>
               <div v-if="book.mp3_count" class="flex items-center gap-2.5">
@@ -215,7 +217,7 @@ const lastPosition = computed(() => {
                 </span>
                 <div>
                   <span class="text-[12px] font-semibold text-[--t1]">{{ book.mp3_count }}</span>
-                  <p class="text-[11px] text-[--t3]">Файлов</p>
+                  <p class="text-[11px] text-[--t3]">{{ t('book.files') }}</p>
                 </div>
               </div>
               <div v-if="book.duration_fmt" class="flex items-center gap-2.5">
@@ -224,7 +226,7 @@ const lastPosition = computed(() => {
                 </span>
                 <div>
                   <span class="text-[12px] font-semibold text-[--t1]">{{ book.duration_fmt }}</span>
-                  <p class="text-[11px] text-[--t3]">Длительность</p>
+                  <p class="text-[11px] text-[--t3]">{{ t('book.duration') }}</p>
                 </div>
               </div>
               <div v-if="book.progress > 0" class="ml-1">
@@ -258,7 +260,7 @@ const lastPosition = computed(() => {
             <div v-if="book.progress > 0" class="mt-3">
               <div class="flex items-center justify-between text-[11px]">
                 <span class="font-semibold text-[--accent]">{{ Math.round(book.progress) }}% прослушано</span>
-                <span v-if="remainingHours !== null" class="text-[--t3]">Осталось ~{{ remainingHours }} ч</span>
+                <span v-if="remainingHours !== null" class="text-[--t3]">{{ t('book.remainingH', { hours: remainingHours }) }}</span>
               </div>
               <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/[0.08]">
                 <div
@@ -272,10 +274,10 @@ const lastPosition = computed(() => {
             <!-- Listening stats -->
             <div v-if="book.progress > 0" class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[12px]">
               <span v-if="listenedHours !== null" class="text-[--t2]">
-                Прослушано <span class="font-semibold text-[--t1]">{{ listenedHours }}</span> из
+                {{ t('book.listenedOf', { hours: listenedHours }) }}
                 {{ book.duration_hours }} ч
               </span>
-              <span v-if="startDate" class="text-[--t3]"> Начато: {{ startDate }} </span>
+              <span v-if="startDate" class="text-[--t3]"> {{ t('book.startedAt', { date: startDate }) }} </span>
             </div>
 
             <!-- Listen button (desktop) -->
@@ -291,7 +293,7 @@ const lastPosition = computed(() => {
                 @click="emit('listen')"
               >
                 <IconPlay :size="16" />
-                {{ isCurrentBook ? 'Продолжить' : 'Слушать' }}
+                {{ isCurrentBook ? t('book.continue') : t('book.listen') }}
               </button>
               <span v-if="isCurrentBook && lastPosition" class="text-[12px] text-[--t3]">
                 Последняя позиция: {{ lastPosition }}
@@ -311,7 +313,7 @@ const lastPosition = computed(() => {
           class="mt-1 cursor-pointer border-0 bg-transparent p-0 text-[12px] text-[--accent] hover:underline"
           @click="descExpanded = !descExpanded"
         >
-          {{ descExpanded ? 'Свернуть' : 'Читать далее' }}
+          {{ descExpanded ? t('book.collapse') : t('book.readMore') }}
         </button>
       </div>
 
@@ -328,7 +330,7 @@ const lastPosition = computed(() => {
             <span class="text-[12px] font-semibold text-[--t1]"
               >{{ typeof book.size_mb === 'number' ? book.size_mb.toFixed(1) : book.size_mb }} МБ</span
             >
-            <p class="text-[10px] text-[--t3]">Размер</p>
+            <p class="text-[10px] text-[--t3]">{{ t('book.size') }}</p>
           </div>
         </div>
         <div v-if="book.mp3_count" class="flex items-center gap-2.5">
@@ -337,7 +339,7 @@ const lastPosition = computed(() => {
           </span>
           <div>
             <span class="text-[12px] font-semibold text-[--t1]">{{ book.mp3_count }}</span>
-            <p class="text-[10px] text-[--t3]">Файлов</p>
+            <p class="text-[10px] text-[--t3]">{{ t('book.files') }}</p>
           </div>
         </div>
         <div v-if="book.duration_fmt" class="flex items-center gap-2.5">
@@ -346,7 +348,7 @@ const lastPosition = computed(() => {
           </span>
           <div>
             <span class="text-[12px] font-semibold text-[--t1]">{{ book.duration_fmt }}</span>
-            <p class="text-[10px] text-[--t3]">Длительность</p>
+            <p class="text-[10px] text-[--t3]">{{ t('book.duration') }}</p>
           </div>
         </div>
         <div class="ml-auto flex items-center gap-2.5" @mouseleave="hoverStar = 0">

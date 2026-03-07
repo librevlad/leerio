@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 defineProps<{
   show: boolean
   title: string
@@ -6,6 +7,7 @@ defineProps<{
   confirmText?: string
   confirmClass?: string
 }>()
+const { t } = useI18n()
 const emit = defineEmits<{ confirm: []; cancel: [] }>()
 </script>
 
@@ -18,9 +20,9 @@ const emit = defineEmits<{ confirm: []; cancel: [] }>()
           <h3 class="mb-1.5 text-[15px] font-semibold text-[--t1]">{{ title }}</h3>
           <p class="mb-6 text-[13px] leading-relaxed text-[--t2]">{{ message }}</p>
           <div class="flex justify-end gap-2">
-            <button class="btn btn-ghost" @click="emit('cancel')">Отмена</button>
+            <button class="btn btn-ghost" @click="emit('cancel')">{{ t('common.cancel') }}</button>
             <button class="btn btn-primary" :class="confirmClass" @click="emit('confirm')">
-              {{ confirmText || 'Подтвердить' }}
+              {{ confirmText || t('common.confirm') }}
             </button>
           </div>
         </div>

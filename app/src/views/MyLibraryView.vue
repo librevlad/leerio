@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useUserBooks } from '@/composables/useUserBooks'
 import { plural } from '@/utils/plural'
 import { useLocalBooks } from '@/composables/useLocalBooks'
@@ -19,6 +20,7 @@ import SourceBadge from '@/components/shared/SourceBadge.vue'
 import ProgressBar from '@/components/shared/ProgressBar.vue'
 import type { TTSJob } from '@/types'
 
+const { t } = useI18n()
 const toast = useToast()
 const { userBooks, ttsJobs, loading: ubLoading, loadUserBooks, loadTTSJobs, deleteBook, pollJob } = useUserBooks()
 const { localBooks, removeLocalBook } = useLocalBooks()
@@ -114,7 +116,7 @@ onMounted(async () => {
 })
 
 async function handleDelete(item: UnifiedItem) {
-  if (!confirm(`Удалить "${item.title}"?`)) return
+  if (!confirm(t('myLibrary.deleteConfirm', { title: item.title }))) return
   try {
     if (item.source === 'local') {
       await removeLocalBook(item.id)
@@ -160,9 +162,9 @@ const coverPatterns: Record<string, string> = {
     <!-- Header -->
     <div class="mb-6 flex items-center justify-between">
       <div>
-        <h1 class="page-title">Моя библиотека</h1>
+        <h1 class="page-title">{{ t('myLibrary.title') }}</h1>
         <p class="mt-1 text-[13px] text-[--t3]">
-          {{ totalCount > 0 ? `${totalCount} ${plural(totalCount, 'книга', 'книги', 'книг')}` : 'Пока нет книг' }}
+          {{ totalCount > 0 ? `${totalCount} ${t('plural.book', totalCount)}` : t('myLibrary.noBooks') }}
         </p>
       </div>
       <router-link to="/upload" class="btn btn-primary flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold">
@@ -173,7 +175,7 @@ const coverPatterns: Record<string, string> = {
 
     <!-- Active TTS Jobs -->
     <div v-if="activeJobs.length" class="card mb-6 space-y-3 px-4 py-3">
-      <h2 class="section-label">Конвертация</h2>
+      <h2 class="section-label">{{ t('myLibrary.conversion') }}</h2>
       <div v-for="job in activeJobs" :key="job.id">
         <div class="mb-1.5 flex items-center justify-between">
           <div class="flex items-center gap-2">
@@ -215,9 +217,9 @@ const coverPatterns: Record<string, string> = {
     <div v-else-if="items.length === 0" class="flex flex-col items-center justify-center py-16 text-center">
       <IconFolder :size="48" class="mb-4 text-[--t3]" />
       <p class="mb-2 text-[14px] font-medium text-[--t2]">
-        {{ activeFilter === 'all' ? 'Библиотека пуста' : 'Нет книг в этой категории' }}
+        {{ activeFilter === 'all' ? t('myLibrary.emptyLibrary') : t('myLibrary.emptyCategory') }}
       </p>
-      <p class="mb-4 text-[13px] text-[--t3]">Загрузите, скачайте или добавьте книгу с устройства</p>
+      <p class="mb-4 text-[13px] text-[--t3]">{{ t('myLibrary.emptyDesc') }}</p>
       <router-link to="/upload" class="btn btn-primary flex items-center gap-2 text-[13px]">
         <IconPlus :size="16" />
         Добавить
@@ -296,7 +298,7 @@ const coverPatterns: Record<string, string> = {
               </span>
               <button
                 class="rounded-full p-1.5 text-[--t3] opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/15 hover:text-red-400"
-                aria-label="Удалить книгу"
+                :aria-label="t('myLibrary.deleteAriaLabel')"
                 @click.stop="handleDelete(item)"
               >
                 <IconTrash :size="14" />

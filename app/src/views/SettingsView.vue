@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { api } from '../api'
 import { useDownloads } from '../composables/useDownloads'
@@ -8,9 +9,11 @@ import { useOfflineCache } from '../composables/useOfflineCache'
 import { useAuth } from '../composables/useAuth'
 import type { SessionStats } from '../types'
 import { IconTrash, IconDownload, IconHardDrive } from '../components/shared/icons'
-import { plural } from '../utils/plural'
+import { useLocale } from '../composables/useLocale'
 
 const router = useRouter()
+const { t } = useI18n()
+const { currentLocale, setLocale, LOCALES } = useLocale()
 const dl = useDownloads()
 const { localBooks } = useLocalBooks()
 const cache = useOfflineCache()
@@ -62,9 +65,9 @@ async function setSpeed(speed: number) {
 }
 
 function fmtSize(bytes: number): string {
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' КБ'
-  if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' МБ'
-  return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' ГБ'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' ' + t('common.kb')
+  if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' ' + t('common.mb')
+  return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' ' + t('common.gb')
 }
 
 function clearCache() {
@@ -80,12 +83,12 @@ async function handleLogout() {
 
 <template>
   <div>
-    <h1 class="page-title mb-8">Настройки</h1>
+    <h1 class="page-title mb-8">{{ t('settings.title') }}</h1>
 
     <div class="max-w-2xl space-y-5">
       <!-- Profile -->
       <div class="card p-5">
-        <h3 class="section-label mb-4">Профиль</h3>
+        <h3 class="section-label mb-4">{{ t('settings.profile') }}</h3>
         <div v-if="user" class="flex items-center gap-4">
           <img
             v-if="user.picture"
@@ -144,28 +147,28 @@ async function handleLogout() {
 
       <!-- Listening stats -->
       <div v-else-if="sessionStats" class="card p-5">
-        <h3 class="section-label mb-4">Статистика прослушивания</h3>
+        <h3 class="section-label mb-4">{{ t('settings.statsTitle') }}</h3>
         <div class="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
           <div>
-            <p class="mb-1 text-[11px] font-semibold text-[--t3]">Всего часов</p>
+            <p class="mb-1 text-[11px] font-semibold text-[--t3]">{{ t('settings.statTotalHours') }}</p>
             <p class="text-[22px] leading-none font-bold tracking-tight text-[--t1]">
               {{ sessionStats.total_hours.toFixed(1) }}
             </p>
           </div>
           <div>
-            <p class="mb-1 text-[11px] font-semibold text-[--t3]">Сегодня</p>
+            <p class="mb-1 text-[11px] font-semibold text-[--t3]">{{ t('settings.statToday') }}</p>
             <p class="text-[22px] leading-none font-bold tracking-tight text-[--t1]">
-              {{ sessionStats.today_min }}<span class="ml-0.5 text-[12px] text-[--t3]">мин</span>
+              {{ sessionStats.today_min }}<span class="ml-0.5 text-[12px] text-[--t3]">{{ t('settings.unitMin') }}</span>
             </p>
           </div>
           <div>
-            <p class="mb-1 text-[11px] font-semibold text-[--t3]">За неделю</p>
+            <p class="mb-1 text-[11px] font-semibold text-[--t3]">{{ t('settings.statWeek') }}</p>
             <p class="text-[22px] leading-none font-bold tracking-tight text-[--t1]">
               {{ sessionStats.week_hours.toFixed(1) }}<span class="ml-0.5 text-[12px] text-[--t3]">ч</span>
             </p>
           </div>
           <div v-if="sessionStats.peak_hour !== null">
-            <p class="mb-1 text-[11px] font-semibold text-[--t3]">Пик активности</p>
+            <p class="mb-1 text-[11px] font-semibold text-[--t3]">{{ t('settings.statPeak') }}</p>
             <p class="gradient-text text-[22px] leading-none font-bold tracking-tight">
               {{ sessionStats.peak_hour }}:00
             </p>
@@ -191,13 +194,13 @@ async function handleLogout() {
             <div class="min-w-0 flex-1">
               <p class="truncate text-[13px] font-medium text-[--t1]">{{ b.title }}</p>
               <p class="text-[11px] text-[--t3]">
-                {{ b.tracks.length }} {{ plural(b.tracks.length, 'трек', 'трека', 'треков') }} ·
+                {{ b.tracks.length }} {{ t('plural.track', b.tracks.length) }} ·
                 {{ fmtSize(b.totalSize) }}
               </p>
             </div>
             <button
               class="shrink-0 rounded-full p-2 text-[--t3] transition-colors hover:bg-red-500/15 hover:text-red-400"
-              title="Удалить"
+              :title="t('common.delete')"
               @click="dl.deleteBook(b.bookId)"
             >
               <IconTrash :size="14" />
@@ -216,12 +219,12 @@ async function handleLogout() {
           </button>
         </div>
 
-        <p v-else class="text-[12px] text-[--t3]">Нет скачанных книг</p>
+        <p v-else class="text-[12px] text-[--t3]">{{ t('settings.noDownloads') }}</p>
       </div>
 
       <!-- Listening Streak -->
       <div class="card p-5">
-        <h3 class="section-label mb-4">Серия прослушивания</h3>
+        <h3 class="section-label mb-4">{{ t('settings.streakTitle') }}</h3>
         <div class="flex items-center gap-6">
           <div class="text-center">
             <p
@@ -231,7 +234,7 @@ async function handleLogout() {
               {{ streak.current }}
             </p>
             <p class="mt-1 text-[11px] font-semibold text-[--t3]">
-              {{ plural(streak.current, 'день', 'дня', 'дней') }} подряд
+              {{ t('plural.day', streak.current) }} {{ t('book.streakDays', streak.current) }}
             </p>
           </div>
           <div class="h-10 w-px" style="background: var(--border)" />
@@ -239,19 +242,19 @@ async function handleLogout() {
             <p class="text-[22px] leading-none font-bold tracking-tight text-[--t2]">
               {{ streak.best }}
             </p>
-            <p class="mt-1 text-[11px] font-semibold text-[--t3]">лучшая серия</p>
+            <p class="mt-1 text-[11px] font-semibold text-[--t3]">{{ t('settings.streakBest') }}</p>
           </div>
         </div>
       </div>
 
       <!-- Playback Preferences -->
       <div class="card p-5">
-        <h3 class="section-label mb-4">Воспроизведение</h3>
+        <h3 class="section-label mb-4">{{ t('settings.playback') }}</h3>
 
         <div class="space-y-5">
           <!-- Default playback speed -->
           <div>
-            <p class="mb-2.5 text-[12px] font-semibold text-[--t3]">Скорость по умолчанию</p>
+            <p class="mb-2.5 text-[12px] font-semibold text-[--t3]">{{ t('settings.defaultSpeed') }}</p>
             <div class="flex flex-wrap gap-2">
               <button
                 v-for="s in speeds"
@@ -269,7 +272,7 @@ async function handleLogout() {
 
           <!-- Yearly goal -->
           <div>
-            <p class="mb-2.5 text-[12px] font-semibold text-[--t3]">Годовая цель (книг)</p>
+            <p class="mb-2.5 text-[12px] font-semibold text-[--t3]">{{ t('settings.yearlyGoal') }}</p>
             <div class="flex items-center gap-3">
               <input
                 v-model.number="yearlyGoal"
@@ -297,15 +300,15 @@ async function handleLogout() {
         </h3>
         <div class="flex flex-wrap gap-x-8 gap-y-3">
           <div v-if="dl.isNative.value">
-            <p class="mb-1 text-[11px] font-semibold text-[--t3]">Скачанные</p>
+            <p class="mb-1 text-[11px] font-semibold text-[--t3]">{{ t('settings.storageDownloaded') }}</p>
             <p class="text-[18px] leading-none font-bold text-[--t1]">{{ fmtSize(dl.totalDownloadedSize.value) }}</p>
           </div>
           <div>
-            <p class="mb-1 text-[11px] font-semibold text-[--t3]">Локальные книги</p>
+            <p class="mb-1 text-[11px] font-semibold text-[--t3]">{{ t('settings.storageLocal') }}</p>
             <p class="text-[18px] leading-none font-bold text-[--t1]">{{ localBooks.length }}</p>
           </div>
           <div>
-            <p class="mb-1 text-[11px] font-semibold text-[--t3]">Кэш</p>
+            <p class="mb-1 text-[11px] font-semibold text-[--t3]">{{ t('settings.storageCache') }}</p>
             <p class="text-[18px] leading-none font-bold text-[--t1]">{{ fmtSize(cacheBytes) }}</p>
           </div>
         </div>
@@ -317,26 +320,26 @@ async function handleLogout() {
 
       <!-- Keyboard Shortcuts -->
       <div class="card p-5">
-        <h3 class="section-label mb-4">Горячие клавиши</h3>
+        <h3 class="section-label mb-4">{{ t('settings.shortcuts') }}</h3>
         <div class="space-y-2 text-[13px]">
           <div class="flex items-center justify-between">
-            <span class="text-[--t3]">Пауза / воспроизведение</span>
+            <span class="text-[--t3]">{{ t('settings.shortcutPlayPause') }}</span>
             <kbd class="rounded bg-white/[0.06] px-2 py-0.5 font-mono text-[11px] text-[--t2]">Space</kbd>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-[--t3]">Перемотка +15 сек</span>
+            <span class="text-[--t3]">{{ t('settings.shortcutForward') }}</span>
             <kbd class="rounded bg-white/[0.06] px-2 py-0.5 font-mono text-[11px] text-[--t2]">&rarr;</kbd>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-[--t3]">Перемотка -15 сек</span>
+            <span class="text-[--t3]">{{ t('settings.shortcutBack') }}</span>
             <kbd class="rounded bg-white/[0.06] px-2 py-0.5 font-mono text-[11px] text-[--t2]">&larr;</kbd>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-[--t3]">Следующий трек</span>
+            <span class="text-[--t3]">{{ t('settings.shortcutNext') }}</span>
             <kbd class="rounded bg-white/[0.06] px-2 py-0.5 font-mono text-[11px] text-[--t2]">Shift + &rarr;</kbd>
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-[--t3]">Предыдущий трек</span>
+            <span class="text-[--t3]">{{ t('settings.shortcutPrev') }}</span>
             <kbd class="rounded bg-white/[0.06] px-2 py-0.5 font-mono text-[11px] text-[--t2]">Shift + &larr;</kbd>
           </div>
         </div>
@@ -344,22 +347,39 @@ async function handleLogout() {
 
       <!-- About -->
       <div class="card p-5">
-        <h3 class="section-label mb-4">О приложении</h3>
+        <h3 class="section-label mb-4">{{ t('settings.about') }}</h3>
         <div class="space-y-2 text-[13px]">
           <div class="flex justify-between">
-            <span class="text-[--t3]">Версия</span>
+            <span class="text-[--t3]">{{ t('settings.aboutVersion') }}</span>
             <span class="font-medium text-[--t2]">2.0.0</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-[--t3]">Книг в каталоге</span>
+            <span class="text-[--t3]">{{ t('settings.aboutBooks') }}</span>
             <span class="font-medium text-[--t2]">{{ totalBooks ?? '—' }}</span>
           </div>
           <div class="flex justify-between">
-            <span class="text-[--t3]">Платформа</span>
+            <span class="text-[--t3]">{{ t('settings.aboutPlatform') }}</span>
             <span class="font-medium text-[--t2]">Web</span>
           </div>
         </div>
       </div>
+      <!-- Language -->
+      <div class="card p-5">
+        <h3 class="section-label mb-4">{{ t('settings.language') }}</h3>
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-for="locale in LOCALES"
+            :key="locale.code"
+            class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-[13px] font-semibold transition-colors"
+            :class="currentLocale === locale.code ? 'bg-[--accent] text-white' : 'bg-white/[0.06] text-[--t2] hover:bg-white/[0.1]'"
+            @click="setLocale(locale.code)"
+          >
+            <span>{{ locale.flag }}</span>
+            <span>{{ locale.label }}</span>
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
 </template>

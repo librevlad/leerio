@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { HistoryEntry } from '../../types'
 import { coverUrl } from '../../api'
 import {
@@ -18,6 +19,7 @@ import {
 
 defineProps<{ entries: HistoryEntry[] }>()
 
+const { t } = useI18n()
 const coverErrors = reactive(new Set<string>())
 
 const actionIcon: Record<string, unknown> = {
@@ -66,7 +68,7 @@ function timeAgo(ts: string): string {
 <template>
   <div v-if="entries.length">
     <div class="mb-4 flex items-center justify-between">
-      <h2 class="section-label">Последние действия</h2>
+      <h2 class="section-label">{{ t('dashboard.recentActivity') }}</h2>
       <router-link
         to="/history"
         class="inline-flex min-h-[44px] items-center text-[12px] font-medium text-[--accent] no-underline hover:underline"
