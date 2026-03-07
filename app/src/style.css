@@ -314,18 +314,23 @@ body {
 
 .heatmap-0 {
   fill: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.03);
 }
 .heatmap-1 {
   fill: rgba(232, 146, 58, 0.18);
+  background: rgba(232, 146, 58, 0.18);
 }
 .heatmap-2 {
   fill: rgba(232, 146, 58, 0.35);
+  background: rgba(232, 146, 58, 0.35);
 }
 .heatmap-3 {
   fill: rgba(232, 146, 58, 0.55);
+  background: rgba(232, 146, 58, 0.55);
 }
 .heatmap-4 {
   fill: rgba(232, 146, 58, 0.75);
+  background: rgba(232, 146, 58, 0.75);
 }
 
 /* ── Range ────────────────────────────────────────────────────────────── */

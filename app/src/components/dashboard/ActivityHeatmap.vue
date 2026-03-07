@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { plural } from '../../utils/plural'
 
 const props = defineProps<{ data: Record<string, number> }>()
+
+const stats = computed(() => {
+  const values = Object.values(props.data)
+  const activeDays = values.filter((v) => v > 0).length
+  const totalActions = values.reduce((s, v) => s + v, 0)
+  return { activeDays, totalActions }
+})
 
 const cells = computed(() => {
   const result: { date: string; count: number; x: number; y: number; month: string }[] = []
@@ -52,7 +60,15 @@ function intensity(count: number): string {
 
 <template>
   <div class="card p-6">
-    <h2 class="section-label mb-5">Активность</h2>
+    <div class="mb-5 flex items-center justify-between">
+      <h2 class="section-label">Активность</h2>
+      <p class="text-[11px] text-[--t3]">
+        <span class="font-bold text-[--accent]">{{ stats.activeDays }}</span>
+        {{ plural(stats.activeDays, 'активный день', 'активных дня', 'активных дней') }}
+        · <span class="font-bold text-[--t2]">{{ stats.totalActions }}</span>
+        {{ plural(stats.totalActions, 'действие', 'действия', 'действий') }}
+      </p>
+    </div>
     <div class="overflow-x-auto">
       <svg :width="Math.max(...cells.map((c) => c.x), 0) + 20" :height="7 * 16 + 24" class="block">
         <text v-for="[label, x] in months" :key="label" :x="x" y="10" fill="var(--t3)" font-size="10" font-weight="600">
@@ -71,6 +87,16 @@ function intensity(count: number): string {
           <title>{{ c.date }}: {{ c.count }}</title>
         </rect>
       </svg>
+    </div>
+    <!-- Legend -->
+    <div class="mt-3 flex items-center justify-end gap-1.5 text-[10px] text-[--t3]">
+      <span>Меньше</span>
+      <span class="heatmap-0 inline-block h-[10px] w-[10px] rounded-sm" />
+      <span class="heatmap-1 inline-block h-[10px] w-[10px] rounded-sm" />
+      <span class="heatmap-2 inline-block h-[10px] w-[10px] rounded-sm" />
+      <span class="heatmap-3 inline-block h-[10px] w-[10px] rounded-sm" />
+      <span class="heatmap-4 inline-block h-[10px] w-[10px] rounded-sm" />
+      <span>Больше</span>
     </div>
   </div>
 </template>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { usePlayer } from '../../composables/usePlayer'
-import { IconPlay, IconPause, IconXCircle, IconForward15 } from '../shared/icons'
+import { IconPlay, IconPause, IconXCircle, IconForward15, IconRewind15 } from '../shared/icons'
 
 const {
   currentBook,
@@ -9,11 +9,15 @@ const {
   isFullscreen,
   currentTrack,
   overallProgress,
+  totalElapsed,
+  totalDuration,
   playingOffline,
   togglePlay,
   skipForward,
+  skipBackward,
   closePlayer,
   openFullscreen,
+  formatTime,
 } = usePlayer()
 </script>
 
@@ -48,9 +52,21 @@ const {
             />
             {{ currentBook.title }}
           </p>
-          <p class="mt-0.5 truncate text-[11px] leading-tight text-[--t3]">
-            {{ currentTrack?.filename ?? '' }}
+          <p class="mt-0.5 flex items-center gap-1.5 truncate text-[11px] leading-tight text-[--t3]">
+            <span class="truncate">{{ currentTrack?.filename ?? '' }}</span>
+            <span v-if="totalDuration > 0" class="shrink-0 tabular-nums">
+              {{ formatTime(totalElapsed) }} / {{ formatTime(totalDuration) }}
+            </span>
           </p>
+        </button>
+
+        <!-- -15s skip -->
+        <button
+          class="hidden shrink-0 cursor-pointer border-0 bg-transparent p-1.5 text-[--t3] transition-colors hover:text-[--t1] sm:block"
+          aria-label="Назад 15 сек"
+          @click="skipBackward()"
+        >
+          <IconRewind15 :size="18" />
         </button>
 
         <!-- Play / Pause -->

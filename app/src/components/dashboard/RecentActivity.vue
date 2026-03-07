@@ -32,6 +32,7 @@ const actionIcon: Record<string, unknown> = {
   undo: IconSync,
   delete: IconTrash,
   download: IconDownload,
+  rated: IconStar,
 }
 
 const actionColor: Record<string, { bg: string; fg: string }> = {
@@ -46,6 +47,7 @@ const actionColor: Record<string, { bg: string; fg: string }> = {
   undo: { bg: 'rgba(148, 163, 184, 0.1)', fg: '#94a3b8' },
   delete: { bg: 'rgba(248, 113, 113, 0.1)', fg: '#f87171' },
   download: { bg: 'rgba(148, 163, 184, 0.1)', fg: '#94a3b8' },
+  rated: { bg: 'rgba(251, 191, 36, 0.1)', fg: '#fbbf24' },
 }
 
 const fallbackColor = { bg: 'rgba(148, 163, 184, 0.1)', fg: '#94a3b8' }
