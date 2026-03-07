@@ -1,24 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#e8923a"/>
-      <stop offset="100%" stop-color="#c87830"/>
-    </linearGradient>
-    <linearGradient id="bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#111119"/>
-      <stop offset="100%" stop-color="#0a0a12"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#5b4cc4"/>
+      <stop offset="45%" stop-color="#c84478"/>
+      <stop offset="100%" stop-color="#e87a20"/>
     </linearGradient>
   </defs>
-  <!-- Background circle -->
+  <!-- Rounded square background -->
   <rect width="512" height="512" rx="112" fill="url(#bg)"/>
-  <!-- Headphones arc -->
-  <path d="M152 280 C152 196 196 140 256 140 C316 140 360 196 360 280" stroke="url(#g)" stroke-width="28" stroke-linecap="round" fill="none"/>
-  <!-- Left ear cup -->
-  <rect x="120" y="260" width="48" height="80" rx="16" fill="url(#g)"/>
-  <!-- Right ear cup -->
-  <rect x="344" y="260" width="48" height="80" rx="16" fill="url(#g)"/>
-  <!-- Open book -->
-  <path d="M208 340 L256 358 L304 340 L304 400 L256 418 L208 400 Z" fill="url(#g)" opacity="0.9"/>
+  <!-- Book icon (open book, white) -->
+  <path d="M160 200 C160 200 256 180 256 180 C256 180 352 200 352 200 L352 360 C352 360 256 340 256 340 C256 340 160 360 160 360 Z" fill="white" opacity="0.95"/>
   <!-- Book spine -->
-  <line x1="256" y1="358" x2="256" y2="418" stroke="#111119" stroke-width="3"/>
+  <line x1="256" y1="180" x2="256" y2="340" stroke="rgba(91,76,196,0.3)" stroke-width="3"/>
+  <!-- Page fold left -->
+  <path d="M160 200 C200 190 240 184 256 180 L256 340 C240 344 200 350 160 360 Z" fill="white"/>
+  <!-- Page fold right -->
+  <path d="M352 200 C312 190 272 184 256 180 L256 340 C272 344 312 350 352 360 Z" fill="rgba(255,255,255,0.85)"/>
 </svg>
