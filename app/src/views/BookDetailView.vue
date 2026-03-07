@@ -11,7 +11,15 @@ import BookSimilar from '../components/book/BookSimilar.vue'
 import BookActions from '../components/book/BookActions.vue'
 import BookQuotes from '../components/book/BookQuotes.vue'
 import BookChapters from '../components/book/BookChapters.vue'
-import { IconArrowLeft, IconDownload, IconTrash, IconCheck, IconX, IconShare } from '../components/shared/icons'
+import {
+  IconArrowLeft,
+  IconDownload,
+  IconTrash,
+  IconCheck,
+  IconX,
+  IconShare,
+  IconBookmark,
+} from '../components/shared/icons'
 import ProgressBar from '../components/shared/ProgressBar.vue'
 import { usePlayer } from '../composables/usePlayer'
 import { useDownloads } from '../composables/useDownloads'
@@ -91,6 +99,23 @@ async function onRatingChanged(rating: number) {
   }
 }
 
+const isInLibrary = computed(() => !!book.value?.book_status)
+
+async function addToLibrary() {
+  if (!book.value) return
+  if (!isLoggedIn.value) {
+    router.push('/login')
+    return
+  }
+  try {
+    await api.setBookStatus(book.value.id, 'want_to_read')
+    book.value.book_status = 'want_to_read'
+    toast.success('Добавлено в библиотеку')
+  } catch {
+    toast.error('Не удалось добавить')
+  }
+}
+
 async function startListening() {
   if (!book.value) return
   if (!isLoggedIn.value) {
@@ -125,11 +150,11 @@ watch(() => route.params.id, loadBook)
       </button>
       <button
         v-if="book"
-        class="flex min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border-0 bg-transparent px-3 py-2.5 text-[13px] text-[--t3] transition-all hover:bg-white/5 hover:text-[--t1] active:bg-white/8"
+        class="flex min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3.5 py-2 text-[13px] text-[--t2] transition-all hover:bg-white/[0.08] hover:text-[--t1] active:bg-white/10"
         @click="shareBook"
       >
         <IconShare :size="15" />
-        <span class="hidden font-medium sm:inline">Поделиться</span>
+        <span class="font-medium">Поделиться</span>
       </button>
     </div>
 
@@ -174,6 +199,16 @@ watch(() => route.params.id, loadBook)
           Войти
         </router-link>
       </div>
+
+      <!-- Add to library (for users without a status set) -->
+      <button
+        v-if="isLoggedIn && !isInLibrary"
+        class="mb-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] py-3 text-[14px] font-medium text-[--t2] transition-colors hover:bg-white/[0.08] hover:text-[--t1]"
+        @click="addToLibrary"
+      >
+        <IconBookmark :size="18" />
+        Добавить в библиотеку
+      </button>
 
       <!-- 2. Action bar: status pills + download (auth only) -->
       <div v-if="isLoggedIn" class="mb-5 space-y-3">

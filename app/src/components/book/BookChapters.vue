@@ -88,7 +88,7 @@ onMounted(async () => {
         <button
           v-for="track in visibleTracks"
           :key="track.index"
-          class="flex w-full cursor-pointer items-center gap-3 rounded-xl border-0 px-3 py-2.5 text-left transition-colors"
+          class="flex w-full cursor-pointer flex-col gap-0 rounded-xl border-0 px-3 py-2.5 text-left transition-colors"
           :class="
             isCurrentBook && player.currentTrackIndex.value === track.index
               ? 'bg-[--accent-soft] text-[--t1]'
@@ -96,21 +96,40 @@ onMounted(async () => {
           "
           @click="handleTrackClick(track.index)"
         >
-          <!-- Track number / play icon -->
-          <span class="w-6 shrink-0 text-center font-mono text-[12px] text-[--t3]">
-            <IconPlay
-              v-if="isCurrentBook && player.currentTrackIndex.value === track.index && player.isPlaying.value"
-              :size="12"
-              class="inline text-[--accent]"
+          <div class="flex w-full items-center gap-3">
+            <!-- Track number / play icon -->
+            <span class="w-6 shrink-0 text-center font-mono text-[12px] text-[--t3]">
+              <IconPlay
+                v-if="isCurrentBook && player.currentTrackIndex.value === track.index && player.isPlaying.value"
+                :size="12"
+                class="inline text-[--accent]"
+              />
+              <span v-else>{{ track.index + 1 }}</span>
+            </span>
+            <!-- Track name -->
+            <span class="min-w-0 flex-1 truncate text-[13px]">{{ trackName(track, track.index) }}</span>
+            <!-- Duration -->
+            <span v-if="track.duration" class="shrink-0 font-mono text-[12px] text-[--t3]">{{
+              formatDuration(track.duration)
+            }}</span>
+          </div>
+          <!-- Per-track progress bar (current track only) -->
+          <div
+            v-if="isCurrentBook && player.currentTrackIndex.value === track.index && player.duration.value > 0"
+            class="mt-1.5 ml-9 h-1 overflow-hidden rounded-full bg-white/[0.08]"
+          >
+            <div
+              class="h-full rounded-full bg-[--accent] transition-all duration-300"
+              :style="{ width: `${Math.min((player.currentTime.value / player.duration.value) * 100, 100)}%` }"
             />
-            <span v-else>{{ track.index + 1 }}</span>
-          </span>
-          <!-- Track name -->
-          <span class="min-w-0 flex-1 truncate text-[13px]">{{ trackName(track, track.index) }}</span>
-          <!-- Duration -->
-          <span v-if="track.duration" class="shrink-0 font-mono text-[12px] text-[--t3]">{{
-            formatDuration(track.duration)
-          }}</span>
+          </div>
+          <!-- Completed track indicator (past tracks) -->
+          <div
+            v-else-if="isCurrentBook && track.index < player.currentTrackIndex.value"
+            class="mt-1.5 ml-9 h-1 overflow-hidden rounded-full bg-white/[0.08]"
+          >
+            <div class="h-full w-full rounded-full bg-emerald-500/60" />
+          </div>
         </button>
       </div>
 

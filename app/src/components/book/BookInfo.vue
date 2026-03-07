@@ -14,7 +14,6 @@ import {
   IconHeadphones,
   IconPlay,
 } from '../shared/icons'
-
 const props = defineProps<{ book: Book; isCurrentBook?: boolean }>()
 const emit = defineEmits<{ listen: []; ratingChanged: [rating: number] }>()
 
@@ -54,6 +53,16 @@ const startDate = computed(() => {
     return null
   }
 })
+
+const lastPosition = computed(() => {
+  if (!props.book.progress || !props.book.duration_hours) return null
+  const totalSec = props.book.duration_hours * 3600
+  const elapsedSec = (props.book.progress / 100) * totalSec
+  const h = Math.floor(elapsedSec / 3600)
+  const m = Math.round((elapsedSec % 3600) / 60)
+  if (h > 0) return `${h}ч ${m}м`
+  return `${m}м`
+})
 </script>
 
 <template>
@@ -76,7 +85,7 @@ const startDate = computed(() => {
         <div class="-mt-16 flex gap-4">
           <!-- Cover -->
           <div
-            class="relative h-[140px] w-[140px] shrink-0 overflow-hidden rounded-lg shadow-lg"
+            class="relative h-[160px] w-[160px] shrink-0 overflow-hidden rounded-lg shadow-lg"
             :style="!hasCover ? { background: catGradient(book.category) } : {}"
           >
             <img
@@ -107,6 +116,21 @@ const startDate = computed(() => {
           </div>
         </div>
 
+        <!-- Progress bar (mobile) -->
+        <div v-if="book.progress > 0" class="mt-4">
+          <div class="flex items-center justify-between text-[11px]">
+            <span class="font-semibold text-[--accent]">{{ Math.round(book.progress) }}% прослушано</span>
+            <span v-if="remainingHours !== null" class="text-[--t3]">Осталось ~{{ remainingHours }} ч</span>
+          </div>
+          <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/[0.08]">
+            <div
+              class="h-full rounded-full transition-all duration-500"
+              style="background: linear-gradient(90deg, var(--accent), var(--accent-2))"
+              :style="{ width: `${Math.min(book.progress, 100)}%` }"
+            />
+          </div>
+        </div>
+
         <!-- Listen button (mobile) -->
         <button
           v-if="book.mp3_count && book.mp3_count > 0"
@@ -121,16 +145,18 @@ const startDate = computed(() => {
           <IconPlay :size="16" />
           {{ isCurrentBook ? 'Продолжить' : 'Слушать' }}
         </button>
+        <p v-if="isCurrentBook && lastPosition" class="mt-2 text-center text-[11px] text-[--t3]">
+          Последняя позиция: {{ lastPosition }}
+        </p>
 
         <!-- Progress stats (mobile) -->
-        <div v-if="book.progress > 0" class="mt-4 flex flex-wrap items-center gap-3 text-[12px]">
+        <div v-if="book.progress > 0" class="mt-3 flex flex-wrap items-center gap-3 text-[12px]">
           <ProgressRing :percent="book.progress" :size="48" :stroke="3" />
           <div class="flex flex-wrap gap-x-4 gap-y-1">
             <span v-if="listenedHours !== null" class="text-[--t2]">
               Прослушано <span class="font-semibold text-[--t1]">{{ listenedHours }}</span> из
               {{ book.duration_hours }} ч
             </span>
-            <span v-if="remainingHours !== null" class="text-[--t3]"> Осталось ~{{ remainingHours }} ч </span>
             <span v-if="startDate" class="text-[--t3]"> Начато: {{ startDate }} </span>
           </div>
         </div>
@@ -228,30 +254,49 @@ const startDate = computed(() => {
               </div>
             </div>
 
+            <!-- Progress bar (desktop) -->
+            <div v-if="book.progress > 0" class="mt-3">
+              <div class="flex items-center justify-between text-[11px]">
+                <span class="font-semibold text-[--accent]">{{ Math.round(book.progress) }}% прослушано</span>
+                <span v-if="remainingHours !== null" class="text-[--t3]">Осталось ~{{ remainingHours }} ч</span>
+              </div>
+              <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/[0.08]">
+                <div
+                  class="h-full rounded-full transition-all duration-500"
+                  style="background: linear-gradient(90deg, var(--accent), var(--accent-2))"
+                  :style="{ width: `${Math.min(book.progress, 100)}%` }"
+                />
+              </div>
+            </div>
+
             <!-- Listening stats -->
-            <div v-if="book.progress > 0" class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[12px]">
+            <div v-if="book.progress > 0" class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[12px]">
               <span v-if="listenedHours !== null" class="text-[--t2]">
                 Прослушано <span class="font-semibold text-[--t1]">{{ listenedHours }}</span> из
                 {{ book.duration_hours }} ч
               </span>
-              <span v-if="remainingHours !== null" class="text-[--t3]"> Осталось ~{{ remainingHours }} ч </span>
               <span v-if="startDate" class="text-[--t3]"> Начато: {{ startDate }} </span>
             </div>
 
             <!-- Listen button (desktop) -->
-            <button
-              v-if="book.mp3_count && book.mp3_count > 0"
-              class="btn btn-primary mt-4 self-start px-7 py-3 text-[15px]"
-              style="
-                box-shadow:
-                  0 6px 28px rgba(232, 146, 58, 0.3),
-                  inset 0 1px 0 rgba(255, 255, 255, 0.15);
-              "
-              @click="emit('listen')"
-            >
-              <IconPlay :size="16" />
-              {{ isCurrentBook ? 'Продолжить' : 'Слушать' }}
-            </button>
+            <div class="mt-4 flex items-center gap-3">
+              <button
+                v-if="book.mp3_count && book.mp3_count > 0"
+                class="btn btn-primary self-start px-7 py-3 text-[15px]"
+                style="
+                  box-shadow:
+                    0 6px 28px rgba(232, 146, 58, 0.3),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+                "
+                @click="emit('listen')"
+              >
+                <IconPlay :size="16" />
+                {{ isCurrentBook ? 'Продолжить' : 'Слушать' }}
+              </button>
+              <span v-if="isCurrentBook && lastPosition" class="text-[12px] text-[--t3]">
+                Последняя позиция: {{ lastPosition }}
+              </span>
+            </div>
           </div>
         </div>
       </div>
