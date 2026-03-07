@@ -99,7 +99,7 @@ const statusPills = computed(() => [
 function randomBook() {
   const pool = filtered.value
   if (!pool.length) return
-  const pick = pool[Math.floor(Math.random() * pool.length)]
+  const pick = pool[Math.floor(Math.random() * pool.length)]!
   router.push(`/book/${pick.id}`)
 }
 
