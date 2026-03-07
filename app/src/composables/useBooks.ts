@@ -19,7 +19,11 @@ export function useBooks() {
 
   const categories = computed(() => {
     const set = new Set(books.value.map((b) => b.category))
-    return Array.from(set).sort()
+    return Array.from(set).sort((a, b) => {
+      if (a === 'Другое') return 1
+      if (b === 'Другое') return -1
+      return a.localeCompare(b)
+    })
   })
 
   return { books, loading, load, categories }

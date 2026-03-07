@@ -21,6 +21,18 @@ const visibleCount = ref(40)
 
 const PAGE_SIZE = 40
 
+const categoryCounts = computed(() => {
+  const counts: Record<string, number> = {}
+  for (const b of books.value) {
+    counts[b.category] = (counts[b.category] || 0) + 1
+  }
+  return counts
+})
+
+const hasActiveFilters = computed(
+  () => search.value !== '' || category.value !== '' || statusFilter.value !== '',
+)
+
 onMounted(() => loadBooks())
 
 watch([category, sort], () => {
@@ -129,7 +141,7 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
       <button
         v-for="cat in categories"
         :key="cat"
-        class="flex-shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
+        class="flex flex-shrink-0 cursor-pointer items-center gap-1 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
         :class="
           category === cat
             ? 'border-white/10 bg-white/[0.08] text-[--t1]'
@@ -138,6 +150,7 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
         @click="category = cat"
       >
         {{ cat }}
+        <span class="text-[10px] opacity-50">{{ categoryCounts[cat] || 0 }}</span>
       </button>
     </div>
 
@@ -181,6 +194,25 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
       </div>
     </div>
 
+    <!-- Active filter summary -->
+    <div
+      v-if="hasActiveFilters && !loading"
+      class="mb-4 flex items-center gap-2 text-[12px] text-[--t3]"
+    >
+      <span>
+        Найдено <span class="font-bold text-[--t1]">{{ filtered.length }}</span>
+        {{ plural(filtered.length, 'книга', 'книги', 'книг') }}
+      </span>
+      <span v-if="category" class="rounded-full bg-white/[0.06] px-2 py-0.5">{{ category }}</span>
+      <span v-if="statusFilter" class="rounded-full bg-white/[0.06] px-2 py-0.5">
+        {{ statusPills.find((p) => p.value === statusFilter)?.label }}
+      </span>
+      <span v-if="search" class="rounded-full bg-white/[0.06] px-2 py-0.5">&laquo;{{ search }}&raquo;</span>
+      <button class="ml-1 cursor-pointer text-[--accent] hover:underline" @click="resetFilters">
+        Сбросить
+      </button>
+    </div>
+
     <!-- Loading skeletons -->
     <div v-if="loading" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <div v-for="i in 8" :key="i">
@@ -193,9 +225,18 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <BookCard v-for="book in visibleBooks" :key="book.id" :book="book" />
       </div>
-      <div v-if="hasMore" class="mt-6 flex justify-center">
+      <div v-if="hasMore" class="mt-8 flex flex-col items-center gap-2">
+        <div class="flex items-center gap-2 text-[12px] text-[--t3]">
+          <div class="h-1 w-24 overflow-hidden rounded-full bg-white/[0.06]">
+            <div
+              class="h-full rounded-full bg-[--accent] transition-all duration-300"
+              :style="{ width: `${(visibleCount / filtered.length) * 100}%` }"
+            />
+          </div>
+          <span>{{ visibleCount }} из {{ filtered.length }}</span>
+        </div>
         <button class="btn btn-ghost px-8 py-2.5 text-[13px] font-semibold" @click="showMore">
-          Показать ещё {{ Math.min(PAGE_SIZE, filtered.length - visibleCount) }} из {{ filtered.length - visibleCount }}
+          Показать ещё {{ Math.min(PAGE_SIZE, filtered.length - visibleCount) }}
         </button>
       </div>
     </div>
