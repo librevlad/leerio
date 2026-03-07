@@ -15,10 +15,10 @@ const route = useRoute()
 const router = useRouter()
 const { books, loading, load, categories } = useBooks()
 
-const search = ref('')
+const search = ref((route.query.q as string) || '')
 const category = ref((route.query.category as string) || '')
-const sort = ref('title')
-const statusFilter = ref<BookStatusValue | ''>('')
+const sort = ref((route.query.sort as string) || 'title')
+const statusFilter = ref<BookStatusValue | ''>((route.query.status as BookStatusValue) || '')
 const visibleCount = ref(40)
 
 const PAGE_SIZE = 40
@@ -35,13 +35,24 @@ const hasActiveFilters = computed(() => search.value !== '' || category.value !=
 
 onMounted(() => loadBooks())
 
+function syncQuery() {
+  const query: Record<string, string> = {}
+  if (category.value) query.category = category.value
+  if (sort.value && sort.value !== 'title') query.sort = sort.value
+  if (statusFilter.value) query.status = statusFilter.value
+  if (search.value) query.q = search.value
+  router.replace({ query })
+}
+
 watch([category, sort], () => {
   visibleCount.value = PAGE_SIZE
   loadBooks()
+  syncQuery()
   window.scrollTo({ top: 0, behavior: 'smooth' })
 })
 watch([statusFilter, search], () => {
   visibleCount.value = PAGE_SIZE
+  syncQuery()
   window.scrollTo({ top: 0, behavior: 'smooth' })
 })
 
