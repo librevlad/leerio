@@ -134,6 +134,29 @@ async function handleLogout() {
         </button>
       </div>
 
+      <!-- Language -->
+      <div class="card p-5">
+        <h3 class="section-label mb-4">{{ t('settings.language') }}</h3>
+        <div class="grid grid-cols-3 gap-2">
+          <button
+            v-for="locale in LOCALES"
+            :key="locale.code"
+            class="relative flex flex-col items-center gap-1.5 rounded-xl px-3 py-3.5 text-[13px] font-semibold transition-all duration-200"
+            :class="currentLocale === locale.code
+              ? 'bg-[--accent] text-white shadow-[0_0_20px_rgba(255,138,0,0.25)]'
+              : 'bg-white/[0.04] text-[--t2] hover:bg-white/[0.08] hover:text-[--t1]'"
+            @click="setLocale(locale.code)"
+          >
+            <span class="text-[22px] leading-none">{{ locale.flag }}</span>
+            <span class="text-[12px] font-semibold">{{ locale.label }}</span>
+            <span
+              v-if="currentLocale === locale.code"
+              class="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-white/60"
+            />
+          </button>
+        </div>
+      </div>
+
       <!-- Listening stats: skeleton -->
       <div v-if="statsLoading" class="card p-5">
         <div class="skeleton mb-4 h-4 w-48 rounded" />
@@ -363,22 +386,7 @@ async function handleLogout() {
           </div>
         </div>
       </div>
-      <!-- Language -->
-      <div class="card p-5">
-        <h3 class="section-label mb-4">{{ t('settings.language') }}</h3>
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-for="locale in LOCALES"
-            :key="locale.code"
-            class="flex items-center gap-2 rounded-lg px-3 py-1.5 text-[13px] font-semibold transition-colors"
-            :class="currentLocale === locale.code ? 'bg-[--accent] text-white' : 'bg-white/[0.06] text-[--t2] hover:bg-white/[0.1]'"
-            @click="setLocale(locale.code)"
-          >
-            <span>{{ locale.flag }}</span>
-            <span>{{ locale.label }}</span>
-          </button>
-        </div>
-      </div>
+
 
     </div>
   </div>
