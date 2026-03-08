@@ -133,19 +133,19 @@ function showMore() {
 }
 
 
-const availableLangs = computed(() => {
-  const langs = new Set(books.value.map((b) => b.language).filter(Boolean))
-  return Array.from(langs).sort()
-})
+const BOOK_LANGS = [
+  { code: 'ru', label: 'Рус', flag: '🇷🇺' },
+  { code: 'uk', label: 'Укр', flag: '🇺🇦' },
+  { code: 'en', label: 'Eng', flag: '🇬🇧' },
+]
 
-const langLabels: Record<string, string> = {
-  ru: '🇷🇺 Рус',
-  uk: '🇺🇦 Укр',
-  en: '🇬🇧 Eng',
-  Russian: '🇷🇺 Рус',
-  Ukrainian: '🇺🇦 Укр',
-  English: '🇬🇧 Eng',
-}
+const langCounts = computed(() => {
+  const counts: Record<string, number> = {}
+  for (const b of books.value) {
+    if (b.language) counts[b.language] = (counts[b.language] || 0) + 1
+  }
+  return counts
+})
 
 const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
 </script>
@@ -206,7 +206,7 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
 
 
     <!-- Language filter pills -->
-    <div v-if="availableLangs.length > 1" class="scrollbar-hide fade-mask-r mb-3 flex gap-2 overflow-x-auto pb-0.5">
+    <div class="scrollbar-hide fade-mask-r mb-3 flex gap-2 overflow-x-auto pb-0.5">
       <button
         class="flex-shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
         :class="langFilter === '' ? 'border-white/10 bg-white/[0.08] text-[--t1]' : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'"
@@ -215,13 +215,14 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
         {{ t('library.filterAll') }}
       </button>
       <button
-        v-for="lang in availableLangs"
-        :key="lang"
-        class="flex-shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
-        :class="langFilter === lang ? 'border-white/10 bg-white/[0.08] text-[--t1]' : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'"
-        @click="langFilter = lang"
+        v-for="lang in BOOK_LANGS"
+        :key="lang.code"
+        class="flex-shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
+        :class="langFilter === lang.code ? 'border-white/10 bg-white/[0.08] text-[--t1]' : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'"
+        @click="langFilter = lang.code"
       >
-        {{ langLabels[lang] || lang }}
+        {{ lang.flag }} {{ lang.label }}
+        <span v-if="langCounts[lang.code]" class="ml-0.5 opacity-50 text-[10px]">{{ langCounts[lang.code] }}</span>
       </button>
     </div>
 
