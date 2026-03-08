@@ -729,10 +729,11 @@ def get_books(
     search: str | None = Query(None),
     tag: str | None = Query(None),
     sort: str = Query("title"),
+    language: str | None = Query(None),
     user: dict | None = Depends(get_optional_user),
 ):
     uid = user["user_id"] if user else None
-    books = db.search_books(category=category, search=search, sort=sort)
+    books = db.search_books(category=category, search=search, sort=sort, language=language)
 
     if uid:
         statuses = db.get_all_user_book_statuses(uid)

@@ -21,6 +21,7 @@ const search = ref((route.query.q as string) || '')
 const category = ref((route.query.category as string) || '')
 const sort = ref((route.query.sort as string) || 'title')
 const statusFilter = ref<BookStatusValue | ''>((route.query.status as BookStatusValue) || '')
+const langFilter = ref((route.query.lang as string) || '')
 const visibleCount = ref(40)
 
 const PAGE_SIZE = 40
@@ -33,7 +34,7 @@ const categoryCounts = computed(() => {
   return counts
 })
 
-const hasActiveFilters = computed(() => search.value !== '' || category.value !== '' || statusFilter.value !== '')
+const hasActiveFilters = computed(() => search.value !== '' || category.value !== '' || statusFilter.value !== '' || langFilter.value !== '')
 
 onMounted(() => loadBooks())
 
@@ -42,11 +43,12 @@ function syncQuery() {
   if (category.value) query.category = category.value
   if (sort.value && sort.value !== 'title') query.sort = sort.value
   if (statusFilter.value) query.status = statusFilter.value
+  if (langFilter.value) query.lang = langFilter.value
   if (search.value) query.q = search.value
   router.replace({ query })
 }
 
-watch([category, sort], () => {
+watch([category, sort, langFilter], () => {
   visibleCount.value = PAGE_SIZE
   loadBooks()
   syncQuery()
@@ -62,6 +64,7 @@ function loadBooks() {
   const params: Record<string, string> = {}
   if (category.value) params.category = category.value
   if (sort.value) params.sort = sort.value
+  if (langFilter.value) params.language = langFilter.value
   load(params)
 }
 
@@ -121,11 +124,27 @@ function resetFilters() {
   category.value = ''
   sort.value = 'title'
   statusFilter.value = ''
+  langFilter.value = ''
   visibleCount.value = PAGE_SIZE
 }
 
 function showMore() {
   visibleCount.value += PAGE_SIZE
+}
+
+
+const availableLangs = computed(() => {
+  const langs = new Set(books.value.map((b) => b.language).filter(Boolean))
+  return Array.from(langs).sort()
+})
+
+const langLabels: Record<string, string> = {
+  ru: '🇷🇺 Рус',
+  uk: '🇺🇦 Укр',
+  en: '🇬🇧 Eng',
+  Russian: '🇷🇺 Рус',
+  Ukrainian: '🇺🇦 Укр',
+  English: '🇬🇧 Eng',
 }
 
 const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
@@ -182,6 +201,27 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
       >
         {{ cat }}
         <span class="text-[10px] opacity-50">{{ categoryCounts[cat] || 0 }}</span>
+      </button>
+    </div>
+
+
+    <!-- Language filter pills -->
+    <div v-if="availableLangs.length > 1" class="scrollbar-hide fade-mask-r mb-3 flex gap-2 overflow-x-auto pb-0.5">
+      <button
+        class="flex-shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
+        :class="langFilter === '' ? 'border-white/10 bg-white/[0.08] text-[--t1]' : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'"
+        @click="langFilter = ''"
+      >
+        {{ t('library.filterAll') }}
+      </button>
+      <button
+        v-for="lang in availableLangs"
+        :key="lang"
+        class="flex-shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
+        :class="langFilter === lang ? 'border-white/10 bg-white/[0.08] text-[--t1]' : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'"
+        @click="langFilter = lang"
+      >
+        {{ langLabels[lang] || lang }}
       </button>
     </div>
 

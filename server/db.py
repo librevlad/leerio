@@ -800,7 +800,7 @@ def get_book_by_slug(slug: str) -> dict | None:
         conn.close()
 
 
-def search_books(category: str | None = None, search: str | None = None, sort: str = "title") -> list[dict]:
+def search_books(category: str | None = None, search: str | None = None, sort: str = "title", language: str | None = None) -> list[dict]:
     """Search books with optional category filter, text search, and sort."""
     conn = _get_conn()
     try:
@@ -811,6 +811,9 @@ def search_books(category: str | None = None, search: str | None = None, sort: s
         if category:
             clauses.append("category = ?")
             params.append(category)
+        if language:
+            clauses.append("language = ?")
+            params.append(language)
         if search:
             clauses.append("(title LIKE ? OR author LIKE ? OR reader LIKE ?)")
             q = f"%{search}%"
