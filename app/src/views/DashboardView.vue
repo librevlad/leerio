@@ -146,7 +146,7 @@ onMounted(loadData)
       <!-- Welcome CTA if no active books -->
       <EmptyState
         v-if="!data.active_books.length && !data.recent.length"
-        title="{{ t('dashboard.welcomeTitle') }}"
+        :title="t('dashboard.welcomeTitle')"
         :description="t('dashboard.welcomeDesc')"
         :action-label="t('dashboard.welcomeAction')"
         @action="$router.push('/library')"
