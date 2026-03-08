@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { plural } from '../../utils/plural'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const props = defineProps<{ data: Record<string, number> }>()
 
 const stats = computed(() => {
@@ -34,7 +33,7 @@ const cells = computed(() => {
         count,
         x: weekIdx * 16,
         y: dayOfWeek * 16,
-        month: d.toLocaleDateString('ru', { month: 'short' }),
+        month: d.toLocaleDateString(locale.value, { month: 'short' }),
       })
     }
     if (dayOfWeek === 6) weekIdx++
@@ -66,9 +65,9 @@ function intensity(count: number): string {
       <h2 class="section-label">{{ t('dashboard.activity') }}</h2>
       <p class="text-[11px] text-[--t3]">
         <span class="font-bold text-[--accent]">{{ stats.activeDays }}</span>
-        {{ plural(stats.activeDays, 'активный день', 'активных дня', 'активных дней') }}
+        {{ t('plural.day', stats.activeDays) }}
         · <span class="font-bold text-[--t2]">{{ stats.totalActions }}</span>
-        {{ plural(stats.totalActions, 'действие', 'действия', 'действий') }}
+        {{ t('plural.entry', stats.totalActions) }}
       </p>
     </div>
     <div class="overflow-x-auto">
