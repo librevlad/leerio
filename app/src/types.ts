@@ -30,6 +30,7 @@ export interface Book {
   progress: number
   tags: string[]
   note: string
+  language?: string
   has_cover?: boolean
   description?: string
   rating?: number
