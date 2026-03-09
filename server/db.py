@@ -800,7 +800,9 @@ def get_book_by_slug(slug: str) -> dict | None:
         conn.close()
 
 
-def search_books(category: str | None = None, search: str | None = None, sort: str = "title", language: str | None = None) -> list[dict]:
+def search_books(
+    category: str | None = None, search: str | None = None, sort: str = "title", language: str | None = None
+) -> list[dict]:
     """Search books with optional category filter, text search, and sort."""
     conn = _get_conn()
     try:

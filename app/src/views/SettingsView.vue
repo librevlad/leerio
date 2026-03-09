@@ -142,9 +142,11 @@ async function handleLogout() {
             v-for="locale in LOCALES"
             :key="locale.code"
             class="relative flex flex-col items-center gap-1.5 rounded-xl px-3 py-3.5 text-[13px] font-semibold transition-all duration-200"
-            :class="currentLocale === locale.code
-              ? 'bg-[--accent] text-white shadow-[0_0_20px_rgba(255,138,0,0.25)]'
-              : 'bg-white/[0.04] text-[--t2] hover:bg-white/[0.08] hover:text-[--t1]'"
+            :class="
+              currentLocale === locale.code
+                ? 'bg-[--accent] text-white shadow-[0_0_20px_rgba(255,138,0,0.25)]'
+                : 'bg-white/[0.04] text-[--t2] hover:bg-white/[0.08] hover:text-[--t1]'
+            "
             @click="setLocale(locale.code)"
           >
             <span class="text-[22px] leading-none">{{ locale.flag }}</span>
@@ -181,7 +183,8 @@ async function handleLogout() {
           <div>
             <p class="mb-1 text-[11px] font-semibold text-[--t3]">{{ t('settings.statToday') }}</p>
             <p class="text-[22px] leading-none font-bold tracking-tight text-[--t1]">
-              {{ sessionStats.today_min }}<span class="ml-0.5 text-[12px] text-[--t3]">{{ t('settings.unitMin') }}</span>
+              {{ sessionStats.today_min
+              }}<span class="ml-0.5 text-[12px] text-[--t3]">{{ t('settings.unitMin') }}</span>
             </p>
           </div>
           <div>
@@ -386,8 +389,6 @@ async function handleLogout() {
           </div>
         </div>
       </div>
-
-
     </div>
   </div>
 </template>

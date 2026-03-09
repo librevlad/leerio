@@ -16,7 +16,6 @@ const toast = useToast()
 const { t } = useI18n()
 const loading = ref(false)
 
-
 const statuses = computed<{ value: BookStatusValue; label: string }[]>(() => [
   { value: 'want_to_read', label: t('book.actionWantToRead') },
   { value: 'reading', label: t('book.actionListening') },

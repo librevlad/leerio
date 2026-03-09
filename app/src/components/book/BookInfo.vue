@@ -122,7 +122,9 @@ const lastPosition = computed(() => {
         <div v-if="book.progress > 0" class="mt-4">
           <div class="flex items-center justify-between text-[11px]">
             <span class="font-semibold text-[--accent]">{{ Math.round(book.progress) }}% прослушано</span>
-            <span v-if="remainingHours !== null" class="text-[--t3]">{{ t('book.remainingH', { hours: remainingHours }) }}</span>
+            <span v-if="remainingHours !== null" class="text-[--t3]">{{
+              t('book.remainingH', { hours: remainingHours })
+            }}</span>
           </div>
           <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/[0.08]">
             <div
@@ -260,7 +262,9 @@ const lastPosition = computed(() => {
             <div v-if="book.progress > 0" class="mt-3">
               <div class="flex items-center justify-between text-[11px]">
                 <span class="font-semibold text-[--accent]">{{ Math.round(book.progress) }}% прослушано</span>
-                <span v-if="remainingHours !== null" class="text-[--t3]">{{ t('book.remainingH', { hours: remainingHours }) }}</span>
+                <span v-if="remainingHours !== null" class="text-[--t3]">{{
+                  t('book.remainingH', { hours: remainingHours })
+                }}</span>
               </div>
               <div class="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/[0.08]">
                 <div

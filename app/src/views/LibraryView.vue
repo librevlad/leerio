@@ -34,7 +34,9 @@ const categoryCounts = computed(() => {
   return counts
 })
 
-const hasActiveFilters = computed(() => search.value !== '' || category.value !== '' || statusFilter.value !== '' || langFilter.value !== '')
+const hasActiveFilters = computed(
+  () => search.value !== '' || category.value !== '' || statusFilter.value !== '' || langFilter.value !== '',
+)
 
 onMounted(() => loadBooks())
 
@@ -132,7 +134,6 @@ function showMore() {
   visibleCount.value += PAGE_SIZE
 }
 
-
 const BOOK_LANGS = [
   { code: 'ru', label: 'Рус', flag: '🇷🇺' },
   { code: 'uk', label: 'Укр', flag: '🇺🇦' },
@@ -204,12 +205,15 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
       </button>
     </div>
 
-
     <!-- Language filter pills -->
     <div class="scrollbar-hide fade-mask-r mb-3 flex gap-2 overflow-x-auto pb-0.5">
       <button
         class="flex-shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
-        :class="langFilter === '' ? 'border-white/10 bg-white/[0.08] text-[--t1]' : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'"
+        :class="
+          langFilter === ''
+            ? 'border-white/10 bg-white/[0.08] text-[--t1]'
+            : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
+        "
         @click="langFilter = ''"
       >
         {{ t('library.filterAll') }}
@@ -218,11 +222,15 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
         v-for="lang in BOOK_LANGS"
         :key="lang.code"
         class="flex-shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
-        :class="langFilter === lang.code ? 'border-white/10 bg-white/[0.08] text-[--t1]' : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'"
+        :class="
+          langFilter === lang.code
+            ? 'border-white/10 bg-white/[0.08] text-[--t1]'
+            : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
+        "
         @click="langFilter = lang.code"
       >
         {{ lang.flag }} {{ lang.label }}
-        <span v-if="langCounts[lang.code]" class="ml-0.5 opacity-50 text-[10px]">{{ langCounts[lang.code] }}</span>
+        <span v-if="langCounts[lang.code]" class="ml-0.5 text-[10px] opacity-50">{{ langCounts[lang.code] }}</span>
       </button>
     </div>
 
@@ -277,7 +285,9 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
         {{ statusPills.find((p) => p.value === statusFilter)?.label }}
       </span>
       <span v-if="search" class="rounded-full bg-white/[0.06] px-2 py-0.5">&laquo;{{ search }}&raquo;</span>
-      <button class="ml-1 cursor-pointer text-[--accent] hover:underline" @click="resetFilters">{{ t('library.reset') }}</button>
+      <button class="ml-1 cursor-pointer text-[--accent] hover:underline" @click="resetFilters">
+        {{ t('library.reset') }}
+      </button>
     </div>
 
     <!-- Loading skeletons -->

@@ -26,7 +26,14 @@ const loading = ref(true)
 
 const greeting = computed(() => {
   const h = new Date().getHours()
-  const base = h < 6 ? t('dashboard.greetNight') : h < 12 ? t('dashboard.greetMorning') : h < 18 ? t('dashboard.greetDay') : t('dashboard.greetEvening')
+  const base =
+    h < 6
+      ? t('dashboard.greetNight')
+      : h < 12
+        ? t('dashboard.greetMorning')
+        : h < 18
+          ? t('dashboard.greetDay')
+          : t('dashboard.greetEvening')
   const name = user.value?.name?.split(' ')[0]
   return name ? `${base}, ${name}` : base
 })
@@ -87,7 +94,9 @@ onMounted(loadData)
             <p class="mt-1 text-[28px] leading-none font-bold tracking-tight text-[--t1]">{{ data.total_books }}</p>
           </div>
           <div class="card px-5 py-4">
-            <p class="text-[11px] font-semibold tracking-wide text-[--t3] uppercase">{{ t('dashboard.statListened') }}</p>
+            <p class="text-[11px] font-semibold tracking-wide text-[--t3] uppercase">
+              {{ t('dashboard.statListened') }}
+            </p>
             <p class="mt-1 text-[28px] leading-none font-bold tracking-tight text-emerald-400">{{ data.total_done }}</p>
           </div>
           <div class="card px-5 py-4">

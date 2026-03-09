@@ -293,7 +293,12 @@ const tabDefs = [
         <!-- Title -->
         <div>
           <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelTitle') }}</label>
-          <input v-model="uploadTitle" type="text" :placeholder="t('upload.placeholderTitle')" class="input-field w-full px-3.5 py-2.5" />
+          <input
+            v-model="uploadTitle"
+            type="text"
+            :placeholder="t('upload.placeholderTitle')"
+            class="input-field w-full px-3.5 py-2.5"
+          />
         </div>
 
         <!-- Author -->
@@ -310,7 +315,12 @@ const tabDefs = [
         <!-- Reader -->
         <div>
           <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelReader') }}</label>
-          <input v-model="uploadReader" type="text" :placeholder="t('upload.placeholderReader')" class="input-field w-full px-3.5 py-2.5" />
+          <input
+            v-model="uploadReader"
+            type="text"
+            :placeholder="t('upload.placeholderReader')"
+            class="input-field w-full px-3.5 py-2.5"
+          />
         </div>
       </div>
 
@@ -394,13 +404,23 @@ const tabDefs = [
         <!-- Title -->
         <div>
           <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelTitle') }}</label>
-          <input v-model="ttsTitle" type="text" :placeholder="t('upload.placeholderBookTitle')" class="input-field w-full px-3.5 py-2.5" />
+          <input
+            v-model="ttsTitle"
+            type="text"
+            :placeholder="t('upload.placeholderBookTitle')"
+            class="input-field w-full px-3.5 py-2.5"
+          />
         </div>
 
         <!-- Author -->
         <div>
           <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelAuthor') }}</label>
-          <input v-model="ttsAuthor" type="text" :placeholder="t('upload.placeholderAuthor')" class="input-field w-full px-3.5 py-2.5" />
+          <input
+            v-model="ttsAuthor"
+            type="text"
+            :placeholder="t('upload.placeholderAuthor')"
+            class="input-field w-full px-3.5 py-2.5"
+          />
         </div>
 
         <!-- Document file -->
@@ -446,7 +466,10 @@ const tabDefs = [
           <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelVoice') }}</label>
           <select v-model="ttsVoice" class="input-field w-full px-3.5 py-2.5">
             <option v-for="v in voices" :key="v.id" :value="v.id">
-              {{ v.name }} ({{ v.lang }}, {{ v.gender === 'male' ? t('upload.genderMale') : v.gender === 'female' ? t('upload.genderFemale') : '' }})
+              {{ v.name }} ({{ v.lang }},
+              {{
+                v.gender === 'male' ? t('upload.genderMale') : v.gender === 'female' ? t('upload.genderFemale') : ''
+              }})
             </option>
           </select>
         </div>
@@ -518,7 +541,13 @@ const tabDefs = [
                 <IconMicrophone v-else :size="16" class="text-violet-400" />
               </div>
               <span class="text-[13px] font-semibold text-[--t1]">
-                {{ jobStatus === 'done' ? t('upload.conversionDone') : jobStatus === 'error' ? t('upload.conversionError') : t('upload.conversionProgress') }}
+                {{
+                  jobStatus === 'done'
+                    ? t('upload.conversionDone')
+                    : jobStatus === 'error'
+                      ? t('upload.conversionError')
+                      : t('upload.conversionProgress')
+                }}
               </span>
             </div>
             <span class="text-[12px] font-semibold" :class="jobStatus === 'done' ? 'text-emerald-400' : 'text-[--t3]'">
@@ -563,7 +592,12 @@ const tabDefs = [
         <!-- Author -->
         <div>
           <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelAuthor') }}</label>
-          <input v-model="localAuthor" type="text" :placeholder="t('upload.placeholderAuthor')" class="input-field w-full px-3.5 py-2.5" />
+          <input
+            v-model="localAuthor"
+            type="text"
+            :placeholder="t('upload.placeholderAuthor')"
+            class="input-field w-full px-3.5 py-2.5"
+          />
         </div>
       </div>
 

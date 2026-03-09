@@ -330,7 +330,11 @@ onMounted(async () => {
 
               <div class="mb-4">
                 <label class="mb-1.5 block text-[12px] font-medium text-[--t2]">{{ t('collections.labelDesc') }}</label>
-                <input v-model="formDesc" class="input-field w-full px-3.5 py-2.5" :placeholder="t('collections.placeholderDesc')" />
+                <input
+                  v-model="formDesc"
+                  class="input-field w-full px-3.5 py-2.5"
+                  :placeholder="t('collections.placeholderDesc')"
+                />
               </div>
 
               <div class="mb-2">

@@ -33,7 +33,7 @@ export default {
     statHours: 'Часов',
     statStreak: 'Серия',
     welcomeTitle: 'Добро пожаловать!',
-    welcomeDesc: "Начните с каталога — выберите книгу и поставьте статус «Слушаю»",
+    welcomeDesc: 'Начните с каталога — выберите книгу и поставьте статус «Слушаю»',
     welcomeAction: 'Открыть каталог',
     todayForYou: 'Сегодня для вас',
     currentlyListening: 'Сейчас слушаю',
