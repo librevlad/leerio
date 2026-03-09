@@ -9,6 +9,7 @@ import hashlib
 import json
 import logging
 import os
+import re
 import secrets
 import sqlite3
 from datetime import datetime, timedelta, timezone
@@ -599,12 +600,17 @@ def _sync_books_from_s3(client):
 
             display_cat = cat_norm.get(cat, cat)
 
-            # Determine language from category
-            lang = "en" if display_cat == "Языки" else "ru"
-
             for folder, mp3_keys in sorted(book_mp3s.items()):
                 author, title, reader = parse_folder_name(folder)
                 slug = make_slug(title, author)
+
+                # Detect language: "Языки" category or Latin title/author → English
+                if display_cat == "Языки":
+                    lang = "en"
+                elif re.search(r"[a-zA-Z]{2,}", f"{title} {author}"):
+                    lang = "en"
+                else:
+                    lang = "ru"
 
                 s3_prefix = f"{cat}/{folder}"
                 has_cover = int(folder in book_covers)
