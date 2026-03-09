@@ -619,10 +619,10 @@ def _sync_books_from_s3(client):
                 has_cover = int(folder in book_covers)
 
                 if s3_prefix in existing_prefixes:
-                    # Update has_cover and language for existing books
+                    # Update has_cover for existing books (don't overwrite manual language)
                     conn.execute(
-                        "UPDATE books SET has_cover = ?, language = ? WHERE s3_prefix = ?",
-                        (has_cover, lang, s3_prefix),
+                        "UPDATE books SET has_cover = ? WHERE s3_prefix = ?",
+                        (has_cover, s3_prefix),
                     )
                     continue
 
