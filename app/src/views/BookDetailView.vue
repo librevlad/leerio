@@ -36,7 +36,7 @@ const loading = ref(true)
 const player = usePlayer()
 const dl = useDownloads()
 const toast = useToast()
-const { isLoggedIn } = useAuth()
+const { isLoggedIn, isAdmin } = useAuth()
 
 const isCurrentBook = computed(() => player.currentBook.value?.id === book.value?.id)
 
@@ -136,6 +136,17 @@ async function startListening() {
   }
 }
 
+async function changeLanguage(lang: string) {
+  if (!book.value) return
+  try {
+    await api.setBookLanguage(book.value.id, lang)
+    book.value.language = lang
+    toast.success(`Мова: ${lang.toUpperCase()}`)
+  } catch {
+    toast.error('Не вдалося змінити мову')
+  }
+}
+
 onMounted(loadBook)
 watch(() => route.params.id, loadBook)
 </script>
@@ -187,6 +198,24 @@ watch(() => route.params.id, loadBook)
         @listen="startListening"
         @rating-changed="onRatingChanged"
       />
+
+      <!-- Admin: language selector -->
+      <div v-if="isAdmin" class="mb-4 flex items-center gap-2">
+        <span class="text-[12px] text-[--t3]">Мова:</span>
+        <button
+          v-for="lang in ['ru', 'en', 'uk']"
+          :key="lang"
+          class="cursor-pointer rounded-lg border px-3 py-1.5 text-[12px] font-medium transition-colors"
+          :class="
+            book.language === lang
+              ? 'border-[--accent] bg-[--accent]/10 text-[--accent]'
+              : 'border-white/[0.08] bg-white/[0.04] text-[--t3] hover:bg-white/[0.08] hover:text-[--t1]'
+          "
+          @click="changeLanguage(lang)"
+        >
+          {{ lang === 'ru' ? '🇷🇺 RU' : lang === 'en' ? '🇬🇧 EN' : '🇺🇦 UK' }}
+        </button>
+      </div>
 
       <!-- Login prompt for guests -->
       <div

@@ -1600,6 +1600,17 @@ def delete_category(cat_id: int) -> bool:
         conn.close()
 
 
+def update_book_language(book_id: int, language: str) -> bool:
+    """Update a book's language. Returns True if updated."""
+    conn = _get_conn()
+    try:
+        updated = conn.execute("UPDATE books SET language = ? WHERE id = ?", (language, book_id)).rowcount
+        conn.commit()
+        return updated > 0
+    finally:
+        conn.close()
+
+
 def update_book_category(book_id: int, category: str) -> bool:
     """Update a book's category. Returns True if updated."""
     conn = _get_conn()

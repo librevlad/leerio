@@ -225,6 +225,10 @@ export const api = {
   // Rating
   setRating: (bookId: string, rating: number) => put<{ ok: boolean }>(`/user/rating/${bookId}`, { rating }),
 
+  // Admin
+  setBookLanguage: (bookId: string, language: string) =>
+    put<{ ok: boolean }>(`/admin/books/${bookId}/language`, { language }),
+
   // Auth
   getMe: () => get<{ user_id: string; email: string; name: string; picture: string; role: string }>('/auth/me'),
   logout: () => post<{ ok: boolean }>('/auth/logout'),

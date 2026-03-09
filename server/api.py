@@ -316,6 +316,10 @@ class BookCategoryRequest(BaseModel):
     category: str
 
 
+class BookLanguageRequest(BaseModel):
+    language: str
+
+
 # ── App lifecycle ──────────────────────────────────────────────────────────
 
 
@@ -486,6 +490,18 @@ def update_book_category(book_id: int, req: BookCategoryRequest, user: dict = De
     """Admin only: reassign a book to a different category."""
     require_admin(user)
     updated = db.update_book_category(book_id, req.category)
+    if not updated:
+        raise HTTPException(404, "Book not found")
+    return {"ok": True}
+
+
+@app.put("/api/admin/books/{book_id}/language")
+def update_book_language(book_id: int, req: BookLanguageRequest, user: dict = Depends(get_current_user)):
+    """Admin only: set a book's language (ru, en, uk)."""
+    require_admin(user)
+    if req.language not in ("ru", "en", "uk"):
+        raise HTTPException(400, "Language must be ru, en, or uk")
+    updated = db.update_book_language(book_id, req.language)
     if not updated:
         raise HTTPException(404, "Book not found")
     return {"ok": True}
