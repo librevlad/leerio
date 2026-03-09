@@ -604,10 +604,10 @@ def _sync_books_from_s3(client):
                 author, title, reader = parse_folder_name(folder)
                 slug = make_slug(title, author)
 
-                # Detect language: "Языки" category or Latin title/author → English
-                if display_cat == "Языки":
-                    lang = "en"
-                elif re.search(r"[a-zA-Z]{2,}", f"{title} {author}"):
+                # Detect language by title: if title is mostly Latin → English
+                latin_chars = len(re.findall(r"[a-zA-Z]", title))
+                cyrillic_chars = len(re.findall(r"[а-яА-ЯёЁіІїЇєЄґҐ]", title))
+                if latin_chars > cyrillic_chars and latin_chars >= 3:
                     lang = "en"
                 else:
                     lang = "ru"
