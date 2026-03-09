@@ -599,6 +599,9 @@ def _sync_books_from_s3(client):
 
             display_cat = cat_norm.get(cat, cat)
 
+            # Determine language from category
+            lang = "en" if display_cat == "Языки" else "ru"
+
             for folder, mp3_keys in sorted(book_mp3s.items()):
                 author, title, reader = parse_folder_name(folder)
                 slug = make_slug(title, author)
@@ -607,10 +610,10 @@ def _sync_books_from_s3(client):
                 has_cover = int(folder in book_covers)
 
                 if s3_prefix in existing_prefixes:
-                    # Update has_cover for existing books (may have been wrong on first sync)
+                    # Update has_cover and language for existing books
                     conn.execute(
-                        "UPDATE books SET has_cover = ? WHERE s3_prefix = ?",
-                        (has_cover, s3_prefix),
+                        "UPDATE books SET has_cover = ?, language = ? WHERE s3_prefix = ?",
+                        (has_cover, lang, s3_prefix),
                     )
                     continue
 
@@ -620,9 +623,9 @@ def _sync_books_from_s3(client):
 
                 conn.execute(
                     """INSERT INTO books (slug, title, author, reader, category, folder,
-                       s3_prefix, has_cover, mp3_count)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                    (slug, title, author, reader or "", display_cat, folder, s3_prefix, has_cover, len(mp3_keys)),
+                       s3_prefix, has_cover, mp3_count, language)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    (slug, title, author, reader or "", display_cat, folder, s3_prefix, has_cover, len(mp3_keys), lang),
                 )
                 existing_slugs.add(slug)
                 existing_prefixes.add(s3_prefix)
