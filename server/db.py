@@ -605,11 +605,15 @@ def _sync_books_from_s3(client):
                 slug = make_slug(title, author)
 
                 # Detect language by title+author characters:
-                # є, ї, ґ → Ukrainian; Latin letters → English;
-                # ё, ъ, ы → Russian; default → Russian
+                # є, ї, ґ → Ukrainian (unique letters);
+                # ё, ъ, ы or any Cyrillic → Russian;
+                # Only Latin → English
                 text = f"{title} {author}"
+                has_cyrillic = bool(re.search(r"[а-яА-ЯёЁіІєЄїЇґҐъЪыЫ]", text))
                 if re.search(r"[єЄїЇґҐ]", text):
                     lang = "uk"
+                elif has_cyrillic:
+                    lang = "ru"
                 elif re.search(r"[a-zA-Z]", text):
                     lang = "en"
                 else:
