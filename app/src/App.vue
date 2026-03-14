@@ -33,7 +33,11 @@ const showApp = computed(
 )
 
 // PWA install prompt
-const deferredPrompt = ref<any>(null)
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
+}
+const deferredPrompt = ref<BeforeInstallPromptEvent | null>(null)
 const showInstallBanner = ref(false)
 
 function handleBeforeInstallPrompt(e: Event) {

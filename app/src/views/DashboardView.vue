@@ -52,7 +52,7 @@ async function loadData() {
 
 const hasActivity = computed(() => {
   if (!data.value?.heatmap) return false
-  return data.value.heatmap.some((entry: any) => entry.count > 0)
+  return data.value.heatmap.some((entry: { date: string; count: number }) => entry.count > 0)
 })
 
 const { refreshing, pullProgress } = usePullToRefresh(loadData)

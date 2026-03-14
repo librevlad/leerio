@@ -10,7 +10,8 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel
 
 from . import db
-from .auth import get_current_user, require_admin as _require_admin
+from .auth import get_current_user
+from .auth import require_admin as _require_admin
 
 logger = logging.getLogger("leerio.ingest_api")
 
