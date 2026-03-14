@@ -333,11 +333,12 @@ def init_db():
 
 
 def _migrate_categories(conn: sqlite3.Connection):
-    """Normalize bad category values from S3 sync (e.g. 'books' -> 'Художественная', '.' -> 'Другое')."""
+    """Normalize bad category values from S3 sync (e.g. 'books' -> 'Художественная', '.' -> 'Художественная')."""
     mapping = {
         "books": "Художественная",
-        ".": "Другое",
-        "": "Другое",
+        "Другое": "Художественная",
+        ".": "Художественная",
+        "": "Художественная",
     }
     total = 0
     for old_cat, new_cat in mapping.items():
@@ -569,8 +570,9 @@ def _sync_books_from_s3(client):
     # Normalize category names from S3 prefixes
     cat_norm = {
         "books": "Художественная",
-        ".": "Другое",
-        "": "Другое",
+        "Другое": "Художественная",
+        ".": "Художественная",
+        "": "Художественная",
     }
 
     for cat in categories:
@@ -1441,8 +1443,6 @@ def _seed_categories(conn: sqlite3.Connection):
         ("Саморазвитие", "#E8923A", "linear-gradient(135deg, #9a5c16 0%, #E8923A 100%)", 3),
         ("Художественная", "#0e8a99", "linear-gradient(135deg, #155e75 0%, #0891b2 100%)", 4),
         ("Языки", "#0f8660", "linear-gradient(135deg, #064e3b 0%, #059669 100%)", 5),
-        ("Личные", "#7c3aed", "linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%)", 6),
-        ("Другое", "#64748b", "linear-gradient(135deg, #334155 0%, #64748b 100%)", 7),
     ]
     conn.executemany(
         "INSERT INTO categories (name, color, gradient, sort_order) VALUES (?, ?, ?, ?)",
