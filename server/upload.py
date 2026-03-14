@@ -15,6 +15,9 @@ from .core import UserData, count_mp3, estimate_duration_hours, folder_size_mb, 
 
 logger = logging.getLogger("leerio.upload")
 
+MAX_UPLOAD_SIZE = 500 * 1024 * 1024  # 500 MB (matches nginx)
+VALID_IMAGE_HEADERS = [b"\xff\xd8\xff", b"\x89PNG"]
+
 router = APIRouter(prefix="/api/user/books", tags=["user-books"])
 
 
@@ -65,13 +68,17 @@ async def upload_book(
 
     slug = make_slug(title, author)
 
-    # Ensure unique slug
-    existing = ud.books_dir / slug
-    if existing.exists():
-        counter = 2
-        while (ud.books_dir / f"{slug}-{counter}").exists():
-            counter += 1
-        slug = f"{slug}-{counter}"
+    # Ensure unique slug (atomic mkdir to avoid TOCTOU race)
+    for attempt in range(100):
+        candidate = slug if attempt == 0 else f"{slug}-{attempt + 1}"
+        try:
+            (ud.books_dir / candidate).mkdir(parents=True, exist_ok=False)
+            slug = candidate
+            break
+        except FileExistsError:
+            continue
+    else:
+        raise HTTPException(409, "Could not create unique book directory")
 
     book_dir = ud.user_book_create(slug, title, author, reader, source="upload")
 
@@ -79,14 +86,16 @@ async def upload_book(
     for i, f in enumerate(files, 1):
         filename = f"{i:02d}. {f.filename}"
         file_path = book_dir / filename
-        content = await f.read()
+        content = await f.read(MAX_UPLOAD_SIZE + 1)
+        if len(content) > MAX_UPLOAD_SIZE:
+            raise HTTPException(413, "File too large (max 500 MB)")
         file_path.write_bytes(content)
         logger.info("Saved track: %s (%d bytes)", filename, len(content))
 
     # Save cover if provided
     if cover and cover.filename:
         cover_data = await cover.read()
-        if cover_data:
+        if cover_data and any(cover_data.startswith(h) for h in VALID_IMAGE_HEADERS):
             (book_dir / "cover.jpg").write_bytes(cover_data)
 
     book_id = f"ub:{user['user_id']}:{slug}"

@@ -14,6 +14,5 @@ app/node_modules
 app/dist
 app/coverage
 *.md
-!server/requirements.txt
 .env
 .env.*

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../../api'
 import { useToast } from '../../composables/useToast'
@@ -23,11 +23,11 @@ onMounted(async () => {
   }
 })
 
-const suggestions = () => {
+const suggestions = computed(() => {
   if (!input.value) return allTags.value.filter((t) => !currentTags.value.includes(t)).slice(0, 5)
   const q = input.value.toLowerCase()
   return allTags.value.filter((t) => t.toLowerCase().includes(q) && !currentTags.value.includes(t)).slice(0, 5)
-}
+})
 
 async function addTag(tag: string) {
   const t = tag.trim()
@@ -54,7 +54,7 @@ async function save() {
     await api.setTags(props.bookId, currentTags.value)
     emit('updated', currentTags.value)
   } catch {
-    toast.error('Не удалось сохранить теги')
+    toast.error(t('book.tagsSaveError'))
   }
 }
 </script>
@@ -91,7 +91,7 @@ async function save() {
         @keydown.enter="addTag(input)"
       />
       <div
-        v-if="showSuggestions && suggestions().length"
+        v-if="showSuggestions && suggestions.length"
         class="absolute top-full right-0 left-0 z-10 mt-1.5 overflow-hidden rounded-xl"
         style="
           background: var(--card-solid);
@@ -100,7 +100,7 @@ async function save() {
         "
       >
         <button
-          v-for="s in suggestions()"
+          v-for="s in suggestions"
           :key="s"
           class="block w-full cursor-pointer border-0 bg-transparent px-3.5 py-2.5 text-left text-[12px] text-[--t2] transition-colors hover:bg-white/5 hover:text-[--t1]"
           @mousedown="addTag(s)"

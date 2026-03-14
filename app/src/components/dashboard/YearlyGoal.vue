@@ -2,7 +2,6 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ProgressBar from '../shared/ProgressBar.vue'
-import { plural } from '../../utils/plural'
 
 const { t } = useI18n()
 const props = defineProps<{
@@ -34,20 +33,20 @@ const pace = computed(() => {
     <ProgressBar :percent="percent" height="h-1.5" />
     <p class="gradient-text mt-3 text-[24px] leading-none font-bold tracking-tight">{{ percent }}%</p>
     <p class="mt-1 text-[12px] text-[--t3]">
-      <template v-if="done >= goal"> Цель достигнута! </template>
+      <template v-if="done >= goal"> {{ t('dashboard.goalReached') }} </template>
       <template v-else>
-        осталось {{ Math.max(0, goal - done) }} {{ plural(Math.max(0, goal - done), 'книга', 'книги', 'книг') }}
+        {{ t('dashboard.goalRemaining', { n: `${Math.max(0, goal - done)} ${t('plural.book', Math.max(0, goal - done))}` }) }}
       </template>
     </p>
     <p v-if="pace" class="mt-2 text-[11px]" :class="pace.ahead ? 'text-emerald-400' : 'text-amber-400'">
       <template v-if="done >= goal">
-        Темп: {{ pace.projected }} {{ plural(pace.projected, 'книга', 'книги', 'книг') }} к концу года
+        {{ t('dashboard.paceProjected', { n: `${pace.projected} ${t('plural.book', pace.projected)}` }) }}
       </template>
       <template v-else-if="pace.ahead">
-        В темпе на {{ pace.projected }} {{ plural(pace.projected, 'книгу', 'книги', 'книг') }}
+        {{ t('dashboard.paceOnTrack', { n: `${pace.projected} ${t('plural.book', pace.projected)}` }) }}
       </template>
       <template v-else>
-        Нужно ~{{ pace.perMonth }} {{ plural(Math.ceil(pace.perMonth), 'книга', 'книги', 'книг') }}/мес
+        {{ t('dashboard.paceNeeded', { n: `${pace.perMonth} ${t('plural.book', Math.ceil(pace.perMonth))}` }) }}
       </template>
     </p>
   </div>

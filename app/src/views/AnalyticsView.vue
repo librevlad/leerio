@@ -11,7 +11,7 @@ import ActivityHeatmap from '../components/dashboard/ActivityHeatmap.vue'
 import EmptyState from '../components/shared/EmptyState.vue'
 
 const { t } = useI18n()
-const { data, achievements, loading, load } = useAnalytics()
+const { data, achievements, loading, error, load } = useAnalytics()
 
 onMounted(load)
 </script>
@@ -29,6 +29,18 @@ onMounted(load)
         <div class="skeleton h-64" />
         <div class="skeleton h-64" />
       </div>
+    </div>
+
+    <div v-else-if="error" class="card p-8 text-center">
+      <p class="text-[16px] font-semibold text-[--t1]">{{ t('common.loadError') }}</p>
+      <p class="mt-1 text-[13px] text-[--t3]">{{ t('common.tryAgain') }}</p>
+      <button
+        class="mt-4 rounded-xl px-5 py-2.5 text-[13px] font-semibold text-white"
+        style="background: var(--gradient-accent)"
+        @click="load"
+      >
+        {{ t('common.retry') }}
+      </button>
     </div>
 
     <div v-else-if="data" class="fade-in space-y-6">

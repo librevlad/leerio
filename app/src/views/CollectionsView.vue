@@ -30,6 +30,12 @@ function bookById(id: number): Book | undefined {
   return books.value.find((b) => b.id === String(id))
 }
 
+/** Safely convert string book ID to number; returns NaN for non-numeric IDs (e.g. "ub:..." prefixed) */
+function safeBookId(id: string): number {
+  const n = Number(id)
+  return isNaN(n) ? NaN : n
+}
+
 const filteredBooks = computed(() => {
   const q = bookSearch.value.toLowerCase().trim()
   if (!q) return books.value
@@ -41,7 +47,7 @@ async function loadCollections() {
   try {
     collections.value = await api.getCollections()
   } catch {
-    toast.error('Ошибка загрузки коллекций')
+    toast.error(t('collections.loadError'))
   } finally {
     loading.value = false
   }
@@ -85,21 +91,21 @@ function toggleExpand(idx: number) {
 
 async function save() {
   if (!formName.value.trim()) {
-    toast.error('Введите название')
+    toast.error(t('collections.nameRequired'))
     return
   }
   try {
     if (editId.value !== null) {
       await api.updateCollection(editId.value, formName.value.trim(), formBooks.value, formDesc.value.trim())
-      toast.success('Коллекция обновлена')
+      toast.success(t('collections.updated'))
     } else {
       await api.createCollection(formName.value.trim(), formBooks.value, formDesc.value.trim())
-      toast.success('Коллекция создана')
+      toast.success(t('collections.created'))
     }
     closeForm()
     await loadCollections()
   } catch {
-    toast.error('Ошибка сохранения')
+    toast.error(t('collections.saveError'))
   }
 }
 
@@ -107,11 +113,11 @@ async function remove(col: Collection) {
   if (!confirm(t('collections.deleteConfirm', { name: col.name }))) return
   try {
     await api.deleteCollection(col.id)
-    toast.success('Удалено')
+    toast.success(t('collections.deleted'))
     expandedIdx.value = null
     await loadCollections()
   } catch {
-    toast.error('Ошибка удаления')
+    toast.error(t('collections.deleteError'))
   }
 }
 
@@ -136,7 +142,7 @@ onMounted(async () => {
       </div>
       <button class="btn btn-primary flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold" @click="openCreate">
         <IconPlus :size="14" />
-        Создать
+        {{ t('collections.create') }}
       </button>
     </div>
 
@@ -278,7 +284,7 @@ onMounted(async () => {
               </div>
               <div class="min-w-0">
                 <p class="line-clamp-2 text-[12px] font-medium text-[--t2] transition-colors group-hover:text-[--t1]">
-                  {{ bookById(bookId)?.title ?? 'Неизвестная книга' }}
+                  {{ bookById(bookId)?.title ?? t('book.unknownBook') }}
                 </p>
                 <p v-if="bookById(bookId)" class="mt-0.5 line-clamp-1 text-[11px] text-[--t3]">
                   {{ bookById(bookId)!.author }}
@@ -339,7 +345,7 @@ onMounted(async () => {
 
               <div class="mb-2">
                 <label class="mb-2 block text-[12px] font-medium text-[--t2]">
-                  Книги
+                  {{ t('collections.books') }}
                   <span v-if="formBooks.length" class="text-[--accent]">({{ formBooks.length }})</span>
                 </label>
 
@@ -366,8 +372,8 @@ onMounted(async () => {
                   >
                     {{
                       (() => {
-                        const t = bookById(bookId)?.title ?? 'Книга #' + bookId
-                        return t.length > 25 ? t.slice(0, 25) + '...' : t
+                        const title = bookById(bookId)?.title ?? t('book.bookN', { n: bookId })
+                        return title.length > 25 ? title.slice(0, 25) + '...' : title
                       })()
                     }}
                     <button
@@ -388,18 +394,18 @@ onMounted(async () => {
                     v-for="book in filteredBooks"
                     :key="book.id"
                     class="flex w-full cursor-pointer items-center gap-2.5 rounded-lg border-0 bg-transparent px-2.5 py-2 text-left transition-colors hover:bg-white/[0.04]"
-                    :class="formBooks.includes(Number(book.id)) ? 'text-[--accent]' : 'text-[--t2]'"
-                    @click="toggleBook(Number(book.id))"
+                    :class="formBooks.includes(safeBookId(book.id)) ? 'text-[--accent]' : 'text-[--t2]'"
+                    @click="toggleBook(safeBookId(book.id))"
                   >
                     <span
                       class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded border"
                       :class="
-                        formBooks.includes(Number(book.id))
+                        formBooks.includes(safeBookId(book.id))
                           ? 'border-[--accent] bg-[--accent]'
                           : 'border-[--border] bg-transparent'
                       "
                     >
-                      <IconCheck v-if="formBooks.includes(Number(book.id))" :size="10" class="text-black" />
+                      <IconCheck v-if="formBooks.includes(safeBookId(book.id))" :size="10" class="text-black" />
                     </span>
                     <div class="h-7 w-7 flex-shrink-0 overflow-hidden rounded">
                       <img
@@ -422,7 +428,7 @@ onMounted(async () => {
                       book.author
                     }}</span>
                   </button>
-                  <p v-if="!filteredBooks.length" class="py-4 text-center text-[12px] text-[--t3]">Ничего не найдено</p>
+                  <p v-if="!filteredBooks.length" class="py-4 text-center text-[12px] text-[--t3]">{{ t('collections.notFoundBooks') }}</p>
                 </div>
               </div>
             </div>

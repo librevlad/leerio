@@ -10,7 +10,6 @@ import PullIndicator from '../components/shared/PullIndicator.vue'
 import { usePullToRefresh } from '../composables/usePullToRefresh'
 import { IconShuffle } from '../components/shared/icons'
 import type { BookStatusValue } from '../types'
-import { plural } from '../utils/plural'
 
 const route = useRoute()
 const { t } = useI18n()
@@ -107,11 +106,12 @@ const statusCounts = computed(() => {
 
 // Status pills with live counts
 const statusPills = computed(() => [
-  { value: '' as BookStatusValue | '', label: 'Все' },
-  { value: 'reading' as BookStatusValue | '', label: 'Слушаю', count: statusCounts.value.reading },
-  { value: 'want_to_read' as BookStatusValue | '', label: 'Хочу' },
-  { value: 'done' as BookStatusValue | '', label: 'Готово', count: statusCounts.value.done },
-  { value: 'paused' as BookStatusValue | '', label: 'На паузе' },
+  { value: '' as BookStatusValue | '', label: t('library.filterAll') },
+  { value: 'reading' as BookStatusValue | '', label: t('library.filterListening'), count: statusCounts.value.reading },
+  { value: 'want_to_read' as BookStatusValue | '', label: t('library.filterWant') },
+  { value: 'done' as BookStatusValue | '', label: t('library.filterDone'), count: statusCounts.value.done },
+  { value: 'paused' as BookStatusValue | '', label: t('library.filterPaused') },
+  { value: 'rejected' as BookStatusValue | '', label: t('library.filterRejected') },
 ])
 
 function randomBook() {
@@ -135,9 +135,9 @@ function showMore() {
 }
 
 const BOOK_LANGS = [
-  { code: 'ru', label: 'Рус', flag: '🇷🇺' },
-  { code: 'uk', label: 'Укр', flag: '🇺🇦' },
-  { code: 'en', label: 'Eng', flag: '🇬🇧' },
+  { code: 'ru', key: 'common.langRu', flag: '🇷🇺', ariaLabel: 'Russian' },
+  { code: 'uk', key: 'common.langUk', flag: '🇺🇦', ariaLabel: 'Ukrainian' },
+  { code: 'en', key: 'common.langEn', flag: '🇬🇧', ariaLabel: 'English' },
 ]
 
 const langCounts = computed(() => {
@@ -161,7 +161,7 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
         <h1 class="page-title">{{ t('library.title') }}</h1>
         <p class="mt-1 text-[13px] text-[--t3]">
           <span class="font-bold text-[--accent]">{{ filtered.length }}</span>
-          {{ plural(filtered.length, 'книга', 'книги', 'книг') }}
+          {{ t('plural.book', filtered.length) }}
         </p>
       </div>
       <div class="flex items-center gap-2">
@@ -187,7 +187,7 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
         "
         @click="category = ''"
       >
-        Все
+        {{ t('library.filterAll') }}
       </button>
       <button
         v-for="cat in categories"
@@ -221,6 +221,7 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
       <button
         v-for="lang in BOOK_LANGS"
         :key="lang.code"
+        :aria-label="lang.ariaLabel"
         class="flex-shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
         :class="
           langFilter === lang.code
@@ -229,7 +230,7 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
         "
         @click="langFilter = lang.code"
       >
-        {{ lang.flag }} {{ lang.label }}
+        {{ lang.flag }} {{ t(lang.key) }}
         <span v-if="langCounts[lang.code]" class="ml-0.5 text-[10px] opacity-50">{{ langCounts[lang.code] }}</span>
       </button>
     </div>
@@ -277,8 +278,8 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
     <!-- Active filter summary -->
     <div v-if="hasActiveFilters && !loading" class="mb-4 flex items-center gap-2 text-[12px] text-[--t3]">
       <span>
-        Найдено <span class="font-bold text-[--t1]">{{ filtered.length }}</span>
-        {{ plural(filtered.length, 'книга', 'книги', 'книг') }}
+        {{ t('library.found') }} <span class="font-bold text-[--t1]">{{ filtered.length }}</span>
+        {{ t('plural.book', filtered.length) }}
       </span>
       <span v-if="category" class="rounded-full bg-white/[0.06] px-2 py-0.5">{{ category }}</span>
       <span v-if="statusFilter" class="rounded-full bg-white/[0.06] px-2 py-0.5">
@@ -310,10 +311,10 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
               :style="{ width: `${(visibleCount / filtered.length) * 100}%` }"
             />
           </div>
-          <span>{{ visibleCount }} из {{ filtered.length }}</span>
+          <span>{{ visibleCount }} {{ t('library.of') }} {{ filtered.length }}</span>
         </div>
         <button class="btn btn-ghost px-8 py-2.5 text-[13px] font-semibold" @click="showMore">
-          Показать ещё {{ Math.min(PAGE_SIZE, filtered.length - visibleCount) }}
+          {{ t('library.showMore') }} {{ Math.min(PAGE_SIZE, filtered.length - visibleCount) }}
         </button>
       </div>
     </div>

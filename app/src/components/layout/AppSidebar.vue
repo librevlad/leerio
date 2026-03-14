@@ -13,6 +13,8 @@ import {
   IconX,
   IconFolder,
   IconUpload,
+  IconChart,
+  IconQueue,
 } from '../shared/icons'
 
 defineProps<{ collapsed: boolean }>()
@@ -29,7 +31,9 @@ const mainLinks = computed(() => [
   { path: '/', label: t('nav.home'), icon: IconHome },
   { path: '/library', label: t('nav.catalog'), icon: IconLibrary },
   { path: '/my-library', label: t('nav.library'), icon: IconFolder },
+  { path: '/collections', label: t('nav.collections'), icon: IconQueue },
   { path: '/history', label: t('nav.history'), icon: IconHistory },
+  { path: '/analytics', label: t('nav.analytics'), icon: IconChart },
   { path: '/upload', label: t('nav.upload'), icon: IconUpload },
 ])
 

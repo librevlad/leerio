@@ -17,6 +17,7 @@ const adding = ref(false)
 
 const quotes = computed(() => allQuotes.value.filter((q) => q.book === props.bookTitle))
 
+// TODO: Add server-side filtering (GET /api/quotes?book=...) to avoid fetching all quotes
 onMounted(async () => {
   try {
     allQuotes.value = await api.getQuotes()
@@ -35,9 +36,9 @@ async function addQuote() {
     await api.addQuote(text, props.bookTitle, props.bookAuthor)
     allQuotes.value = await api.getQuotes()
     newText.value = ''
-    toast.success('Цитата добавлена')
+    toast.success(t('book.quoteAdded'))
   } catch {
-    toast.error('Не удалось добавить цитату')
+    toast.error(t('book.quoteAddError'))
   } finally {
     adding.value = false
   }
@@ -48,7 +49,7 @@ async function removeQuote(quoteId: number) {
     await api.deleteQuote(quoteId)
     allQuotes.value = await api.getQuotes()
   } catch {
-    toast.error('Не удалось удалить цитату')
+    toast.error(t('book.quoteDeleteError'))
   }
 }
 </script>

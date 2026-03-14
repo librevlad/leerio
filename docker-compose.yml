@@ -16,7 +16,11 @@ services:
       - ./data:/data
       - ./books:/books:ro
     depends_on:
-      - openedai-speech
+      openedai-speech:
+        condition: service_healthy
+    networks:
+      - backend
+      - frontend
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8000/api/config/constants"]
@@ -32,7 +36,15 @@ services:
       HF_HOME: voices
     volumes:
       - tts_voices:/app/voices
+    networks:
+      - backend
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8000/v1/models"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
 
   app:
     build:
@@ -42,9 +54,11 @@ services:
     depends_on:
       server:
         condition: service_healthy
+    networks:
+      - frontend
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-sf", "http://localhost:80/"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:80/"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -64,7 +78,13 @@ services:
     depends_on:
       app:
         condition: service_healthy
+    networks:
+      - frontend
     restart: unless-stopped
+
+networks:
+  backend:
+  frontend:
 
 volumes:
   caddy_data:

@@ -108,7 +108,7 @@ onMounted(async () => {
       const idx = ttsJobs.value.findIndex((x: TTSJob) => x.id === j.id)
       if (idx >= 0) ttsJobs.value[idx] = j
       if (j.status === 'done') {
-        toast.success(`"${j.title}" готова!`)
+        toast.success(t('myLibrary.ttsComplete', { title: j.title }))
         loadUserBooks()
       }
     })
@@ -125,17 +125,17 @@ async function handleDelete(item: UnifiedItem) {
     } else if (item.source === 'downloaded') {
       await downloads.deleteBook(item.id)
     }
-    toast.success('Удалено')
+    toast.success(t('myLibrary.deleted'))
   } catch {
-    toast.error('Ошибка удаления')
+    toast.error(t('myLibrary.deleteError'))
   }
 }
 
-const filters: { key: 'all' | 'downloaded' | 'local' | 'uploaded'; label: string }[] = [
-  { key: 'all', label: 'Все' },
-  { key: 'downloaded', label: 'Скачанные' },
-  { key: 'local', label: 'Локальные' },
-  { key: 'uploaded', label: 'Загруженные' },
+const filters: { key: 'all' | 'downloaded' | 'local' | 'uploaded'; labelKey: string; titleKey?: string }[] = [
+  { key: 'all', labelKey: 'myLibrary.filterAll' },
+  { key: 'downloaded', labelKey: 'myLibrary.filterDownloaded', titleKey: 'myLibrary.filterDownloadedHint' },
+  { key: 'local', labelKey: 'myLibrary.filterLocal', titleKey: 'myLibrary.filterLocalHint' },
+  { key: 'uploaded', labelKey: 'myLibrary.filterUploaded', titleKey: 'myLibrary.filterUploadedHint' },
 ]
 
 const sourceBadgeMap: Record<UnifiedItem['source'], 'library' | 'librivox' | 'user' | 'local'> = {
@@ -199,9 +199,10 @@ const coverPatterns: Record<string, string> = {
             ? 'border-white/10 bg-white/[0.08] text-[--t1]'
             : 'border-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
         "
+        :title="f.titleKey ? t(f.titleKey) : undefined"
         @click="activeFilter = f.key"
       >
-        {{ f.label }}
+        {{ t(f.labelKey) }}
       </button>
     </div>
 
@@ -217,13 +218,18 @@ const coverPatterns: Record<string, string> = {
     <div v-else-if="items.length === 0" class="flex flex-col items-center justify-center py-16 text-center">
       <IconFolder :size="48" class="mb-4 text-[--t3]" />
       <p class="mb-2 text-[14px] font-medium text-[--t2]">
-        {{ activeFilter === 'all' ? t('myLibrary.emptyLibrary') : t('myLibrary.emptyCategory') }}
+        {{ activeFilter === 'all' ? t('myLibrary.emptyTitle') : t('myLibrary.emptyCategory') }}
       </p>
-      <p class="mb-4 text-[13px] text-[--t3]">{{ t('myLibrary.emptyDesc') }}</p>
-      <router-link to="/upload" class="btn btn-primary flex items-center gap-2 text-[13px]">
-        <IconPlus :size="16" />
-        Добавить
-      </router-link>
+      <p class="mb-5 text-[13px] text-[--t3]">{{ t('myLibrary.emptyDesc') }}</p>
+      <div class="flex gap-3">
+        <router-link to="/library" class="btn btn-secondary flex items-center gap-2 text-[13px]">
+          {{ t('myLibrary.goToCatalog') }}
+        </router-link>
+        <router-link to="/upload" class="btn btn-primary flex items-center gap-2 text-[13px]">
+          <IconPlus :size="16" />
+          {{ t('upload.uploadBtn') }}
+        </router-link>
+      </div>
     </div>
 
     <!-- Grid -->

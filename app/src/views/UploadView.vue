@@ -22,13 +22,13 @@ const { isOnline } = useNetwork()
 const activeTab = ref<'upload' | 'tts' | 'local'>('upload')
 
 // ── Upload state ──
+const touched = ref(false)
 const uploadTitle = ref('')
 const uploadAuthor = ref('')
 const uploadReader = ref('')
 const uploadFiles = ref<File[]>([])
 const uploadCover = ref<File | null>(null)
 const uploading = ref(false)
-const uploadProgress = ref(0)
 
 function onFilesChange(e: Event) {
   const input = e.target as HTMLInputElement
@@ -60,7 +60,6 @@ async function handleUpload() {
   }
 
   uploading.value = true
-  uploadProgress.value = 0
 
   try {
     const formData = new FormData()
@@ -298,7 +297,12 @@ const tabDefs = [
             type="text"
             :placeholder="t('upload.placeholderTitle')"
             class="input-field w-full px-3.5 py-2.5"
+            :class="{ 'border-red-400/50': touched && !uploadTitle.trim() }"
+            @blur="touched = true"
           />
+          <p v-if="touched && !uploadTitle.trim()" class="mt-1 text-[11px] text-red-400">
+            {{ t('upload.titleRequired') }}
+          </p>
         </div>
 
         <!-- Author -->
@@ -339,9 +343,10 @@ const tabDefs = [
             class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-[--accent-soft] px-4 py-2 text-[12px] font-medium text-[--accent] transition-all hover:bg-[--accent]/20"
           >
             <IconUpload :size="14" />
-            Выбрать файлы
+            {{ t('upload.selectFiles') }}
             <input type="file" accept=".mp3" multiple class="hidden" @change="onFilesChange" />
           </label>
+          <p class="mt-2 text-[11px] text-[--t3]">{{ t('upload.formatHint') }}</p>
         </div>
 
         <!-- File list -->
@@ -357,7 +362,7 @@ const tabDefs = [
             <div class="flex min-w-0 items-center gap-2.5">
               <IconMusic :size="14" class="flex-shrink-0 text-[--t3]" />
               <span class="truncate text-[12px] text-[--t2]">{{ file.name }}</span>
-              <span class="flex-shrink-0 text-[11px] text-[--t3]">{{ (file.size / 1024 / 1024).toFixed(1) }} МБ</span>
+              <span class="flex-shrink-0 text-[11px] text-[--t3]">{{ (file.size / 1024 / 1024).toFixed(1) }} {{ t('upload.mb') }}</span>
             </div>
             <button
               class="flex-shrink-0 rounded-full p-1 text-[--t3] transition-all hover:bg-red-500/15 hover:text-red-400"
@@ -382,7 +387,7 @@ const tabDefs = [
         </label>
         <div v-if="uploadCover" class="mt-2 flex items-center gap-1.5 text-[11px] text-emerald-400">
           <IconCheck :size="12" />
-          Обложка выбрана
+          {{ t('upload.coverSelected') }}
         </div>
       </div>
 
@@ -393,7 +398,7 @@ const tabDefs = [
         @click="handleUpload"
       >
         <IconUpload v-if="!uploading" :size="16" />
-        <span v-if="uploading">{{ t('upload.uploading', { progress: uploadProgress }) }}</span>
+        <span v-if="uploading">{{ t('upload.uploadingIndeterminate') }}</span>
         <span v-else>{{ t('upload.uploadBtn') }}</span>
       </button>
     </div>
@@ -431,7 +436,7 @@ const tabDefs = [
             :class="ttsFile ? 'text-[--t1]' : 'text-[--t3]'"
           >
             <IconUpload :size="14" />
-            {{ ttsFile ? ttsFile.name : 'Выбрать файл' }}
+            {{ ttsFile ? ttsFile.name : t('upload.selectFile') }}
             <input type="file" accept=".pdf,.epub,.txt,.fb2" class="hidden" @change="onTTSFileChange" />
           </label>
         </div>
@@ -509,6 +514,7 @@ const tabDefs = [
       <!-- Conversion progress -->
       <div
         v-if="conversionStarted"
+        :aria-busy="jobStatus === 'processing'"
         class="card overflow-hidden"
         :class="
           jobStatus === 'done'
@@ -560,7 +566,7 @@ const tabDefs = [
             to="/my-library"
             class="mt-3 inline-flex items-center gap-1.5 text-[12px] font-semibold text-emerald-400 no-underline hover:underline"
           >
-            Перейти к моим книгам
+            {{ t('upload.goToMyBooks') }}
           </router-link>
         </div>
       </div>
@@ -573,7 +579,7 @@ const tabDefs = [
           <IconSmartphone :size="16" class="text-[--t2]" />
         </div>
         <p class="text-[12px] leading-relaxed text-[--t2]">
-          Книга будет доступна только на этом устройстве и не синхронизируется с облаком
+          {{ t('upload.localOnlyNote') }}
         </p>
       </div>
 
@@ -616,7 +622,7 @@ const tabDefs = [
             class="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-[--accent-soft] px-4 py-2 text-[12px] font-medium text-[--accent] transition-all hover:bg-[--accent]/20"
           >
             <IconUpload :size="14" />
-            Выбрать файлы
+            {{ t('upload.selectFiles') }}
             <input type="file" accept=".mp3,audio/*" multiple class="hidden" @change="onLocalFilesChange" />
           </label>
         </div>
@@ -634,7 +640,7 @@ const tabDefs = [
             <div class="flex min-w-0 items-center gap-2.5">
               <IconMusic :size="14" class="flex-shrink-0 text-[--t3]" />
               <span class="truncate text-[12px] text-[--t2]">{{ file.name }}</span>
-              <span class="flex-shrink-0 text-[11px] text-[--t3]">{{ (file.size / 1024 / 1024).toFixed(1) }} МБ</span>
+              <span class="flex-shrink-0 text-[11px] text-[--t3]">{{ (file.size / 1024 / 1024).toFixed(1) }} {{ t('upload.mb') }}</span>
             </div>
             <button
               class="flex-shrink-0 rounded-full p-1 text-[--t3] transition-all hover:bg-red-500/15 hover:text-red-400"
@@ -659,7 +665,7 @@ const tabDefs = [
         </label>
         <div v-if="localCover" class="mt-2 flex items-center gap-1.5 text-[11px] text-emerald-400">
           <IconCheck :size="12" />
-          Обложка выбрана
+          {{ t('upload.coverSelected') }}
         </div>
       </div>
 
@@ -680,7 +686,7 @@ const tabDefs = [
       v-if="!isOnline && (activeTab === 'upload' || activeTab === 'tts')"
       class="mt-5 max-w-xl rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-[13px] text-[--t2]"
     >
-      Загрузка и TTS доступны только онлайн
+      {{ t('upload.offlineNote') }}
     </div>
   </div>
 </template>

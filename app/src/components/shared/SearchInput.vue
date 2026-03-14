@@ -9,7 +9,7 @@ const props = withDefaults(
     placeholder?: string
   }>(),
   {
-    placeholder: 'Поиск...',
+    placeholder: '',
   },
 )
 

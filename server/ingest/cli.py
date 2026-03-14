@@ -147,26 +147,23 @@ def cmd_report(args):
     db.init_db()
 
     conn = db._get_conn()
-    try:
-        days = args.days or 7
-        stats = conn.execute(
-            """
-            SELECT status, COUNT(*) as cnt
-            FROM ingestion_jobs
-            WHERE created_at >= datetime('now', ?)
-            GROUP BY status
-        """,
-            (f"-{days} days",),
-        ).fetchall()
-        print(f"Ingestion report (last {days} days):")
-        print("-" * 30)
-        total = 0
-        for row in stats:
-            print(f"  {row['status']:<12} {row['cnt']}")
-            total += row["cnt"]
-        print(f"  {'total':<12} {total}")
-    finally:
-        conn.close()
+    days = args.days or 7
+    stats = conn.execute(
+        """
+        SELECT status, COUNT(*) as cnt
+        FROM ingestion_jobs
+        WHERE created_at >= datetime('now', ?)
+        GROUP BY status
+    """,
+        (f"-{days} days",),
+    ).fetchall()
+    print(f"Ingestion report (last {days} days):")
+    print("-" * 30)
+    total = 0
+    for row in stats:
+        print(f"  {row['status']:<12} {row['cnt']}")
+        total += row["cnt"]
+    print(f"  {'total':<12} {total}")
 
 
 def main():

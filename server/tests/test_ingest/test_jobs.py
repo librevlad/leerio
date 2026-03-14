@@ -14,7 +14,6 @@ def test_books_table_has_language_column(tmp_data_dir):
     assert "source" in columns
     assert "external_id" in columns
     assert "fingerprint" in columns
-    conn.close()
 
 
 def test_ingestion_jobs_table_exists(tmp_data_dir):
@@ -22,7 +21,6 @@ def test_ingestion_jobs_table_exists(tmp_data_dir):
     conn = db._get_conn()
     row = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='ingestion_jobs'").fetchone()
     assert row is not None
-    conn.close()
 
 
 def test_ingestion_jobs_columns(tmp_data_dir):
@@ -38,7 +36,6 @@ def test_ingestion_jobs_columns(tmp_data_dir):
     assert "timeout_seconds" in columns
     assert "started_at" in columns
     assert "heartbeat_at" in columns
-    conn.close()
 
 
 def test_create_ingestion_job(tmp_data_dir):
@@ -91,7 +88,6 @@ def test_recover_stalled_jobs(tmp_data_dir):
         (job_id,),
     )
     conn.commit()
-    conn.close()
     recovered = db.recover_stalled_jobs()
     assert recovered == 1
     job = db.get_ingestion_job(job_id)

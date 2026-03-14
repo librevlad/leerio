@@ -13,7 +13,7 @@ function init() {
 
   window.addEventListener('online', () => {
     isOnline.value = true
-    toast.success('Подключено')
+    import('../i18n').then((m) => toast.success(m.default.global.t('common.online'))).catch(() => toast.success('Online'))
     reconnectCallbacks.forEach((cb) => cb())
   })
 

@@ -106,7 +106,6 @@ class IngestPipeline:
         fingerprint = make_fingerprint(self.title, self.author, duration_hours)
         conn = db._get_conn()
         existing = conn.execute("SELECT id FROM books WHERE fingerprint = ?", (fingerprint,)).fetchone()
-        conn.close()
         if existing:
             return {
                 "status": "skipped",

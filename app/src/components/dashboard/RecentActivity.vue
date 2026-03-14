@@ -57,11 +57,11 @@ const fallbackColor = { bg: 'rgba(148, 163, 184, 0.1)', fg: '#94a3b8' }
 function timeAgo(ts: string): string {
   const diff = Date.now() - new Date(ts).getTime()
   const mins = Math.floor(diff / 60000)
-  if (mins < 60) return `${mins} мин`
+  if (mins < 60) return t('dashboard.timeAgoMin', { n: mins })
   const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return `${hrs} ч`
+  if (hrs < 24) return t('dashboard.timeAgoH', { n: hrs })
   const days = Math.floor(hrs / 24)
-  return `${days} д`
+  return t('dashboard.timeAgoD', { n: days })
 }
 </script>
 
@@ -73,7 +73,7 @@ function timeAgo(ts: string): string {
         to="/history"
         class="inline-flex min-h-[44px] items-center text-[12px] font-medium text-[--accent] no-underline hover:underline"
       >
-        Все действия
+        {{ t('dashboard.allActions') }}
       </router-link>
     </div>
     <div class="space-y-2">

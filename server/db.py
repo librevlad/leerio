@@ -12,6 +12,7 @@ import os
 import re
 import secrets
 import sqlite3
+import threading
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -27,8 +28,22 @@ SEED_EMAIL = "librevlad@gmail.com"
 SEED_ROLE = "admin"
 
 
+_local = threading.local()
+
+
 def _get_conn() -> sqlite3.Connection:
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    conn = getattr(_local, "conn", None)
+    if conn is None:
+        conn = sqlite3.connect(str(DB_PATH))
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA foreign_keys=ON")
+        _local.conn = conn
+    return conn
+
+
+def _fresh_conn() -> sqlite3.Connection:
+    """Create a new connection (for init_db and one-off setup tasks)."""
     conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")
@@ -43,7 +58,10 @@ def _get_conn() -> sqlite3.Connection:
 
 def init_db():
     """Create all tables and ensure seed data exists."""
-    conn = _get_conn()
+    # Clear any thread-local connection (DB_PATH may have changed)
+    _local.conn = None
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    conn = _fresh_conn()
     try:
         # --- Auth tables ---
         conn.execute(
@@ -194,6 +212,9 @@ def init_db():
                 rating INTEGER DEFAULT 0
             )
             """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_user_history_user_ts ON user_history(user_id, ts)"
         )
         conn.execute(
             """
@@ -415,90 +436,69 @@ def is_email_allowed(email: str) -> bool:
     - Email is in allowed_emails table
     """
     conn = _get_conn()
-    try:
-        # Existing users always allowed
-        row = conn.execute("SELECT 1 FROM users WHERE email = ?", (email,)).fetchone()
-        if row:
-            return True
-        # If no restrictions configured, allow all
-        count = conn.execute("SELECT COUNT(*) FROM allowed_emails").fetchone()[0]
-        if count == 0:
-            return True
-        # Check allowlist
-        row = conn.execute("SELECT 1 FROM allowed_emails WHERE email = ?", (email,)).fetchone()
-        return row is not None
-    finally:
-        conn.close()
+    # Existing users always allowed
+    row = conn.execute("SELECT 1 FROM users WHERE email = ?", (email,)).fetchone()
+    if row:
+        return True
+    # If no restrictions configured, allow all
+    count = conn.execute("SELECT COUNT(*) FROM allowed_emails").fetchone()[0]
+    if count == 0:
+        return True
+    # Check allowlist
+    row = conn.execute("SELECT 1 FROM allowed_emails WHERE email = ?", (email,)).fetchone()
+    return row is not None
 
 
 def add_allowed_email(email: str, added_by: str = "admin") -> bool:
     conn = _get_conn()
-    try:
-        conn.execute(
-            "INSERT OR IGNORE INTO allowed_emails (email, added_by) VALUES (?, ?)",
-            (email, added_by),
-        )
-        conn.commit()
-        return True
-    finally:
-        conn.close()
+    conn.execute(
+        "INSERT OR IGNORE INTO allowed_emails (email, added_by) VALUES (?, ?)",
+        (email, added_by),
+    )
+    conn.commit()
+    return True
 
 
 def remove_allowed_email(email: str) -> bool:
     conn = _get_conn()
-    try:
-        cur = conn.execute("DELETE FROM allowed_emails WHERE email = ?", (email,))
-        conn.commit()
-        return cur.rowcount > 0
-    finally:
-        conn.close()
+    cur = conn.execute("DELETE FROM allowed_emails WHERE email = ?", (email,))
+    conn.commit()
+    return cur.rowcount > 0
 
 
 def list_allowed_emails() -> list[dict]:
     conn = _get_conn()
-    try:
-        rows = conn.execute("SELECT email, added_by, added_at FROM allowed_emails ORDER BY added_at").fetchall()
-        return [dict(r) for r in rows]
-    finally:
-        conn.close()
+    rows = conn.execute("SELECT email, added_by, added_at FROM allowed_emails ORDER BY added_at").fetchall()
+    return [dict(r) for r in rows]
 
 
 def verify_user_password(email: str, password: str) -> dict | None:
     """Verify email/password and return user dict, or None if invalid."""
     conn = _get_conn()
-    try:
-        row = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
-        if not row:
-            return None
-        user = dict(row)
-        if not user.get("password_hash"):
-            return None
-        if not _verify_password(password, user["password_hash"]):
-            return None
-        # Update last_login
-        conn.execute("UPDATE users SET last_login = datetime('now') WHERE email = ?", (email,))
-        conn.commit()
-        return user
-    finally:
-        conn.close()
+    row = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+    if not row:
+        return None
+    user = dict(row)
+    if not user.get("password_hash"):
+        return None
+    if not _verify_password(password, user["password_hash"]):
+        return None
+    # Update last_login
+    conn.execute("UPDATE users SET last_login = datetime('now') WHERE email = ?", (email,))
+    conn.commit()
+    return user
 
 
 def get_user_by_email(email: str) -> dict | None:
     conn = _get_conn()
-    try:
-        row = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
-        return dict(row) if row else None
-    finally:
-        conn.close()
+    row = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+    return dict(row) if row else None
 
 
 def get_user_by_id(user_id: str) -> dict | None:
     conn = _get_conn()
-    try:
-        row = conn.execute("SELECT * FROM users WHERE user_id = ?", (user_id,)).fetchone()
-        return dict(row) if row else None
-    finally:
-        conn.close()
+    row = conn.execute("SELECT * FROM users WHERE user_id = ?", (user_id,)).fetchone()
+    return dict(row) if row else None
 
 
 def create_or_update_user(email: str, name: str, picture: str) -> dict:
@@ -506,26 +506,27 @@ def create_or_update_user(email: str, name: str, picture: str) -> dict:
     import hashlib
 
     conn = _get_conn()
-    try:
-        row = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
-        if row:
-            conn.execute(
-                "UPDATE users SET name = ?, picture = ?, last_login = datetime('now') WHERE email = ?",
-                (name, picture, email),
-            )
-            conn.commit()
-            return dict(conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone())
-        else:
-            user_id = hashlib.sha256(email.encode()).hexdigest()[:16]
-            conn.execute(
-                "INSERT INTO users (user_id, email, name, picture, role, last_login) VALUES (?, ?, ?, ?, 'user', datetime('now'))",
-                (user_id, email, name, picture),
-            )
-            conn.commit()
-            logger.info("New user created: %s", email)
-            return dict(conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone())
-    finally:
-        conn.close()
+    row = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+    if row:
+        conn.execute(
+            "UPDATE users SET name = ?, picture = ?, last_login = datetime('now') WHERE email = ?",
+            (name, picture, email),
+        )
+        conn.commit()
+        return dict(conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone())
+    else:
+        user_id = hashlib.sha256(email.encode()).hexdigest()[:16]
+        # Check for hash collision — different email producing same user_id
+        existing = conn.execute("SELECT email FROM users WHERE user_id = ?", (user_id,)).fetchone()
+        if existing and existing["email"] != email:
+            raise RuntimeError(f"User ID collision: {email!r} collides with {existing['email']!r} (id={user_id})")
+        conn.execute(
+            "INSERT INTO users (user_id, email, name, picture, role, last_login) VALUES (?, ?, ?, ?, 'user', datetime('now'))",
+            (user_id, email, name, picture),
+        )
+        conn.commit()
+        logger.info("New user created: %s", email)
+        return dict(conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone())
 
 
 # ===========================================================================
@@ -556,108 +557,105 @@ def _sync_books_from_s3(client):
     bucket = os.environ.get("S3_BUCKET", "leerio-books")
 
     conn = _get_conn()
-    try:
-        existing_slugs = {r[0] for r in conn.execute("SELECT slug FROM books").fetchall()}
-        existing_prefixes = {
-            r[0]
-            for r in conn.execute(
-                "SELECT s3_prefix FROM books WHERE s3_prefix IS NOT NULL AND s3_prefix != ''"
-            ).fetchall()
-        }
-        inserted = 0
+    existing_slugs = {r[0] for r in conn.execute("SELECT slug FROM books").fetchall()}
+    existing_prefixes = {
+        r[0]
+        for r in conn.execute(
+            "SELECT s3_prefix FROM books WHERE s3_prefix IS NOT NULL AND s3_prefix != ''"
+        ).fetchall()
+    }
+    inserted = 0
 
-        # List top-level prefixes (categories)
-        cat_resp = client.list_objects_v2(Bucket=bucket, Delimiter="/")
-        categories = [p["Prefix"].rstrip("/") for p in cat_resp.get("CommonPrefixes", [])]
+    # List top-level prefixes (categories)
+    cat_resp = client.list_objects_v2(Bucket=bucket, Delimiter="/")
+    categories = [p["Prefix"].rstrip("/") for p in cat_resp.get("CommonPrefixes", [])]
 
-        # Normalize category names from S3 prefixes
-        cat_norm = {
-            "books": "Художественная",
-            ".": "Другое",
-            "": "Другое",
-        }
+    # Normalize category names from S3 prefixes
+    cat_norm = {
+        "books": "Художественная",
+        ".": "Другое",
+        "": "Другое",
+    }
 
-        for cat in categories:
-            # List all objects in category, collect mp3s and covers per folder
-            paginator = client.get_paginator("list_objects_v2")
-            book_mp3s: dict[str, list[str]] = {}  # folder -> [mp3 keys]
-            book_covers: dict[str, str] = {}  # folder -> cover S3 key
-            _cover_names = {"cover.jpg", "cover.jpeg", "cover.png", "cover.webp"}
+    for cat in categories:
+        # List all objects in category, collect mp3s and covers per folder
+        paginator = client.get_paginator("list_objects_v2")
+        book_mp3s: dict[str, list[str]] = {}  # folder -> [mp3 keys]
+        book_covers: dict[str, str] = {}  # folder -> cover S3 key
+        _cover_names = {"cover.jpg", "cover.jpeg", "cover.png", "cover.webp"}
 
-            for page in paginator.paginate(Bucket=bucket, Prefix=f"{cat}/"):
-                for obj in page.get("Contents", []):
-                    key = obj["Key"]
-                    # key looks like "Бизнес/Author - Title [Reader]/file.mp3"
-                    parts = key.split("/", 2)
-                    if len(parts) < 3:
-                        continue
-                    folder = parts[1]
-                    filename = parts[2].lower()
-                    if filename.endswith(".mp3"):
-                        book_mp3s.setdefault(folder, []).append(key)
-                    elif filename in _cover_names:
-                        book_covers[folder] = key
-
-            display_cat = cat_norm.get(cat, cat)
-
-            for folder, mp3_keys in sorted(book_mp3s.items()):
-                author, title, reader = parse_folder_name(folder)
-                slug = make_slug(title, author)
-
-                # Detect language by title+author characters:
-                # є, ї, ґ → Ukrainian (unique letters);
-                # ё, ъ, ы or any Cyrillic → Russian;
-                # Only Latin → English
-                text = f"{title} {author}"
-                has_cyrillic = bool(re.search(r"[а-яА-ЯёЁіІєЄїЇґҐъЪыЫ]", text))
-                if re.search(r"[єЄїЇґҐ]", text):
-                    lang = "uk"
-                elif has_cyrillic:
-                    lang = "ru"
-                elif re.search(r"[a-zA-Z]", text):
-                    lang = "en"
-                else:
-                    lang = "ru"
-
-                s3_prefix = f"{cat}/{folder}"
-                has_cover = int(folder in book_covers)
-
-                if s3_prefix in existing_prefixes:
-                    # Update has_cover for existing books (don't overwrite manual language)
-                    conn.execute(
-                        "UPDATE books SET has_cover = ? WHERE s3_prefix = ?",
-                        (has_cover, s3_prefix),
-                    )
+        for page in paginator.paginate(Bucket=bucket, Prefix=f"{cat}/"):
+            for obj in page.get("Contents", []):
+                key = obj["Key"]
+                # key looks like "Бизнес/Author - Title [Reader]/file.mp3"
+                parts = key.split("/", 2)
+                if len(parts) < 3:
                     continue
+                folder = parts[1]
+                filename = parts[2].lower()
+                if filename.endswith(".mp3"):
+                    book_mp3s.setdefault(folder, []).append(key)
+                elif filename in _cover_names:
+                    book_covers[folder] = key
 
-                # For same title+author with different reader, append reader to slug
-                if slug in existing_slugs and reader:
-                    slug = f"{slug}-{make_slug(reader)}"
+        display_cat = cat_norm.get(cat, cat)
 
+        for folder, mp3_keys in sorted(book_mp3s.items()):
+            author, title, reader = parse_folder_name(folder)
+            slug = make_slug(title, author)
+
+            # Detect language by title+author characters:
+            # є, ї, ґ → Ukrainian (unique letters);
+            # ё, ъ, ы or any Cyrillic → Russian;
+            # Only Latin → English
+            text = f"{title} {author}"
+            has_cyrillic = bool(re.search(r"[а-яА-ЯёЁіІєЄїЇґҐъЪыЫ]", text))
+            if re.search(r"[єЄїЇґҐ]", text):
+                lang = "uk"
+            elif has_cyrillic:
+                lang = "ru"
+            elif re.search(r"[a-zA-Z]", text):
+                lang = "en"
+            else:
+                lang = "ru"
+
+            s3_prefix = f"{cat}/{folder}"
+            has_cover = int(folder in book_covers)
+
+            if s3_prefix in existing_prefixes:
+                # Update has_cover for existing books (don't overwrite manual language)
                 conn.execute(
-                    """INSERT INTO books (slug, title, author, reader, category, folder,
-                       s3_prefix, has_cover, mp3_count, language)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                    (slug, title, author, reader or "", display_cat, folder, s3_prefix, has_cover, len(mp3_keys), lang),
+                    "UPDATE books SET has_cover = ? WHERE s3_prefix = ?",
+                    (has_cover, s3_prefix),
                 )
-                existing_slugs.add(slug)
-                existing_prefixes.add(s3_prefix)
-                inserted += 1
+                continue
 
-                # Insert tracks
-                book_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
-                for idx, s3_key in enumerate(sorted(mp3_keys)):
-                    filename = s3_key.rsplit("/", 1)[-1]
-                    conn.execute(
-                        "INSERT INTO tracks (book_id, idx, filename, s3_key) VALUES (?, ?, ?, ?)",
-                        (book_id, idx, filename, s3_key),
-                    )
+            # For same title+author with different reader, append reader to slug
+            if slug in existing_slugs and reader:
+                slug = f"{slug}-{make_slug(reader)}"
 
-        conn.commit()
-        if inserted:
-            logger.info("Synced %d new books from S3", inserted)
-    finally:
-        conn.close()
+            conn.execute(
+                """INSERT INTO books (slug, title, author, reader, category, folder,
+                   s3_prefix, has_cover, mp3_count, language)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (slug, title, author, reader or "", display_cat, folder, s3_prefix, has_cover, len(mp3_keys), lang),
+            )
+            existing_slugs.add(slug)
+            existing_prefixes.add(s3_prefix)
+            inserted += 1
+
+            # Insert tracks
+            book_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+            for idx, s3_key in enumerate(sorted(mp3_keys)):
+                filename = s3_key.rsplit("/", 1)[-1]
+                conn.execute(
+                    "INSERT INTO tracks (book_id, idx, filename, s3_key) VALUES (?, ?, ?, ?)",
+                    (book_id, idx, filename, s3_key),
+                )
+
+    conn.commit()
+    if inserted:
+        logger.info("Synced %d new books from S3", inserted)
 
 
 def _sync_books_from_filesystem():
@@ -673,70 +671,67 @@ def _sync_books_from_filesystem():
     )
 
     conn = _get_conn()
-    try:
-        existing_slugs = {r[0] for r in conn.execute("SELECT slug FROM books").fetchall()}
-        inserted = 0
+    existing_slugs = {r[0] for r in conn.execute("SELECT slug FROM books").fetchall()}
+    inserted = 0
 
-        for cat in CATEGORIES:
-            cat_dir = BOOKS_DIR / cat
-            if not cat_dir.is_dir():
+    for cat in CATEGORIES:
+        cat_dir = BOOKS_DIR / cat
+        if not cat_dir.is_dir():
+            continue
+        for book_dir in sorted(cat_dir.iterdir()):
+            if not book_dir.is_dir():
                 continue
-            for book_dir in sorted(cat_dir.iterdir()):
-                if not book_dir.is_dir():
-                    continue
-                folder = book_dir.name
-                author, title, reader = parse_folder_name(folder)
-                slug = make_slug(title, author)
-                # Deduplicate: append reader to slug if same title+author already exists
-                if slug in existing_slugs and reader:
-                    slug = f"{slug}-{make_slug(reader)}"
+            folder = book_dir.name
+            author, title, reader = parse_folder_name(folder)
+            slug = make_slug(title, author)
+            # Deduplicate: append reader to slug if same title+author already exists
+            if slug in existing_slugs and reader:
+                slug = f"{slug}-{make_slug(reader)}"
 
-                if slug in existing_slugs:
-                    continue
+            if slug in existing_slugs:
+                continue
 
-                mp3_count = count_mp3(book_dir)
-                if mp3_count == 0:
-                    continue
+            mp3_count = count_mp3(book_dir)
+            if mp3_count == 0:
+                continue
 
-                has_cover = any(book_dir.glob("cover.*"))
-                duration_hours = estimate_duration_hours(book_dir) or 0.0
-                size_mb = folder_size_mb(book_dir)
-                s3_prefix = f"{cat}/{folder}"
+            has_cover = any(book_dir.glob("cover.*"))
+            duration_hours = estimate_duration_hours(book_dir) or 0.0
+            size_mb = folder_size_mb(book_dir)
+            s3_prefix = f"{cat}/{folder}"
 
+            conn.execute(
+                """INSERT INTO books (slug, title, author, reader, category, folder,
+                   s3_prefix, has_cover, mp3_count, duration_hours, size_mb)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    slug,
+                    title,
+                    author,
+                    reader or "",
+                    cat,
+                    folder,
+                    s3_prefix,
+                    int(has_cover),
+                    mp3_count,
+                    duration_hours,
+                    size_mb,
+                ),
+            )
+            existing_slugs.add(slug)
+            inserted += 1
+
+            book_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+            mp3s = sorted(book_dir.rglob("*.mp3"), key=lambda f: str(f))
+            for idx, mp3 in enumerate(mp3s):
                 conn.execute(
-                    """INSERT INTO books (slug, title, author, reader, category, folder,
-                       s3_prefix, has_cover, mp3_count, duration_hours, size_mb)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                    (
-                        slug,
-                        title,
-                        author,
-                        reader or "",
-                        cat,
-                        folder,
-                        s3_prefix,
-                        int(has_cover),
-                        mp3_count,
-                        duration_hours,
-                        size_mb,
-                    ),
+                    "INSERT INTO tracks (book_id, idx, filename, s3_key) VALUES (?, ?, ?, ?)",
+                    (book_id, idx, mp3.name, f"{s3_prefix}/{mp3.name}"),
                 )
-                existing_slugs.add(slug)
-                inserted += 1
 
-                book_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
-                mp3s = sorted(book_dir.rglob("*.mp3"), key=lambda f: str(f))
-                for idx, mp3 in enumerate(mp3s):
-                    conn.execute(
-                        "INSERT INTO tracks (book_id, idx, filename, s3_key) VALUES (?, ?, ?, ?)",
-                        (book_id, idx, mp3.name, f"{s3_prefix}/{mp3.name}"),
-                    )
-
-        conn.commit()
-        if inserted:
-            logger.info("Synced %d new books from filesystem", inserted)
-    finally:
-        conn.close()
+    conn.commit()
+    if inserted:
+        logger.info("Synced %d new books from filesystem", inserted)
 
 
 # ===========================================================================
@@ -747,16 +742,13 @@ def _sync_books_from_filesystem():
 def get_user_settings(user_id: str) -> dict:
     """Return user settings, creating defaults if missing."""
     conn = _get_conn()
-    try:
-        row = conn.execute("SELECT * FROM user_settings WHERE user_id = ?", (user_id,)).fetchone()
-        if row:
-            return dict(row)
-        # Create defaults
-        conn.execute("INSERT INTO user_settings (user_id) VALUES (?)", (user_id,))
-        conn.commit()
-        return {"user_id": user_id, "yearly_goal": 24, "playback_speed": 1.0}
-    finally:
-        conn.close()
+    row = conn.execute("SELECT * FROM user_settings WHERE user_id = ?", (user_id,)).fetchone()
+    if row:
+        return dict(row)
+    # Create defaults
+    conn.execute("INSERT INTO user_settings (user_id) VALUES (?)", (user_id,))
+    conn.commit()
+    return {"user_id": user_id, "yearly_goal": 24, "playback_speed": 1.0}
 
 
 def update_user_settings(user_id: str, **kwargs) -> dict:
@@ -766,16 +758,13 @@ def update_user_settings(user_id: str, **kwargs) -> dict:
     if not fields:
         return get_user_settings(user_id)
     conn = _get_conn()
-    try:
-        # Ensure row exists
-        conn.execute("INSERT OR IGNORE INTO user_settings (user_id) VALUES (?)", (user_id,))
-        sets = ", ".join(f"{k} = ?" for k in fields)
-        vals = list(fields.values()) + [user_id]
-        conn.execute(f"UPDATE user_settings SET {sets} WHERE user_id = ?", vals)
-        conn.commit()
-        return get_user_settings(user_id)
-    finally:
-        conn.close()
+    # Ensure row exists
+    conn.execute("INSERT OR IGNORE INTO user_settings (user_id) VALUES (?)", (user_id,))
+    sets = ", ".join(f"{k} = ?" for k in fields)
+    vals = list(fields.values()) + [user_id]
+    conn.execute(f"UPDATE user_settings SET {sets} WHERE user_id = ?", vals)
+    conn.commit()
+    return get_user_settings(user_id)
 
 
 # ===========================================================================
@@ -791,29 +780,20 @@ def _ghost_filter() -> str:
 def get_all_books() -> list[dict]:
     """Return all books (excluding ghost books)."""
     conn = _get_conn()
-    try:
-        rows = conn.execute(f"SELECT * FROM books WHERE {_ghost_filter()} ORDER BY title").fetchall()
-        return [dict(r) for r in rows]
-    finally:
-        conn.close()
+    rows = conn.execute(f"SELECT * FROM books WHERE {_ghost_filter()} ORDER BY title").fetchall()
+    return [dict(r) for r in rows]
 
 
 def get_book_by_id(book_id: int) -> dict | None:
     conn = _get_conn()
-    try:
-        row = conn.execute("SELECT * FROM books WHERE id = ?", (book_id,)).fetchone()
-        return dict(row) if row else None
-    finally:
-        conn.close()
+    row = conn.execute("SELECT * FROM books WHERE id = ?", (book_id,)).fetchone()
+    return dict(row) if row else None
 
 
 def get_book_by_slug(slug: str) -> dict | None:
     conn = _get_conn()
-    try:
-        row = conn.execute("SELECT * FROM books WHERE slug = ?", (slug,)).fetchone()
-        return dict(row) if row else None
-    finally:
-        conn.close()
+    row = conn.execute("SELECT * FROM books WHERE slug = ?", (slug,)).fetchone()
+    return dict(row) if row else None
 
 
 def search_books(
@@ -821,38 +801,33 @@ def search_books(
 ) -> list[dict]:
     """Search books with optional category filter, text search, and sort."""
     conn = _get_conn()
-    try:
-        clauses: list[str] = []
-        params: list[str] = []
-        # Exclude ghost books: numeric-only title with no author
-        clauses.append(_ghost_filter())
-        if category:
-            clauses.append("category = ?")
-            params.append(category)
-        if language:
-            clauses.append("language = ?")
-            params.append(language)
-        if search:
-            clauses.append("(title LIKE ? OR author LIKE ? OR reader LIKE ?)")
-            q = f"%{search}%"
-            params.extend([q, q, q])
-        where = (" WHERE " + " AND ".join(clauses)) if clauses else ""
-        allowed_sorts = {"title": "title", "author": "author", "created_at": "created_at"}
-        order = allowed_sorts.get(sort, "title")
-        rows = conn.execute(f"SELECT * FROM books{where} ORDER BY {order}", params).fetchall()
-        return [dict(r) for r in rows]
-    finally:
-        conn.close()
+    clauses: list[str] = []
+    params: list[str] = []
+    # Exclude ghost books: numeric-only title with no author
+    clauses.append(_ghost_filter())
+    if category:
+        clauses.append("category = ?")
+        params.append(category)
+    if language:
+        clauses.append("language = ?")
+        params.append(language)
+    if search:
+        escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        clauses.append("(title LIKE ? ESCAPE '\\' OR author LIKE ? ESCAPE '\\' OR reader LIKE ? ESCAPE '\\')")
+        q = f"%{escaped}%"
+        params.extend([q, q, q])
+    where = (" WHERE " + " AND ".join(clauses)) if clauses else ""
+    allowed_sorts = {"title": "title", "author": "author", "created_at": "created_at"}
+    order = allowed_sorts.get(sort, "title")
+    rows = conn.execute(f"SELECT * FROM books{where} ORDER BY {order}", params).fetchall()
+    return [dict(r) for r in rows]
 
 
 def get_book_tracks(book_id: int) -> list[dict]:
     """Return tracks for a book ordered by index."""
     conn = _get_conn()
-    try:
-        rows = conn.execute("SELECT * FROM tracks WHERE book_id = ? ORDER BY idx", (book_id,)).fetchall()
-        return [dict(r) for r in rows]
-    finally:
-        conn.close()
+    rows = conn.execute("SELECT * FROM tracks WHERE book_id = ? ORDER BY idx", (book_id,)).fetchall()
+    return [dict(r) for r in rows]
 
 
 # ===========================================================================
@@ -862,53 +837,41 @@ def get_book_tracks(book_id: int) -> list[dict]:
 
 def get_user_book_status(user_id: str, book_id: int) -> dict | None:
     conn = _get_conn()
-    try:
-        row = conn.execute(
-            "SELECT status, updated FROM user_book_status WHERE user_id = ? AND book_id = ?",
-            (user_id, book_id),
-        ).fetchone()
-        return dict(row) if row else None
-    finally:
-        conn.close()
+    row = conn.execute(
+        "SELECT status, updated FROM user_book_status WHERE user_id = ? AND book_id = ?",
+        (user_id, book_id),
+    ).fetchone()
+    return dict(row) if row else None
 
 
 def set_user_book_status(user_id: str, book_id: int, status: str):
     conn = _get_conn()
-    try:
-        conn.execute(
-            """INSERT INTO user_book_status (user_id, book_id, status, updated)
-               VALUES (?, ?, ?, datetime('now'))
-               ON CONFLICT(user_id, book_id) DO UPDATE SET status=excluded.status, updated=excluded.updated""",
-            (user_id, book_id, status),
-        )
-        conn.commit()
-    finally:
-        conn.close()
+    conn.execute(
+        """INSERT INTO user_book_status (user_id, book_id, status, updated)
+           VALUES (?, ?, ?, datetime('now'))
+           ON CONFLICT(user_id, book_id) DO UPDATE SET status=excluded.status, updated=excluded.updated""",
+        (user_id, book_id, status),
+    )
+    conn.commit()
 
 
 def remove_user_book_status(user_id: str, book_id: int):
     conn = _get_conn()
-    try:
-        conn.execute(
-            "DELETE FROM user_book_status WHERE user_id = ? AND book_id = ?",
-            (user_id, book_id),
-        )
-        conn.commit()
-    finally:
-        conn.close()
+    conn.execute(
+        "DELETE FROM user_book_status WHERE user_id = ? AND book_id = ?",
+        (user_id, book_id),
+    )
+    conn.commit()
 
 
 def get_all_user_book_statuses(user_id: str) -> dict:
     """Return {book_id: {status, updated}} for the user."""
     conn = _get_conn()
-    try:
-        rows = conn.execute(
-            "SELECT book_id, status, updated FROM user_book_status WHERE user_id = ?",
-            (user_id,),
-        ).fetchall()
-        return {r["book_id"]: {"status": r["status"], "updated": r["updated"]} for r in rows}
-    finally:
-        conn.close()
+    rows = conn.execute(
+        "SELECT book_id, status, updated FROM user_book_status WHERE user_id = ?",
+        (user_id,),
+    ).fetchall()
+    return {str(r["book_id"]): {"status": r["status"], "updated": r["updated"]} for r in rows}
 
 
 # ===========================================================================
@@ -919,41 +882,32 @@ def get_all_user_book_statuses(user_id: str) -> dict:
 def get_user_progress(user_id: str, book_id: int) -> int:
     """Return progress percent (0 if not set)."""
     conn = _get_conn()
-    try:
-        row = conn.execute(
-            "SELECT percent FROM user_progress WHERE user_id = ? AND book_id = ?",
-            (user_id, book_id),
-        ).fetchone()
-        return row["percent"] if row else 0
-    finally:
-        conn.close()
+    row = conn.execute(
+        "SELECT percent FROM user_progress WHERE user_id = ? AND book_id = ?",
+        (user_id, book_id),
+    ).fetchone()
+    return row["percent"] if row else 0
 
 
 def set_user_progress(user_id: str, book_id: int, percent: int):
     conn = _get_conn()
-    try:
-        conn.execute(
-            """INSERT INTO user_progress (user_id, book_id, percent, updated)
-               VALUES (?, ?, ?, datetime('now'))
-               ON CONFLICT(user_id, book_id) DO UPDATE SET percent=excluded.percent, updated=excluded.updated""",
-            (user_id, book_id, percent),
-        )
-        conn.commit()
-    finally:
-        conn.close()
+    conn.execute(
+        """INSERT INTO user_progress (user_id, book_id, percent, updated)
+           VALUES (?, ?, ?, datetime('now'))
+           ON CONFLICT(user_id, book_id) DO UPDATE SET percent=excluded.percent, updated=excluded.updated""",
+        (user_id, book_id, percent),
+    )
+    conn.commit()
 
 
 def get_all_user_progress(user_id: str) -> dict:
     """Return {book_id: {pct, updated}}."""
     conn = _get_conn()
-    try:
-        rows = conn.execute(
-            "SELECT book_id, percent, updated FROM user_progress WHERE user_id = ?",
-            (user_id,),
-        ).fetchall()
-        return {r["book_id"]: {"pct": r["percent"], "updated": r["updated"]} for r in rows}
-    finally:
-        conn.close()
+    rows = conn.execute(
+        "SELECT book_id, percent, updated FROM user_progress WHERE user_id = ?",
+        (user_id,),
+    ).fetchall()
+    return {str(r["book_id"]): {"pct": r["percent"], "updated": r["updated"]} for r in rows}
 
 
 # ===========================================================================
@@ -963,30 +917,24 @@ def get_all_user_progress(user_id: str) -> dict:
 
 def get_user_playback(user_id: str, book_id: int) -> dict | None:
     conn = _get_conn()
-    try:
-        row = conn.execute(
-            "SELECT track_index, position, filename, updated FROM user_playback WHERE user_id = ? AND book_id = ?",
-            (user_id, book_id),
-        ).fetchone()
-        return dict(row) if row else None
-    finally:
-        conn.close()
+    row = conn.execute(
+        "SELECT track_index, position, filename, updated FROM user_playback WHERE user_id = ? AND book_id = ?",
+        (user_id, book_id),
+    ).fetchone()
+    return dict(row) if row else None
 
 
 def set_user_playback(user_id: str, book_id: int, track_index: int, position: float, filename: str = ""):
     conn = _get_conn()
-    try:
-        conn.execute(
-            """INSERT INTO user_playback (user_id, book_id, track_index, position, filename, updated)
-               VALUES (?, ?, ?, ?, ?, datetime('now'))
-               ON CONFLICT(user_id, book_id) DO UPDATE
-               SET track_index=excluded.track_index, position=excluded.position,
-                   filename=excluded.filename, updated=excluded.updated""",
-            (user_id, book_id, track_index, position, filename),
-        )
-        conn.commit()
-    finally:
-        conn.close()
+    conn.execute(
+        """INSERT INTO user_playback (user_id, book_id, track_index, position, filename, updated)
+           VALUES (?, ?, ?, ?, ?, datetime('now'))
+           ON CONFLICT(user_id, book_id) DO UPDATE
+           SET track_index=excluded.track_index, position=excluded.position,
+               filename=excluded.filename, updated=excluded.updated""",
+        (user_id, book_id, track_index, position, filename),
+    )
+    conn.commit()
 
 
 # ===========================================================================
@@ -996,34 +944,28 @@ def set_user_playback(user_id: str, book_id: int, track_index: int, position: fl
 
 def get_user_note(user_id: str, book_id: int) -> str:
     conn = _get_conn()
-    try:
-        row = conn.execute(
-            "SELECT note FROM user_notes WHERE user_id = ? AND book_id = ?",
-            (user_id, book_id),
-        ).fetchone()
-        return row["note"] if row else ""
-    finally:
-        conn.close()
+    row = conn.execute(
+        "SELECT note FROM user_notes WHERE user_id = ? AND book_id = ?",
+        (user_id, book_id),
+    ).fetchone()
+    return row["note"] if row else ""
 
 
 def set_user_note(user_id: str, book_id: int, note: str):
     conn = _get_conn()
-    try:
-        if not note:
-            conn.execute(
-                "DELETE FROM user_notes WHERE user_id = ? AND book_id = ?",
-                (user_id, book_id),
-            )
-        else:
-            conn.execute(
-                """INSERT INTO user_notes (user_id, book_id, note)
-                   VALUES (?, ?, ?)
-                   ON CONFLICT(user_id, book_id) DO UPDATE SET note=excluded.note""",
-                (user_id, book_id, note),
-            )
-        conn.commit()
-    finally:
-        conn.close()
+    if not note:
+        conn.execute(
+            "DELETE FROM user_notes WHERE user_id = ? AND book_id = ?",
+            (user_id, book_id),
+        )
+    else:
+        conn.execute(
+            """INSERT INTO user_notes (user_id, book_id, note)
+               VALUES (?, ?, ?)
+               ON CONFLICT(user_id, book_id) DO UPDATE SET note=excluded.note""",
+            (user_id, book_id, note),
+        )
+    conn.commit()
 
 
 # ===========================================================================
@@ -1033,47 +975,38 @@ def set_user_note(user_id: str, book_id: int, note: str):
 
 def get_user_tags(user_id: str, book_id: int) -> list[str]:
     conn = _get_conn()
-    try:
-        rows = conn.execute(
-            "SELECT tag FROM user_tags WHERE user_id = ? AND book_id = ?",
-            (user_id, book_id),
-        ).fetchall()
-        return [r["tag"] for r in rows]
-    finally:
-        conn.close()
+    rows = conn.execute(
+        "SELECT tag FROM user_tags WHERE user_id = ? AND book_id = ?",
+        (user_id, book_id),
+    ).fetchall()
+    return [r["tag"] for r in rows]
 
 
 def set_user_tags(user_id: str, book_id: int, tags: list[str]):
     """Replace all tags for a user/book with the given list."""
     conn = _get_conn()
-    try:
-        conn.execute(
-            "DELETE FROM user_tags WHERE user_id = ? AND book_id = ?",
-            (user_id, book_id),
-        )
-        for tag in tags:
-            tag = tag.strip()
-            if tag:
-                conn.execute(
-                    "INSERT OR IGNORE INTO user_tags (user_id, book_id, tag) VALUES (?, ?, ?)",
-                    (user_id, book_id, tag),
-                )
-        conn.commit()
-    finally:
-        conn.close()
+    conn.execute(
+        "DELETE FROM user_tags WHERE user_id = ? AND book_id = ?",
+        (user_id, book_id),
+    )
+    for tag in tags:
+        tag = tag.strip()
+        if tag:
+            conn.execute(
+                "INSERT OR IGNORE INTO user_tags (user_id, book_id, tag) VALUES (?, ?, ?)",
+                (user_id, book_id, tag),
+            )
+    conn.commit()
 
 
 def get_all_user_tags(user_id: str) -> list[str]:
     """Return all unique tags for a user across all books."""
     conn = _get_conn()
-    try:
-        rows = conn.execute(
-            "SELECT DISTINCT tag FROM user_tags WHERE user_id = ? ORDER BY tag",
-            (user_id,),
-        ).fetchall()
-        return [r["tag"] for r in rows]
-    finally:
-        conn.close()
+    rows = conn.execute(
+        "SELECT DISTINCT tag FROM user_tags WHERE user_id = ? ORDER BY tag",
+        (user_id,),
+    ).fetchall()
+    return [r["tag"] for r in rows]
 
 
 # ===========================================================================
@@ -1085,36 +1018,31 @@ def get_user_history(
     user_id: str, action: str | None = None, search: str | None = None, limit: int = 100
 ) -> list[dict]:
     conn = _get_conn()
-    try:
-        clauses = ["user_id = ?"]
-        params: list = [user_id]
-        if action:
-            clauses.append("action = ?")
-            params.append(action)
-        if search:
-            clauses.append("(book_title LIKE ? OR detail LIKE ?)")
-            q = f"%{search}%"
-            params.extend([q, q])
-        where = " WHERE " + " AND ".join(clauses)
-        params.append(limit)
-        rows = conn.execute(f"SELECT * FROM user_history{where} ORDER BY ts DESC LIMIT ?", params).fetchall()
-        return [dict(r) for r in rows]
-    finally:
-        conn.close()
+    clauses = ["user_id = ?"]
+    params: list = [user_id]
+    if action:
+        clauses.append("action = ?")
+        params.append(action)
+    if search:
+        escaped = search.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        clauses.append("(book_title LIKE ? ESCAPE '\\' OR detail LIKE ? ESCAPE '\\')")
+        q = f"%{escaped}%"
+        params.extend([q, q])
+    where = " WHERE " + " AND ".join(clauses)
+    params.append(limit)
+    rows = conn.execute(f"SELECT * FROM user_history{where} ORDER BY ts DESC LIMIT ?", params).fetchall()
+    return [dict(r) for r in rows]
 
 
 def add_user_history(
     user_id: str, action: str, book_id: int | None = None, book_title: str = "", detail: str = "", rating: int = 0
 ):
     conn = _get_conn()
-    try:
-        conn.execute(
-            "INSERT INTO user_history (user_id, action, book_id, book_title, detail, rating) VALUES (?, ?, ?, ?, ?, ?)",
-            (user_id, action, book_id, book_title, detail, rating),
-        )
-        conn.commit()
-    finally:
-        conn.close()
+    conn.execute(
+        "INSERT INTO user_history (user_id, action, book_id, book_title, detail, rating) VALUES (?, ?, ?, ?, ?, ?)",
+        (user_id, action, book_id, book_title, detail, rating),
+    )
+    conn.commit()
 
 
 # ===========================================================================
@@ -1124,38 +1052,29 @@ def add_user_history(
 
 def get_user_quotes(user_id: str) -> list[dict]:
     conn = _get_conn()
-    try:
-        rows = conn.execute(
-            "SELECT * FROM user_quotes WHERE user_id = ? ORDER BY ts DESC",
-            (user_id,),
-        ).fetchall()
-        return [dict(r) for r in rows]
-    finally:
-        conn.close()
+    rows = conn.execute(
+        "SELECT * FROM user_quotes WHERE user_id = ? ORDER BY ts DESC",
+        (user_id,),
+    ).fetchall()
+    return [dict(r) for r in rows]
 
 
 def add_user_quote(user_id: str, text: str, book: str = "", author: str = ""):
     conn = _get_conn()
-    try:
-        conn.execute(
-            "INSERT INTO user_quotes (user_id, text, book, author) VALUES (?, ?, ?, ?)",
-            (user_id, text, book, author),
-        )
-        conn.commit()
-    finally:
-        conn.close()
+    conn.execute(
+        "INSERT INTO user_quotes (user_id, text, book, author) VALUES (?, ?, ?, ?)",
+        (user_id, text, book, author),
+    )
+    conn.commit()
 
 
 def delete_user_quote(user_id: str, quote_id: int):
     conn = _get_conn()
-    try:
-        conn.execute(
-            "DELETE FROM user_quotes WHERE id = ? AND user_id = ?",
-            (quote_id, user_id),
-        )
-        conn.commit()
-    finally:
-        conn.close()
+    conn.execute(
+        "DELETE FROM user_quotes WHERE id = ? AND user_id = ?",
+        (quote_id, user_id),
+    )
+    conn.commit()
 
 
 # ===========================================================================
@@ -1165,113 +1084,98 @@ def delete_user_quote(user_id: str, quote_id: int):
 
 def get_user_sessions(user_id: str) -> list[dict]:
     conn = _get_conn()
-    try:
-        rows = conn.execute(
-            "SELECT * FROM user_sessions WHERE user_id = ? ORDER BY started DESC",
-            (user_id,),
-        ).fetchall()
-        return [dict(r) for r in rows]
-    finally:
-        conn.close()
+    rows = conn.execute(
+        "SELECT * FROM user_sessions WHERE user_id = ? ORDER BY started DESC",
+        (user_id,),
+    ).fetchall()
+    return [dict(r) for r in rows]
 
 
 def start_user_session(user_id: str, book_title: str) -> dict:
     """Start a listening session. Returns the created session dict."""
     conn = _get_conn()
-    try:
-        now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-        cur = conn.execute(
-            "INSERT INTO user_sessions (user_id, book_title, started) VALUES (?, ?, ?)",
-            (user_id, book_title, now),
-        )
-        conn.commit()
-        row = conn.execute("SELECT * FROM user_sessions WHERE id = ?", (cur.lastrowid,)).fetchone()
-        return dict(row)
-    finally:
-        conn.close()
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    cur = conn.execute(
+        "INSERT INTO user_sessions (user_id, book_title, started) VALUES (?, ?, ?)",
+        (user_id, book_title, now),
+    )
+    conn.commit()
+    row = conn.execute("SELECT * FROM user_sessions WHERE id = ?", (cur.lastrowid,)).fetchone()
+    return dict(row)
 
 
 def stop_user_session(user_id: str, book_title: str) -> float:
     """Stop the most recent open session for this book. Returns duration in minutes."""
     conn = _get_conn()
-    try:
-        row = conn.execute(
-            "SELECT id, started FROM user_sessions WHERE user_id = ? AND book_title = ? AND ended IS NULL ORDER BY started DESC LIMIT 1",
-            (user_id, book_title),
-        ).fetchone()
-        if not row:
-            return 0.0
-        started = datetime.strptime(row["started"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
-        now = datetime.now(timezone.utc)
-        duration_min = (now - started).total_seconds() / 60.0
-        now_str = now.strftime("%Y-%m-%d %H:%M:%S")
-        conn.execute(
-            "UPDATE user_sessions SET ended = ?, duration_min = ? WHERE id = ?",
-            (now_str, round(duration_min, 2), row["id"]),
-        )
-        conn.commit()
-        return round(duration_min, 2)
-    finally:
-        conn.close()
+    row = conn.execute(
+        "SELECT id, started FROM user_sessions WHERE user_id = ? AND book_title = ? AND ended IS NULL ORDER BY started DESC LIMIT 1",
+        (user_id, book_title),
+    ).fetchone()
+    if not row:
+        return 0.0
+    started = datetime.strptime(row["started"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+    now = datetime.now(timezone.utc)
+    duration_min = (now - started).total_seconds() / 60.0
+    now_str = now.strftime("%Y-%m-%d %H:%M:%S")
+    conn.execute(
+        "UPDATE user_sessions SET ended = ?, duration_min = ? WHERE id = ?",
+        (now_str, round(duration_min, 2), row["id"]),
+    )
+    conn.commit()
+    return round(duration_min, 2)
 
 
 def get_total_listening_hours(user_id: str) -> float:
     """Return total listening hours for a user."""
     conn = _get_conn()
-    try:
-        row = conn.execute(
-            "SELECT COALESCE(SUM(duration_min), 0) as total FROM user_sessions WHERE user_id = ? AND duration_min > 0",
-            (user_id,),
-        ).fetchone()
-        return round(row["total"] / 60.0, 1)
-    finally:
-        conn.close()
+    row = conn.execute(
+        "SELECT COALESCE(SUM(duration_min), 0) as total FROM user_sessions WHERE user_id = ? AND duration_min > 0",
+        (user_id,),
+    ).fetchone()
+    return round(row["total"] / 60.0, 1)
 
 
 def get_session_stats(user_id: str, days: int = 7) -> dict:
     """Return {total_hours, today_min, week_hours, peak_hour}."""
     conn = _get_conn()
-    try:
-        # Total hours across all time
-        total_row = conn.execute(
-            "SELECT COALESCE(SUM(duration_min), 0) as total FROM user_sessions WHERE user_id = ? AND duration_min > 0",
-            (user_id,),
-        ).fetchone()
-        total_hours = round(total_row["total"] / 60.0, 2)
+    # Total hours across all time
+    total_row = conn.execute(
+        "SELECT COALESCE(SUM(duration_min), 0) as total FROM user_sessions WHERE user_id = ? AND duration_min > 0",
+        (user_id,),
+    ).fetchone()
+    total_hours = round(total_row["total"] / 60.0, 2)
 
-        # Today's minutes
-        today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        today_row = conn.execute(
-            "SELECT COALESCE(SUM(duration_min), 0) as total FROM user_sessions WHERE user_id = ? AND started LIKE ?",
-            (user_id, f"{today_str}%"),
-        ).fetchone()
-        today_min = round(today_row["total"], 1)
+    # Today's minutes
+    today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today_row = conn.execute(
+        "SELECT COALESCE(SUM(duration_min), 0) as total FROM user_sessions WHERE user_id = ? AND started LIKE ?",
+        (user_id, f"{today_str}%"),
+    ).fetchone()
+    today_min = round(today_row["total"], 1)
 
-        # Last N days hours
-        cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
-        week_row = conn.execute(
-            "SELECT COALESCE(SUM(duration_min), 0) as total FROM user_sessions WHERE user_id = ? AND started >= ?",
-            (user_id, cutoff),
-        ).fetchone()
-        week_hours = round(week_row["total"] / 60.0, 2)
+    # Last N days hours
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
+    week_row = conn.execute(
+        "SELECT COALESCE(SUM(duration_min), 0) as total FROM user_sessions WHERE user_id = ? AND started >= ?",
+        (user_id, cutoff),
+    ).fetchone()
+    week_hours = round(week_row["total"] / 60.0, 2)
 
-        # Peak hour (most sessions started)
-        peak_row = conn.execute(
-            """SELECT CAST(strftime('%H', started) AS INTEGER) as hour, COUNT(*) as cnt
-               FROM user_sessions WHERE user_id = ?
-               GROUP BY hour ORDER BY cnt DESC LIMIT 1""",
-            (user_id,),
-        ).fetchone()
-        peak_hour = peak_row["hour"] if peak_row else 0
+    # Peak hour (most sessions started)
+    peak_row = conn.execute(
+        """SELECT CAST(strftime('%H', started) AS INTEGER) as hour, COUNT(*) as cnt
+           FROM user_sessions WHERE user_id = ?
+           GROUP BY hour ORDER BY cnt DESC LIMIT 1""",
+        (user_id,),
+    ).fetchone()
+    peak_hour = peak_row["hour"] if peak_row else 0
 
-        return {
-            "total_hours": total_hours,
-            "today_min": today_min,
-            "week_hours": week_hours,
-            "peak_hour": peak_hour,
-        }
-    finally:
-        conn.close()
+    return {
+        "total_hours": total_hours,
+        "today_min": today_min,
+        "week_hours": week_hours,
+        "peak_hour": peak_hour,
+    }
 
 
 # ===========================================================================
@@ -1281,41 +1185,32 @@ def get_session_stats(user_id: str, days: int = 7) -> dict:
 
 def get_user_bookmarks(user_id: str, book_id: int) -> list[dict]:
     conn = _get_conn()
-    try:
-        rows = conn.execute(
-            "SELECT * FROM user_bookmarks WHERE user_id = ? AND book_id = ? ORDER BY created_at",
-            (user_id, book_id),
-        ).fetchall()
-        return [dict(r) for r in rows]
-    finally:
-        conn.close()
+    rows = conn.execute(
+        "SELECT * FROM user_bookmarks WHERE user_id = ? AND book_id = ? ORDER BY created_at",
+        (user_id, book_id),
+    ).fetchall()
+    return [dict(r) for r in rows]
 
 
 def add_user_bookmark(user_id: str, book_id: int, track_index: int, position: float, note: str = "") -> dict:
     conn = _get_conn()
-    try:
-        cur = conn.execute(
-            "INSERT INTO user_bookmarks (user_id, book_id, track_index, position, note) VALUES (?, ?, ?, ?, ?)",
-            (user_id, book_id, track_index, position, note),
-        )
-        conn.commit()
-        row = conn.execute("SELECT * FROM user_bookmarks WHERE id = ?", (cur.lastrowid,)).fetchone()
-        return dict(row)
-    finally:
-        conn.close()
+    cur = conn.execute(
+        "INSERT INTO user_bookmarks (user_id, book_id, track_index, position, note) VALUES (?, ?, ?, ?, ?)",
+        (user_id, book_id, track_index, position, note),
+    )
+    conn.commit()
+    row = conn.execute("SELECT * FROM user_bookmarks WHERE id = ?", (cur.lastrowid,)).fetchone()
+    return dict(row)
 
 
 def remove_user_bookmark(user_id: str, bookmark_id: int) -> bool:
     conn = _get_conn()
-    try:
-        cur = conn.execute(
-            "DELETE FROM user_bookmarks WHERE id = ? AND user_id = ?",
-            (bookmark_id, user_id),
-        )
-        conn.commit()
-        return cur.rowcount > 0
-    finally:
-        conn.close()
+    cur = conn.execute(
+        "DELETE FROM user_bookmarks WHERE id = ? AND user_id = ?",
+        (bookmark_id, user_id),
+    )
+    conn.commit()
+    return cur.rowcount > 0
 
 
 # ===========================================================================
@@ -1326,74 +1221,62 @@ def remove_user_bookmark(user_id: str, bookmark_id: int) -> bool:
 def get_user_collections(user_id: str) -> list[dict]:
     """Return collections with their book lists."""
     conn = _get_conn()
-    try:
-        rows = conn.execute(
-            "SELECT * FROM user_collections WHERE user_id = ? ORDER BY created_at",
-            (user_id,),
+    rows = conn.execute(
+        "SELECT * FROM user_collections WHERE user_id = ? ORDER BY created_at",
+        (user_id,),
+    ).fetchall()
+    result = []
+    for r in rows:
+        c = dict(r)
+        book_rows = conn.execute(
+            "SELECT book_id FROM collection_books WHERE collection_id = ?",
+            (c["id"],),
         ).fetchall()
-        result = []
-        for r in rows:
-            c = dict(r)
-            book_rows = conn.execute(
-                "SELECT book_id FROM collection_books WHERE collection_id = ?",
-                (c["id"],),
-            ).fetchall()
-            c["books"] = [br["book_id"] for br in book_rows]
-            result.append(c)
-        return result
-    finally:
-        conn.close()
+        c["books"] = [br["book_id"] for br in book_rows]
+        result.append(c)
+    return result
 
 
 def create_user_collection(user_id: str, name: str, book_ids: list[int] | None = None, description: str = "") -> int:
     """Create a collection and return its id."""
     conn = _get_conn()
-    try:
-        cur = conn.execute(
-            "INSERT INTO user_collections (user_id, name, description) VALUES (?, ?, ?)",
-            (user_id, name, description),
+    cur = conn.execute(
+        "INSERT INTO user_collections (user_id, name, description) VALUES (?, ?, ?)",
+        (user_id, name, description),
+    )
+    coll_id = cur.lastrowid
+    for bid in book_ids or []:
+        conn.execute(
+            "INSERT OR IGNORE INTO collection_books (collection_id, book_id) VALUES (?, ?)",
+            (coll_id, bid),
         )
-        coll_id = cur.lastrowid
-        for bid in book_ids or []:
-            conn.execute(
-                "INSERT OR IGNORE INTO collection_books (collection_id, book_id) VALUES (?, ?)",
-                (coll_id, bid),
-            )
-        conn.commit()
-        return coll_id
-    finally:
-        conn.close()
+    conn.commit()
+    return coll_id
 
 
 def update_user_collection(user_id: str, collection_id: int, name: str, book_ids: list[int], description: str):
     conn = _get_conn()
-    try:
+    conn.execute(
+        "UPDATE user_collections SET name = ?, description = ? WHERE id = ? AND user_id = ?",
+        (name, description, collection_id, user_id),
+    )
+    conn.execute("DELETE FROM collection_books WHERE collection_id = ?", (collection_id,))
+    for bid in book_ids:
         conn.execute(
-            "UPDATE user_collections SET name = ?, description = ? WHERE id = ? AND user_id = ?",
-            (name, description, collection_id, user_id),
+            "INSERT OR IGNORE INTO collection_books (collection_id, book_id) VALUES (?, ?)",
+            (collection_id, bid),
         )
-        conn.execute("DELETE FROM collection_books WHERE collection_id = ?", (collection_id,))
-        for bid in book_ids:
-            conn.execute(
-                "INSERT OR IGNORE INTO collection_books (collection_id, book_id) VALUES (?, ?)",
-                (collection_id, bid),
-            )
-        conn.commit()
-    finally:
-        conn.close()
+    conn.commit()
 
 
 def delete_user_collection(user_id: str, collection_id: int) -> bool:
     conn = _get_conn()
-    try:
-        cur = conn.execute(
-            "DELETE FROM user_collections WHERE id = ? AND user_id = ?",
-            (collection_id, user_id),
-        )
-        conn.commit()
-        return cur.rowcount > 0
-    finally:
-        conn.close()
+    cur = conn.execute(
+        "DELETE FROM user_collections WHERE id = ? AND user_id = ?",
+        (collection_id, user_id),
+    )
+    conn.commit()
+    return cur.rowcount > 0
 
 
 # ===========================================================================
@@ -1404,91 +1287,73 @@ def delete_user_collection(user_id: str, collection_id: int) -> bool:
 def get_all_user_notes_map(user_id: str) -> dict[int, str]:
     """Return {book_id: note} for all books with notes."""
     conn = _get_conn()
-    try:
-        rows = conn.execute("SELECT book_id, note FROM user_notes WHERE user_id = ?", (user_id,)).fetchall()
-        return {r["book_id"]: r["note"] for r in rows}
-    finally:
-        conn.close()
+    rows = conn.execute("SELECT book_id, note FROM user_notes WHERE user_id = ?", (user_id,)).fetchall()
+    return {r["book_id"]: r["note"] for r in rows}
 
 
 def get_all_user_tags_map(user_id: str) -> dict[int, list[str]]:
     """Return {book_id: [tag1, tag2, ...]} for all books with tags."""
     conn = _get_conn()
-    try:
-        rows = conn.execute(
-            "SELECT book_id, tag FROM user_tags WHERE user_id = ? ORDER BY book_id", (user_id,)
-        ).fetchall()
-        result: dict[int, list[str]] = {}
-        for r in rows:
-            result.setdefault(r["book_id"], []).append(r["tag"])
-        return result
-    finally:
-        conn.close()
+    rows = conn.execute(
+        "SELECT book_id, tag FROM user_tags WHERE user_id = ? ORDER BY book_id", (user_id,)
+    ).fetchall()
+    result: dict[int, list[str]] = {}
+    for r in rows:
+        result.setdefault(r["book_id"], []).append(r["tag"])
+    return result
 
 
 def get_user_history_for_book(user_id: str, book_id: int) -> list[dict]:
     """Return history entries for a specific book."""
     conn = _get_conn()
-    try:
-        rows = conn.execute(
-            "SELECT * FROM user_history WHERE user_id = ? AND book_id = ? ORDER BY ts DESC",
-            (user_id, book_id),
-        ).fetchall()
-        return [dict(r) for r in rows]
-    finally:
-        conn.close()
+    rows = conn.execute(
+        "SELECT * FROM user_history WHERE user_id = ? AND book_id = ? ORDER BY ts DESC",
+        (user_id, book_id),
+    ).fetchall()
+    return [dict(r) for r in rows]
 
 
 def get_user_rating(user_id: str, book_id: int) -> int:
     """Return the rating from the most recent 'rated' or 'done' history entry for a book."""
     conn = _get_conn()
-    try:
-        row = conn.execute(
-            "SELECT rating FROM user_history WHERE user_id = ? AND book_id = ? AND action IN ('rated', 'done') AND rating > 0 ORDER BY ts DESC LIMIT 1",
-            (user_id, book_id),
-        ).fetchone()
-        return row["rating"] if row else 0
-    finally:
-        conn.close()
+    row = conn.execute(
+        "SELECT rating FROM user_history WHERE user_id = ? AND book_id = ? AND action IN ('rated', 'done') AND rating > 0 ORDER BY ts DESC LIMIT 1",
+        (user_id, book_id),
+    ).fetchone()
+    return row["rating"] if row else 0
 
 
 def set_user_rating(user_id: str, book_id: int, rating: int) -> None:
     """Set or update a standalone rating for a book (1-5, or 0 to remove)."""
     conn = _get_conn()
-    try:
-        if rating == 0:
+    if rating == 0:
+        conn.execute(
+            "DELETE FROM user_history WHERE user_id = ? AND book_id = ? AND action = 'rated'",
+            (user_id, book_id),
+        )
+    else:
+        existing = conn.execute(
+            "SELECT id FROM user_history WHERE user_id = ? AND book_id = ? AND action = 'rated' LIMIT 1",
+            (user_id, book_id),
+        ).fetchone()
+        if existing:
             conn.execute(
-                "DELETE FROM user_history WHERE user_id = ? AND book_id = ? AND action = 'rated'",
-                (user_id, book_id),
+                "UPDATE user_history SET rating = ?, ts = datetime('now') WHERE id = ?",
+                (rating, existing["id"]),
             )
         else:
-            existing = conn.execute(
-                "SELECT id FROM user_history WHERE user_id = ? AND book_id = ? AND action = 'rated' LIMIT 1",
-                (user_id, book_id),
-            ).fetchone()
-            if existing:
-                conn.execute(
-                    "UPDATE user_history SET rating = ?, ts = datetime('now') WHERE id = ?",
-                    (rating, existing["id"]),
-                )
-            else:
-                conn.execute(
-                    "INSERT INTO user_history (user_id, book_id, action, rating, ts) VALUES (?, ?, 'rated', ?, datetime('now'))",
-                    (user_id, book_id, rating),
-                )
-        conn.commit()
-    finally:
-        conn.close()
+            conn.execute(
+                "INSERT INTO user_history (user_id, book_id, action, rating, ts) VALUES (?, ?, 'rated', ?, datetime('now'))",
+                (user_id, book_id, rating),
+            )
+    conn.commit()
 
 
 def get_categories() -> list[str]:
     """Return distinct categories from the books table."""
     conn = _get_conn()
-    try:
-        rows = conn.execute("SELECT DISTINCT category FROM books WHERE category != '' ORDER BY category").fetchall()
-        return [r["category"] for r in rows]
-    finally:
-        conn.close()
+    rows = conn.execute("SELECT DISTINCT category FROM books WHERE category != '' ORDER BY category").fetchall()
+    return [r["category"] for r in rows]
 
 
 # ── Categories table helpers ──────────────────────────────────────────────
@@ -1519,111 +1384,87 @@ def _seed_categories(conn: sqlite3.Connection):
 def get_all_categories() -> list[dict]:
     """Return all categories ordered by sort_order."""
     conn = _get_conn()
-    try:
-        rows = conn.execute("SELECT * FROM categories ORDER BY sort_order").fetchall()
-        return [dict(r) for r in rows]
-    finally:
-        conn.close()
+    rows = conn.execute("SELECT * FROM categories ORDER BY sort_order").fetchall()
+    return [dict(r) for r in rows]
 
 
 def get_category_by_name(name: str) -> dict | None:
     """Return a single category by name."""
     conn = _get_conn()
-    try:
-        row = conn.execute("SELECT * FROM categories WHERE name = ?", (name,)).fetchone()
-        return dict(row) if row else None
-    finally:
-        conn.close()
+    row = conn.execute("SELECT * FROM categories WHERE name = ?", (name,)).fetchone()
+    return dict(row) if row else None
 
 
 def upsert_category(name: str, color: str, gradient: str, sort_order: int) -> dict:
     """Insert or update a category. Returns the category dict."""
     conn = _get_conn()
-    try:
-        conn.execute(
-            """
-            INSERT INTO categories (name, color, gradient, sort_order)
-            VALUES (?, ?, ?, ?)
-            ON CONFLICT(name) DO UPDATE SET
-                color = excluded.color,
-                gradient = excluded.gradient,
-                sort_order = excluded.sort_order
-            """,
-            (name, color, gradient, sort_order),
-        )
-        conn.commit()
-        row = conn.execute("SELECT * FROM categories WHERE name = ?", (name,)).fetchone()
-        return dict(row)
-    finally:
-        conn.close()
+    conn.execute(
+        """
+        INSERT INTO categories (name, color, gradient, sort_order)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(name) DO UPDATE SET
+            color = excluded.color,
+            gradient = excluded.gradient,
+            sort_order = excluded.sort_order
+        """,
+        (name, color, gradient, sort_order),
+    )
+    conn.commit()
+    row = conn.execute("SELECT * FROM categories WHERE name = ?", (name,)).fetchone()
+    return dict(row)
 
 
 def update_category_by_id(cat_id: int, **fields) -> dict | None:
     """Update specific fields of a category by ID. Returns updated dict or None."""
     conn = _get_conn()
-    try:
-        existing = conn.execute("SELECT * FROM categories WHERE id = ?", (cat_id,)).fetchone()
-        if not existing:
-            return None
-        updates = {k: v for k, v in fields.items() if v is not None}
-        if not updates:
-            return dict(existing)
-        set_clause = ", ".join(f"{k} = ?" for k in updates)
-        values = list(updates.values()) + [cat_id]
-        conn.execute(f"UPDATE categories SET {set_clause} WHERE id = ?", values)
-        conn.commit()
-        row = conn.execute("SELECT * FROM categories WHERE id = ?", (cat_id,)).fetchone()
-        return dict(row)
-    finally:
-        conn.close()
+    existing = conn.execute("SELECT * FROM categories WHERE id = ?", (cat_id,)).fetchone()
+    if not existing:
+        return None
+    updates = {k: v for k, v in fields.items() if v is not None}
+    if not updates:
+        return dict(existing)
+    set_clause = ", ".join(f"{k} = ?" for k in updates)
+    values = list(updates.values()) + [cat_id]
+    conn.execute(f"UPDATE categories SET {set_clause} WHERE id = ?", values)
+    conn.commit()
+    row = conn.execute("SELECT * FROM categories WHERE id = ?", (cat_id,)).fetchone()
+    return dict(row)
 
 
 def create_category(name: str, color: str, gradient: str, sort_order: int) -> dict:
     """Create a new category. Returns the category dict."""
     conn = _get_conn()
-    try:
-        cur = conn.execute(
-            "INSERT INTO categories (name, color, gradient, sort_order) VALUES (?, ?, ?, ?)",
-            (name, color, gradient, sort_order),
-        )
-        conn.commit()
-        row = conn.execute("SELECT * FROM categories WHERE id = ?", (cur.lastrowid,)).fetchone()
-        return dict(row)
-    finally:
-        conn.close()
+    cur = conn.execute(
+        "INSERT INTO categories (name, color, gradient, sort_order) VALUES (?, ?, ?, ?)",
+        (name, color, gradient, sort_order),
+    )
+    conn.commit()
+    row = conn.execute("SELECT * FROM categories WHERE id = ?", (cur.lastrowid,)).fetchone()
+    return dict(row)
 
 
 def delete_category(cat_id: int) -> bool:
     """Delete a category by ID. Returns True if deleted."""
     conn = _get_conn()
-    try:
-        deleted = conn.execute("DELETE FROM categories WHERE id = ?", (cat_id,)).rowcount
-        conn.commit()
-        return deleted > 0
-    finally:
-        conn.close()
+    deleted = conn.execute("DELETE FROM categories WHERE id = ?", (cat_id,)).rowcount
+    conn.commit()
+    return deleted > 0
 
 
 def update_book_language(book_id: int, language: str) -> bool:
     """Update a book's language. Returns True if updated."""
     conn = _get_conn()
-    try:
-        updated = conn.execute("UPDATE books SET language = ? WHERE id = ?", (language, book_id)).rowcount
-        conn.commit()
-        return updated > 0
-    finally:
-        conn.close()
+    updated = conn.execute("UPDATE books SET language = ? WHERE id = ?", (language, book_id)).rowcount
+    conn.commit()
+    return updated > 0
 
 
 def update_book_category(book_id: int, category: str) -> bool:
     """Update a book's category. Returns True if updated."""
     conn = _get_conn()
-    try:
-        updated = conn.execute("UPDATE books SET category = ? WHERE id = ?", (category, book_id)).rowcount
-        conn.commit()
-        return updated > 0
-    finally:
-        conn.close()
+    updated = conn.execute("UPDATE books SET category = ? WHERE id = ?", (category, book_id)).rowcount
+    conn.commit()
+    return updated > 0
 
 
 # ── Ingestion Jobs ─────────────────────────────────────────────────────────
@@ -1631,94 +1472,76 @@ def update_book_category(book_id: int, category: str) -> bool:
 
 def create_ingestion_job(source: str, input_data: dict, timeout_seconds: int = 600) -> int:
     conn = _get_conn()
-    try:
-        cur = conn.execute(
-            "INSERT INTO ingestion_jobs (source, input_data, timeout_seconds) VALUES (?, ?, ?)",
-            (source, json.dumps(input_data, ensure_ascii=False), timeout_seconds),
-        )
-        conn.commit()
-        return cur.lastrowid
-    finally:
-        conn.close()
+    cur = conn.execute(
+        "INSERT INTO ingestion_jobs (source, input_data, timeout_seconds) VALUES (?, ?, ?)",
+        (source, json.dumps(input_data, ensure_ascii=False), timeout_seconds),
+    )
+    conn.commit()
+    return cur.lastrowid
 
 
 def get_ingestion_job(job_id: int) -> dict | None:
     conn = _get_conn()
-    try:
-        row = conn.execute("SELECT * FROM ingestion_jobs WHERE id = ?", (job_id,)).fetchone()
-        return dict(row) if row else None
-    finally:
-        conn.close()
+    row = conn.execute("SELECT * FROM ingestion_jobs WHERE id = ?", (job_id,)).fetchone()
+    return dict(row) if row else None
 
 
 def list_ingestion_jobs(status: str | None = None, limit: int = 100) -> list[dict]:
     conn = _get_conn()
-    try:
-        if status:
-            rows = conn.execute(
-                "SELECT * FROM ingestion_jobs WHERE status = ? ORDER BY created_at DESC LIMIT ?",
-                (status, limit),
-            ).fetchall()
-        else:
-            rows = conn.execute(
-                "SELECT * FROM ingestion_jobs ORDER BY created_at DESC LIMIT ?",
-                (limit,),
-            ).fetchall()
-        return [dict(r) for r in rows]
-    finally:
-        conn.close()
+    if status:
+        rows = conn.execute(
+            "SELECT * FROM ingestion_jobs WHERE status = ? ORDER BY created_at DESC LIMIT ?",
+            (status, limit),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT * FROM ingestion_jobs ORDER BY created_at DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
+    return [dict(r) for r in rows]
 
 
 def update_ingestion_job(job_id: int, status: str | None = None, result: dict | None = None) -> None:
     conn = _get_conn()
-    try:
-        parts = ["updated_at = datetime('now')"]
-        params: list = []
-        if status:
-            parts.append("status = ?")
-            params.append(status)
-            if status == "processing":
-                parts.append("started_at = datetime('now')")
-                parts.append("heartbeat_at = datetime('now')")
-        if result is not None:
-            parts.append("result = ?")
-            params.append(json.dumps(result, ensure_ascii=False))
-        params.append(job_id)
-        conn.execute(
-            f"UPDATE ingestion_jobs SET {', '.join(parts)} WHERE id = ?",
-            params,
-        )
-        conn.commit()
-    finally:
-        conn.close()
+    parts = ["updated_at = datetime('now')"]
+    params: list = []
+    if status:
+        parts.append("status = ?")
+        params.append(status)
+        if status == "processing":
+            parts.append("started_at = datetime('now')")
+            parts.append("heartbeat_at = datetime('now')")
+    if result is not None:
+        parts.append("result = ?")
+        params.append(json.dumps(result, ensure_ascii=False))
+    params.append(job_id)
+    conn.execute(
+        f"UPDATE ingestion_jobs SET {', '.join(parts)} WHERE id = ?",
+        params,
+    )
+    conn.commit()
 
 
 def heartbeat_ingestion_job(job_id: int) -> None:
     conn = _get_conn()
-    try:
-        conn.execute(
-            "UPDATE ingestion_jobs SET heartbeat_at = datetime('now') WHERE id = ?",
-            (job_id,),
-        )
-        conn.commit()
-    finally:
-        conn.close()
+    conn.execute(
+        "UPDATE ingestion_jobs SET heartbeat_at = datetime('now') WHERE id = ?",
+        (job_id,),
+    )
+    conn.commit()
 
 
 def recover_stalled_jobs() -> int:
     conn = _get_conn()
-    try:
-        cur = conn.execute("""
-            UPDATE ingestion_jobs
-            SET status = 'pending', retries = retries + 1, updated_at = datetime('now')
-            WHERE status = 'processing'
-              AND heartbeat_at IS NOT NULL
-              AND (julianday('now') - julianday(heartbeat_at)) * 86400 > timeout_seconds
-        """)
-        conn.commit()
-        return cur.rowcount
-    finally:
-        conn.close()
+    cur = conn.execute("""
+        UPDATE ingestion_jobs
+        SET status = 'pending', retries = retries + 1, updated_at = datetime('now')
+        WHERE status = 'processing'
+          AND heartbeat_at IS NOT NULL
+          AND (julianday('now') - julianday(heartbeat_at)) * 86400 > timeout_seconds
+    """)
+    conn.commit()
+    return cur.rowcount
 
 
 # ── Ingestion Pipeline helpers ────────────────────────────────────────────
@@ -1740,69 +1563,57 @@ def insert_book_for_ingest(
     has_cover,
 ) -> int:
     conn = _get_conn()
-    try:
-        cur = conn.execute(
-            """INSERT INTO books
-            (slug, title, author, reader, category, folder, s3_prefix,
-             language, source, fingerprint, has_cover, mp3_count, duration_hours, size_mb)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            (
-                slug,
-                title,
-                author,
-                reader,
-                category,
-                slug,
-                f"books/{slug}",
-                language,
-                source,
-                fingerprint,
-                has_cover,
-                mp3_count,
-                duration_hours,
-                size_mb,
-            ),
-        )
-        conn.commit()
-        return cur.lastrowid
-    finally:
-        conn.close()
+    cur = conn.execute(
+        """INSERT INTO books
+        (slug, title, author, reader, category, folder, s3_prefix,
+         language, source, fingerprint, has_cover, mp3_count, duration_hours, size_mb)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        (
+            slug,
+            title,
+            author,
+            reader,
+            category,
+            slug,
+            f"books/{slug}",
+            language,
+            source,
+            fingerprint,
+            has_cover,
+            mp3_count,
+            duration_hours,
+            size_mb,
+        ),
+    )
+    conn.commit()
+    return cur.lastrowid
 
 
 def update_book_description(book_id: int, description: str) -> None:
     conn = _get_conn()
-    try:
-        conn.execute("UPDATE books SET description = ? WHERE id = ?", (description, book_id))
-        conn.commit()
-    finally:
-        conn.close()
+    conn.execute("UPDATE books SET description = ? WHERE id = ?", (description, book_id))
+    conn.commit()
 
 
 def get_books_without_description() -> list[dict]:
     conn = _get_conn()
-    try:
-        rows = conn.execute(
-            "SELECT id, title, author, category FROM books WHERE description IS NULL OR description = '' ORDER BY id"
-        ).fetchall()
-        return [dict(r) for r in rows]
-    finally:
-        conn.close()
+    rows = conn.execute(
+        "SELECT id, title, author, category FROM books WHERE description IS NULL OR description = '' ORDER BY id"
+    ).fetchall()
+    return [dict(r) for r in rows]
 
 
 def insert_tracks_for_ingest(book_id: int, tracks: list[dict]) -> None:
     conn = _get_conn()
-    try:
-        for t in tracks:
-            conn.execute(
-                "INSERT INTO tracks (book_id, idx, filename, s3_key, duration) VALUES (?, ?, ?, ?, ?)",
-                (
-                    book_id,
-                    t["track"],
-                    t["file"],
-                    f"books/{book_id}/audio/{t['file']}",
-                    t["duration"],
-                ),
-            )
-        conn.commit()
-    finally:
-        conn.close()
+    for t in tracks:
+        conn.execute(
+            "INSERT INTO tracks (book_id, idx, filename, s3_key, duration) VALUES (?, ?, ?, ?, ?)",
+            (
+                book_id,
+                t["track"],
+                t["file"],
+                f"books/{book_id}/audio/{t['file']}",
+                t["duration"],
+            ),
+        )
+    conn.commit()

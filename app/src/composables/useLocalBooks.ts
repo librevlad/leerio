@@ -7,6 +7,7 @@ const DB_STORE = 'tracks'
 
 const localBooks = ref<LocalBook[]>([])
 let dbPromise: Promise<IDBDatabase> | null = null
+let previousAudioUrl: string | null = null
 
 function loadMeta(): LocalBook[] {
   try {
@@ -152,7 +153,12 @@ export function useLocalBooks() {
   async function getLocalAudioUrl(bookId: string, trackIndex: number): Promise<string | null> {
     const blob = await getBlob(`${bookId}/${trackIndex}`)
     if (!blob) return null
-    return URL.createObjectURL(blob)
+    if (previousAudioUrl) {
+      URL.revokeObjectURL(previousAudioUrl)
+    }
+    const url = URL.createObjectURL(blob)
+    previousAudioUrl = url
+    return url
   }
 
   function totalSize(): number {

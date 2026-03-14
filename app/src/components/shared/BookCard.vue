@@ -35,7 +35,7 @@ const coverPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0
       <img
         v-if="hasCover"
         :src="coverSrc || coverUrl(book.id)"
-        :alt="book.title"
+        :alt="book.author ? `${book.title} — ${book.author}` : book.title"
         class="absolute inset-0 h-full w-full object-cover transition-opacity duration-300"
         :class="coverLoaded ? 'opacity-100 blur-[1px] brightness-75' : 'opacity-0'"
         @load="coverLoaded = true"
@@ -64,7 +64,7 @@ const coverPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0
           <img
             v-if="hasCover"
             :src="coverSrc || coverUrl(book.id)"
-            :alt="book.title"
+            :alt="book.author ? `${book.title} — ${book.author}` : book.title"
             class="h-full w-full object-cover"
             @error="coverError = true"
           />

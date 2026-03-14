@@ -4,22 +4,19 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { api, coverUrl } from '../api'
 import { useAuth } from '../composables/useAuth'
-import type { DashboardData, ShelfData, ShelfBook } from '../types'
+import type { DashboardData, ShelfBook } from '../types'
 import ContinueListening from '../components/dashboard/ContinueListening.vue'
-import BookShelf from '../components/dashboard/BookShelf.vue'
 import ActivityHeatmap from '../components/dashboard/ActivityHeatmap.vue'
 import YearlyGoal from '../components/dashboard/YearlyGoal.vue'
 import RecentActivity from '../components/dashboard/RecentActivity.vue'
 import PullIndicator from '../components/shared/PullIndicator.vue'
 import EmptyState from '../components/shared/EmptyState.vue'
 import { usePullToRefresh } from '../composables/usePullToRefresh'
-import { plural } from '../utils/plural'
 
 const router = useRouter()
 const { t } = useI18n()
 const { user } = useAuth()
 const data = ref<DashboardData | null>(null)
-const shelves = ref<ShelfData[]>([])
 const streak = ref({ current: 0, best: 0 })
 const recommendations = ref<ShelfBook[]>([])
 const loading = ref(true)
@@ -40,14 +37,12 @@ const greeting = computed(() => {
 
 async function loadData() {
   try {
-    const [d, s, st, rec] = await Promise.allSettled([
+    const [d, st, rec] = await Promise.allSettled([
       api.getDashboard(),
-      api.getShelves(),
       api.getStreak(),
       api.getRecommendations(),
     ])
     if (d.status === 'fulfilled') data.value = d.value
-    if (s.status === 'fulfilled') shelves.value = s.value
     if (st.status === 'fulfilled') streak.value = st.value
     if (rec.status === 'fulfilled') recommendations.value = rec.value
   } finally {
@@ -55,12 +50,16 @@ async function loadData() {
   }
 }
 
+const hasActivity = computed(() => {
+  if (!data.value?.heatmap) return false
+  return data.value.heatmap.some((entry: any) => entry.count > 0)
+})
+
 const { refreshing, pullProgress } = usePullToRefresh(loadData)
 
 function randomBook() {
-  const allBooks = shelves.value.flatMap((s) => s.books)
-  if (!allBooks.length) return
-  const pick = allBooks[Math.floor(Math.random() * allBooks.length)]!
+  if (!recommendations.value.length) return
+  const pick = recommendations.value[Math.floor(Math.random() * recommendations.value.length)]!
   router.push(`/book/${pick.id}`)
 }
 
@@ -109,7 +108,7 @@ onMounted(loadData)
             <p class="text-[11px] font-semibold tracking-wide text-[--t3] uppercase">{{ t('dashboard.statStreak') }}</p>
             <div class="mt-1 flex items-baseline gap-2">
               <p class="text-[28px] leading-none font-bold tracking-tight text-[--accent]">{{ streak.current }}</p>
-              <p class="text-[12px] text-[--t3]">{{ plural(streak.current, 'день', 'дня', 'дней') }}</p>
+              <p class="text-[12px] text-[--t3]">{{ t('plural.day', streak.current) }}</p>
             </div>
           </div>
         </div>
@@ -124,10 +123,10 @@ onMounted(loadData)
         <span class="text-[28px]">&#x1F525;</span>
         <div class="flex-1">
           <p class="text-[15px] font-bold text-[--accent]">
-            {{ streak.current }} {{ plural(streak.current, 'день', 'дня', 'дней') }} подряд!
+            {{ streak.current }} {{ t('plural.day', streak.current) }} {{ t('book.inARow') }}
           </p>
           <p class="text-[12px] text-[--t3]">
-            Лучшая серия: {{ streak.best }} {{ plural(streak.best, 'день', 'дня', 'дней') }}
+            {{ t('book.bestStreak') }}: {{ streak.best }} {{ t('plural.day', streak.best) }}
           </p>
         </div>
         <!-- 7-day progress -->
@@ -201,17 +200,8 @@ onMounted(loadData)
         </div>
       </div>
 
-      <!-- Category shelves -->
-      <BookShelf
-        v-for="shelf in shelves"
-        :key="shelf.category"
-        :category="shelf.category"
-        :count="shelf.count"
-        :books="shelf.books"
-      />
-
       <!-- Compact widgets row -->
-      <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div v-if="hasActivity" class="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div class="lg:col-span-2">
           <ActivityHeatmap :data="data.heatmap" />
         </div>

@@ -5,6 +5,7 @@ import { apiUrl } from '../api'
 const user = ref<User | null>(null)
 const loading = ref(true)
 const checked = ref(false)
+let checkPromise: Promise<boolean> | null = null
 
 export function useAuth() {
   const isLoggedIn = computed(() => !!user.value)
@@ -12,37 +13,42 @@ export function useAuth() {
 
   async function checkAuth(): Promise<boolean> {
     if (checked.value) return !!user.value
-    loading.value = true
-    try {
-      const res = await fetch(apiUrl('/auth/me'), { credentials: 'include' })
-      if (res.ok) {
-        user.value = await res.json()
-        try {
-          localStorage.setItem('leerio_user', JSON.stringify(user.value))
-        } catch {
-          /* full */
-        }
-        return true
-      }
-      user.value = null
-      return false
-    } catch {
-      // Offline — try cached user
+    if (checkPromise) return checkPromise
+    checkPromise = (async () => {
+      loading.value = true
       try {
-        const cached = localStorage.getItem('leerio_user')
-        if (cached) {
-          user.value = JSON.parse(cached)
+        const res = await fetch(apiUrl('/auth/me'), { credentials: 'include' })
+        if (res.ok) {
+          user.value = await res.json()
+          try {
+            localStorage.setItem('leerio_user', JSON.stringify(user.value))
+          } catch {
+            /* full */
+          }
           return true
         }
+        user.value = null
+        return false
       } catch {
-        /* parse error */
+        // Offline — try cached user
+        try {
+          const cached = localStorage.getItem('leerio_user')
+          if (cached) {
+            user.value = JSON.parse(cached)
+            return true
+          }
+        } catch {
+          /* parse error */
+        }
+        user.value = null
+        return false
+      } finally {
+        loading.value = false
+        checked.value = true
+        checkPromise = null
       }
-      user.value = null
-      return false
-    } finally {
-      loading.value = false
-      checked.value = true
-    }
+    })()
+    return checkPromise
   }
 
   async function loginWithGoogle(idToken: string): Promise<User> {

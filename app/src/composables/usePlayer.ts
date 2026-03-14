@@ -6,6 +6,17 @@ import { useNetwork } from './useNetwork'
 import { useToast } from './useToast'
 import type { Book, Track } from '../types'
 
+function t(key: string): string {
+  try {
+    // Lazy import to avoid circular dependency in tests
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mod = require('../i18n')
+    return mod.default.global.t(key)
+  } catch {
+    return key
+  }
+}
+
 // ── Singleton state (shared across all components) ──────────────────────────
 
 const currentBook = ref<Book | null>(null)
@@ -31,6 +42,7 @@ let audio: HTMLAudioElement | null = null
 let saveTimer: ReturnType<typeof setTimeout> | null = null
 let isSeeking = false
 let activeSessionBook: string | null = null
+let deviceChangeRegistered = false
 
 // ── Computed ────────────────────────────────────────────────────────────────
 
@@ -104,11 +116,12 @@ function ensureAudio(): HTMLAudioElement {
 
     audio.addEventListener('error', () => {
       isLoading.value = false
-      toast.error('Ошибка загрузки аудио')
+      toast.error(t('player.loadError'))
     })
 
-    // Pause when headphones are disconnected
-    if (navigator.mediaDevices?.addEventListener) {
+    // Pause when headphones are disconnected (register only once)
+    if (!deviceChangeRegistered && navigator.mediaDevices?.addEventListener) {
+      deviceChangeRegistered = true
       let previousDevices: string[] = []
       navigator.mediaDevices.enumerateDevices().then((devices) => {
         previousDevices = devices.filter((d) => d.kind === 'audiooutput').map((d) => d.deviceId)
@@ -147,12 +160,12 @@ function savePosition() {
 
   api
     .setPlaybackPosition(currentBook.value.id, currentTrackIndex.value, currentTime.value, currentTrack.value.filename)
-    .catch((e) => console.warn('Не удалось сохранить позицию:', e))
+    .catch((e) => console.warn('Failed to save position:', e))
 
   // Auto-track book progress (0-100%)
   const pct = Math.round(overallProgress.value)
   if (pct > 0) {
-    api.setProgress(currentBook.value.id, pct).catch((e) => console.warn('Не удалось сохранить прогресс:', e))
+    api.setProgress(currentBook.value.id, pct).catch((e) => console.warn('Failed to save progress:', e))
   }
 }
 
@@ -248,8 +261,11 @@ async function loadBook(book: Book) {
       currentTrackIndex.value = 0
 
       // Restore position from localStorage
-      const savedPos = localStorage.getItem(`leerio_pos_${book.id}`)
-      const pos = savedPos ? JSON.parse(savedPos) : { track_index: 0, position: 0 }
+      let pos = { track_index: 0, position: 0 }
+      try {
+        const savedPos = localStorage.getItem(`leerio_pos_${book.id}`)
+        if (savedPos) pos = JSON.parse(savedPos)
+      } catch { /* corrupted localStorage */ }
       const idx = pos.track_index < tracks.value.length ? pos.track_index : 0
       currentTrackIndex.value = idx
 
@@ -294,8 +310,10 @@ async function loadBook(book: Book) {
       pos = await api.getPlaybackPosition(book.id)
     } catch {
       // Offline — try localStorage fallback
-      const savedPos = localStorage.getItem(`leerio_pos_${book.id}`)
-      if (savedPos) pos = JSON.parse(savedPos)
+      try {
+        const savedPos = localStorage.getItem(`leerio_pos_${book.id}`)
+        if (savedPos) pos = JSON.parse(savedPos)
+      } catch { /* corrupted localStorage */ }
     }
     const idx = pos.track_index < tracks.value.length ? pos.track_index : 0
     currentTrackIndex.value = idx
@@ -316,7 +334,7 @@ async function loadBook(book: Book) {
     updateMediaSession()
   } catch {
     isLoading.value = false
-    toast.error('Не удалось загрузить треки')
+    toast.error(t('player.tracksLoadError'))
   }
 }
 
@@ -330,7 +348,7 @@ async function playTrack(index: number) {
   const a = ensureAudio()
   a.src = await resolveAudioSrc(currentBook.value.id, index)
   a.load()
-  a.play().catch(() => toast.error('Ошибка воспроизведения'))
+  a.play().catch(() => toast.error(t('player.playbackError')))
   updateMediaSession()
 }
 
@@ -338,7 +356,7 @@ function togglePlay() {
   const a = ensureAudio()
   if (!a.src) return
   if (a.paused) {
-    a.play().catch(() => toast.error('Ошибка воспроизведения'))
+    a.play().catch(() => toast.error(t('player.playbackError')))
   } else {
     a.pause()
   }

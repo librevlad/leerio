@@ -12,6 +12,7 @@ const query = ref('')
 const results = ref<Book[]>([])
 const open = ref(false)
 const loading = ref(false)
+const searched = ref(false)
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
 
 watch(query, (q) => {
@@ -19,6 +20,7 @@ watch(query, (q) => {
   if (!q.trim()) {
     results.value = []
     open.value = false
+    searched.value = false
     return
   }
   debounceTimer = setTimeout(async () => {
@@ -26,7 +28,8 @@ watch(query, (q) => {
     try {
       const all = await api.getBooks({ search: q.trim() })
       results.value = all.slice(0, 8)
-      open.value = results.value.length > 0
+      searched.value = true
+      open.value = results.value.length > 0 || searched.value
     } catch {
       results.value = []
     } finally {
@@ -66,9 +69,10 @@ function goToCatalog() {
 }
 
 function onBlur() {
-  setTimeout(() => {
+  // Small delay to allow mousedown.prevent on results to fire first
+  requestAnimationFrame(() => {
     open.value = false
-  }, 200)
+  })
 }
 </script>
 
@@ -81,7 +85,7 @@ function onBlur() {
         type="text"
         class="input-field w-full py-2.5 pr-4 pl-10 text-[13px]"
         :placeholder="t('global.search')"
-        @focus="query.trim() && results.length && (open = true)"
+        @focus="query.trim() && searched && (open = true)"
         @blur="onBlur"
         @keyup.enter="goToCatalog"
       />
@@ -93,8 +97,13 @@ function onBlur() {
       class="absolute top-full right-0 left-0 z-50 mt-2 overflow-hidden rounded-2xl border border-[--border] shadow-lg"
       style="background: var(--card-solid)"
     >
+      <!-- No results -->
+      <div v-if="searched && !results.length" class="p-4 text-center text-[13px] text-[--t3]">
+        {{ t('global.noResults') }}
+      </div>
+
       <!-- Authors -->
-      <div v-if="authors.length" class="border-b border-[--border] px-3 py-2">
+      <div v-else-if="authors.length" class="border-b border-[--border] px-3 py-2">
         <p class="mb-1.5 text-[10px] font-bold tracking-wider text-[--t3] uppercase">{{ t('global.authors') }}</p>
         <button
           v-for="a in authors"
@@ -132,7 +141,7 @@ function onBlur() {
         class="flex w-full cursor-pointer items-center justify-center border-t border-[--border] bg-transparent py-2.5 text-[12px] font-medium text-[--accent] transition-colors hover:bg-[--card-hover]"
         @mousedown.prevent="goToCatalog"
       >
-        Все результаты
+        {{ t('global.allResults') }}
       </button>
     </div>
   </div>

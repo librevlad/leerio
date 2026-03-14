@@ -120,15 +120,15 @@ function selectSpeed(rate: number) {
   showSpeedMenu.value = false
 }
 
-const sleepOptions = [
-  { label: '5 мин', value: 5 },
-  { label: '15 мин', value: 15 },
-  { label: '30 мин', value: 30 },
-  { label: '45 мин', value: 45 },
-  { label: '60 мин', value: 60 },
-  { label: 'Конец трека', value: -1 },
-  { label: 'Выкл', value: null },
-]
+const sleepOptions = computed(() => [
+  { label: t('player.sleepMin', { n: 5 }), value: 5 },
+  { label: t('player.sleepMin', { n: 15 }), value: 15 },
+  { label: t('player.sleepMin', { n: 30 }), value: 30 },
+  { label: t('player.sleepMin', { n: 45 }), value: 45 },
+  { label: t('player.sleepMin', { n: 60 }), value: 60 },
+  { label: t('player.endOfTrack'), value: -1 },
+  { label: t('player.off'), value: null },
+])
 
 function selectSleep(val: number | null) {
   setSleepTimer(val)
@@ -144,9 +144,9 @@ async function addBookmark() {
   if (!currentBook.value) return
   try {
     await api.addBookmark(currentBook.value.id, currentTrackIndex.value, currentTime.value)
-    toast.success('Закладка добавлена')
+    toast.success(t('player.bookmarkAdded'))
   } catch {
-    toast.error('Не удалось добавить закладку')
+    toast.error(t('player.bookmarkError'))
   }
 }
 
@@ -313,6 +313,7 @@ function closeOverlays() {
           <button
             class="flex h-10 items-center gap-1 rounded-full border-0 bg-transparent px-2 text-[12px] font-semibold transition-colors"
             :class="playbackRate !== 1 ? 'text-[--accent]' : 'text-[--t3] hover:text-[--t2]'"
+            :aria-expanded="showSpeedMenu"
             @click="showSpeedMenu = !showSpeedMenu"
           >
             <IconSpeed :size="16" />
@@ -340,6 +341,7 @@ function closeOverlays() {
           <button
             class="flex h-10 items-center gap-1 rounded-full border-0 bg-transparent px-2 text-[12px] font-semibold transition-colors"
             :class="sleepTimer !== null ? 'text-[--accent]' : 'text-[--t3] hover:text-[--t2]'"
+            :aria-expanded="showSleepMenu"
             @click="showSleepMenu = !showSleepMenu"
           >
             <IconMoon :size="16" />

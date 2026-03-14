@@ -1,6 +1,6 @@
 .PHONY: help dev server-dev app-dev docker-up docker-down docker-logs lint format check build setup \
        server-lint server-format app-lint app-format test server-test app-test type-check clean \
-       e2e e2e-ui e2e-prod
+       e2e e2e-ui e2e-prod deploy
 
 .DEFAULT_GOAL := help
 
@@ -94,9 +94,21 @@ e2e-ui: ## Playwright E2E tests (interactive UI)
 e2e-prod: ## Playwright E2E tests (production)
 	cd app && E2E_BASE_URL=https://app.leerio.app npx playwright test
 
+# ── Deploy ───────────────────────────────────────────────────────────────────
+
+deploy: ## Deploy to VPS (no GitHub Actions needed)
+	bash scripts/deploy.sh
+
 # ── Cleanup ──────────────────────────────────────────────────────────────────
 
 clean: ## Remove build artifacts and caches
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	rm -rf .pytest_cache .ruff_cache htmlcov .coverage
 	rm -rf app/dist app/coverage
+
+clean-all: clean ## Deep clean: screenshots, temp data, pipeline work files
+	rm -f *.jpeg *.png *.tar.gz
+	rm -rf .playwright-mcp/ scripts/book-pipeline/work/
+	rm -f data/*.json data/*.csv data/*.md data/*.db data/*.db-journal data/*.db-wal
+	rm -rf data/users/
+	@echo "Cleaned all transient files."

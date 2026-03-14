@@ -70,13 +70,17 @@ async def start_conversion(
     ud = _user_data(user)
     slug = make_slug(title, author)
 
-    # Ensure unique slug
-    existing = ud.books_dir / slug
-    if existing.exists():
-        counter = 2
-        while (ud.books_dir / f"{slug}-{counter}").exists():
-            counter += 1
-        slug = f"{slug}-{counter}"
+    # Ensure unique slug (atomic mkdir to avoid TOCTOU race)
+    for attempt in range(100):
+        candidate = slug if attempt == 0 else f"{slug}-{attempt + 1}"
+        try:
+            (ud.books_dir / candidate).mkdir(parents=True, exist_ok=False)
+            slug = candidate
+            break
+        except FileExistsError:
+            continue
+    else:
+        raise HTTPException(409, "Could not create unique book directory")
 
     # Save uploaded document to temp location
     temp_dir = ud.dir / "tmp"

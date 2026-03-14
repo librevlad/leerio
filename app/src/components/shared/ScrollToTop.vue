@@ -1,19 +1,36 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { IconChevronUp } from './icons'
 
+const { t } = useI18n()
+
 const visible = ref(false)
+let mainEl: HTMLElement | null = null
 
 function onScroll() {
-  visible.value = window.scrollY > 400
+  if (mainEl) {
+    visible.value = mainEl.scrollTop > 400
+  }
 }
 
 function scrollToTop() {
-  window.scrollTo({ top: 0, behavior: 'smooth' })
+  if (mainEl) {
+    mainEl.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 }
 
-onMounted(() => window.addEventListener('scroll', onScroll, { passive: true }))
-onUnmounted(() => window.removeEventListener('scroll', onScroll))
+onMounted(() => {
+  mainEl = document.querySelector('main')
+  if (mainEl) {
+    mainEl.addEventListener('scroll', onScroll, { passive: true })
+  }
+})
+onUnmounted(() => {
+  if (mainEl) {
+    mainEl.removeEventListener('scroll', onScroll)
+  }
+})
 </script>
 
 <template>
@@ -21,7 +38,7 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll))
     <button
       v-if="visible"
       class="fixed right-4 bottom-20 z-40 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-white/10 bg-[--card-solid] text-[--t2] shadow-lg transition-colors hover:bg-white/[0.12] hover:text-[--t1] md:bottom-6"
-      title="Наверх"
+      :title="t('common.toTop')"
       @click="scrollToTop"
     >
       <IconChevronUp :size="20" />

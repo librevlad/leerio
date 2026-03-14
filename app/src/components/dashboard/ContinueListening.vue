@@ -9,9 +9,10 @@ import { useCategories } from '../../composables/useCategories'
 import { usePlayer } from '../../composables/usePlayer'
 import { api } from '../../api'
 
-defineProps<{ books: ActiveBook[] }>()
+const props = defineProps<{ books: ActiveBook[] }>()
 
 const { t } = useI18n()
+const activeBooks = computed(() => props.books.filter((b) => b.progress > 0))
 const { currentBook, loadBook, togglePlay } = usePlayer()
 const nowPlayingId = computed(() => currentBook.value?.id ?? null)
 
@@ -20,11 +21,11 @@ const { gradient: catGradient } = useCategories()
 
 function formatRemaining(totalHours: number, progress: number): string {
   const remaining = totalHours * (1 - progress / 100)
-  if (remaining < 1 / 60) return '< 1 мин'
-  if (remaining < 1) return `${Math.round(remaining * 60)} мин`
+  if (remaining < 1 / 60) return `< 1 ${t('common.unitMin')}`
+  if (remaining < 1) return `${Math.round(remaining * 60)} ${t('common.unitMin')}`
   const h = Math.floor(remaining)
   const m = Math.round((remaining - h) * 60)
-  return m > 0 ? `${h}ч ${m}м` : `${h}ч`
+  return m > 0 ? `${h}${t('common.unitH')} ${m}${t('common.unitM')}` : `${h}${t('common.unitH')}`
 }
 
 async function playBook(bookId: string) {
@@ -40,10 +41,10 @@ async function playBook(bookId: string) {
 <template>
   <div v-if="books.length">
     <h2 class="section-label mb-4">{{ t('dashboard.continueListening') }}</h2>
-    <div class="fade-mask-r">
+    <div v-if="activeBooks.length" class="fade-mask-r">
       <div class="flex gap-4 overflow-x-auto pb-2">
         <div
-          v-for="book in books"
+          v-for="book in activeBooks"
           :key="book.id"
           class="card group relative max-w-[320px] min-w-[280px] flex-shrink-0 overflow-hidden sm:min-w-[320px]"
         >
@@ -83,7 +84,7 @@ async function playBook(bookId: string) {
                 <div class="mb-1 flex items-center justify-between">
                   <span class="text-[11px] text-[--t3]">{{ book.progress }}%</span>
                   <span v-if="book.duration_hours && book.progress < 100" class="text-[10px] text-[--t3]">
-                    {{ formatRemaining(book.duration_hours, book.progress) }} осталось
+                    {{ formatRemaining(book.duration_hours, book.progress) }} {{ t('common.remaining') }}
                   </span>
                 </div>
                 <ProgressBar :percent="book.progress" height="h-1" />
@@ -103,5 +104,6 @@ async function playBook(bookId: string) {
         </div>
       </div>
     </div>
+    <p v-else class="text-sm text-[--t3]">{{ t('dashboard.startListening') }}</p>
   </div>
 </template>

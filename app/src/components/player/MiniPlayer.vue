@@ -30,7 +30,15 @@ const {
       class="mini-player-position fixed right-0 left-0 z-40 md:bottom-0 md:left-56"
     >
       <!-- Progress bar -->
-      <div class="h-[2px] w-full" style="background: rgba(255, 255, 255, 0.06)">
+      <div
+        class="h-[2px] w-full"
+        style="background: rgba(255, 255, 255, 0.06)"
+        role="progressbar"
+        :aria-valuenow="overallProgress"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        :aria-label="t('player.progressAria')"
+      >
         <div
           class="h-full transition-all duration-300"
           style="background: var(--gradient-bar)"
@@ -53,6 +61,9 @@ const {
               :title="t('player.offline')"
             />
             {{ currentBook.title }}
+          </p>
+          <p v-if="currentBook?.author" class="line-clamp-1 text-[11px] text-[--t3]">
+            {{ currentBook.author }}
           </p>
           <p class="mt-0.5 flex items-center gap-1.5 truncate text-[11px] leading-tight text-[--t3]">
             <span class="truncate">{{ currentTrack?.filename ?? '' }}</span>

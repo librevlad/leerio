@@ -13,13 +13,13 @@ function copyPath() {
     .writeText(props.path)
     .then(() => {
       copied.value = true
-      toast.success('Путь скопирован')
+      toast.success(t('book.pathCopied'))
       setTimeout(() => {
         copied.value = false
       }, 2000)
     })
     .catch(() => {
-      toast.error('Не удалось скопировать')
+      toast.error(t('book.copyError'))
     })
 }
 </script>

@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuth } from '../composables/useAuth'
+import { version } from '../../package.json'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -149,11 +150,15 @@ async function handlePasswordLogin() {
           <div id="google-signin-btn" />
         </div>
 
+        <p class="mt-4 text-center text-[12px] text-[--t3]">
+          {{ t('login.noAccount') }}
+        </p>
+
         <div v-if="loading" class="mt-5 text-[13px] text-[--t3]">{{ t('login.loading') }}</div>
         <div v-if="error" class="mt-5 text-[13px] text-red-400">{{ error }}</div>
       </div>
 
-      <p class="mt-10 text-center text-[11px] text-[--t3] opacity-40">Leerio v1.0</p>
+      <p class="mt-10 text-center text-[11px] text-[--t3] opacity-40">Leerio v{{ version }}</p>
     </div>
   </div>
 </template>

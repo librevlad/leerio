@@ -1,5 +1,6 @@
 import { defineComponent, h } from 'vue'
 
+// SECURITY: paths must be string literals only, never user input
 function icon(paths: string, opts?: { fill?: boolean; viewBox?: string; strokeWidth?: string }) {
   return defineComponent({
     props: { size: { type: [Number, String], default: 24 } },

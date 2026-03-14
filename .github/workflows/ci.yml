@@ -105,7 +105,7 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 20
           cache: npm
           cache-dependency-path: app/package-lock.json
       - name: Install
@@ -131,20 +131,22 @@ jobs:
         with:
           name: leerio-debug-apk
           path: app/android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Rename APK
+        run: cp app/android/app/build/outputs/apk/debug/app-debug.apk app/android/app/build/outputs/apk/debug/leerio.apk
       - name: Create/update GitHub release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest-apk
           name: Latest APK Build
-          body: "Debug APK built from ${{ github.sha }}"
+          body: "APK built from ${{ github.sha }}"
           prerelease: true
-          files: app/android/app/build/outputs/apk/debug/app-debug.apk
+          files: app/android/app/build/outputs/apk/debug/leerio.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   deploy:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: [server-lint, app-build]
+    needs: [server-lint, app-build, e2e]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -165,35 +167,12 @@ jobs:
           capture_stdout: true
           script: |
             cd /opt/leerio
-            PREV_SHA=$(git rev-parse HEAD)
-            echo "Previous SHA: $PREV_SHA"
-            git fetch origin main
-            git reset --hard origin/main
-            echo "Current SHA: $(git rev-parse HEAD)"
-            rm -f docker-compose.override.yml
-            sed -i 's|CORS_ORIGINS=https://leerio.app|CORS_ORIGINS=https://app.leerio.app|' .env
-            # Ensure S3 config in .env (overwrite if exists)
-            sed -i '/^S3_ENDPOINT=/d' .env 2>/dev/null; echo "S3_ENDPOINT=$S3_ENDPOINT" >> .env
-            sed -i '/^S3_ACCESS_KEY=/d' .env 2>/dev/null; echo "S3_ACCESS_KEY=$S3_ACCESS_KEY" >> .env
-            sed -i '/^S3_SECRET_KEY=/d' .env 2>/dev/null; echo "S3_SECRET_KEY=$S3_SECRET_KEY" >> .env
-            sed -i '/^S3_BUCKET=/d' .env 2>/dev/null; echo "S3_BUCKET=$S3_BUCKET" >> .env
-            sed -i '/^GOOGLE_CLIENT_ID=/d' .env 2>/dev/null; echo "GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID" >> .env
-            docker compose build --pull --no-cache app
-            docker compose build --pull server
-            docker compose up -d
-            echo "Waiting for services to start..."
-            sleep 15
-            for i in 1 2 3; do
-              if curl -sf https://app.leerio.app/api/config/constants > /dev/null; then
-                echo "Health check passed (attempt $i)"
-                exit 0
+            # Inject secrets from CI into .env (VPS .env may not have them)
+            for var in S3_ENDPOINT S3_ACCESS_KEY S3_SECRET_KEY S3_BUCKET GOOGLE_CLIENT_ID; do
+              val=$(eval echo "\$$var")
+              if [ -n "$val" ]; then
+                sed -i "/^${var}=/d" .env 2>/dev/null
+                echo "${var}=${val}" >> .env
               fi
-              echo "Health check failed (attempt $i/3), retrying in 10s..."
-              sleep 10
             done
-            echo "All health checks failed — rolling back to $PREV_SHA"
-            git checkout "$PREV_SHA"
-            docker compose build --pull --no-cache app
-            docker compose build --pull server
-            docker compose up -d
-            exit 1
+            bash scripts/deploy.sh --local

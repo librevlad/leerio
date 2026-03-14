@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { IconHome, IconLibrary, IconFolder, IconMenu, IconUpload, IconHistory, IconSettings } from '../shared/icons'
+import { IconHome, IconLibrary, IconFolder, IconMenu, IconUpload, IconHistory, IconSettings, IconChart, IconQueue } from '../shared/icons'
 import BottomSheet from './BottomSheet.vue'
 import { usePlayer } from '../../composables/usePlayer'
 import { useAuth } from '../../composables/useAuth'
@@ -25,7 +25,9 @@ const guestTabs = computed(() => [{ path: '/library', label: t('nav.catalog'), i
 const tabs = computed(() => (isLoggedIn.value ? authTabs.value : guestTabs.value))
 
 const moreLinks = computed(() => [
+  { path: '/collections', label: t('nav.collections'), icon: IconQueue },
   { path: '/history', label: t('nav.history'), icon: IconHistory },
+  { path: '/analytics', label: t('nav.analytics'), icon: IconChart },
   { path: '/upload', label: t('nav.upload'), icon: IconUpload },
   { path: '/settings', label: t('nav.settings'), icon: IconSettings },
 ])

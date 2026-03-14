@@ -39,9 +39,13 @@
         <span>Leerio</span>
       </a>
       <div class="nav-links">
-        <a href="#features">Можливості</a>
-        <a href="#gallery">Скріншоти</a>
-        <a class="btn btn-primary btn-sm" href="https://app.leerio.app">Відкрити застосунок</a>
+        <a href="#features" data-uk="Можливості" data-ru="Возможности">Можливості</a>
+        <a href="#gallery" data-uk="Скріншоти" data-ru="Скриншоты">Скріншоти</a>
+        <a class="btn btn-primary btn-sm" href="https://app.leerio.app" data-uk="Відкрити застосунок" data-ru="Открыть приложение">Відкрити застосунок</a>
+        <div class="lang-toggle">
+          <button class="lang-btn active" data-lang="uk" onclick="setLang('uk')">UA</button>
+          <button class="lang-btn" data-lang="ru" onclick="setLang('ru')">RU</button>
+        </div>
       </div>
     </div>
   </nav>
@@ -51,26 +55,32 @@
     <div class="hero-glow"></div>
     <div class="hero-grid-bg"></div>
     <div class="container hero-inner">
-      <div class="hero-badge reveal">
+      <div class="hero-badge reveal" data-uk="Безкоштовно та без реклами" data-ru="Бесплатно и без рекламы">
         <span class="hero-badge-dot"></span>
         Безкоштовно та без реклами
       </div>
 
       <h1 class="reveal">
-        Ваша <span class="gradient-text">аудіокнижкова</span><br>бібліотека
+        <span data-uk="Ваша" data-ru="Ваша">Ваша</span> <span class="gradient-text" data-uk="аудіокнижкова" data-ru="аудиокнижная">аудіокнижкова</span><br><span data-uk="бібліотека" data-ru="библиотека">бібліотека</span>
       </h1>
-      <p class="hero-sub reveal">
+      <p class="hero-sub reveal" data-uk="Організуй колекцію, стеж за прогресом, слухай будь-де — у браузері або на Android." data-ru="Организуй коллекцию, следи за прогрессом, слушай где угодно — в браузере или на Android.">
         Організуй колекцію, стеж за прогресом, слухай будь-де — у браузері або на Android.
       </p>
+
+      <div class="hero-features reveal">
+        <span data-uk="&#10003; 270+ аудіокниг" data-ru="&#10003; 270+ аудиокниг">&#10003; 270+ аудіокниг</span>
+        <span data-uk="&#10003; Без реєстрації для перегляду" data-ru="&#10003; Без регистрации для просмотра">&#10003; Без реєстрації для перегляду</span>
+        <span data-uk="&#10003; Завантажуйте свої книги" data-ru="&#10003; Загружайте свои книги">&#10003; Завантажуйте свої книги</span>
+      </div>
 
       <div class="hero-ctas reveal">
         <a class="btn btn-primary" href="https://app.leerio.app">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-          Відкрити застосунок
+          <span data-uk="Відкрити застосунок" data-ru="Открыть приложение">Відкрити застосунок</span>
         </a>
-        <a class="btn btn-ghost" href="https://github.com/librevlad/leerio/releases/download/latest-apk/app-debug.apk">
+        <a class="btn btn-ghost" href="https://github.com/librevlad/leerio/releases/download/latest-apk/leerio.apk">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Завантажити APK
+          <span data-uk="Завантажити APK" data-ru="Скачать APK">Завантажити APK</span>
         </a>
       </div>
 
@@ -97,23 +107,23 @@
     <div class="container">
       <div class="stats-grid reveal">
         <div class="stat-item">
-          <span class="stat-number">195+</span>
-          <span class="stat-label">аудіокниг</span>
+          <span class="stat-number">270+</span>
+          <span class="stat-label" data-uk="аудіокниг" data-ru="аудиокниг">аудіокниг</span>
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
           <span class="stat-number">6</span>
-          <span class="stat-label">категорій</span>
+          <span class="stat-label" data-uk="категорій" data-ru="категорий">категорій</span>
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
           <span class="stat-number">2</span>
-          <span class="stat-label">платформи</span>
+          <span class="stat-label" data-uk="платформи" data-ru="платформы">платформи</span>
         </div>
         <div class="stat-divider"></div>
         <div class="stat-item">
           <span class="stat-number">0 $</span>
-          <span class="stat-label">назавжди</span>
+          <span class="stat-label" data-uk="назавжди" data-ru="навсегда">назавжди</span>
         </div>
       </div>
     </div>
@@ -123,9 +133,9 @@
   <section class="features" id="features">
     <div class="container">
       <div class="section-header reveal">
-        <span class="section-tag">Можливості</span>
-        <h2>Усе для аудіокниг</h2>
-        <p>Одна програма — повний контроль над колекцією</p>
+        <span class="section-tag" data-uk="Можливості" data-ru="Возможности">Можливості</span>
+        <h2 data-uk="Усе для аудіокниг" data-ru="Всё для аудиокниг">Усе для аудіокниг</h2>
+        <p data-uk="Одна програма — повний контроль над колекцією" data-ru="Одна программа — полный контроль над коллекцией">Одна програма — повний контроль над колекцією</p>
       </div>
 
       <div class="features-grid">
@@ -133,48 +143,48 @@
           <div class="feature-icon" style="--icon-bg: rgba(232, 146, 58, 0.12); --icon-fg: #e8923a">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
           </div>
-          <h3>Бібліотека</h3>
-          <p>Категорії, пошук, фільтри — швидкий доступ до будь-якої книги</p>
+          <h3 data-uk="Бібліотека" data-ru="Библиотека">Бібліотека</h3>
+          <p data-uk="Категорії, пошук, фільтри — швидкий доступ до будь-якої книги" data-ru="Категории, поиск, фильтры — быстрый доступ к любой книге">Категорії, пошук, фільтри — швидкий доступ до будь-якої книги</p>
         </div>
 
         <div class="feature-card reveal" style="--delay: 0.06s">
           <div class="feature-icon" style="--icon-bg: rgba(192, 132, 252, 0.12); --icon-fg: #c084fc">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
           </div>
-          <h3>Плеєр</h3>
-          <p>Трекліст, швидкість відтворення, таймер сну, закладки</p>
+          <h3 data-uk="Плеєр" data-ru="Плеер">Плеєр</h3>
+          <p data-uk="Трекліст, швидкість відтворення, таймер сну, закладки" data-ru="Треклист, скорость воспроизведения, таймер сна, закладки">Трекліст, швидкість відтворення, таймер сну, закладки</p>
         </div>
 
         <div class="feature-card reveal" style="--delay: 0.12s">
           <div class="feature-icon" style="--icon-bg: rgba(52, 211, 153, 0.12); --icon-fg: #34d399">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
           </div>
-          <h3>Аналітика</h3>
-          <p>Статистика прослуховування, теплова карта, щоденні цілі</p>
+          <h3 data-uk="Аналітика" data-ru="Аналитика">Аналітика</h3>
+          <p data-uk="Статистика прослуховування, теплова карта, щоденні цілі" data-ru="Статистика прослушивания, тепловая карта, ежедневные цели">Статистика прослуховування, теплова карта, щоденні цілі</p>
         </div>
 
         <div class="feature-card reveal" style="--delay: 0.18s">
           <div class="feature-icon" style="--icon-bg: rgba(96, 165, 250, 0.12); --icon-fg: #60a5fa">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           </div>
-          <h3>Завантаження</h3>
-          <p>Додавайте власні аудіокниги — завантажте ZIP або окремі файли</p>
+          <h3 data-uk="Завантаження" data-ru="Загрузка">Завантаження</h3>
+          <p data-uk="Додавайте власні аудіокниги — завантажте ZIP або окремі файли" data-ru="Добавляйте свои аудиокниги — загрузите ZIP или отдельные файлы">Додавайте власні аудіокниги — завантажте ZIP або окремі файли</p>
         </div>
 
         <div class="feature-card reveal" style="--delay: 0.24s">
           <div class="feature-icon" style="--icon-bg: rgba(251, 191, 36, 0.12); --icon-fg: #fbbf24">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
           </div>
-          <h3>Веб і Android</h3>
-          <p>Браузер та APK — слухайте на будь-якому пристрої</p>
+          <h3 data-uk="Веб і Android" data-ru="Веб и Android">Веб і Android</h3>
+          <p data-uk="Браузер та APK — слухайте на будь-якому пристрої" data-ru="Браузер и APK — слушайте на любом устройстве">Браузер та APK — слухайте на будь-якому пристрої</p>
         </div>
 
         <div class="feature-card reveal" style="--delay: 0.3s">
           <div class="feature-icon" style="--icon-bg: rgba(248, 113, 113, 0.12); --icon-fg: #f87171">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
           </div>
-          <h3>Нотатки та цитати</h3>
-          <p>Зберігайте думки та улюблені моменти до кожної книги</p>
+          <h3 data-uk="Нотатки та цитати" data-ru="Заметки и цитаты">Нотатки та цитати</h3>
+          <p data-uk="Зберігайте думки та улюблені моменти до кожної книги" data-ru="Сохраняйте мысли и любимые моменты к каждой книге">Зберігайте думки та улюблені моменти до кожної книги</p>
         </div>
       </div>
     </div>
@@ -184,14 +194,14 @@
   <section class="gallery" id="gallery">
     <div class="container">
       <div class="section-header reveal">
-        <span class="section-tag">Інтерфейс</span>
-        <h2>Як це виглядає</h2>
-        <p>Реальні скріншоти застосунку</p>
+        <span class="section-tag" data-uk="Інтерфейс" data-ru="Интерфейс">Інтерфейс</span>
+        <h2 data-uk="Як це виглядає" data-ru="Как это выглядит">Як це виглядає</h2>
+        <p data-uk="Реальні скріншоти застосунку" data-ru="Реальные скриншоты приложения">Реальні скріншоти застосунку</p>
       </div>
 
       <div class="gallery-tabs reveal">
-        <button class="gallery-tab active" data-target="desktop">Десктоп</button>
-        <button class="gallery-tab" data-target="mobile">Мобільна</button>
+        <button class="gallery-tab active" data-target="desktop" data-uk="Десктоп" data-ru="Десктоп">Десктоп</button>
+        <button class="gallery-tab" data-target="mobile" data-uk="Мобільна" data-ru="Мобильная">Мобільна</button>
       </div>
 
       <div class="gallery-desktop gallery-panel active reveal" id="gallery-desktop">
@@ -260,20 +270,20 @@
     <div class="container">
       <div class="bottom-cta-card reveal">
         <div class="bottom-cta-glow"></div>
-        <h2>Почніть слухати<br><span class="gradient-text">прямо зараз</span></h2>
+        <h2><span data-uk="Почніть слухати" data-ru="Начните слушать">Почніть слухати</span><br><span class="gradient-text" data-uk="прямо зараз" data-ru="прямо сейчас">прямо зараз</span></h2>
 
         <div class="hero-ctas">
           <a class="btn btn-primary" href="https://app.leerio.app">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-            Відкрити застосунок
+            <span data-uk="Відкрити застосунок" data-ru="Открыть приложение">Відкрити застосунок</span>
           </a>
-          <a class="btn btn-ghost" href="https://github.com/librevlad/leerio/releases/download/latest-apk/app-debug.apk">
+          <a class="btn btn-ghost" href="https://github.com/librevlad/leerio/releases/download/latest-apk/leerio.apk">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Завантажити APK
+            <span data-uk="Завантажити APK" data-ru="Скачать APK">Завантажити APK</span>
           </a>
         </div>
 
-        <p class="bottom-cta-note">Безкоштовно. Без реклами. Назавжди.</p>
+        <p class="bottom-cta-note" data-uk="Безкоштовно. Без реклами. Назавжди." data-ru="Бесплатно. Без рекламы. Навсегда.">Безкоштовно. Без реклами. Назавжди.</p>
       </div>
     </div>
   </section>
@@ -295,6 +305,26 @@
 
   <!-- ── Scripts ───────────────────────────────────────────────────────── -->
   <script>
+    // Language switcher
+    function setLang(lang) {
+      document.querySelectorAll('[data-' + lang + ']').forEach(function (el) {
+        // For hero-badge, preserve the dot child
+        if (el.classList.contains('hero-badge')) {
+          var dot = el.querySelector('.hero-badge-dot');
+          el.textContent = '';
+          if (dot) el.appendChild(dot);
+          el.appendChild(document.createTextNode(' ' + el.getAttribute('data-' + lang)));
+        } else {
+          el.textContent = el.getAttribute('data-' + lang);
+        }
+      });
+      document.querySelectorAll('.lang-btn').forEach(function (b) { b.classList.remove('active'); });
+      var activeBtn = document.querySelector('.lang-btn[data-lang="' + lang + '"]');
+      if (activeBtn) activeBtn.classList.add('active');
+      document.documentElement.lang = lang;
+      localStorage.setItem('leerio-lang', lang);
+    }
+
     // Scroll reveal with staggered delays
     document.addEventListener('DOMContentLoaded', function () {
       var els = document.querySelectorAll('.reveal');
@@ -331,6 +361,11 @@
       window.addEventListener('scroll', function () {
         nav.classList.toggle('scrolled', window.scrollY > 40);
       }, { passive: true });
+
+      // Auto-detect language
+      var saved = localStorage.getItem('leerio-lang');
+      var browser = navigator.language.startsWith('ru') ? 'ru' : 'uk';
+      setLang(saved || browser);
     });
   </script>
 

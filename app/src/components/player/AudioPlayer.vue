@@ -120,13 +120,13 @@ function pickSleep(v: number | null) {
   setSleepTimer(v)
   showSleepMenu.value = false
 }
-const SLEEP_OPTIONS = [
-  { label: '15 мин', value: 15 },
-  { label: '30 мин', value: 30 },
-  { label: '45 мин', value: 45 },
-  { label: '60 мин', value: 60 },
-  { label: 'Конец трека', value: -1 },
-]
+const SLEEP_OPTIONS = computed(() => [
+  { label: t('player.sleepMin', { n: 15 }), value: 15 },
+  { label: t('player.sleepMin', { n: 30 }), value: 30 },
+  { label: t('player.sleepMin', { n: 45 }), value: 45 },
+  { label: t('player.sleepMin', { n: 60 }), value: 60 },
+  { label: t('player.endOfTrack'), value: -1 },
+])
 </script>
 
 <template>
@@ -138,7 +138,7 @@ const SLEEP_OPTIONS = [
       <p class="truncate text-[14px] font-semibold text-[--t1]">
         {{ currentTrack?.filename ?? '—' }}
       </p>
-      <p class="text-[12px] text-[--t3]">Трек {{ currentTrackIndex + 1 }} из {{ tracks.length }}</p>
+      <p class="text-[12px] text-[--t3]">{{ t('player.trackN', { n: currentTrackIndex + 1, total: tracks.length }) }}</p>
     </div>
 
     <!-- Controls -->
@@ -292,7 +292,7 @@ const SLEEP_OPTIONS = [
             class="block w-full cursor-pointer border-0 bg-transparent px-4 py-1.5 text-left text-[12px] text-red-400 transition-colors hover:bg-white/5"
             @click="pickSleep(null)"
           >
-            Отменить
+            {{ t('player.cancel') }}
           </button>
         </div>
       </div>
@@ -325,7 +325,7 @@ const SLEEP_OPTIONS = [
         @click="showBookmarks = !showBookmarks"
       >
         <IconBookmark :size="14" />
-        Закладки ({{ bookmarks.length }})
+        {{ t('player.bookmarksN', { n: bookmarks.length }) }}
         <span class="text-[10px] text-[--t3]">{{ showBookmarks ? '▲' : '▼' }}</span>
       </button>
       <div v-if="showBookmarks" class="scrollbar-hide max-h-48 space-y-1 overflow-y-auto">
@@ -336,7 +336,7 @@ const SLEEP_OPTIONS = [
         >
           <button class="flex-1 cursor-pointer border-0 bg-transparent text-left" @click="seekToBookmark(bm)">
             <span class="text-[12px] font-medium text-[--t2]">
-              Трек {{ bm.track + 1 }} · {{ formatTime(bm.time) }}
+              {{ t('player.trackN', { n: bm.track + 1, total: tracks.length }) }} · {{ formatTime(bm.time) }}
             </span>
             <span v-if="bm.note" class="ml-2 text-[11px] text-[--t3]">{{ bm.note }}</span>
           </button>

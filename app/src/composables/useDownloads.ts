@@ -26,6 +26,11 @@ interface DownloadsMeta {
   books: Record<string, BookMeta>
 }
 
+/** Minimal interface for cancelling an in-progress download (replaces fake AbortController cast) */
+interface Cancellable {
+  abort: () => void
+}
+
 interface DownloadProgress {
   currentTrack: number
   totalTracks: number
@@ -43,7 +48,7 @@ const BOOKS_DIR = 'leerio/books'
 const isNative = ref(false)
 const meta = ref<DownloadsMeta>({ books: {} })
 const downloading = ref<Record<string, DownloadProgress>>({})
-const abortControllers = new Map<string, AbortController>()
+const abortControllers = new Map<string, Cancellable>()
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -99,7 +104,7 @@ async function downloadBook(book: Book, trackList: Track[]): Promise<void> {
     abort: () => {
       cancelled = true
     },
-  } as unknown as AbortController)
+  })
 
   const totalBytes = trackList.reduce((s, t) => s + (t.size_bytes || 0), 0)
   downloading.value[book.id] = {

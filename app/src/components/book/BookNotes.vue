@@ -24,7 +24,7 @@ const save = useDebounceFn(async (val: string) => {
   try {
     await api.setNote(props.bookId, val)
   } catch {
-    toast.error('Не удалось сохранить заметку')
+    toast.error(t('book.noteSaveError'))
   } finally {
     saving.value = false
   }
@@ -36,7 +36,7 @@ const save = useDebounceFn(async (val: string) => {
     <div class="mb-3 flex items-center justify-between">
       <h3 class="section-label">{{ t('book.notes') }}</h3>
       <Transition name="toast">
-        <span v-if="saving" class="text-[11px] font-medium text-[--accent] opacity-70"> Сохранение... </span>
+        <span v-if="saving" class="text-[11px] font-medium text-[--accent] opacity-70"> {{ t('book.noteSaving') }}</span>
       </Transition>
     </div>
     <textarea

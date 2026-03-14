@@ -28,8 +28,8 @@ const totalDuration = computed(() => {
   if (!total) return null
   const hours = Math.floor(total / 3600)
   const minutes = Math.round((total % 3600) / 60)
-  if (hours > 0) return `${hours} ч ${minutes} мин`
-  return `${minutes} мин`
+  if (hours > 0) return `${hours} ${t('common.unitH')} ${minutes} ${t('common.unitMin')}`
+  return `${minutes} ${t('common.unitMin')}`
 })
 
 function formatDuration(sec: number): string {
@@ -96,6 +96,7 @@ onMounted(async () => {
               ? 'bg-[--accent-soft] text-[--t1]'
               : 'bg-transparent text-[--t2] hover:bg-white/[0.04]'
           "
+          :aria-label="t('player.playTrackAria', { index: track.index + 1 })"
           @click="handleTrackClick(track.index)"
         >
           <div class="flex w-full items-center gap-3">
@@ -142,18 +143,18 @@ onMounted(async () => {
         @click="expanded = !expanded"
       >
         <template v-if="expanded">
-          Свернуть
+          {{ t('book.collapse') }}
           <IconChevronUp :size="14" />
         </template>
         <template v-else>
-          Показать все ({{ tracks.length }})
+          {{ t('book.showAllTracks', { count: tracks.length }) }}
           <IconChevronDown :size="14" />
         </template>
       </button>
 
       <!-- Total duration -->
       <p v-if="totalDuration" class="mt-2 border-t border-white/[0.04] pt-3 text-[12px] text-[--t3]">
-        Всего: {{ totalDuration }}
+        {{ t('book.totalDuration') }} {{ totalDuration }}
       </p>
     </div>
   </div>

@@ -31,7 +31,6 @@ def test_migrate_book_already_migrated(setup_db):
     )
     conn.commit()
     book_id = conn.execute("SELECT id FROM books WHERE slug = 'test'").fetchone()[0]
-    conn.close()
 
     result = migrate_book(book_id)
     assert result["status"] == "skipped"
@@ -48,7 +47,6 @@ def test_migrate_book_dry_run(setup_db):
     )
     conn.commit()
     book_id = conn.execute("SELECT id FROM books WHERE slug = 'old-book'").fetchone()[0]
-    conn.close()
 
     with patch("server.ingest.migrate.get_old_s3_files") as mock_list:
         mock_list.return_value = [
@@ -71,7 +69,6 @@ def test_migrate_book_no_mp3s(setup_db):
     )
     conn.commit()
     book_id = conn.execute("SELECT id FROM books WHERE slug = 'no-audio'").fetchone()[0]
-    conn.close()
 
     with patch("server.ingest.migrate.get_old_s3_files") as mock_list:
         mock_list.return_value = [
@@ -98,7 +95,6 @@ def test_migrate_all_filters_already_migrated(setup_db):
         ("old", "Old", "Author", "old", "Бизнес/Author - Old"),
     )
     conn.commit()
-    conn.close()
 
     with patch("server.ingest.migrate.get_old_s3_files") as mock_list:
         mock_list.return_value = [

@@ -100,18 +100,15 @@ def sample_books(tmp_data_dir):
     ]
 
     conn = db_mod._get_conn()
-    try:
-        book_ids = []
-        for cat, folder, author, title, reader in book_data:
-            (books_dir / cat / folder).mkdir(parents=True, exist_ok=True)
-            slug = f"{author}-{title}".lower().replace(" ", "-")
-            conn.execute(
-                """INSERT INTO books (slug, title, author, reader, category, folder, s3_prefix, has_cover, mp3_count)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0)""",
-                (slug, title, author, reader, cat, folder, f"{cat}/{folder}"),
-            )
-            book_ids.append(conn.execute("SELECT last_insert_rowid()").fetchone()[0])
-        conn.commit()
-        return book_ids
-    finally:
-        conn.close()
+    book_ids = []
+    for cat, folder, author, title, reader in book_data:
+        (books_dir / cat / folder).mkdir(parents=True, exist_ok=True)
+        slug = f"{author}-{title}".lower().replace(" ", "-")
+        conn.execute(
+            """INSERT INTO books (slug, title, author, reader, category, folder, s3_prefix, has_cover, mp3_count)
+               VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0)""",
+            (slug, title, author, reader, cat, folder, f"{cat}/{folder}"),
+        )
+        book_ids.append(conn.execute("SELECT last_insert_rowid()").fetchone()[0])
+    conn.commit()
+    return book_ids

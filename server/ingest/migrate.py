@@ -50,10 +50,7 @@ def migrate_book(book_id: int, dry_run: bool = False) -> dict:
     Returns result dict with status and details.
     """
     conn = db._get_conn()
-    try:
-        book = conn.execute("SELECT * FROM books WHERE id = ?", (book_id,)).fetchone()
-    finally:
-        conn.close()
+    book = conn.execute("SELECT * FROM books WHERE id = ?", (book_id,)).fetchone()
 
     if not book:
         return {"status": "error", "reason": f"Book {book_id} not found"}
@@ -139,20 +136,17 @@ def migrate_book(book_id: int, dry_run: bool = False) -> dict:
 
         # Update DB
         conn = db._get_conn()
-        try:
+        conn.execute(
+            "UPDATE books SET s3_prefix = ? WHERE id = ?",
+            (new_prefix, book_id),
+        )
+        # Update tracks
+        for t in tracks_json:
             conn.execute(
-                "UPDATE books SET s3_prefix = ? WHERE id = ?",
-                (new_prefix, book_id),
+                "UPDATE tracks SET s3_key = ? WHERE book_id = ? AND idx = ?",
+                (f"{new_prefix}/audio/{t['file']}", book_id, t["track"]),
             )
-            # Update tracks
-            for t in tracks_json:
-                conn.execute(
-                    "UPDATE tracks SET s3_key = ? WHERE book_id = ? AND idx = ?",
-                    (f"{new_prefix}/audio/{t['file']}", book_id, t["track"]),
-                )
-            conn.commit()
-        finally:
-            conn.close()
+        conn.commit()
 
         return {
             "status": "done",
@@ -169,10 +163,7 @@ def migrate_book(book_id: int, dry_run: bool = False) -> dict:
 def migrate_all(dry_run: bool = False) -> list[dict]:
     """Migrate all books that haven't been migrated yet."""
     conn = db._get_conn()
-    try:
-        books = conn.execute("SELECT id FROM books WHERE s3_prefix NOT LIKE 'books/%' ORDER BY id").fetchall()
-    finally:
-        conn.close()
+    books = conn.execute("SELECT id FROM books WHERE s3_prefix NOT LIKE 'books/%' ORDER BY id").fetchall()
 
     results = []
     for book in books:

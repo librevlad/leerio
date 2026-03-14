@@ -28,17 +28,17 @@ const search = ref('')
 const actionFilter = ref('')
 const coverErrors = reactive(new Set<string>())
 
-const actions: { value: string; label: string }[] = [
-  { value: '', label: 'Все' },
-  { value: 'inbox', label: 'Добавлено' },
-  { value: 'listen', label: 'Слушаю' },
-  { value: 'phone', label: 'На телефон' },
-  { value: 'done', label: 'Прослушано' },
-  { value: 'pause', label: 'На паузе' },
-  { value: 'reject', label: 'Забраковано' },
-  { value: 'rated', label: 'Оценено' },
-  { value: 'move', label: 'Перемещено' },
-]
+const actions = computed(() => [
+  { value: '', label: t('history.filterAll') },
+  { value: 'inbox', label: t('history.filterAdded') },
+  { value: 'listen', label: t('history.filterListening') },
+  { value: 'phone', label: t('history.filterPhone') },
+  { value: 'done', label: t('history.filterDone') },
+  { value: 'pause', label: t('history.filterPaused') },
+  { value: 'reject', label: t('history.filterRejected') },
+  { value: 'rated', label: t('history.filterRated') },
+  { value: 'move', label: t('history.filterMoved') },
+])
 
 const actionIcon: Record<string, unknown> = {
   inbox: IconInbox,
@@ -89,7 +89,12 @@ async function loadHistory() {
 const { refreshing, pullProgress } = usePullToRefresh(loadHistory)
 
 onMounted(loadHistory)
-watch([actionFilter, search], loadHistory)
+let searchTimeout: ReturnType<typeof setTimeout> | null = null
+watch(search, () => {
+  if (searchTimeout) clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(loadHistory, 300)
+})
+watch(actionFilter, loadHistory)
 
 // Group entries by date
 const grouped = computed(() => {

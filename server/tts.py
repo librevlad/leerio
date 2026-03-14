@@ -591,12 +591,12 @@ async def run_tts_job(
         user_data.tts_job_update(job_id, status="done", progress=100)
         logger.info("TTS job %s: completed successfully", job_id)
 
-        # Clean up source file
+    except Exception as e:
+        logger.error("TTS job %s failed: %s", job_id, e, exc_info=True)
+        user_data.tts_job_update(job_id, status="error", error=str(e))
+    finally:
+        # Clean up source file even on error
         try:
             source_path.unlink()
         except Exception:
             pass
-
-    except Exception as e:
-        logger.error("TTS job %s failed: %s", job_id, e, exc_info=True)
-        user_data.tts_job_update(job_id, status="error", error=str(e))

@@ -62,8 +62,8 @@ const lastPosition = computed(() => {
   const elapsedSec = (props.book.progress / 100) * totalSec
   const h = Math.floor(elapsedSec / 3600)
   const m = Math.round((elapsedSec % 3600) / 60)
-  if (h > 0) return `${h}ч ${m}м`
-  return `${m}м`
+  if (h > 0) return `${h}${t('common.unitH')} ${m}${t('common.unitM')}`
+  return `${m}${t('common.unitM')}`
 })
 </script>
 
@@ -121,7 +121,7 @@ const lastPosition = computed(() => {
         <!-- Progress bar (mobile) -->
         <div v-if="book.progress > 0" class="mt-4">
           <div class="flex items-center justify-between text-[11px]">
-            <span class="font-semibold text-[--accent]">{{ Math.round(book.progress) }}% прослушано</span>
+            <span class="font-semibold text-[--accent]">{{ Math.round(book.progress) }}% {{ t('book.percentListened') }}</span>
             <span v-if="remainingHours !== null" class="text-[--t3]">{{
               t('book.remainingH', { hours: remainingHours })
             }}</span>
@@ -150,7 +150,7 @@ const lastPosition = computed(() => {
           {{ isCurrentBook ? t('book.continue') : t('book.listen') }}
         </button>
         <p v-if="isCurrentBook && lastPosition" class="mt-2 text-center text-[11px] text-[--t3]">
-          Последняя позиция: {{ lastPosition }}
+          {{ t('book.lastPosition', { pos: lastPosition }) }}
         </p>
 
         <!-- Progress stats (mobile) -->
@@ -159,7 +159,7 @@ const lastPosition = computed(() => {
           <div class="flex flex-wrap gap-x-4 gap-y-1">
             <span v-if="listenedHours !== null" class="text-[--t2]">
               {{ t('book.listenedOf', { hours: listenedHours }) }}
-              {{ book.duration_hours }} ч
+              {{ book.duration_hours }} {{ t('common.unitH') }}
             </span>
             <span v-if="startDate" class="text-[--t3]"> {{ t('book.startedAt', { date: startDate }) }} </span>
           </div>
@@ -245,7 +245,7 @@ const lastPosition = computed(() => {
                         ? 'text-amber-400'
                         : 'text-white/15 hover:text-amber-400/50'
                     "
-                    :title="`${s} из 5`"
+                    :title="`${s} ${t('common.outOf')} 5`"
                     @mouseenter="hoverStar = s"
                     @click="onStarClick(s)"
                   >
@@ -261,7 +261,7 @@ const lastPosition = computed(() => {
             <!-- Progress bar (desktop) -->
             <div v-if="book.progress > 0" class="mt-3">
               <div class="flex items-center justify-between text-[11px]">
-                <span class="font-semibold text-[--accent]">{{ Math.round(book.progress) }}% прослушано</span>
+                <span class="font-semibold text-[--accent]">{{ Math.round(book.progress) }}% {{ t('book.percentListened') }}</span>
                 <span v-if="remainingHours !== null" class="text-[--t3]">{{
                   t('book.remainingH', { hours: remainingHours })
                 }}</span>
@@ -279,7 +279,7 @@ const lastPosition = computed(() => {
             <div v-if="book.progress > 0" class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[12px]">
               <span v-if="listenedHours !== null" class="text-[--t2]">
                 {{ t('book.listenedOf', { hours: listenedHours }) }}
-                {{ book.duration_hours }} ч
+                {{ book.duration_hours }} {{ t('common.unitH') }}
               </span>
               <span v-if="startDate" class="text-[--t3]"> {{ t('book.startedAt', { date: startDate }) }} </span>
             </div>
@@ -300,7 +300,7 @@ const lastPosition = computed(() => {
                 {{ isCurrentBook ? t('book.continue') : t('book.listen') }}
               </button>
               <span v-if="isCurrentBook && lastPosition" class="text-[12px] text-[--t3]">
-                Последняя позиция: {{ lastPosition }}
+                {{ t('book.lastPosition', { pos: lastPosition }) }}
               </span>
             </div>
           </div>

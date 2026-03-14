@@ -36,7 +36,7 @@ const loading = ref(true)
 const player = usePlayer()
 const dl = useDownloads()
 const toast = useToast()
-const { isLoggedIn, isAdmin } = useAuth()
+const { isLoggedIn } = useAuth()
 
 const isCurrentBook = computed(() => player.currentBook.value?.id === book.value?.id)
 
@@ -63,15 +63,21 @@ async function removeDl() {
   if (book.value) await dl.deleteBook(book.value.id)
 }
 
+let loadGeneration = 0
+
 async function loadBook() {
+  const gen = ++loadGeneration
   loading.value = true
   try {
-    book.value = await api.getBook(route.params.id as string)
+    const result = await api.getBook(route.params.id as string)
+    if (gen !== loadGeneration) return // stale response from previous navigation
+    book.value = result
     if (book.value) document.title = `${book.value.title} — Leerio`
   } catch {
+    if (gen !== loadGeneration) return
     router.push('/library')
   } finally {
-    loading.value = false
+    if (gen === loadGeneration) loading.value = false
   }
 }
 
@@ -81,8 +87,12 @@ async function shareBook() {
   if (navigator.share) {
     navigator.share({ title: book.value.title, url }).catch(() => {})
   } else {
-    await navigator.clipboard.writeText(url)
-    toast.success('Ссылка скопирована')
+    try {
+      await navigator.clipboard.writeText(url)
+      toast.success(t('book.linkCopied'))
+    } catch {
+      // Clipboard API unavailable (Firefox/Safari restrictions)
+    }
   }
 }
 
@@ -97,7 +107,7 @@ async function onRatingChanged(rating: number) {
     book.value.rating = rating
     toast.success(rating ? t('book.ratingSet', { rating }) : t('book.ratingRemoved'))
   } catch {
-    toast.error('Не удалось сохранить оценку')
+    toast.error(t('book.ratingError'))
   }
 }
 
@@ -112,9 +122,9 @@ async function addToLibrary() {
   try {
     await api.setBookStatus(book.value.id, 'want_to_read')
     book.value.book_status = 'want_to_read'
-    toast.success('Добавлено в библиотеку')
+    toast.success(t('book.addedToLibrary'))
   } catch {
-    toast.error('Не удалось добавить')
+    toast.error(t('book.addError'))
   }
 }
 
@@ -133,17 +143,6 @@ async function startListening() {
     } catch {
       /* non-critical */
     }
-  }
-}
-
-async function changeLanguage(lang: string) {
-  if (!book.value) return
-  try {
-    await api.setBookLanguage(book.value.id, lang)
-    book.value.language = lang
-    toast.success(`Мова: ${lang.toUpperCase()}`)
-  } catch {
-    toast.error('Не вдалося змінити мову')
   }
 }
 
@@ -199,35 +198,16 @@ watch(() => route.params.id, loadBook)
         @rating-changed="onRatingChanged"
       />
 
-      <!-- Admin: language selector -->
-      <div v-if="isAdmin" class="mb-4 flex items-center gap-2">
-        <span class="text-[12px] text-[--t3]">Мова:</span>
-        <button
-          v-for="lang in ['ru', 'en', 'uk']"
-          :key="lang"
-          class="cursor-pointer rounded-lg border px-3 py-1.5 text-[12px] font-medium transition-colors"
-          :class="
-            book.language === lang
-              ? 'border-[--accent] bg-[--accent]/10 text-[--accent]'
-              : 'border-white/[0.08] bg-white/[0.04] text-[--t3] hover:bg-white/[0.08] hover:text-[--t1]'
-          "
-          @click="changeLanguage(lang)"
-        >
-          {{ lang === 'ru' ? '🇷🇺 RU' : lang === 'en' ? '🇬🇧 EN' : '🇺🇦 UK' }}
-        </button>
-      </div>
-
       <!-- Login prompt for guests -->
-      <div
-        v-if="!isLoggedIn"
-        class="card mb-5 flex flex-col items-center gap-3 px-6 py-6 text-center sm:flex-row sm:text-left"
-      >
-        <div class="flex-1">
-          <p class="text-[14px] font-semibold text-[--t1]">{{ t('book.loginToListen') }}</p>
-          <p class="mt-1 text-[12px] text-[--t3]">{{ t('book.loginFeatures') }}</p>
-        </div>
-        <router-link to="/login" class="btn btn-primary inline-flex items-center gap-2 whitespace-nowrap no-underline">
-          Войти
+      <div v-if="!isLoggedIn" class="card mb-5 p-6 text-center">
+        <p class="text-[16px] font-semibold text-[--t1]">{{ t('book.guestTitle') }}</p>
+        <p class="mt-1 text-[13px] text-[--t3]">{{ t('book.guestDesc') }}</p>
+        <router-link
+          to="/login"
+          class="mt-4 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-[14px] font-semibold text-white no-underline"
+          style="background: var(--gradient-accent)"
+        >
+          {{ t('book.guestLogin') }}
         </router-link>
       </div>
 
@@ -238,7 +218,7 @@ watch(() => route.params.id, loadBook)
         @click="addToLibrary"
       >
         <IconBookmark :size="18" />
-        Добавить в библиотеку
+        {{ t('book.addToLibrary') }}
       </button>
 
       <!-- 2. Action bar: status pills + download (auth only) -->
@@ -252,7 +232,7 @@ watch(() => route.params.id, loadBook)
               <!-- Not downloaded -->
               <button v-if="!isDownloaded && !isDownloading" class="btn btn-ghost" @click="startDownload">
                 <IconDownload :size="16" />
-                Скачать
+                {{ t('book.download') }}
               </button>
 
               <!-- Downloading -->
@@ -260,7 +240,7 @@ watch(() => route.params.id, loadBook)
                 <div class="flex-1">
                   <div class="mb-1 flex items-center justify-between">
                     <span class="text-[11px] text-[--t3]">
-                      Трек {{ (dlProgress?.currentTrack ?? 0) + 1 }} из {{ dlProgress?.totalTracks ?? 0 }}
+                      {{ t('player.trackN', { n: (dlProgress?.currentTrack ?? 0) + 1, total: dlProgress?.totalTracks ?? 0 }) }}
                     </span>
                     <span class="text-[11px] font-bold text-[--accent]">{{ dlPercent }}%</span>
                   </div>
@@ -279,7 +259,7 @@ watch(() => route.params.id, loadBook)
               <div v-else class="flex items-center gap-2">
                 <span class="flex items-center gap-1.5 text-[13px] font-medium text-emerald-400">
                   <IconCheck :size="16" />
-                  Загружено
+                  {{ t('book.downloaded') }}
                 </span>
                 <button
                   class="shrink-0 cursor-pointer border-0 bg-transparent p-1.5 text-[--t3] transition-colors hover:text-red-400"

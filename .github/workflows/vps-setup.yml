@@ -55,18 +55,12 @@ jobs:
               HAS_SUDO=0
             fi
 
-            # ── 3. Enable password auth + set password (if sudo) ──────
+            # ── 3. Harden SSH (if sudo) ──────────────────────────────
             if [ "$HAS_SUDO" = "1" ]; then
-              sudo sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
-              sudo sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+              sudo sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+              sudo sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
               sudo systemctl restart sshd || sudo systemctl restart ssh
-              NEW_PASS=$(openssl rand -base64 12)
-              echo "$(whoami):$NEW_PASS" | sudo chpasswd
-              echo "=========================================="
-              echo "NEW PASSWORD: $NEW_PASS"
-              echo "=========================================="
-              # Also set root password
-              echo "root:$NEW_PASS" | sudo chpasswd 2>/dev/null || true
+              echo ">>> SSH hardened: password auth disabled, root login key-only"
             fi
 
             # ── 4. Extract books ───────────────────────────────────────

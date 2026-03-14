@@ -14,6 +14,9 @@ export const LOCALES: { code: LocaleCode; label: string; flag: string }[] = [
 /**
  * Slavic plural rule for Russian and Ukrainian.
  * Returns 0 (one), 1 (few), or 2 (many).
+ *
+ * Used by vue-i18n's built-in t('key', count) pluralization.
+ * For inline template pluralization with explicit word forms, use utils/plural.ts instead.
  */
 function slavicPluralRule(choice: number): number {
   const abs = Math.abs(choice)

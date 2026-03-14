@@ -10,14 +10,12 @@ __pycache__/
 htmlcov/
 
 # Node
-app/node_modules/
+node_modules/
 app/dist/
 app/coverage/
 
 # Runtime data (sensitive + generated)
-data/*.json
-data/*.csv
-data/*.md
+data/*
 !data/.gitkeep
 !data/.gitignore
 
@@ -40,6 +38,21 @@ _backups/
 
 # Claude Code
 .claude/
+
+# Debug screenshots / snapshots (root-level)
+/*.jpeg
+/*.png
+/*.md
+!CLAUDE.md
+
+# Playwright MCP artifacts
+.playwright-mcp/
+
+# Book pipeline work files
+scripts/book-pipeline/work/
+
+# Large binary archives
+*.tar.gz
 
 # OS
 Thumbs.db

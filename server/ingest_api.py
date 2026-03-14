@@ -4,22 +4,24 @@ import asyncio
 import json
 import logging
 import os
+import threading
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel
 
 from . import db
-from .auth import get_current_user
+from .auth import get_current_user, require_admin as _require_admin
 
 logger = logging.getLogger("leerio.ingest_api")
 
 router = APIRouter(prefix="/api/admin/ingest", tags=["ingest"])
 
+_status_lock = threading.Lock()
+
 
 def require_admin(user: dict = Depends(get_current_user)):
-    if user.get("role") != "admin":
-        raise HTTPException(status_code=403, detail="Admin access required")
-    return user
+    """FastAPI dependency: require authenticated admin user."""
+    return _require_admin(user)
 
 
 class CreateJobRequest(BaseModel):
@@ -74,61 +76,52 @@ def run_migration(user: dict = Depends(require_admin)):
     """Force-run DB migration for ingestion columns."""
     conn = db._get_conn()
     results = []
-    try:
-        for col in [
-            "description TEXT DEFAULT ''",
-            "language TEXT DEFAULT 'ru'",
-            "source TEXT DEFAULT 'manual'",
-            "external_id TEXT",
-            "fingerprint TEXT",
-        ]:
-            try:
-                conn.execute(f"ALTER TABLE books ADD COLUMN {col}")
-                results.append(f"Added: {col}")
-            except Exception as e:
-                results.append(f"Skipped: {col} ({e})")
-        conn.commit()
+    for col in [
+        "description TEXT DEFAULT ''",
+        "language TEXT DEFAULT 'ru'",
+        "source TEXT DEFAULT 'manual'",
+        "external_id TEXT",
+        "fingerprint TEXT",
+    ]:
+        try:
+            conn.execute(f"ALTER TABLE books ADD COLUMN {col}")
+            results.append(f"Added: {col}")
+        except Exception as e:
+            results.append(f"Skipped: {col} ({e})")
+    conn.commit()
 
-        # Verify
-        cols = [r[1] for r in conn.execute("PRAGMA table_info(books)").fetchall()]
-        return {"results": results, "columns": cols}
-    finally:
-        conn.close()
+    # Verify
+    cols = [r[1] for r in conn.execute("PRAGMA table_info(books)").fetchall()]
+    return {"results": results, "columns": cols}
 
 
 @router.post("/recover")
 def recover_stalled(user: dict = Depends(require_admin)):
     """Reset stalled processing jobs back to pending."""
     conn = db._get_conn()
-    try:
-        cur = conn.execute("""
-            UPDATE ingestion_jobs
-            SET status = 'pending', retries = retries + 1, updated_at = datetime('now')
-            WHERE status = 'processing'
-        """)
-        conn.commit()
-        return {"recovered": cur.rowcount}
-    finally:
-        conn.close()
+    cur = conn.execute("""
+        UPDATE ingestion_jobs
+        SET status = 'pending', retries = retries + 1, updated_at = datetime('now')
+        WHERE status = 'processing'
+    """)
+    conn.commit()
+    return {"recovered": cur.rowcount}
 
 
 @router.get("/stats")
 def ingest_stats(user: dict = Depends(require_admin)):
     conn = db._get_conn()
-    try:
-        stats = conn.execute("""
-            SELECT
-                COUNT(*) as total,
-                SUM(CASE WHEN status = 'done' THEN 1 ELSE 0 END) as done,
-                SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed,
-                SUM(CASE WHEN status = 'processing' THEN 1 ELSE 0 END) as processing,
-                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
-                SUM(CASE WHEN status = 'skipped' THEN 1 ELSE 0 END) as skipped
-            FROM ingestion_jobs
-        """).fetchone()
-        return dict(stats)
-    finally:
-        conn.close()
+    stats = conn.execute("""
+        SELECT
+            COUNT(*) as total,
+            SUM(CASE WHEN status = 'done' THEN 1 ELSE 0 END) as done,
+            SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed,
+            SUM(CASE WHEN status = 'processing' THEN 1 ELSE 0 END) as processing,
+            SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+            SUM(CASE WHEN status = 'skipped' THEN 1 ELSE 0 END) as skipped
+        FROM ingestion_jobs
+    """).fetchone()
+    return dict(stats)
 
 
 class LibriVoxImportRequest(BaseModel):
@@ -144,15 +137,19 @@ def _run_librivox_import(lang: str, scan_all: bool):
     """Background task to scan LibriVox and create jobs."""
     from .ingest.sources.librivox import create_ingestion_jobs
 
-    _import_status["running"] = True
-    _import_status["error"] = None
+    with _status_lock:
+        _import_status["running"] = True
+        _import_status["error"] = None
     try:
         job_ids = create_ingestion_jobs(lang=lang, scan_all=scan_all)
-        _import_status["jobs_created"] = len(job_ids)
+        with _status_lock:
+            _import_status["jobs_created"] = len(job_ids)
     except Exception as e:
-        _import_status["error"] = str(e)
+        with _status_lock:
+            _import_status["error"] = str(e)
     finally:
-        _import_status["running"] = False
+        with _status_lock:
+            _import_status["running"] = False
 
 
 @router.post("/librivox")
@@ -162,8 +159,9 @@ def import_librivox(
     user: dict = Depends(require_admin),
 ):
     """Scan LibriVox catalog and create ingestion jobs (runs in background)."""
-    if _import_status["running"]:
-        return {"message": "Import already running", "status": _import_status}
+    with _status_lock:
+        if _import_status["running"]:
+            return {"message": "Import already running", "status": dict(_import_status)}
     background_tasks.add_task(_run_librivox_import, req.lang, req.scan_all)
     return {"message": "LibriVox scan started in background", "status": "started"}
 
@@ -171,7 +169,8 @@ def import_librivox(
 @router.get("/librivox/status")
 def librivox_status(user: dict = Depends(require_admin)):
     """Check status of background LibriVox import."""
-    return _import_status
+    with _status_lock:
+        return dict(_import_status)
 
 
 def _run_queue_sync():
@@ -211,15 +210,17 @@ def _generate_descriptions_task():
     model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
 
     if not api_key:
-        _desc_status["error"] = "OPENAI_API_KEY not set"
-        _desc_status["running"] = False
+        with _status_lock:
+            _desc_status["error"] = "OPENAI_API_KEY not set"
+            _desc_status["running"] = False
         return
 
     books = db.get_books_without_description()
-    _desc_status["total"] = len(books)
-    _desc_status["done"] = 0
-    _desc_status["running"] = True
-    _desc_status["error"] = None
+    with _status_lock:
+        _desc_status["total"] = len(books)
+        _desc_status["done"] = 0
+        _desc_status["running"] = True
+        _desc_status["error"] = None
 
     # Process in batches of 10 for efficiency
     batch_size = 10
@@ -258,12 +259,15 @@ def _generate_descriptions_task():
             for item in items:
                 if isinstance(item, dict) and "id" in item and "description" in item:
                     db.update_book_description(int(item["id"]), item["description"])
-                    _desc_status["done"] += 1
+                    with _status_lock:
+                        _desc_status["done"] += 1
         except Exception as e:
             logger.error("Description generation batch failed: %s", e)
-            _desc_status["error"] = str(e)
+            with _status_lock:
+                _desc_status["error"] = str(e)
 
-    _desc_status["running"] = False
+    with _status_lock:
+        _desc_status["running"] = False
 
 
 @router.post("/descriptions/generate")
@@ -272,8 +276,9 @@ def generate_descriptions(
     user: dict = Depends(require_admin),
 ):
     """Generate short descriptions for all books that don't have one."""
-    if _desc_status["running"]:
-        return {"message": "Already running", "status": _desc_status}
+    with _status_lock:
+        if _desc_status["running"]:
+            return {"message": "Already running", "status": dict(_desc_status)}
 
     books = db.get_books_without_description()
     if not books:
@@ -286,7 +291,8 @@ def generate_descriptions(
 @router.get("/descriptions/status")
 def descriptions_status(user: dict = Depends(require_admin)):
     """Check status of description generation."""
-    return _desc_status
+    with _status_lock:
+        return dict(_desc_status)
 
 
 class UpdateDescriptionRequest(BaseModel):

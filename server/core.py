@@ -355,6 +355,7 @@ def _safe_json_write(path: Path, data, indent=1):
 
 
 # ── History log ──────────────────────────────────────────────────────────────
+# Used by TUI (_library.py)
 
 
 def history_load() -> list[dict]:
@@ -378,6 +379,7 @@ def history_add(action: str, book: str, detail: str = "", rating: int = 0):
 
 
 # ── Notes ────────────────────────────────────────────────────────────────────
+# Used by TUI (_library.py)
 
 
 def notes_load() -> dict[str, str]:
@@ -405,6 +407,7 @@ def note_set(title: str, text: str):
 
 
 # ── Tags ────────────────────────────────────────────────────────────────────
+# Used by TUI (_library.py)
 
 
 def tags_load() -> dict[str, list[str]]:
@@ -440,6 +443,7 @@ def tags_all() -> list[str]:
 
 
 # ── Collections ─────────────────────────────────────────────────────────────
+# Used by TUI (_library.py)
 
 
 def collections_load() -> list[dict]:
@@ -614,6 +618,7 @@ def reading_velocity(hist: list[dict]) -> dict:
 
 
 # ── Progress tracking ──────────────────────────────────────────────────────
+# Used by TUI (_library.py)
 
 
 def progress_load() -> dict[str, dict]:
@@ -642,6 +647,7 @@ def progress_set(title: str, pct: int, note: str = ""):
 
 
 # ── Playback position ─────────────────────────────────────────────────────
+# Used by TUI (_library.py)
 
 
 def playback_load() -> dict:
@@ -669,6 +675,7 @@ def playback_set(book_id: str, track_index: int, position: float, filename: str 
 
 
 # ── Quotes ──────────────────────────────────────────────────────────────────
+# Used by TUI (_library.py)
 
 
 def quotes_load() -> list[dict]:
@@ -693,6 +700,7 @@ def quotes_add(text: str, book: str, author: str = ""):
 
 
 # ── Sessions ───────────────────────────────────────────────────────────────
+# Used by TUI (_library.py)
 
 
 def sessions_load() -> list[dict]:
@@ -950,6 +958,7 @@ def parse_recommendations() -> list[dict]:
 
 
 # ── Library ───────────────────────────────────────────────────────────────────
+# Used by TUI (_library.py)
 
 
 class Library:

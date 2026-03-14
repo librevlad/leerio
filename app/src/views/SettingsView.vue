@@ -10,6 +10,7 @@ import { useAuth } from '../composables/useAuth'
 import type { SessionStats } from '../types'
 import { IconTrash, IconDownload, IconHardDrive } from '../components/shared/icons'
 import { useLocale } from '../composables/useLocale'
+import { version } from '../../package.json'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -111,7 +112,7 @@ async function handleLogout() {
               v-if="isAdmin"
               class="mt-1 inline-block rounded-md bg-[--accent-soft] px-2 py-0.5 text-[11px] font-medium text-[--accent]"
             >
-              Администратор
+              {{ t('settings.admin') }}
             </span>
           </div>
         </div>
@@ -130,7 +131,7 @@ async function handleLogout() {
             <polyline points="16 17 21 12 16 7" />
             <line x1="21" y1="12" x2="9" y2="12" />
           </svg>
-          Выйти
+          {{ t('settings.logout') }}
         </button>
       </div>
 
@@ -190,7 +191,7 @@ async function handleLogout() {
           <div>
             <p class="mb-1 text-[11px] font-semibold text-[--t3]">{{ t('settings.statWeek') }}</p>
             <p class="text-[22px] leading-none font-bold tracking-tight text-[--t1]">
-              {{ sessionStats.week_hours.toFixed(1) }}<span class="ml-0.5 text-[12px] text-[--t3]">ч</span>
+              {{ sessionStats.week_hours.toFixed(1) }}<span class="ml-0.5 text-[12px] text-[--t3]">{{ t('settings.unitH') }}</span>
             </p>
           </div>
           <div v-if="sessionStats.peak_hour !== null">
@@ -207,7 +208,7 @@ async function handleLogout() {
         <h3 class="section-label mb-4">
           <span class="flex items-center gap-2">
             <IconDownload :size="16" />
-            Загрузки
+            {{ t('settings.downloads') }}
           </span>
         </h3>
 
@@ -233,7 +234,7 @@ async function handleLogout() {
             </button>
           </div>
           <p class="pt-1 text-[12px] text-[--t3]">
-            Всего: <span class="font-semibold text-[--t2]">{{ fmtSize(dl.totalDownloadedSize.value) }}</span>
+            {{ t('settings.totalSize') }}: <span class="font-semibold text-[--t2]">{{ fmtSize(dl.totalDownloadedSize.value) }}</span>
           </p>
           <button
             v-if="dl.downloadedBooks.value.length > 1"
@@ -241,7 +242,7 @@ async function handleLogout() {
             @click="dl.deleteAllBooks()"
           >
             <IconTrash :size="14" />
-            Удалить все загрузки
+            {{ t('settings.deleteAllDownloads') }}
           </button>
         </div>
 
@@ -260,7 +261,7 @@ async function handleLogout() {
               {{ streak.current }}
             </p>
             <p class="mt-1 text-[11px] font-semibold text-[--t3]">
-              {{ t('plural.day', streak.current) }} {{ t('book.streakDays', streak.current) }}
+              {{ t('plural.day', streak.current) }}
             </p>
           </div>
           <div class="h-10 w-px" style="background: var(--border)" />
@@ -321,7 +322,7 @@ async function handleLogout() {
         <h3 class="section-label mb-4">
           <span class="flex items-center gap-2">
             <IconHardDrive :size="16" />
-            Хранилище
+            {{ t('settings.storage') }}
           </span>
         </h3>
         <div class="flex flex-wrap gap-x-8 gap-y-3">
@@ -340,7 +341,7 @@ async function handleLogout() {
         </div>
         <button v-if="cacheBytes > 0" class="btn btn-ghost mt-4" @click="clearCache">
           <IconTrash :size="14" />
-          Очистить кэш
+          {{ t('settings.clearCache') }}
         </button>
       </div>
 
@@ -377,7 +378,7 @@ async function handleLogout() {
         <div class="space-y-2 text-[13px]">
           <div class="flex justify-between">
             <span class="text-[--t3]">{{ t('settings.aboutVersion') }}</span>
-            <span class="font-medium text-[--t2]">2.0.0</span>
+            <span class="font-medium text-[--t2]">{{ version }}</span>
           </div>
           <div class="flex justify-between">
             <span class="text-[--t3]">{{ t('settings.aboutBooks') }}</span>

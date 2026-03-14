@@ -19,13 +19,18 @@ from pathlib import Path
 
 from fastapi import Body, Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from slowapi import Limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi.util import get_remote_address
 from starlette.requests import Request
 
 from . import db
 from .auth import (
+    check_jwt_secret,
     clear_auth_cookie,
     get_current_user,
     get_optional_user,
@@ -88,6 +93,8 @@ def _resolve_user_book_path(book_id: str, user: dict | None = None) -> Path | No
     if len(parts) != 3:
         return None
     _, uid, slug = parts
+    if ".." in slug or "/" in slug or "\\" in slug:
+        return None
     if user and uid != user["user_id"]:
         return None
     book_dir = (
@@ -320,11 +327,17 @@ class BookLanguageRequest(BaseModel):
     language: str
 
 
+class SettingsUpdate(BaseModel):
+    yearly_goal: int | None = None
+    playback_speed: float | None = None
+
+
 # ── App lifecycle ──────────────────────────────────────────────────────────
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    check_jwt_secret()
     db.init_db()
     db.sync_books()
     yield
@@ -339,9 +352,31 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in _cors_origins],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allow_headers=["Content-Type", "Accept"],
 )
+
+# ── Rate limiting ─────────────────────────────────────────────────────────
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_middleware(SlowAPIMiddleware)
+
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    return JSONResponse(status_code=429, content={"detail": "Too many requests"})
+
+
+# ── CSRF protection ──────────────────────────────────────────────────────
+@app.middleware("http")
+async def csrf_protect(request: Request, call_next):
+    if request.method in ("POST", "PUT", "DELETE", "PATCH"):
+        origin = request.headers.get("origin")
+        if origin:
+            allowed = {o.strip() for o in _cors_origins}
+            if origin not in allowed:
+                return JSONResponse(status_code=403, content={"detail": "Origin not allowed"})
+    return await call_next(request)
 
 
 @app.exception_handler(Exception)
@@ -360,7 +395,8 @@ app.include_router(ingest_router)
 
 
 @app.post("/api/auth/google")
-def auth_google(req: GoogleAuthRequest):
+@limiter.limit("10/minute")
+def auth_google(request: Request, req: GoogleAuthRequest):
     info = verify_google_token(req.id_token)
     if not db.is_email_allowed(info["email"]):
         raise HTTPException(403, "Registration is not allowed for this email")
@@ -379,7 +415,8 @@ def auth_google(req: GoogleAuthRequest):
 
 
 @app.post("/api/auth/login")
-def auth_login(req: LoginRequest):
+@limiter.limit("5/minute")
+def auth_login(request: Request, req: LoginRequest):
     user = db.verify_user_password(req.email, req.password)
     if not user:
         raise HTTPException(401, "Invalid email or password")
@@ -512,8 +549,9 @@ def update_book_language(book_id: int, req: BookLanguageRequest, user: dict = De
 
 @app.get("/api/config/constants")
 def get_constants():
+    all_cats = [c for c in db.get_all_categories() if c["name"] != "Личные"]
     return {
-        "categories": db.get_all_categories(),
+        "categories": all_cats,
         "status_style": STATUS_STYLE,
         "action_styles": ACTION_STYLES,
         "action_labels": ACTION_LABELS,
@@ -632,10 +670,15 @@ def get_book_shelves(user: dict = Depends(get_current_user)):
     cats_db = db.get_all_categories()
     cat_order = {c["name"]: c["sort_order"] for c in cats_db}
 
-    # Group by category
+    # Group by category (exclude personal uploads and low-quality entries)
     by_cat: dict[str, list[dict]] = {}
     for b in all_books:
         cat = b.get("category", "")
+        if cat == "Личные":
+            continue
+        # Exclude low-quality entries (no cover and no author)
+        if not b.get("has_cover") and not b.get("author"):
+            continue
         if cat not in by_cat:
             by_cat[cat] = []
         by_cat[cat].append(b)
@@ -711,7 +754,8 @@ def get_recommendations(user: dict = Depends(get_current_user)):
     candidates = []
     for b in all_books:
         bid = str(b["id"])
-        if bid not in user_book_ids and b.get("has_cover"):
+        if bid not in user_book_ids and (b.get("has_cover") or b.get("author")):
+            # Exclude low-quality entries (no cover and no author)
             # Score: prefer user's favorite categories, then random
             cat_score = user_cats.get(b["category"], 0)
             candidates.append((b, cat_score + random.random()))
@@ -955,7 +999,7 @@ def get_similar(book_id: str, user: dict | None = Depends(get_optional_user)):
 
 
 @app.get("/api/books/{book_id}/tracks")
-def get_book_tracks(book_id: str):
+def get_book_tracks(book_id: str, user: dict = Depends(get_current_user)):
     # User books
     ub_path = _resolve_user_book_path(book_id)
     if ub_path:
@@ -997,6 +1041,33 @@ def get_book_tracks(book_id: str):
     return {"book_id": book_id, "count": len(tracks), "tracks": tracks}
 
 
+def _cover_placeholder(title: str = "", category: str = "") -> Response:
+    """Return a simple SVG placeholder for books without covers."""
+    letter = title[0].upper() if title else "?"
+    # Category-based colors (match frontend catGradient)
+    colors = {
+        "Бизнес": ("#92400e", "#d97706"),
+        "Отношения": ("#9d174d", "#db2777"),
+        "Саморазвитие": ("#9a5c16", "#E8923A"),
+        "Художественная": ("#155e75", "#0891b2"),
+        "Языки": ("#064e3b", "#059669"),
+    }
+    c1, c2 = colors.get(category, ("#334155", "#64748b"))
+    svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="{c1}"/>
+    <stop offset="100%" stop-color="{c2}"/>
+  </linearGradient></defs>
+  <rect width="300" height="300" fill="url(#g)"/>
+  <text x="150" y="170" text-anchor="middle" font-size="120" font-family="sans-serif" fill="rgba(255,255,255,0.3)">{letter}</text>
+</svg>'''
+    return Response(
+        content=svg,
+        media_type="image/svg+xml",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
+
+
 @app.get("/api/books/{book_id}/cover")
 def get_book_cover(book_id: str):
     # User books
@@ -1004,7 +1075,7 @@ def get_book_cover(book_id: str):
     if ub_path:
         cover = ub_path / "cover.jpg"
         if not cover.exists():
-            raise HTTPException(404, "No cover")
+            return _cover_placeholder(ub_path.name)
         return FileResponse(str(cover), media_type="image/jpeg")
 
     # Catalog books
@@ -1030,11 +1101,19 @@ def get_book_cover(book_id: str):
                 if url:
                     return RedirectResponse(url)
 
-    raise HTTPException(404, "No cover")
+    return _cover_placeholder(b.get("title", ""), b.get("category", ""))
+
+
+def _s3_stream(body, chunk_size=64 * 1024):
+    """Wrap S3 body stream to ensure cleanup on error or early disconnect."""
+    try:
+        yield from body.iter_chunks(chunk_size=chunk_size)
+    finally:
+        body.close()
 
 
 @app.get("/api/audio/{book_id}/{track_index}")
-def stream_audio(book_id: str, track_index: int, request: Request):
+def stream_audio(book_id: str, track_index: int, request: Request, user: dict = Depends(get_current_user)):
     # User books — always filesystem
     ub_path = _resolve_user_book_path(book_id)
     if ub_path:
@@ -1064,7 +1143,7 @@ def stream_audio(book_id: str, track_index: int, request: Request):
                 headers["Content-Length"] = str(s3_resp["content_length"])
             status = 206 if range_header and s3_resp["status"] == 206 else 200
             return StreamingResponse(
-                s3_resp["body"].iter_chunks(chunk_size=64 * 1024),
+                _s3_stream(s3_resp["body"]),
                 status_code=status,
                 headers=headers,
             )
@@ -1259,8 +1338,8 @@ def get_settings(user: dict = Depends(get_current_user)):
 
 
 @app.put("/api/user/settings")
-def update_settings(req: dict, user: dict = Depends(get_current_user)):
-    return db.update_user_settings(user["user_id"], **req)
+def update_settings(req: SettingsUpdate, user: dict = Depends(get_current_user)):
+    return db.update_user_settings(user["user_id"], **req.model_dump(exclude_none=True))
 
 
 @app.get("/api/user/streak")

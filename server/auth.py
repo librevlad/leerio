@@ -9,6 +9,7 @@ Auth flow:
 
 import logging
 import os
+import time
 
 import jwt
 from fastapi import HTTPException, Request
@@ -25,6 +26,11 @@ JWT_ALGORITHM = "HS256"
 COOKIE_NAME = "leerio_token"
 COOKIE_MAX_AGE = 30 * 24 * 3600  # 30 days
 IS_DEV = os.environ.get("LEERIO_DEV", "") == "1"
+
+def check_jwt_secret():
+    """Call at app startup to ensure JWT_SECRET is properly configured."""
+    if JWT_SECRET == "dev-secret-change-in-production" and not IS_DEV:
+        raise RuntimeError("JWT_SECRET must be set in production (LEERIO_DEV is not '1')")
 
 
 def verify_google_token(token: str) -> dict:
@@ -45,7 +51,12 @@ def verify_google_token(token: str) -> dict:
 
 def create_jwt(user_id: str) -> str:
     """Create a JWT token for the user."""
-    return jwt.encode({"sub": user_id}, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    now = int(time.time())
+    return jwt.encode(
+        {"sub": user_id, "iat": now, "exp": now + COOKIE_MAX_AGE},
+        JWT_SECRET,
+        algorithm=JWT_ALGORITHM,
+    )
 
 
 def decode_jwt(token: str) -> str | None:

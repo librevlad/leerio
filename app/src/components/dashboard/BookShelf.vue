@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { ShelfBook } from '../../types'
 import { coverUrl } from '../../api'
 import { IconMusic, IconCheck, IconPause, IconPlay } from '../shared/icons'
@@ -12,6 +13,7 @@ defineProps<{
   books: ShelfBook[]
 }>()
 
+const { t } = useI18n()
 const coverErrors = reactive(new Set<string>())
 const { color: catColor, gradient: catGradient } = useCategories()
 
@@ -34,7 +36,7 @@ const statusBadge: Record<string, { icon: unknown; bg: string; fg: string }> = {
         :to="`/library?category=${encodeURIComponent(category)}`"
         class="inline-flex min-h-[44px] items-center text-[12px] font-medium text-[--accent] no-underline hover:underline"
       >
-        Показать все
+        {{ t('dashboard.showAll') }}
       </router-link>
     </div>
     <div class="fade-mask-r">
