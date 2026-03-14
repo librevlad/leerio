@@ -6,15 +6,21 @@ import { useNetwork } from './useNetwork'
 import { useToast } from './useToast'
 import type { Book, Track } from '../types'
 
+// Cached i18n instance (lazy-loaded to avoid circular dependency in tests)
+let _i18n: { global: { t: (key: string) => string } } | null = null
 function t(key: string): string {
-  try {
-    // Lazy import to avoid circular dependency in tests
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const mod = require('../i18n')
-    return mod.default.global.t(key)
-  } catch {
-    return key
+  if (!_i18n) {
+    try {
+      // Dynamic import is async, so first call returns key as fallback
+      import('../i18n').then((m) => {
+        _i18n = m.default
+      })
+      return key
+    } catch {
+      return key
+    }
   }
+  return _i18n.global.t(key)
 }
 
 // ── Singleton state (shared across all components) ──────────────────────────

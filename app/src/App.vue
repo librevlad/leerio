@@ -42,7 +42,7 @@ const showInstallBanner = ref(false)
 
 function handleBeforeInstallPrompt(e: Event) {
   e.preventDefault()
-  deferredPrompt.value = e
+  deferredPrompt.value = e as BeforeInstallPromptEvent
   if (!localStorage.getItem('pwa-install-dismissed')) {
     showInstallBanner.value = true
   }
