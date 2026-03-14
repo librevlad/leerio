@@ -121,7 +121,9 @@ const lastPosition = computed(() => {
         <!-- Progress bar (mobile) -->
         <div v-if="book.progress > 0" class="mt-4">
           <div class="flex items-center justify-between text-[11px]">
-            <span class="font-semibold text-[--accent]">{{ Math.round(book.progress) }}% {{ t('book.percentListened') }}</span>
+            <span class="font-semibold text-[--accent]"
+              >{{ Math.round(book.progress) }}% {{ t('book.percentListened') }}</span
+            >
             <span v-if="remainingHours !== null" class="text-[--t3]">{{
               t('book.remainingH', { hours: remainingHours })
             }}</span>
@@ -261,7 +263,9 @@ const lastPosition = computed(() => {
             <!-- Progress bar (desktop) -->
             <div v-if="book.progress > 0" class="mt-3">
               <div class="flex items-center justify-between text-[11px]">
-                <span class="font-semibold text-[--accent]">{{ Math.round(book.progress) }}% {{ t('book.percentListened') }}</span>
+                <span class="font-semibold text-[--accent]"
+                  >{{ Math.round(book.progress) }}% {{ t('book.percentListened') }}</span
+                >
                 <span v-if="remainingHours !== null" class="text-[--t3]">{{
                   t('book.remainingH', { hours: remainingHours })
                 }}</span>

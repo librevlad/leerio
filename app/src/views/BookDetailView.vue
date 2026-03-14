@@ -240,7 +240,12 @@ watch(() => route.params.id, loadBook)
                 <div class="flex-1">
                   <div class="mb-1 flex items-center justify-between">
                     <span class="text-[11px] text-[--t3]">
-                      {{ t('player.trackN', { n: (dlProgress?.currentTrack ?? 0) + 1, total: dlProgress?.totalTracks ?? 0 }) }}
+                      {{
+                        t('player.trackN', {
+                          n: (dlProgress?.currentTrack ?? 0) + 1,
+                          total: dlProgress?.totalTracks ?? 0,
+                        })
+                      }}
                     </span>
                     <span class="text-[11px] font-bold text-[--accent]">{{ dlPercent }}%</span>
                   </div>

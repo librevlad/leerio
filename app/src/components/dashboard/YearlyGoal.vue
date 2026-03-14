@@ -35,7 +35,11 @@ const pace = computed(() => {
     <p class="mt-1 text-[12px] text-[--t3]">
       <template v-if="done >= goal"> {{ t('dashboard.goalReached') }} </template>
       <template v-else>
-        {{ t('dashboard.goalRemaining', { n: `${Math.max(0, goal - done)} ${t('plural.book', Math.max(0, goal - done))}` }) }}
+        {{
+          t('dashboard.goalRemaining', {
+            n: `${Math.max(0, goal - done)} ${t('plural.book', Math.max(0, goal - done))}`,
+          })
+        }}
       </template>
     </p>
     <p v-if="pace" class="mt-2 text-[11px]" :class="pace.ahead ? 'text-emerald-400' : 'text-amber-400'">

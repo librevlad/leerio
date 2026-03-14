@@ -13,7 +13,9 @@ function init() {
 
   window.addEventListener('online', () => {
     isOnline.value = true
-    import('../i18n').then((m) => toast.success(m.default.global.t('common.online'))).catch(() => toast.success('Online'))
+    import('../i18n')
+      .then((m) => toast.success(m.default.global.t('common.online')))
+      .catch(() => toast.success('Online'))
     reconnectCallbacks.forEach((cb) => cb())
   })
 

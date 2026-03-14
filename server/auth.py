@@ -27,6 +27,7 @@ COOKIE_NAME = "leerio_token"
 COOKIE_MAX_AGE = 30 * 24 * 3600  # 30 days
 IS_DEV = os.environ.get("LEERIO_DEV", "") == "1"
 
+
 def check_jwt_secret():
     """Call at app startup to ensure JWT_SECRET is properly configured."""
     if JWT_SECRET == "dev-secret-change-in-production" and not IS_DEV:

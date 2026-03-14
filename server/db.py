@@ -213,9 +213,7 @@ def init_db():
             )
             """
         )
-        conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_user_history_user_ts ON user_history(user_id, ts)"
-        )
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_user_history_user_ts ON user_history(user_id, ts)")
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS user_quotes (
@@ -560,9 +558,7 @@ def _sync_books_from_s3(client):
     existing_slugs = {r[0] for r in conn.execute("SELECT slug FROM books").fetchall()}
     existing_prefixes = {
         r[0]
-        for r in conn.execute(
-            "SELECT s3_prefix FROM books WHERE s3_prefix IS NOT NULL AND s3_prefix != ''"
-        ).fetchall()
+        for r in conn.execute("SELECT s3_prefix FROM books WHERE s3_prefix IS NOT NULL AND s3_prefix != ''").fetchall()
     }
     inserted = 0
 
@@ -1294,9 +1290,7 @@ def get_all_user_notes_map(user_id: str) -> dict[int, str]:
 def get_all_user_tags_map(user_id: str) -> dict[int, list[str]]:
     """Return {book_id: [tag1, tag2, ...]} for all books with tags."""
     conn = _get_conn()
-    rows = conn.execute(
-        "SELECT book_id, tag FROM user_tags WHERE user_id = ? ORDER BY book_id", (user_id,)
-    ).fetchall()
+    rows = conn.execute("SELECT book_id, tag FROM user_tags WHERE user_id = ? ORDER BY book_id", (user_id,)).fetchall()
     result: dict[int, list[str]] = {}
     for r in rows:
         result.setdefault(r["book_id"], []).append(r["tag"])

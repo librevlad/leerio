@@ -174,7 +174,7 @@ onUnmounted(() => {
     <!-- PWA Install Banner -->
     <div
       v-if="showInstallBanner"
-      class="fixed right-0 bottom-16 left-0 z-50 flex items-center justify-between gap-3 border-t border-white/10 px-4 py-3 backdrop-blur-xl md:bottom-4 md:left-auto md:right-4 md:w-80 md:rounded-xl md:border"
+      class="fixed right-0 bottom-16 left-0 z-50 flex items-center justify-between gap-3 border-t border-white/10 px-4 py-3 backdrop-blur-xl md:right-4 md:bottom-4 md:left-auto md:w-80 md:rounded-xl md:border"
       style="background: var(--card)"
     >
       <div class="min-w-0">
@@ -182,8 +182,16 @@ onUnmounted(() => {
         <p class="text-[11px] text-[--t3]">{{ t('common.installDesc') }}</p>
       </div>
       <div class="flex shrink-0 gap-2">
-        <button class="rounded-lg px-3 py-1.5 text-[12px] text-[--t3]" @click="dismissInstall">{{ t('common.later') }}</button>
-        <button class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white" style="background: var(--gradient-accent)" @click="installPwa">{{ t('common.install') }}</button>
+        <button class="rounded-lg px-3 py-1.5 text-[12px] text-[--t3]" @click="dismissInstall">
+          {{ t('common.later') }}
+        </button>
+        <button
+          class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white"
+          style="background: var(--gradient-accent)"
+          @click="installPwa"
+        >
+          {{ t('common.install') }}
+        </button>
       </div>
     </div>
   </div>

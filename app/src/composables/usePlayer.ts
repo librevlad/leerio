@@ -265,7 +265,9 @@ async function loadBook(book: Book) {
       try {
         const savedPos = localStorage.getItem(`leerio_pos_${book.id}`)
         if (savedPos) pos = JSON.parse(savedPos)
-      } catch { /* corrupted localStorage */ }
+      } catch {
+        /* corrupted localStorage */
+      }
       const idx = pos.track_index < tracks.value.length ? pos.track_index : 0
       currentTrackIndex.value = idx
 
@@ -313,7 +315,9 @@ async function loadBook(book: Book) {
       try {
         const savedPos = localStorage.getItem(`leerio_pos_${book.id}`)
         if (savedPos) pos = JSON.parse(savedPos)
-      } catch { /* corrupted localStorage */ }
+      } catch {
+        /* corrupted localStorage */
+      }
     }
     const idx = pos.track_index < tracks.value.length ? pos.track_index : 0
     currentTrackIndex.value = idx

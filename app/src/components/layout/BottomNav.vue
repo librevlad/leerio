@@ -2,7 +2,17 @@
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { IconHome, IconLibrary, IconFolder, IconMenu, IconUpload, IconHistory, IconSettings, IconChart, IconQueue } from '../shared/icons'
+import {
+  IconHome,
+  IconLibrary,
+  IconFolder,
+  IconMenu,
+  IconUpload,
+  IconHistory,
+  IconSettings,
+  IconChart,
+  IconQueue,
+} from '../shared/icons'
 import BottomSheet from './BottomSheet.vue'
 import { usePlayer } from '../../composables/usePlayer'
 import { useAuth } from '../../composables/useAuth'

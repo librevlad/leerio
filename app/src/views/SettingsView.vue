@@ -191,7 +191,8 @@ async function handleLogout() {
           <div>
             <p class="mb-1 text-[11px] font-semibold text-[--t3]">{{ t('settings.statWeek') }}</p>
             <p class="text-[22px] leading-none font-bold tracking-tight text-[--t1]">
-              {{ sessionStats.week_hours.toFixed(1) }}<span class="ml-0.5 text-[12px] text-[--t3]">{{ t('settings.unitH') }}</span>
+              {{ sessionStats.week_hours.toFixed(1)
+              }}<span class="ml-0.5 text-[12px] text-[--t3]">{{ t('settings.unitH') }}</span>
             </p>
           </div>
           <div v-if="sessionStats.peak_hour !== null">
@@ -234,7 +235,8 @@ async function handleLogout() {
             </button>
           </div>
           <p class="pt-1 text-[12px] text-[--t3]">
-            {{ t('settings.totalSize') }}: <span class="font-semibold text-[--t2]">{{ fmtSize(dl.totalDownloadedSize.value) }}</span>
+            {{ t('settings.totalSize') }}:
+            <span class="font-semibold text-[--t2]">{{ fmtSize(dl.totalDownloadedSize.value) }}</span>
           </p>
           <button
             v-if="dl.downloadedBooks.value.length > 1"

@@ -37,11 +37,7 @@ const greeting = computed(() => {
 
 async function loadData() {
   try {
-    const [d, st, rec] = await Promise.allSettled([
-      api.getDashboard(),
-      api.getStreak(),
-      api.getRecommendations(),
-    ])
+    const [d, st, rec] = await Promise.allSettled([api.getDashboard(), api.getStreak(), api.getRecommendations()])
     if (d.status === 'fulfilled') data.value = d.value
     if (st.status === 'fulfilled') streak.value = st.value
     if (rec.status === 'fulfilled') recommendations.value = rec.value

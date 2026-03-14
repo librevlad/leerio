@@ -362,7 +362,9 @@ const tabDefs = [
             <div class="flex min-w-0 items-center gap-2.5">
               <IconMusic :size="14" class="flex-shrink-0 text-[--t3]" />
               <span class="truncate text-[12px] text-[--t2]">{{ file.name }}</span>
-              <span class="flex-shrink-0 text-[11px] text-[--t3]">{{ (file.size / 1024 / 1024).toFixed(1) }} {{ t('upload.mb') }}</span>
+              <span class="flex-shrink-0 text-[11px] text-[--t3]"
+                >{{ (file.size / 1024 / 1024).toFixed(1) }} {{ t('upload.mb') }}</span
+              >
             </div>
             <button
               class="flex-shrink-0 rounded-full p-1 text-[--t3] transition-all hover:bg-red-500/15 hover:text-red-400"
@@ -640,7 +642,9 @@ const tabDefs = [
             <div class="flex min-w-0 items-center gap-2.5">
               <IconMusic :size="14" class="flex-shrink-0 text-[--t3]" />
               <span class="truncate text-[12px] text-[--t2]">{{ file.name }}</span>
-              <span class="flex-shrink-0 text-[11px] text-[--t3]">{{ (file.size / 1024 / 1024).toFixed(1) }} {{ t('upload.mb') }}</span>
+              <span class="flex-shrink-0 text-[11px] text-[--t3]"
+                >{{ (file.size / 1024 / 1024).toFixed(1) }} {{ t('upload.mb') }}</span
+              >
             </div>
             <button
               class="flex-shrink-0 rounded-full p-1 text-[--t3] transition-all hover:bg-red-500/15 hover:text-red-400"

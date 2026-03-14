@@ -138,7 +138,9 @@ const SLEEP_OPTIONS = computed(() => [
       <p class="truncate text-[14px] font-semibold text-[--t1]">
         {{ currentTrack?.filename ?? '—' }}
       </p>
-      <p class="text-[12px] text-[--t3]">{{ t('player.trackN', { n: currentTrackIndex + 1, total: tracks.length }) }}</p>
+      <p class="text-[12px] text-[--t3]">
+        {{ t('player.trackN', { n: currentTrackIndex + 1, total: tracks.length }) }}
+      </p>
     </div>
 
     <!-- Controls -->

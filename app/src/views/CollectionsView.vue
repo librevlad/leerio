@@ -428,7 +428,9 @@ onMounted(async () => {
                       book.author
                     }}</span>
                   </button>
-                  <p v-if="!filteredBooks.length" class="py-4 text-center text-[12px] text-[--t3]">{{ t('collections.notFoundBooks') }}</p>
+                  <p v-if="!filteredBooks.length" class="py-4 text-center text-[12px] text-[--t3]">
+                    {{ t('collections.notFoundBooks') }}
+                  </p>
                 </div>
               </div>
             </div>
