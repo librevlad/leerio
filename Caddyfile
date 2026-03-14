@@ -7,6 +7,8 @@ leerio.app {
 		X-Frame-Options "DENY"
 		Referrer-Policy "strict-origin-when-cross-origin"
 	}
+	header /*.html Cache-Control "no-cache, must-revalidate"
+	header /style.css Cache-Control "no-cache, must-revalidate"
 }
 
 app.leerio.app {
