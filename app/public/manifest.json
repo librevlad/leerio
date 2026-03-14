@@ -1,7 +1,7 @@
 {
   "name": "Leerio",
   "short_name": "Leerio",
-  "description": "Менеджер аудиокниг",
+  "description": "Audiobook library — listen, track progress, manage your collection",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#07070e",

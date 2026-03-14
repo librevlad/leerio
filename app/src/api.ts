@@ -134,7 +134,6 @@ import type {
   TTSVoice,
   TTSEngine,
   TTSJob,
-  ShelfData,
   ShelfBook,
 } from './types'
 
@@ -145,7 +144,6 @@ export const api = {
 
   // Dashboard
   getDashboard: () => get<DashboardData>('/dashboard'),
-  getShelves: () => get<ShelfData[]>('/books/shelves'),
   getRecommendations: () => get<ShelfBook[]>('/recommendations'),
 
   // Books
@@ -225,12 +223,7 @@ export const api = {
   // Rating
   setRating: (bookId: string, rating: number) => put<{ ok: boolean }>(`/user/rating/${bookId}`, { rating }),
 
-  // Admin
-  setBookLanguage: (bookId: string, language: string) =>
-    put<{ ok: boolean }>(`/admin/books/${bookId}/language`, { language }),
-
   // Auth
-  getMe: () => get<{ user_id: string; email: string; name: string; picture: string; role: string }>('/auth/me'),
   logout: () => post<{ ok: boolean }>('/auth/logout'),
 
   // User Books (personal library)
