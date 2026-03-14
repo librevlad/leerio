@@ -568,8 +568,12 @@ def get_constants():
 @app.get("/api/dashboard")
 def get_dashboard(user: dict = Depends(get_current_user)):
     uid = user["user_id"]
-    all_books = db.get_all_books()
-    book_by_id = {b["id"]: b for b in all_books}
+    year = str(datetime.now().year)
+
+    # Single batched call replaces 7 separate DB queries
+    data = db.get_dashboard_data(uid, year)
+    hist = data["history"]
+    counts = data["counts"]
 
     # Count personal user books too
     from .core import UserData
@@ -577,38 +581,37 @@ def get_dashboard(user: dict = Depends(get_current_user)):
     ud = UserData(uid)
     user_books_count = len(ud.user_books_list())
 
-    hist = db.get_user_history(uid, limit=500)
-    statuses = db.get_all_user_book_statuses(uid)
-    progress = db.get_all_user_progress(uid)
-    quotes = db.get_user_quotes(uid)
+    # Active books — already joined with progress in the query
+    active_cards = [
+        {
+            "id": str(b["id"]),
+            "folder": b["folder"],
+            "category": b["category"],
+            "author": b["author"],
+            "title": b["title"],
+            "reader": b.get("reader", ""),
+            "progress": b["progress"],
+            "has_cover": bool(b.get("has_cover")),
+            "duration_hours": b.get("duration_hours", 0),
+            "list": "В процессе",
+            "name": b["folder"],
+        }
+        for b in data["active"]
+    ]
 
-    # Active books (reading)
-    active_cards = []
-    for book_id, info in statuses.items():
-        if info["status"] == "reading" and book_id in book_by_id:
-            b = book_by_id[book_id]
-            pct = progress.get(book_id, {}).get("pct", 0)
-            active_cards.append(
-                {
-                    "id": str(book_id),
-                    "folder": b["folder"],
-                    "category": b["category"],
-                    "author": b["author"],
-                    "title": b["title"],
-                    "reader": b.get("reader", ""),
-                    "progress": pct,
-                    "has_cover": bool(b.get("has_cover")),
-                    "duration_hours": b.get("duration_hours", 0),
-                    "list": "В процессе",
-                    "name": b["folder"],
-                }
-            )
+    # Build book_id→title lookup from history for recent activity
+    # (only need titles for history entries with book_ids)
+    book_ids_in_hist = {h["book_id"] for h in hist[:8] if h.get("book_id")}
+    if book_ids_in_hist:
+        book_titles = {b["id"]: b["title"] for b in (db.get_book_by_id(bid) for bid in book_ids_in_hist) if b}
+    else:
+        book_titles = {}
 
-    # Recent activity — resolve real title from books table
+    # Recent activity
     recent = []
     for h in hist[:8]:
         bid = h.get("book_id")
-        book_title = book_by_id[bid]["title"] if bid and bid in book_by_id else h.get("book_title", "")
+        book_title = book_titles.get(bid, h.get("book_title", "")) if bid else h.get("book_title", "")
         recent.append(
             {
                 "ts": h.get("ts", ""),
@@ -630,28 +633,22 @@ def get_dashboard(user: dict = Depends(get_current_user)):
             if day:
                 day_counts[day] += 1
 
-    done = [h for h in hist if h.get("action") == "done"]
-    quote = random.choice(quotes) if quotes else None
-    year = str(datetime.now().year)
-    this_year_done = sum(1 for h in done if (h.get("ts") or "").startswith(year))
-
+    # Category counts — lightweight query (no per-row Python work)
+    all_books = db.get_all_books()
     cat_counts = Counter(_normalize_category(b["category"]) for b in all_books)
 
-    # Total listening hours
-    total_hours = db.get_total_listening_hours(uid)
-
     return {
-        "total_books": len(all_books) + user_books_count,
-        "total_done": len(done),
-        "total_hours": total_hours,
+        "total_books": int(counts.get("total_books", 0)) + user_books_count,
+        "total_done": int(counts.get("total_done", 0)),
+        "total_hours": round(float(counts.get("total_hours", 0)), 1),
         "active_count": len(active_cards),
         "active_books": active_cards,
         "now_playing": None,
         "recent": recent,
         "heatmap": dict(day_counts),
-        "quote": quote,
-        "this_year_done": this_year_done,
-        "yearly_goal": db.get_user_settings(uid).get("yearly_goal", 24),
+        "quote": data["quote"],
+        "this_year_done": int(counts.get("this_year_done", 0)),
+        "yearly_goal": data["settings"].get("yearly_goal", 24),
         "category_counts": dict(cat_counts),
     }
 
@@ -1076,7 +1073,11 @@ def get_book_cover(book_id: str):
         cover = ub_path / "cover.jpg"
         if not cover.exists():
             return _cover_placeholder(ub_path.name)
-        return FileResponse(str(cover), media_type="image/jpeg")
+        return FileResponse(
+            str(cover),
+            media_type="image/jpeg",
+            headers={"Cache-Control": "public, max-age=604800"},
+        )
 
     # Catalog books
     bid = _parse_book_id(book_id)
@@ -1089,7 +1090,11 @@ def get_book_cover(book_id: str):
     for ext in ("jpg", "jpeg", "png", "webp"):
         cover = book_path / f"cover.{ext}"
         if cover.exists():
-            return FileResponse(str(cover), media_type=f"image/{ext}")
+            return FileResponse(
+                str(cover),
+                media_type=f"image/{ext}",
+                headers={"Cache-Control": "public, max-age=604800"},
+            )
 
     # Fallback to S3 — redirect to presigned URL
     s3_prefix = b.get("s3_prefix", "")
@@ -1660,7 +1665,11 @@ def get_user_book_cover(slug: str, user: dict = Depends(get_current_user)):
     cover = Path(book["path"]) / "cover.jpg"
     if not cover.exists():
         raise HTTPException(404, "No cover")
-    return FileResponse(str(cover), media_type="image/jpeg")
+    return FileResponse(
+        str(cover),
+        media_type="image/jpeg",
+        headers={"Cache-Control": "public, max-age=604800"},
+    )
 
 
 # ── Serve static files in production ────────────────────────────────────────

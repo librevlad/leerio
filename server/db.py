@@ -1131,6 +1131,83 @@ def get_total_listening_hours(user_id: str) -> float:
     return round(row["total"] / 60.0, 1)
 
 
+def get_dashboard_data(user_id: str, year: str) -> dict:
+    """Fetch all dashboard data in minimal DB round-trips.
+
+    Returns dict with keys: active, history, counts, settings, quote.
+    Replaces 7+ separate queries with 5 focused ones on one connection.
+    """
+    conn = _get_conn()
+    ghost = _ghost_filter()
+
+    # 1. Active books: JOIN status + progress + books in one query
+    active = conn.execute(
+        f"""
+        SELECT b.id, b.title, b.author, b.reader, b.folder, b.category,
+               b.has_cover, b.duration_hours,
+               COALESCE(p.percent, 0) AS progress
+        FROM books b
+        JOIN user_book_status s ON s.book_id = b.id AND s.user_id = ?
+        LEFT JOIN user_progress p ON p.book_id = b.id AND p.user_id = ?
+        WHERE s.status = 'reading' AND {ghost}
+        """,
+        (user_id, user_id),
+    ).fetchall()
+
+    # 2. History (already indexed on user_id, ts)
+    history = conn.execute(
+        """
+        SELECT h.id, h.user_id, h.ts, h.action, h.book_id, h.book_title,
+               h.detail, h.rating
+        FROM user_history h
+        WHERE h.user_id = ?
+        ORDER BY h.ts DESC LIMIT 500
+        """,
+        (user_id,),
+    ).fetchall()
+
+    # 3. Aggregate counts in a single query
+    counts = conn.execute(
+        f"""
+        SELECT
+            (SELECT COUNT(*) FROM books WHERE {ghost}) AS total_books,
+            (SELECT COUNT(*) FROM user_history
+             WHERE user_id = ? AND action = 'done') AS total_done,
+            (SELECT COALESCE(SUM(duration_min), 0) / 60.0
+             FROM user_sessions
+             WHERE user_id = ? AND duration_min > 0) AS total_hours,
+            (SELECT COUNT(*) FROM user_history
+             WHERE user_id = ? AND action = 'done'
+               AND ts >= ?) AS this_year_done
+        FROM (SELECT 1)
+        """,
+        (user_id, user_id, user_id, f"{year}-01-01"),
+    ).fetchone()
+
+    # 4. Settings (creates defaults if missing — side-effect kept)
+    settings_row = conn.execute("SELECT * FROM user_settings WHERE user_id = ?", (user_id,)).fetchone()
+    if not settings_row:
+        conn.execute("INSERT INTO user_settings (user_id) VALUES (?)", (user_id,))
+        conn.commit()
+        settings = {"user_id": user_id, "yearly_goal": 24, "playback_speed": 1.0}
+    else:
+        settings = dict(settings_row)
+
+    # 5. Random quote
+    quote_row = conn.execute(
+        "SELECT * FROM user_quotes WHERE user_id = ? ORDER BY RANDOM() LIMIT 1",
+        (user_id,),
+    ).fetchone()
+
+    return {
+        "active": [dict(r) for r in active],
+        "history": [dict(r) for r in history],
+        "counts": dict(counts) if counts else {},
+        "settings": settings,
+        "quote": dict(quote_row) if quote_row else None,
+    }
+
+
 def get_session_stats(user_id: str, days: int = 7) -> dict:
     """Return {total_hours, today_min, week_hours, peak_hour}."""
     conn = _get_conn()
