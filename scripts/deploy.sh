@@ -60,6 +60,9 @@ deploy_local() {
   log "Starting services..."
   docker compose up -d --wait --wait-timeout 120
 
+  # Restore git-tracked file permissions (entrypoint chowns /data for appuser)
+  git checkout -- data/.gitignore data/.gitkeep 2>/dev/null || true
+
   # Health check
   log "Verifying services..."
 
