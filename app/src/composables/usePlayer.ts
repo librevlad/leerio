@@ -339,7 +339,8 @@ async function loadBook(book: Book) {
       } catch {
         /* corrupted localStorage */
       }
-      const idx = pos.track_index < tracks.value.length ? pos.track_index : 0
+      const idx = pos.track_index >= 0 && pos.track_index < tracks.value.length ? pos.track_index : 0
+      const seekPos = pos.position >= 0 ? pos.position : 0
       currentTrackIndex.value = idx
 
       const a = ensureAudio()
@@ -347,9 +348,9 @@ async function loadBook(book: Book) {
       a.src = localUrl || ''
       a.load()
 
-      if (pos.position > 0) {
+      if (seekPos > 0) {
         const onLoaded = () => {
-          a.currentTime = pos.position
+          a.currentTime = seekPos
           a.removeEventListener('loadedmetadata', onLoaded)
         }
         a.addEventListener('loadedmetadata', onLoaded)
@@ -391,7 +392,8 @@ async function loadBook(book: Book) {
         /* corrupted localStorage */
       }
     }
-    const idx = pos.track_index < tracks.value.length ? pos.track_index : 0
+    const idx = pos.track_index >= 0 && pos.track_index < tracks.value.length ? pos.track_index : 0
+    const seekPos = pos.position >= 0 ? pos.position : 0
     currentTrackIndex.value = idx
 
     const a = ensureAudio()
@@ -399,9 +401,9 @@ async function loadBook(book: Book) {
     a.load()
 
     // Seek to saved position after metadata loads
-    if (pos.position > 0) {
+    if (seekPos > 0) {
       const onLoaded = () => {
-        a.currentTime = pos.position
+        a.currentTime = seekPos
         a.removeEventListener('loadedmetadata', onLoaded)
       }
       a.addEventListener('loadedmetadata', onLoaded)
