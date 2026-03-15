@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { api, coverUrl } from '../api'
 import { useAuth } from '../composables/useAuth'
@@ -16,7 +15,6 @@ import ProgressBar from '../components/shared/ProgressBar.vue'
 import { IconMusic, IconPlay, IconPause } from '../components/shared/icons'
 import { usePullToRefresh } from '../composables/usePullToRefresh'
 
-const router = useRouter()
 const { t } = useI18n()
 const { user } = useAuth()
 const player = usePlayer()

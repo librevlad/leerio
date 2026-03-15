@@ -45,7 +45,6 @@ const { isLoggedIn } = useAuth()
 const { gradient: catGradient } = useCategories()
 
 const isCurrentBook = computed(() => player.currentBook.value?.id === book.value?.id)
-const nowPlayingId = computed(() => player.currentBook.value?.id ?? null)
 const isPlaying = computed(() => player.isPlaying.value)
 
 const isDownloaded = computed(() => (book.value ? dl.isBookDownloaded(book.value.id) : false))
@@ -115,7 +114,7 @@ async function shareBook() {
     try {
       await navigator.clipboard.writeText(url)
       toast.success(t('book.linkCopied'))
-    } catch {}
+    } catch { /* ignored */ }
   }
 }
 
@@ -151,7 +150,7 @@ async function startListening() {
     try {
       await api.setBookStatus(book.value.id, 'reading')
       book.value.book_status = 'reading'
-    } catch {}
+    } catch { /* ignored */ }
   }
 }
 
