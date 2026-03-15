@@ -9,7 +9,7 @@ test.describe('Login page', () => {
 
   test('displays login form with all elements', async ({ page, takeScreenshot }) => {
     await expect(page.locator('img[alt="Leerio"]')).toBeVisible()
-    await expect(page.locator('text=Войдите, чтобы продолжить')).toBeVisible()
+    await expect(page.locator('text=Войдите, чтобы начать слушать')).toBeVisible()
     await expect(page.locator('input[type="email"]')).toBeVisible()
     await expect(page.locator('input[type="password"]')).toBeVisible()
     await expect(page.locator('button[type="submit"]:has-text("Войти")')).toBeVisible()

@@ -28,6 +28,9 @@ deploy_local() {
   PREV_SHA=$(git rev-parse HEAD)
   log "Current: $PREV_SHA"
 
+  # Fix ownership on git-tracked files that Docker may have chowned
+  chown -f "$(id -u):$(id -g)" data/.gitignore data/.gitkeep 2>/dev/null || true
+
   # Pull latest
   git fetch origin main
   git reset --hard origin/main

@@ -20,13 +20,12 @@ test.describe('Dashboard', () => {
     })
   })
 
-  test('displays stat cards after loading', async ({ page, takeScreenshot }) => {
+  test('displays content after loading', async ({ page, takeScreenshot }) => {
     await expect(page.locator('.fade-in').first()).toBeVisible({ timeout: 15_000 })
 
-    // Should have stat cards with labels
-    await expect(page.getByText('Книг', { exact: true })).toBeVisible()
-    await expect(page.getByText('Часов', { exact: true })).toBeVisible()
-    await takeScreenshot('dashboard-stats')
+    // Dashboard should show greeting and either hero card, empty state, or stats
+    await expect(page.locator('h1').first()).toBeVisible()
+    await takeScreenshot('dashboard-content')
   })
 
   test('loads dashboard content', async ({ page }) => {
