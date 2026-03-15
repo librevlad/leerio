@@ -417,7 +417,7 @@ watch(() => route.params.id, loadBook)
           <!-- Tab content + desktop context panel -->
           <div class="mt-4 flex gap-5">
             <!-- Main tab content -->
-            <div class="min-w-0 flex-1 tab-content-enter" :key="activeTab">
+            <div :key="activeTab" class="tab-content-enter min-w-0 flex-1">
               <!-- Chapters -->
               <BookChapters
                 v-if="activeTab === 'chapters' && isLoggedIn && book.mp3_count && book.mp3_count > 0"
@@ -441,12 +441,7 @@ watch(() => route.params.id, loadBook)
 
               <!-- Tags -->
               <div v-if="activeTab === 'tags' && isLoggedIn" class="space-y-5">
-                <BookTags
-                  :book-id="book.id"
-                  :title="book.title"
-                  :tags="book.tags"
-                  @updated="(t) => (book!.tags = t)"
-                />
+                <BookTags :book-id="book.id" :title="book.title" :tags="book.tags" @updated="(t) => (book!.tags = t)" />
                 <BookTimeline :entries="book.timeline || []" />
               </div>
 
@@ -472,10 +467,7 @@ watch(() => route.params.id, loadBook)
             </div>
 
             <!-- Desktop context panel -->
-            <div
-              v-if="isLoggedIn && activeTab !== 'about'"
-              class="hidden w-[260px] shrink-0 space-y-4 lg:block"
-            >
+            <div v-if="isLoggedIn && activeTab !== 'about'" class="hidden w-[260px] shrink-0 space-y-4 lg:block">
               <!-- Notes preview (when not on notes tab) -->
               <div v-if="activeTab !== 'notes' && book.note" class="card p-4">
                 <p class="section-label mb-2">{{ t('book.notes') }}</p>
@@ -498,17 +490,10 @@ watch(() => route.params.id, loadBook)
               </div>
 
               <!-- Timeline snippet (when not on tags tab) -->
-              <div
-                v-if="activeTab !== 'tags' && book.timeline?.length"
-                class="card p-4"
-              >
+              <div v-if="activeTab !== 'tags' && book.timeline?.length" class="card p-4">
                 <p class="section-label mb-2">{{ t('book.timeline') }}</p>
                 <div class="space-y-2">
-                  <div
-                    v-for="(e, i) in book.timeline.slice(0, 3)"
-                    :key="i"
-                    class="flex items-center gap-2 text-[11px]"
-                  >
+                  <div v-for="(e, i) in book.timeline.slice(0, 3)" :key="i" class="flex items-center gap-2 text-[11px]">
                     <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-[--accent]" />
                     <span class="text-[--t2]">{{ e.action_label }}</span>
                     <span class="ml-auto text-[--t3]">{{
