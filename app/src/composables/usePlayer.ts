@@ -38,6 +38,7 @@ const playingOffline = ref(false)
 const playbackRate = ref(parseFloat(localStorage.getItem('leerio_playback_rate') || '1'))
 const sleepTimer = ref<number | null>(null)
 const isFullscreen = ref(false)
+const audioError = ref(false)
 
 let sleepTimerId: ReturnType<typeof setTimeout> | null = null
 
@@ -123,10 +124,12 @@ function ensureAudio(): HTMLAudioElement {
 
     audio.addEventListener('canplay', () => {
       isLoading.value = false
+      audioError.value = false
     })
 
     audio.addEventListener('error', () => {
       isLoading.value = false
+      audioError.value = true
       toast.error(t('player.loadError'))
     })
 
@@ -582,6 +585,19 @@ function closePlayer() {
   duration.value = 0
 }
 
+function retryAudio() {
+  if (!audio || !currentBook.value) return
+  audioError.value = false
+  isLoading.value = true
+  audio.load()
+  audio.play().catch(() => toast.error(t('player.playbackError')))
+}
+
+function skipErrorTrack() {
+  audioError.value = false
+  nextTrack()
+}
+
 // ── Format helpers ──────────────────────────────────────────────────────────
 
 function formatTime(sec: number): string {
@@ -609,6 +625,7 @@ export function usePlayer() {
     playbackRate,
     sleepTimer,
     isFullscreen,
+    audioError,
 
     // Computed
     currentTrack,
@@ -633,6 +650,8 @@ export function usePlayer() {
     openFullscreen,
     closeFullscreen,
     closePlayer,
+    retryAudio,
+    skipErrorTrack,
 
     // Helpers
     formatTime,

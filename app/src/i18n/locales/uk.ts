@@ -373,6 +373,8 @@ export default {
     loadError: 'Помилка завантаження аудіо',
     tracksLoadError: 'Не вдалося завантажити треки',
     playbackError: 'Помилка відтворення',
+    retry: 'Повторити',
+    skipChapter: 'Пропустити',
   },
   common: {
     cancel: 'Скасувати',

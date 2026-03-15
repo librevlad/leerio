@@ -373,6 +373,8 @@ export default {
     loadError: 'Audio loading error',
     tracksLoadError: 'Failed to load tracks',
     playbackError: 'Playback error',
+    retry: 'Retry',
+    skipChapter: 'Skip',
   },
   common: {
     cancel: 'Cancel',

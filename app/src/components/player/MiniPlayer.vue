@@ -20,6 +20,8 @@ const {
   closePlayer,
   openFullscreen,
   formatTime,
+  audioError,
+  retryAudio,
 } = usePlayer()
 </script>
 
@@ -82,8 +84,18 @@ const {
           <IconRewind15 :size="18" />
         </button>
 
-        <!-- Play / Pause -->
+        <!-- Play / Pause / Retry -->
         <button
+          v-if="audioError"
+          class="flex h-10 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 px-4 text-[12px] font-semibold text-white transition-all"
+          style="background: linear-gradient(135deg, #dc2626, #b91c1c)"
+          :aria-label="t('player.retry')"
+          @click="retryAudio"
+        >
+          {{ t('player.retry') }}
+        </button>
+        <button
+          v-else
           class="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 transition-all"
           style="background: var(--gradient-accent); box-shadow: 0 2px 12px rgba(232, 146, 58, 0.25)"
           :aria-label="isPlaying ? t('player.pause') : t('player.play')"

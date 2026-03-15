@@ -53,6 +53,9 @@ const {
   playTrack,
   closeFullscreen,
   formatTime,
+  audioError,
+  retryAudio,
+  skipErrorTrack,
 } = usePlayer()
 
 const showTrackList = ref(false)
@@ -251,6 +254,26 @@ function closeOverlays() {
             style="box-shadow: 0 0 6px rgba(52, 211, 153, 0.5)"
           />
         </p>
+      </div>
+
+      <!-- Audio error banner -->
+      <div v-if="audioError" class="mx-6 mt-3 flex items-center gap-3 rounded-xl bg-red-500/10 px-4 py-3">
+        <span class="text-[13px] text-red-400">{{ t('player.loadError') }}</span>
+        <div class="ml-auto flex gap-2">
+          <button
+            class="rounded-lg border-0 bg-white/10 px-3 py-1.5 text-[12px] font-semibold text-[--t1] transition-colors hover:bg-white/15"
+            @click="retryAudio"
+          >
+            {{ t('player.retry') }}
+          </button>
+          <button
+            v-if="tracks.length > 1"
+            class="rounded-lg border-0 bg-white/10 px-3 py-1.5 text-[12px] font-semibold text-[--t1] transition-colors hover:bg-white/15"
+            @click="skipErrorTrack"
+          >
+            {{ t('player.skipChapter') }}
+          </button>
+        </div>
       </div>
 
       <!-- Seek bar -->
