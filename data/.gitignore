@@ -1,9 +1,0 @@
-# Runtime data files — not tracked in git
-*.json
-*.csv
-*.md
-*.db
-*.db-journal
-*.db-wal
-!.gitkeep
-!.gitignore

@@ -14,10 +14,8 @@ node_modules/
 app/dist/
 app/coverage/
 
-# Runtime data (sensitive + generated)
-data/*
-!data/.gitkeep
-!data/.gitignore
+# Runtime data (sensitive + generated, volume-mounted in Docker)
+data/
 
 # Books (large binary files, volume-mounted)
 books/

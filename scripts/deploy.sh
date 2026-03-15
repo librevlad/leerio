@@ -28,12 +28,12 @@ deploy_local() {
   PREV_SHA=$(git rev-parse HEAD)
   log "Current: $PREV_SHA"
 
-  # Remove git-tracked data files that Docker may have chowned to appuser
-  rm -f data/.gitignore data/.gitkeep 2>/dev/null || true
-
   # Pull latest
   git fetch origin main
   git reset --hard origin/main
+
+  # Ensure data directory exists (no longer tracked in git)
+  mkdir -p data
   NEW_SHA=$(git rev-parse HEAD)
   log "Updated: $NEW_SHA"
 
@@ -62,9 +62,6 @@ deploy_local() {
 
   log "Starting services..."
   docker compose up -d --wait --wait-timeout 120
-
-  # Restore git-tracked file permissions (entrypoint chowns /data for appuser)
-  git checkout -- data/.gitignore data/.gitkeep 2>/dev/null || true
 
   # Health check
   log "Verifying services..."
