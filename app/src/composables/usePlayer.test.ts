@@ -13,6 +13,8 @@ vi.mock('../api', () => ({
     getUserBookTracks: vi.fn(),
   },
   audioUrl: vi.fn((_id: string, _idx: number) => 'http://test/audio.mp3'),
+  coverUrl: vi.fn((id: string) => `http://test/books/${id}/cover`),
+  userBookCoverUrl: vi.fn((slug: string) => `http://test/user/books/${slug}/cover`),
 }))
 
 vi.mock('./useDownloads', () => ({
@@ -48,6 +50,20 @@ vi.mock('./useToast', () => ({
     warning: vi.fn(),
   }),
 }))
+
+// Stub MediaMetadata (not available in JSDOM)
+vi.stubGlobal(
+  'MediaMetadata',
+  class MediaMetadata {
+    title?: string
+    artist?: string
+    album?: string
+    artwork?: { src: string; sizes: string; type: string }[]
+    constructor(init: Record<string, unknown>) {
+      Object.assign(this, init)
+    }
+  },
+)
 
 // Stub HTMLAudioElement
 function createMockAudio() {
@@ -422,6 +438,179 @@ describe('usePlayer', () => {
       expect(p.currentTime.value).toBe(0)
       expect(p.isPlayerVisible.value).toBe(false)
       expect(p.isPlaying.value).toBe(false)
+    })
+  })
+
+  // ── Media Session ─────────────────────────────────────────────────────
+  describe('media session', () => {
+    const mockMetadata = vi.fn()
+    const mockSetActionHandler = vi.fn()
+    const mockSetPositionState = vi.fn()
+
+    let origCreateObjectURL: typeof URL.createObjectURL
+    let origRevokeObjectURL: typeof URL.revokeObjectURL
+
+    beforeEach(() => {
+      origCreateObjectURL = URL.createObjectURL
+      origRevokeObjectURL = URL.revokeObjectURL
+
+      Object.defineProperty(navigator, 'mediaSession', {
+        value: {
+          _metadata: null,
+          get metadata() {
+            return this._metadata
+          },
+          set metadata(v: MediaMetadata) {
+            this._metadata = v
+            mockMetadata(v)
+          },
+          setActionHandler: mockSetActionHandler,
+          setPositionState: mockSetPositionState,
+        },
+        writable: true,
+        configurable: true,
+      })
+      mockMetadata.mockClear()
+      mockSetActionHandler.mockClear()
+      mockSetPositionState.mockClear()
+    })
+
+    afterEach(() => {
+      URL.createObjectURL = origCreateObjectURL
+      URL.revokeObjectURL = origRevokeObjectURL
+    })
+
+    const testBook = {
+      id: '1',
+      folder: 'test',
+      category: 'test',
+      author: 'Author',
+      title: 'Title',
+      reader: '',
+      path: '',
+      progress: 0,
+      tags: [] as string[],
+      note: '',
+    }
+
+    async function setupBookMocks(bookId = '1') {
+      const { api } = await import('../api')
+      vi.mocked(api.getBookTracks).mockResolvedValue({
+        book_id: bookId,
+        count: 1,
+        tracks: [{ index: 0, filename: '01.mp3', path: '', duration: 60 }],
+      })
+      vi.mocked(api.getPlaybackPosition).mockResolvedValue({
+        track_index: 0,
+        position: 0,
+      })
+    }
+
+    it('fetches cover and creates blob URL on loadBook', async () => {
+      await setupBookMocks()
+
+      const mockBlob = new Blob(['fake-image'], { type: 'image/jpeg' })
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          blob: () => Promise.resolve(mockBlob),
+          headers: new Headers({ 'Content-Type': 'image/jpeg' }),
+        }),
+      )
+
+      const mockBlobUrl = 'blob:http://localhost/fake-cover'
+      URL.createObjectURL = vi.fn(() => mockBlobUrl)
+      URL.revokeObjectURL = vi.fn()
+
+      const p = usePlayer()
+      await p.loadBook({ ...testBook, id: '1' })
+
+      expect(mockMetadata).toHaveBeenCalled()
+      const metadata = mockMetadata.mock.calls[0][0]
+      expect(metadata.artwork).toEqual([{ src: mockBlobUrl, sizes: '512x512', type: 'image/jpeg' }])
+    })
+
+    it('skips artwork when cover is SVG placeholder', async () => {
+      await setupBookMocks('2')
+
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          blob: () => Promise.resolve(new Blob(['<svg></svg>'], { type: 'image/svg+xml' })),
+          headers: new Headers({ 'Content-Type': 'image/svg+xml' }),
+        }),
+      )
+
+      const p = usePlayer()
+      await p.loadBook({ ...testBook, id: '2' })
+
+      expect(mockMetadata).toHaveBeenCalled()
+      const metadata = mockMetadata.mock.calls[0][0]
+      expect(metadata.artwork).toBeUndefined()
+    })
+
+    it('omits artwork when cover fetch fails', async () => {
+      await setupBookMocks('3')
+      vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network error')))
+
+      const p = usePlayer()
+      await p.loadBook({ ...testBook, id: '3' })
+
+      expect(mockMetadata).toHaveBeenCalled()
+      const metadata = mockMetadata.mock.calls[0][0]
+      expect(metadata.artwork).toBeUndefined()
+    })
+
+    it('registers seekbackward handler with 10s default', async () => {
+      await setupBookMocks('4')
+      vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('no cover')))
+
+      const p = usePlayer()
+      await p.loadBook({ ...testBook, id: '4' })
+
+      const seekbackwardCall = mockSetActionHandler.mock.calls.find((c: unknown[]) => c[0] === 'seekbackward')
+      expect(seekbackwardCall).toBeTruthy()
+
+      mockAudio._setDuration(120)
+      p.currentTime.value = 50
+      seekbackwardCall![1]({})
+      expect(p.currentTime.value).toBe(40)
+    })
+
+    it('registers seekforward handler with 30s default', async () => {
+      await setupBookMocks('5')
+      vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('no cover')))
+
+      const p = usePlayer()
+      await p.loadBook({ ...testBook, id: '5' })
+
+      const seekforwardCall = mockSetActionHandler.mock.calls.find((c: unknown[]) => c[0] === 'seekforward')
+      expect(seekforwardCall).toBeTruthy()
+
+      mockAudio._setDuration(120)
+      p.currentTime.value = 20
+      seekforwardCall![1]({})
+      expect(p.currentTime.value).toBe(50)
+    })
+
+    it('calls setPositionState on play event', async () => {
+      await setupBookMocks('6')
+      vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('no cover')))
+
+      const p = usePlayer()
+      await p.loadBook({ ...testBook, id: '6' })
+
+      mockSetPositionState.mockClear()
+      mockAudio._setDuration(60)
+      mockAudio._emit('play')
+
+      expect(mockSetPositionState).toHaveBeenCalledWith({
+        duration: 60,
+        position: expect.any(Number),
+        playbackRate: expect.any(Number),
+      })
     })
   })
 })

@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import { api, audioUrl } from '../api'
+import { api, audioUrl, coverUrl, userBookCoverUrl } from '../api'
 import { useDownloads } from './useDownloads'
 import { useLocalBooks } from './useLocalBooks'
 import { useNetwork } from './useNetwork'
@@ -49,6 +49,8 @@ let saveTimer: ReturnType<typeof setTimeout> | null = null
 let isSeeking = false
 let activeSessionBook: string | null = null
 let deviceChangeRegistered = false
+let coverBlobUrl: string | null = null
+let coverMimeType: string | null = null
 
 // ── Computed ────────────────────────────────────────────────────────────────
 
@@ -83,6 +85,7 @@ function ensureAudio(): HTMLAudioElement {
     audio.addEventListener('loadedmetadata', () => {
       duration.value = audio!.duration
       isLoading.value = false
+      updatePositionState()
     })
 
     audio.addEventListener('ended', () => {
@@ -92,6 +95,7 @@ function ensureAudio(): HTMLAudioElement {
     audio.addEventListener('play', () => {
       isPlaying.value = true
       startSaveTimer()
+      updatePositionState()
       const title = currentBook.value?.title
       if (title && activeSessionBook !== title) {
         if (activeSessionBook) {
@@ -104,6 +108,7 @@ function ensureAudio(): HTMLAudioElement {
 
     audio.addEventListener('pause', () => {
       isPlaying.value = false
+      updatePositionState()
       stopSaveTimer()
       savePosition()
       if (activeSessionBook) {
@@ -123,6 +128,10 @@ function ensureAudio(): HTMLAudioElement {
     audio.addEventListener('error', () => {
       isLoading.value = false
       toast.error(t('player.loadError'))
+    })
+
+    audio.addEventListener('seeked', () => {
+      updatePositionState()
     })
 
     // Pause when headphones are disconnected (register only once)
@@ -189,13 +198,50 @@ function stopSaveTimer() {
 
 // ── Media Session ───────────────────────────────────────────────────────────
 
+async function loadCoverBlobUrl(book: Book): Promise<void> {
+  if (coverBlobUrl) {
+    URL.revokeObjectURL(coverBlobUrl)
+    coverBlobUrl = null
+    coverMimeType = null
+  }
+
+  try {
+    let url: string
+    if (book.id.startsWith('lb:')) {
+      // Local books: cover in IndexedDB — skip (no HTTP URL available)
+      return
+    } else if (book.id.startsWith('ub:')) {
+      const slug = book.id.split(':')[2] ?? ''
+      url = userBookCoverUrl(slug)
+    } else {
+      url = coverUrl(book.id)
+    }
+
+    const response = await fetch(url, { credentials: 'include', redirect: 'follow' })
+    if (!response.ok) return
+
+    const contentType = response.headers.get('Content-Type') || 'image/jpeg'
+    if (contentType.includes('svg')) return
+
+    const blob = await response.blob()
+    coverBlobUrl = URL.createObjectURL(blob)
+    coverMimeType = contentType
+  } catch {
+    // Cover fetch failed (network, CORS on S3 redirect, etc.) — skip artwork
+  }
+}
+
 function updateMediaSession() {
   if (!('mediaSession' in navigator) || !currentBook.value) return
+
+  const artwork: MediaImage[] | undefined =
+    coverBlobUrl && coverMimeType ? [{ src: coverBlobUrl, sizes: '512x512', type: coverMimeType }] : undefined
 
   navigator.mediaSession.metadata = new MediaMetadata({
     title: currentTrack.value?.filename ?? 'Unknown',
     artist: currentBook.value.author,
     album: currentBook.value.title,
+    ...(artwork && { artwork }),
   })
 
   navigator.mediaSession.setActionHandler('play', () => togglePlay())
@@ -205,6 +251,25 @@ function updateMediaSession() {
   navigator.mediaSession.setActionHandler('seekto', (details) => {
     if (details.seekTime != null) seek(details.seekTime)
   })
+  navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+    skipBackward(details.seekOffset ?? 10)
+  })
+  navigator.mediaSession.setActionHandler('seekforward', (details) => {
+    skipForward(details.seekOffset ?? 30)
+  })
+}
+
+function updatePositionState() {
+  if (!('mediaSession' in navigator) || !audio) return
+  try {
+    navigator.mediaSession.setPositionState({
+      duration: audio.duration || 0,
+      position: audio.currentTime || 0,
+      playbackRate: audio.playbackRate || 1,
+    })
+  } catch {
+    // setPositionState can throw if duration is NaN or 0
+  }
 }
 
 // ── Resolve audio source (local or server) ──────────────────────────────────
@@ -290,6 +355,7 @@ async function loadBook(book: Book) {
         a.addEventListener('loadedmetadata', onLoaded)
       }
 
+      await loadCoverBlobUrl(book)
       updateMediaSession()
       return
     }
@@ -341,6 +407,7 @@ async function loadBook(book: Book) {
       a.addEventListener('loadedmetadata', onLoaded)
     }
 
+    await loadCoverBlobUrl(book)
     updateMediaSession()
   } catch {
     isLoading.value = false
@@ -417,6 +484,7 @@ function setPlaybackRate(rate: number) {
   playbackRate.value = rate
   if (audio) audio.playbackRate = rate
   localStorage.setItem('leerio_playback_rate', String(rate))
+  updatePositionState()
 }
 
 function skipForward(seconds = 15) {
@@ -486,6 +554,11 @@ function closeFullscreen() {
 }
 
 function closePlayer() {
+  if (coverBlobUrl) {
+    URL.revokeObjectURL(coverBlobUrl)
+    coverBlobUrl = null
+    coverMimeType = null
+  }
   if (activeSessionBook) {
     api.stopSession(activeSessionBook).catch(() => {})
     activeSessionBook = null
