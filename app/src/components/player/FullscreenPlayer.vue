@@ -302,6 +302,7 @@ function closeOverlays() {
       <div class="flex items-center justify-center gap-5 px-6 py-4">
         <button
           class="flex h-11 w-11 items-center justify-center rounded-full border-0 bg-transparent text-[--t2] transition-colors hover:text-[--t1]"
+          :aria-label="t('player.prevTrack')"
           @click="prevTrack"
         >
           <IconSkipBack :size="22" />
@@ -309,6 +310,7 @@ function closeOverlays() {
         <button
           class="flex h-10 w-10 items-center justify-center rounded-full border-0 text-[13px] font-bold text-[--t2] transition-colors hover:text-[--t1]"
           style="background: rgba(255, 255, 255, 0.06)"
+          :aria-label="t('player.back15')"
           @click="skipBackward()"
         >
           -15
@@ -316,6 +318,7 @@ function closeOverlays() {
         <button
           class="flex h-16 w-16 items-center justify-center rounded-full border-0 transition-all"
           style="background: var(--gradient-accent); box-shadow: 0 4px 24px rgba(232, 146, 58, 0.4)"
+          :aria-label="isPlaying ? t('player.pause') : t('player.play')"
           @click="togglePlay"
         >
           <component :is="isPlaying ? IconPause : IconPlay" :size="24" style="color: #fff" />
@@ -323,12 +326,14 @@ function closeOverlays() {
         <button
           class="flex h-10 w-10 items-center justify-center rounded-full border-0 text-[13px] font-bold text-[--t2] transition-colors hover:text-[--t1]"
           style="background: rgba(255, 255, 255, 0.06)"
+          :aria-label="t('player.forward30')"
           @click="skipForward(30)"
         >
           +30
         </button>
         <button
           class="flex h-11 w-11 items-center justify-center rounded-full border-0 bg-transparent text-[--t2] transition-colors hover:text-[--t1]"
+          :aria-label="t('player.nextTrack')"
           @click="nextTrack"
         >
           <IconSkipForward :size="22" />
