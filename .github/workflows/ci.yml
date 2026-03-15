@@ -186,8 +186,8 @@ jobs:
           envs: S3_ENDPOINT,S3_ACCESS_KEY,S3_SECRET_KEY,S3_BUCKET,GOOGLE_CLIENT_ID
           script: |
             cd /opt/leerio
-            # Fix ownership on git-tracked files that Docker may have chowned
-            sudo chown -Rf "$(id -u):$(id -g)" data/ 2>/dev/null || true
+            # Remove git-tracked data files that Docker may have chowned to appuser
+            rm -f data/.gitignore data/.gitkeep 2>/dev/null; git checkout -- data/.gitignore data/.gitkeep 2>/dev/null || true
             # Inject secrets from CI into .env (VPS .env may not have them)
             for var in S3_ENDPOINT S3_ACCESS_KEY S3_SECRET_KEY S3_BUCKET GOOGLE_CLIENT_ID; do
               val=$(eval echo "\$$var")
