@@ -22,32 +22,48 @@ Polish Media Session integration so Android shows full media notification (artwo
 
 In `usePlayer.ts`:
 
-- Add `coverBlobUrl` ref (string | null)
-- On `loadBook()`: fetch `/api/books/{id}/cover` → create blob URL via `URL.createObjectURL()`
-- On `updateMediaSession()`: pass blob URL in `artwork` array as `[{src, sizes: "512x512", type: "image/png"}]`
-- On book change or player close: `URL.revokeObjectURL()` to free memory
-- Fallback: if fetch fails, omit artwork (notification still works, just no image)
+- Add `coverBlobUrl` ref (string | null) and `coverMimeType` ref (string)
+- On `loadBook()`: resolve cover URL by book type:
+  - **Catalog books**: `coverUrl(id)` → `/api/books/{id}/cover`
+  - **User books** (`ub:` prefix): `userBookCoverUrl(slug)` → `/api/user/books/{slug}/cover`
+  - **Local books** (`lb:` prefix): get cover from IndexedDB via `useLocalBooks()` composable
+- Fetch the cover → read `Content-Type` from response headers → create blob URL via `URL.createObjectURL()`
+- On `updateMediaSession()`: pass blob URL in `artwork` array as `[{src, sizes: "512x512", type: mimeType}]`
+- **Skip artwork** if response Content-Type is `image/svg+xml` (placeholder) — Android Chrome does not reliably render SVG in media notifications; no image is better than a broken image
+- On book change: `URL.revokeObjectURL(coverBlobUrl.value)` before loading new cover
+- On `closePlayer()`: `URL.revokeObjectURL(coverBlobUrl.value)` before nulling state
+- Fallback: if fetch fails (including CORS failure on S3 redirect), omit artwork
 
 Why blob URL: Media Session may not send auth cookies when fetching artwork from a protected endpoint. Blob URLs are local and bypass this entirely.
+
+**Note on S3 redirects**: For catalog books, the cover endpoint may return a 302 redirect to an S3 presigned URL (`ams1.vultrobjects.com`). `fetch()` follows redirects automatically. If S3 CORS headers are missing, the fetch will fail — the fallback (omit artwork) handles this gracefully.
 
 ### 2. seekbackward / seekforward Handlers
 
 Add to `updateMediaSession()`:
 
 ```ts
-navigator.mediaSession.setActionHandler('seekbackward', () => skipBackward(10))
-navigator.mediaSession.setActionHandler('seekforward', () => skipForward(30))
+navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+  skipBackward(details.seekOffset ?? 10)
+})
+navigator.mediaSession.setActionHandler('seekforward', (details) => {
+  skipForward(details.seekOffset ?? 30)
+})
 ```
 
-Intervals: -10s back / +30s forward (Android standard, matches Google Podcasts / Audible behavior). These are independent of the in-app UI skip intervals (-15s / +15s in MiniPlayer).
+Uses `details.seekOffset` from the platform when provided, falls back to -10s / +30s (Android standard, matches Google Podcasts / Audible). These are independent of the in-app UI skip intervals (-15s / +15s in MiniPlayer).
 
 ### 3. Position State
 
-Call `navigator.mediaSession.setPositionState()` at:
+Call `navigator.mediaSession.setPositionState()` on specific events (NOT on `timeupdate` — that causes notification progress bar stutter on some Android devices):
 
-- `loadedmetadata` event (duration becomes known)
-- `timeupdate` event (throttled — only when position changes by ≥1s)
-- `playbackRate` change
+- `loadedmetadata` — duration becomes known
+- `play` — playback starts
+- `pause` — playback pauses
+- `seeked` — user seeks to new position
+- `ratechange` — playback speed changes
+
+The browser extrapolates position between updates using the reported playback rate.
 
 Payload:
 ```ts
@@ -58,7 +74,7 @@ navigator.mediaSession.setPositionState({
 })
 ```
 
-This enables the progress bar in Android notification and lock screen.
+Extract as helper `updatePositionState()` and call from relevant event handlers in `ensureAudio()`.
 
 ## Files Modified
 
@@ -74,7 +90,10 @@ This enables the progress bar in Android notification and lock screen.
 
 ## Testing
 
-- Manual: play a book on Android Chrome/PWA, verify notification shows cover + controls
+- Manual: play a catalog book on Android Chrome/PWA, verify notification shows cover + controls
+- Manual: play a user book, verify artwork appears
 - Manual: verify seekbackward/seekforward buttons work from notification
 - Manual: verify progress bar updates in notification
+- Manual: verify book with no cover shows notification without broken image
+- Manual: verify cover updates when switching books
 - Unit: mock `navigator.mediaSession` and verify handlers are registered
