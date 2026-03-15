@@ -52,6 +52,8 @@ let activeSessionBook: string | null = null
 let deviceChangeRegistered = false
 let coverBlobUrl: string | null = null
 let coverMimeType: string | null = null
+let nextTrackUrl: string | null = null
+let nextTrackIndex: number | null = null
 
 // ── Computed ────────────────────────────────────────────────────────────────
 
@@ -414,6 +416,7 @@ async function loadBook(book: Book) {
 
     await loadCoverBlobUrl(book)
     updateMediaSession()
+    preloadNextTrack()
   } catch {
     isLoading.value = false
     toast.error(t('player.tracksLoadError'))
@@ -429,10 +432,17 @@ async function playTrack(index: number) {
   currentTime.value = 0
 
   const a = ensureAudio()
-  a.src = await resolveAudioSrc(currentBook.value.id, index)
+  if (nextTrackUrl && nextTrackIndex === index) {
+    a.src = nextTrackUrl
+  } else {
+    a.src = await resolveAudioSrc(currentBook.value.id, index)
+  }
+  nextTrackUrl = null
+  nextTrackIndex = null
   a.load()
   a.play().catch(() => toast.error(t('player.playbackError')))
   updateMediaSession()
+  preloadNextTrack()
 }
 
 function togglePlay() {
@@ -583,6 +593,23 @@ function closePlayer() {
   currentTrackIndex.value = 0
   currentTime.value = 0
   duration.value = 0
+}
+
+async function preloadNextTrack() {
+  if (!currentBook.value) return
+  const nextIdx = currentTrackIndex.value + 1
+  if (nextIdx >= tracks.value.length) {
+    nextTrackUrl = null
+    nextTrackIndex = null
+    return
+  }
+  try {
+    nextTrackUrl = await resolveAudioSrc(currentBook.value.id, nextIdx)
+    nextTrackIndex = nextIdx
+  } catch {
+    nextTrackUrl = null
+    nextTrackIndex = null
+  }
 }
 
 function retryAudio() {
