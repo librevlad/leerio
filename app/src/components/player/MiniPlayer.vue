@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { usePlayer } from '../../composables/usePlayer'
-import { IconPlay, IconPause, IconXCircle, IconForward15, IconRewind15 } from '../shared/icons'
+import { IconPlay, IconPause, IconXCircle, IconForward30, IconRewind15 } from '../shared/icons'
 
 const { t } = useI18n()
 const {
@@ -92,13 +92,13 @@ const {
           <component :is="isPlaying ? IconPause : IconPlay" :size="16" style="color: #fff" />
         </button>
 
-        <!-- +15s skip -->
+        <!-- +30s skip -->
         <button
           class="shrink-0 cursor-pointer border-0 bg-transparent p-1.5 text-[--t3] transition-colors hover:text-[--t1]"
-          :aria-label="t('player.forward15Aria')"
-          @click="skipForward()"
+          :aria-label="t('player.forward30Aria')"
+          @click="skipForward(30)"
         >
-          <IconForward15 :size="18" />
+          <IconForward30 :size="18" />
         </button>
 
         <!-- Close -->

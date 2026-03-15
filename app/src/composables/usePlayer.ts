@@ -417,6 +417,7 @@ async function loadBook(book: Book) {
 
 async function playTrack(index: number) {
   if (!currentBook.value || index < 0 || index >= tracks.value.length) return
+  if (isLoading.value) return // prevent double-tap race condition
 
   savePosition()
   currentTrackIndex.value = index

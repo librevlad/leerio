@@ -13,8 +13,6 @@ import {
   IconPause,
   IconSkipForward,
   IconSkipBack,
-  IconRewind15,
-  IconForward15,
   IconSpeed,
   IconMoon,
   IconBookmark,
@@ -88,6 +86,12 @@ const trackLabel = computed(() => {
 const seekPercent = computed(() => {
   if (!duration.value) return 0
   return (currentTime.value / duration.value) * 100
+})
+
+const remainingTime = computed(() => {
+  if (!duration.value) return '0:00'
+  const remaining = duration.value - (seekPreview.value !== null ? seekPreview.value : currentTime.value)
+  return '-' + formatTime(Math.max(0, remaining))
 })
 
 function goToBook() {
@@ -190,7 +194,9 @@ function closeOverlays() {
           <IconChevronDown :size="24" />
         </button>
         <div class="min-w-0 flex-1 px-3 text-center">
-          <p class="truncate text-[13px] font-semibold text-[--t1]">{{ currentBook.title }}</p>
+          <p class="text-[10px] font-semibold tracking-widest text-[--t3] uppercase">
+            {{ t('player.nowPlaying') }}
+          </p>
         </div>
         <button
           class="flex h-10 w-10 items-center justify-center rounded-full border-0 bg-transparent text-[--t2] transition-colors hover:text-[--t1]"
@@ -204,7 +210,8 @@ function closeOverlays() {
       <!-- Cover -->
       <div class="flex flex-1 items-center justify-center px-8 py-4">
         <div
-          class="relative aspect-square w-full max-w-[280px] overflow-hidden rounded-2xl shadow-2xl"
+          class="relative aspect-square w-full max-w-[320px] overflow-hidden rounded-2xl"
+          style="box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5)"
           :style="
             coverSrc && !coverError
               ? ''
@@ -231,22 +238,19 @@ function closeOverlays() {
       </div>
 
       <!-- Track info -->
-      <div class="px-6 text-center">
-        <p class="truncate text-[15px] font-semibold text-[--t1]">
-          {{ currentTrack?.filename ?? '' }}
+      <div class="px-6">
+        <p class="truncate text-[16px] font-bold text-[--t1]">
+          {{ currentBook.title }}
         </p>
-        <p
-          v-if="currentBook.author || playingOffline"
-          class="mt-1 flex items-center justify-center gap-2 text-[12px] text-[--t3]"
-        >
-          {{ currentBook.author }}
+        <p class="mt-1 flex items-center gap-2 text-[13px] text-[--t3]">
+          <span class="truncate">{{ currentBook.author }}</span>
+          <span v-if="tracks.length > 1" class="shrink-0">· {{ trackLabel }}</span>
           <span
             v-if="playingOffline"
-            class="h-2 w-2 rounded-full bg-emerald-400"
+            class="h-2 w-2 shrink-0 rounded-full bg-emerald-400"
             style="box-shadow: 0 0 6px rgba(52, 211, 153, 0.5)"
           />
         </p>
-        <p class="mt-0.5 text-[11px] text-[--t3]">{{ trackLabel }}</p>
       </div>
 
       <!-- Seek bar -->
@@ -267,7 +271,7 @@ function closeOverlays() {
         </div>
         <div class="mt-1 flex justify-between text-[11px] text-[--t3]">
           <span>{{ formatTime(seekPreview !== null ? seekPreview : currentTime) }}</span>
-          <span>{{ formatTime(duration) }}</span>
+          <span>{{ remainingTime }}</span>
         </div>
       </div>
 
@@ -280,23 +284,25 @@ function closeOverlays() {
           <IconSkipBack :size="22" />
         </button>
         <button
-          class="flex h-11 w-11 items-center justify-center rounded-full border-0 bg-transparent text-[--t2] transition-colors hover:text-[--t1]"
+          class="flex h-10 w-10 items-center justify-center rounded-full border-0 text-[13px] font-bold text-[--t2] transition-colors hover:text-[--t1]"
+          style="background: rgba(255, 255, 255, 0.06)"
           @click="skipBackward()"
         >
-          <IconRewind15 :size="24" />
+          -15
         </button>
         <button
           class="flex h-16 w-16 items-center justify-center rounded-full border-0 transition-all"
-          style="background: var(--gradient-accent); box-shadow: 0 4px 20px rgba(232, 146, 58, 0.35)"
+          style="background: var(--gradient-accent); box-shadow: 0 4px 24px rgba(232, 146, 58, 0.4)"
           @click="togglePlay"
         >
           <component :is="isPlaying ? IconPause : IconPlay" :size="24" style="color: #fff" />
         </button>
         <button
-          class="flex h-11 w-11 items-center justify-center rounded-full border-0 bg-transparent text-[--t2] transition-colors hover:text-[--t1]"
-          @click="skipForward()"
+          class="flex h-10 w-10 items-center justify-center rounded-full border-0 text-[13px] font-bold text-[--t2] transition-colors hover:text-[--t1]"
+          style="background: rgba(255, 255, 255, 0.06)"
+          @click="skipForward(30)"
         >
-          <IconForward15 :size="24" />
+          +30
         </button>
         <button
           class="flex h-11 w-11 items-center justify-center rounded-full border-0 bg-transparent text-[--t2] transition-colors hover:text-[--t1]"
@@ -307,17 +313,17 @@ function closeOverlays() {
       </div>
 
       <!-- Secondary controls -->
-      <div class="flex items-center justify-center gap-6 px-6 pb-2">
+      <div class="flex items-center justify-around px-8 pb-2">
         <!-- Speed -->
         <div class="relative">
           <button
-            class="flex h-10 items-center gap-1 rounded-full border-0 bg-transparent px-2 text-[12px] font-semibold transition-colors"
+            class="flex flex-col items-center gap-0.5 border-0 bg-transparent px-3 py-1 transition-colors"
             :class="playbackRate !== 1 ? 'text-[--accent]' : 'text-[--t3] hover:text-[--t2]'"
             :aria-expanded="showSpeedMenu"
             @click="showSpeedMenu = !showSpeedMenu"
           >
-            <IconSpeed :size="16" />
-            {{ playbackRate }}x
+            <IconSpeed :size="18" />
+            <span class="text-[10px] font-semibold">{{ playbackRate }}x</span>
           </button>
           <div
             v-if="showSpeedMenu"
@@ -339,13 +345,15 @@ function closeOverlays() {
         <!-- Sleep timer -->
         <div class="relative">
           <button
-            class="flex h-10 items-center gap-1 rounded-full border-0 bg-transparent px-2 text-[12px] font-semibold transition-colors"
+            class="flex flex-col items-center gap-0.5 border-0 bg-transparent px-3 py-1 transition-colors"
             :class="sleepTimer !== null ? 'text-[--accent]' : 'text-[--t3] hover:text-[--t2]'"
             :aria-expanded="showSleepMenu"
             @click="showSleepMenu = !showSleepMenu"
           >
-            <IconMoon :size="16" />
-            {{ sleepTimer !== null ? `${sleepTimer}м` : '' }}
+            <IconMoon :size="18" />
+            <span class="text-[10px] font-semibold">{{
+              sleepTimer !== null ? `${sleepTimer}м` : t('player.sleepLabel')
+            }}</span>
           </button>
           <div
             v-if="showSleepMenu"
@@ -370,19 +378,21 @@ function closeOverlays() {
 
         <!-- Bookmark -->
         <button
-          class="flex h-10 items-center gap-1 rounded-full border-0 bg-transparent px-2 text-[--t3] transition-colors hover:text-[--t2]"
+          class="flex flex-col items-center gap-0.5 border-0 bg-transparent px-3 py-1 text-[--t3] transition-colors hover:text-[--t2]"
           @click="addBookmark"
         >
-          <IconBookmark :size="16" />
+          <IconBookmark :size="18" />
+          <span class="text-[10px] font-semibold">{{ t('player.bookmarkLabel') }}</span>
         </button>
 
         <!-- Volume -->
         <div class="relative">
           <button
-            class="flex h-10 items-center gap-1 rounded-full border-0 bg-transparent px-2 text-[--t3] transition-colors hover:text-[--t2]"
+            class="flex flex-col items-center gap-0.5 border-0 bg-transparent px-3 py-1 text-[--t3] transition-colors hover:text-[--t2]"
             @click="showVolumeSlider = !showVolumeSlider"
           >
-            <component :is="volume === 0 ? IconVolumeMute : IconVolume" :size="16" />
+            <component :is="volume === 0 ? IconVolumeMute : IconVolume" :size="18" />
+            <span class="text-[10px] font-semibold">{{ t('player.volumeLabel') }}</span>
           </button>
           <div
             v-if="showVolumeSlider"

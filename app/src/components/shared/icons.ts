@@ -114,6 +114,10 @@ export const IconForward15 = icon(
   '<path fill="currentColor" stroke="none" d="M12.066 11.2a1 1 0 113.268.377L13.95 18.03a1 1 0 01-1.98-.243l1.383-6.584zM8.468 18.19V11.2H7.282L5.5 12.68l.777.87.946-.796v5.436h1.245z"/><path d="M3 12a9 9 0 019-9M3 3v6h6"/>',
   { strokeWidth: '1.5' },
 )
+export const IconForward30 = icon(
+  '<path fill="currentColor" stroke="none" d="M6.3 17.3c-.9-.7-1.3-1.8-1.3-2.8 0-2.2 1.5-3.3 3-3.3 1.6 0 3 1.1 3 3.3 0 2.2-1.4 3.4-3 3.4-.6 0-1.2-.2-1.7-.6zm.8-.8c.3.2.6.3.9.3.9 0 1.7-.7 1.7-2.3s-.8-2.2-1.7-2.2c-.9 0-1.7.7-1.7 2.2 0 .8.2 1.5.8 2zM13.5 17.9c-1.1 0-2-.5-2.3-1.5l1-.4c.2.6.6.9 1.3.9.8 0 1.3-.5 1.3-1.3 0-.8-.5-1.3-1.3-1.3-.5 0-.8.2-1.1.5l-.9-.3.4-3.3h3.8v1h-2.9l-.2 1.6c.3-.2.7-.3 1.1-.3 1.3 0 2.1.9 2.1 2.1 0 1.4-1 2.4-2.3 2.4z"/><path d="M3 12a9 9 0 019-9M3 3v6h6"/>',
+  { strokeWidth: '1.5' },
+)
 export const IconSpeed = icon('<path d="M12 12l-3-7m0 0a9 9 0 110 14"/><circle cx="12" cy="12" r="2"/>')
 export const IconMoon = icon('<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>')
 export const IconBookmark = icon('<path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>')

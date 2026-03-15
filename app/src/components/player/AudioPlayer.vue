@@ -12,7 +12,7 @@ import {
   IconVolume,
   IconVolumeMute,
   IconRewind15,
-  IconForward15,
+  IconForward30,
   IconMoon,
   IconBookmark,
   IconTrash,
@@ -180,10 +180,10 @@ const SLEEP_OPTIONS = computed(() => [
 
       <button
         class="flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-2 text-[--t2] transition-colors hover:text-[--t1]"
-        :title="t('player.forward15')"
-        @click="skipForward()"
+        :title="t('player.forward30')"
+        @click="skipForward(30)"
       >
-        <IconForward15 :size="22" />
+        <IconForward30 :size="22" />
       </button>
     </div>
 
