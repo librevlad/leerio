@@ -527,7 +527,7 @@ describe('usePlayer', () => {
       await p.loadBook({ ...testBook, id: '1' })
 
       expect(mockMetadata).toHaveBeenCalled()
-      const metadata = mockMetadata.mock.calls[0][0]
+      const metadata = mockMetadata.mock.calls[0]![0]
       expect(metadata.artwork).toEqual([{ src: mockBlobUrl, sizes: '512x512', type: 'image/jpeg' }])
     })
 
@@ -547,7 +547,7 @@ describe('usePlayer', () => {
       await p.loadBook({ ...testBook, id: '2' })
 
       expect(mockMetadata).toHaveBeenCalled()
-      const metadata = mockMetadata.mock.calls[0][0]
+      const metadata = mockMetadata.mock.calls[0]![0]
       expect(metadata.artwork).toBeUndefined()
     })
 
@@ -559,7 +559,7 @@ describe('usePlayer', () => {
       await p.loadBook({ ...testBook, id: '3' })
 
       expect(mockMetadata).toHaveBeenCalled()
-      const metadata = mockMetadata.mock.calls[0][0]
+      const metadata = mockMetadata.mock.calls[0]![0]
       expect(metadata.artwork).toBeUndefined()
     })
 
