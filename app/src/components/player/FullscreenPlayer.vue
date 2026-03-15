@@ -176,7 +176,6 @@ function closeOverlays() {
   showSleepMenu.value = false
   showVolumeSlider.value = false
 }
-
 </script>
 
 <template>
@@ -199,9 +198,7 @@ function closeOverlays() {
           <p class="text-[11px] font-semibold tracking-wider text-[--t3] uppercase">
             {{ t('player.tracks') }}
           </p>
-          <span class="text-[10px] text-[--t3]">
-            {{ currentTrackIndex + 1 }} / {{ tracks.length }}
-          </span>
+          <span class="text-[10px] text-[--t3]"> {{ currentTrackIndex + 1 }} / {{ tracks.length }} </span>
         </div>
         <div class="scrollbar-hide flex-1 overflow-y-auto p-1.5">
           <button
@@ -327,13 +324,7 @@ function closeOverlays() {
                 <div
                   v-else
                   class="flex h-full w-full items-center justify-center"
-                  style="
-                    background: linear-gradient(
-                      135deg,
-                      rgba(232, 146, 58, 0.15),
-                      rgba(232, 146, 58, 0.05)
-                    );
-                  "
+                  style="background: linear-gradient(135deg, rgba(232, 146, 58, 0.15), rgba(232, 146, 58, 0.05))"
                 >
                   <IconMusic :size="48" class="text-[--t3]" />
                 </div>
@@ -565,11 +556,7 @@ function closeOverlays() {
               class="flex w-full cursor-pointer items-center justify-center gap-1 border-0 bg-transparent py-2.5 text-[11px] font-medium text-[--t3] transition-colors hover:text-[--t2]"
               @click="showTrackList = !showTrackList"
             >
-              <IconChevronUp
-                :size="14"
-                :class="showTrackList ? 'rotate-180' : ''"
-                class="transition-transform"
-              />
+              <IconChevronUp :size="14" :class="showTrackList ? 'rotate-180' : ''" class="transition-transform" />
               {{ showTrackList ? t('player.hideTracks') : t('player.showTracks') }}
             </button>
 
@@ -631,10 +618,7 @@ function closeOverlays() {
             </button>
             <button
               class="flex h-11 w-11 items-center justify-center rounded-full border-0 transition-all"
-              style="
-                background: var(--gradient-accent);
-                box-shadow: 0 2px 16px rgba(232, 146, 58, 0.3);
-              "
+              style="background: var(--gradient-accent); box-shadow: 0 2px 16px rgba(232, 146, 58, 0.3)"
               :aria-label="isPlaying ? t('player.pause') : t('player.play')"
               @click="togglePlay"
             >
@@ -659,7 +643,7 @@ function closeOverlays() {
 
           <!-- Seek bar (fills remaining space) -->
           <div class="flex min-w-0 flex-1 items-center gap-3">
-            <span class="shrink-0 text-[11px] tabular-nums text-[--t3]">
+            <span class="shrink-0 text-[11px] text-[--t3] tabular-nums">
               {{ formatTime(seekPreview !== null ? seekPreview : currentTime) }}
             </span>
             <div class="min-w-0 flex-1">
@@ -678,7 +662,7 @@ function closeOverlays() {
                 />
               </div>
             </div>
-            <span class="shrink-0 text-[11px] tabular-nums text-[--t3]">
+            <span class="shrink-0 text-[11px] text-[--t3] tabular-nums">
               {{ remainingTime }}
             </span>
           </div>
@@ -698,7 +682,7 @@ function closeOverlays() {
               </button>
               <div
                 v-if="showSpeedMenu"
-                class="absolute bottom-full right-0 z-10 mb-2 rounded-xl border border-[--border] p-1"
+                class="absolute right-0 bottom-full z-10 mb-2 rounded-xl border border-[--border] p-1"
                 style="background: var(--card-solid)"
               >
                 <button
@@ -725,7 +709,7 @@ function closeOverlays() {
               </button>
               <div
                 v-if="showSleepMenu"
-                class="absolute bottom-full right-0 z-10 mb-2 rounded-xl border border-[--border] p-1"
+                class="absolute right-0 bottom-full z-10 mb-2 rounded-xl border border-[--border] p-1"
                 style="background: var(--card-solid)"
               >
                 <button
@@ -762,7 +746,7 @@ function closeOverlays() {
               </button>
               <div
                 v-if="showVolumeSlider"
-                class="absolute bottom-full right-0 z-10 mb-2 flex items-center gap-2 rounded-xl border border-[--border] px-3 py-2"
+                class="absolute right-0 bottom-full z-10 mb-2 flex items-center gap-2 rounded-xl border border-[--border] px-3 py-2"
                 style="background: var(--card-solid)"
               >
                 <input

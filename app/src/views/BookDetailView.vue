@@ -114,7 +114,9 @@ async function shareBook() {
     try {
       await navigator.clipboard.writeText(url)
       toast.success(t('book.linkCopied'))
-    } catch { /* ignored */ }
+    } catch {
+      /* ignored */
+    }
   }
 }
 
@@ -150,7 +152,9 @@ async function startListening() {
     try {
       await api.setBookStatus(book.value.id, 'reading')
       book.value.book_status = 'reading'
-    } catch { /* ignored */ }
+    } catch {
+      /* ignored */
+    }
   }
 }
 
