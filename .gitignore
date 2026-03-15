@@ -39,6 +39,10 @@ _backups/
 # Claude Code
 .claude/
 
+# Superpowers
+.worktrees/
+.superpowers/
+
 # Debug screenshots / snapshots (root-level)
 /*.jpeg
 /*.png
