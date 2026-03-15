@@ -781,6 +781,8 @@ def find_similar(
     target_cat = target_book.get("category", "")
     target_author = target_book.get("author", "").lower()
     target_tags = set(tags_get(target_book.get("title", "")))
+    target_user_tags = set(target_book.get("user_tags", []))
+    target_all_tags = target_tags | target_user_tags
     target_rating = book_ratings.get(normalize(target_book.get("folder", "")), 0)
 
     for b in all_books:
@@ -793,7 +795,9 @@ def find_similar(
         if ba and target_author and (ba == target_author or fuzzy_match(ba, target_author) > MATCH_STRONG):
             score += 40
         btags = set(tags_get(b["title"]))
-        shared = target_tags & btags
+        b_user_tags = set(b.get("user_tags", []))
+        b_all_tags = btags | b_user_tags
+        shared = target_all_tags & b_all_tags
         if shared:
             score += len(shared) * 15
         br = book_ratings.get(normalize(b["folder"]), 0)

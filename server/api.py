@@ -804,6 +804,7 @@ def get_books(
         notes_map = {}
 
     result = []
+    search_lower = search.lower() if search else None
     for b in books:
         enriched = _enrich_catalog_book(
             b,
@@ -815,6 +816,22 @@ def get_books(
         if tag and tag not in enriched["tags"]:
             continue
         result.append(enriched)
+
+    # If search is active, also include books matching by user tags
+    # (SQL search only covers title/author/reader, tags are user-specific)
+    if search_lower and uid:
+        matched_ids = {b["id"] for b in result}
+        all_books = db.search_books(category=category, sort=sort, language=language)
+        for b in all_books:
+            enriched = _enrich_catalog_book(
+                b, progress_map=progress, tags_map=tags_map, notes_map=notes_map, statuses_map=statuses
+            )
+            if str(enriched["id"]) in matched_ids or enriched["id"] in matched_ids:
+                continue
+            if any(search_lower in t.lower() for t in enriched["tags"]):
+                if tag and tag not in enriched["tags"]:
+                    continue
+                result.append(enriched)
 
     # Add personal user books (only for authenticated users)
     if uid:
@@ -967,6 +984,10 @@ def get_similar(book_id: str, user: dict | None = Depends(get_optional_user)):
     all_books = db.get_all_books()
     hist = db.get_user_history(uid, limit=500) if uid else []
 
+    # Include user tags for better similarity matching
+    user_tags = db.get_all_user_tags_map(uid) if uid else {}
+    target_tags = user_tags.get(bid, [])
+
     target = {
         "path": _book_path(b),
         "folder": b["folder"],
@@ -974,13 +995,19 @@ def get_similar(book_id: str, user: dict | None = Depends(get_optional_user)):
         "author": b["author"],
         "title": b["title"],
         "reader": b.get("reader", ""),
+        "user_tags": target_tags,
     }
+    folder_to_db = {bk["folder"]: bk for bk in all_books}
     legacy_books = _db_books_to_legacy(all_books)
+    # Inject user tags into legacy books for similarity scoring
+    for lb in legacy_books:
+        db_book = folder_to_db.get(lb["folder"])
+        if db_book:
+            lb["user_tags"] = user_tags.get(db_book["id"], [])
     legacy_hist = _db_history_to_legacy(hist)
     similar = find_similar(target, legacy_books, legacy_hist, top_n=6)
 
     # Map similar results back to DB books for enrichment
-    folder_to_db = {bk["folder"]: bk for bk in all_books}
     result = []
     for legacy_b, score in similar:
         db_book = folder_to_db.get(legacy_b["folder"])
