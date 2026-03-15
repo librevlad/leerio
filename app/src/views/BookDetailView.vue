@@ -22,6 +22,11 @@ import {
   IconPlay,
   IconPause,
   IconMusic,
+  IconList,
+  IconEdit,
+  IconQuote,
+  IconTag,
+  IconInfo,
 } from '../components/shared/icons'
 import ProgressBar from '../components/shared/ProgressBar.vue'
 import { usePlayer } from '../composables/usePlayer'
@@ -74,6 +79,14 @@ const tabs = computed(() => {
   t.push({ key: 'about', label: 'book.aboutBook' })
   return t
 })
+
+const tabIcons: Record<string, typeof IconList> = {
+  chapters: IconList,
+  notes: IconEdit,
+  quotes: IconQuote,
+  tags: IconTag,
+  about: IconInfo,
+}
 
 async function startDownload() {
   if (!book.value) return
@@ -374,67 +387,135 @@ watch(() => route.params.id, loadBook)
             </button>
           </div>
 
-          <!-- Tabs -->
-          <div class="scrollbar-hide flex gap-0 overflow-x-auto border-b border-white/[0.06]">
+          <!-- Tabs: pill segments -->
+          <div
+            class="scrollbar-hide flex gap-1 overflow-x-auto rounded-2xl p-1"
+            style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.04)"
+          >
             <button
               v-for="tab in tabs"
               :key="tab.key"
-              class="cursor-pointer border-0 bg-transparent px-4 py-2.5 text-[13px] font-semibold whitespace-nowrap transition-colors"
+              class="flex cursor-pointer items-center gap-1.5 rounded-xl border-0 px-3.5 py-2.5 text-[12px] font-semibold whitespace-nowrap transition-all duration-200"
               :class="
-                activeTab === tab.key ? 'border-b-2 border-[--accent] text-[--accent]' : 'text-[--t3] hover:text-[--t2]'
+                activeTab === tab.key
+                  ? 'bg-[--accent-soft] text-[--accent] shadow-sm'
+                  : 'bg-transparent text-[--t3] hover:bg-white/[0.04] hover:text-[--t2]'
               "
+              :style="activeTab === tab.key ? 'box-shadow: 0 2px 8px rgba(255, 138, 0, 0.12)' : ''"
               @click="activeTab = tab.key as typeof activeTab"
             >
+              <component
+                :is="tabIcons[tab.key]"
+                :size="14"
+                class="transition-transform duration-200"
+                :class="activeTab === tab.key ? 'scale-110' : 'group-hover:scale-105'"
+              />
               {{ t(tab.label) }}
             </button>
           </div>
 
-          <!-- Tab content -->
-          <div class="mt-4">
-            <!-- Chapters -->
-            <BookChapters
-              v-if="activeTab === 'chapters' && isLoggedIn && book.mp3_count && book.mp3_count > 0"
-              :book="book"
-            />
+          <!-- Tab content + desktop context panel -->
+          <div class="mt-4 flex gap-5">
+            <!-- Main tab content -->
+            <div class="min-w-0 flex-1 tab-content-enter" :key="activeTab">
+              <!-- Chapters -->
+              <BookChapters
+                v-if="activeTab === 'chapters' && isLoggedIn && book.mp3_count && book.mp3_count > 0"
+                :book="book"
+              />
 
-            <!-- Notes -->
-            <BookNotes
-              v-if="activeTab === 'notes' && isLoggedIn"
-              :book-id="book.id"
-              :title="book.title"
-              :note="book.note"
-            />
+              <!-- Notes -->
+              <BookNotes
+                v-if="activeTab === 'notes' && isLoggedIn"
+                :book-id="book.id"
+                :title="book.title"
+                :note="book.note"
+              />
 
-            <!-- Quotes -->
-            <BookQuotes
-              v-if="activeTab === 'quotes' && isLoggedIn"
-              :book-title="book.title"
-              :book-author="book.author"
-            />
+              <!-- Quotes -->
+              <BookQuotes
+                v-if="activeTab === 'quotes' && isLoggedIn"
+                :book-title="book.title"
+                :book-author="book.author"
+              />
 
-            <!-- Tags -->
-            <div v-if="activeTab === 'tags' && isLoggedIn" class="space-y-5">
-              <BookTags :book-id="book.id" :title="book.title" :tags="book.tags" @updated="(t) => (book!.tags = t)" />
-              <BookTimeline :entries="book.timeline || []" />
+              <!-- Tags -->
+              <div v-if="activeTab === 'tags' && isLoggedIn" class="space-y-5">
+                <BookTags
+                  :book-id="book.id"
+                  :title="book.title"
+                  :tags="book.tags"
+                  @updated="(t) => (book!.tags = t)"
+                />
+                <BookTimeline :entries="book.timeline || []" />
+              </div>
+
+              <!-- About -->
+              <div v-if="activeTab === 'about'">
+                <div v-if="book.description" class="text-[13px] leading-relaxed text-[--t2]">
+                  {{ book.description }}
+                </div>
+                <p v-else class="text-[13px] text-[--t3]">{{ t('book.noDescription') }}</p>
+
+                <!-- Meta (mobile only, shown in About tab) -->
+                <div class="mt-4 flex gap-3 text-[12px] text-[--t3] lg:hidden">
+                  <span v-if="book.duration_hours">🕐 {{ formatDuration(book.duration_hours) }}</span>
+                  <span v-if="book.mp3_count">🎵 {{ book.mp3_count }} {{ t('book.tracks') }}</span>
+                  <span v-if="book.size_mb">💾 {{ book.size_mb }} {{ t('common.mb') }}</span>
+                </div>
+
+                <!-- Similar books -->
+                <div class="mt-6">
+                  <BookSimilar :book-id="book.id" />
+                </div>
+              </div>
             </div>
 
-            <!-- About -->
-            <div v-if="activeTab === 'about'">
-              <div v-if="book.description" class="text-[13px] leading-relaxed text-[--t2]">
-                {{ book.description }}
-              </div>
-              <p v-else class="text-[13px] text-[--t3]">{{ t('book.noDescription') }}</p>
-
-              <!-- Meta (mobile only, shown in About tab) -->
-              <div class="mt-4 flex gap-3 text-[12px] text-[--t3] lg:hidden">
-                <span v-if="book.duration_hours">🕐 {{ formatDuration(book.duration_hours) }}</span>
-                <span v-if="book.mp3_count">🎵 {{ book.mp3_count }} {{ t('book.tracks') }}</span>
-                <span v-if="book.size_mb">💾 {{ book.size_mb }} {{ t('common.mb') }}</span>
+            <!-- Desktop context panel -->
+            <div
+              v-if="isLoggedIn && activeTab !== 'about'"
+              class="hidden w-[260px] shrink-0 space-y-4 lg:block"
+            >
+              <!-- Notes preview (when not on notes tab) -->
+              <div v-if="activeTab !== 'notes' && book.note" class="card p-4">
+                <p class="section-label mb-2">{{ t('book.notes') }}</p>
+                <p class="line-clamp-4 text-[12px] leading-relaxed text-[--t2]">{{ book.note }}</p>
               </div>
 
-              <!-- Similar books -->
-              <div class="mt-6">
-                <BookSimilar :book-id="book.id" />
+              <!-- Tags (when not on tags tab) -->
+              <div v-if="activeTab !== 'tags' && book.tags?.length" class="card p-4">
+                <p class="section-label mb-2">{{ t('book.tagsLabel') }}</p>
+                <div class="flex flex-wrap gap-1.5">
+                  <span
+                    v-for="tag in book.tags"
+                    :key="tag"
+                    class="rounded-full px-2.5 py-0.5 text-[11px] font-medium"
+                    style="background: var(--accent-soft); color: var(--accent)"
+                  >
+                    {{ tag }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Timeline snippet (when not on tags tab) -->
+              <div
+                v-if="activeTab !== 'tags' && book.timeline?.length"
+                class="card p-4"
+              >
+                <p class="section-label mb-2">{{ t('book.timeline') }}</p>
+                <div class="space-y-2">
+                  <div
+                    v-for="(e, i) in book.timeline.slice(0, 3)"
+                    :key="i"
+                    class="flex items-center gap-2 text-[11px]"
+                  >
+                    <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-[--accent]" />
+                    <span class="text-[--t2]">{{ e.action_label }}</span>
+                    <span class="ml-auto text-[--t3]">{{
+                      new Date(e.ts).toLocaleDateString('ru', { day: 'numeric', month: 'short' })
+                    }}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
