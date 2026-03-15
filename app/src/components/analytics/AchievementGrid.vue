@@ -1,12 +1,14 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import type { Achievement } from '../../types'
 
+const { t } = useI18n()
 defineProps<{ achievements: Achievement[] }>()
 </script>
 
 <template>
   <div class="card p-6">
-    <h3 class="section-label mb-5">Достижения</h3>
+    <h3 class="section-label mb-5">{{ t('analytics.achievementsTitle') }}</h3>
     <div v-if="achievements.length" class="grid grid-cols-2 gap-3 sm:grid-cols-3">
       <div
         v-for="(a, i) in achievements"
@@ -19,6 +21,6 @@ defineProps<{ achievements: Achievement[] }>()
         <p class="mt-0.5 text-[11px] text-[--t3]">{{ a.desc }}</p>
       </div>
     </div>
-    <p v-else class="py-8 text-center text-[12px] text-[--t3]">Достижения появятся с ростом библиотеки</p>
+    <p v-else class="py-8 text-center text-[12px] text-[--t3]">{{ t('analytics.achievementsEmpty') }}</p>
   </div>
 </template>

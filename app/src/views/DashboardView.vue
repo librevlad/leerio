@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api, coverUrl } from '../api'
 import { useAuth } from '../composables/useAuth'
@@ -23,7 +23,7 @@ const data = ref<DashboardData | null>(null)
 const streak = ref({ current: 0, best: 0 })
 const recommendations = ref<ShelfBook[]>([])
 const loading = ref(true)
-const coverErrors = new Set<string>()
+const coverErrors = reactive(new Set<string>())
 
 const greeting = computed(() => {
   const h = new Date().getHours()
@@ -321,6 +321,7 @@ onMounted(loadData)
             <button
               class="flex h-7 w-7 flex-shrink-0 cursor-pointer items-center justify-center rounded-full border-0 transition-colors hover:bg-white/10"
               style="background: rgba(255, 255, 255, 0.06)"
+              :aria-label="t('player.play') + ': ' + book.title"
               @click="playBook(book.id)"
             >
               <component

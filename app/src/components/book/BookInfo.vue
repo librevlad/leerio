@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Book } from '../../types'
 import { coverUrl } from '../../api'
+import { formatSizeMB } from '../../utils/format'
 import CategoryBadge from '../shared/CategoryBadge.vue'
 import { useCategories } from '../../composables/useCategories'
 import ProgressRing from '../shared/ProgressRing.vue'
@@ -209,9 +210,9 @@ const lastPosition = computed(() => {
                   <IconHardDrive :size="14" class="text-[--accent-2]" />
                 </span>
                 <div>
-                  <span class="text-[12px] font-semibold text-[--t1]"
-                    >{{ typeof book.size_mb === 'number' ? book.size_mb.toFixed(1) : book.size_mb }} МБ</span
-                  >
+                  <span class="text-[12px] font-semibold text-[--t1]">{{
+                    typeof book.size_mb === 'number' ? formatSizeMB(book.size_mb, t) : book.size_mb
+                  }}</span>
                   <p class="text-[11px] text-[--t3]">{{ t('book.size') }}</p>
                 </div>
               </div>
@@ -335,9 +336,9 @@ const lastPosition = computed(() => {
             <IconHardDrive :size="14" class="text-[--accent-2]" />
           </span>
           <div>
-            <span class="text-[12px] font-semibold text-[--t1]"
-              >{{ typeof book.size_mb === 'number' ? book.size_mb.toFixed(1) : book.size_mb }} МБ</span
-            >
+            <span class="text-[12px] font-semibold text-[--t1]">{{
+              typeof book.size_mb === 'number' ? formatSizeMB(book.size_mb, t) : book.size_mb
+            }}</span>
             <p class="text-[10px] text-[--t3]">{{ t('book.size') }}</p>
           </div>
         </div>

@@ -2,7 +2,6 @@
 import { ref, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUserBooks } from '@/composables/useUserBooks'
-import { plural } from '@/utils/plural'
 import { useLocalBooks } from '@/composables/useLocalBooks'
 import { useDownloads } from '@/composables/useDownloads'
 import { useToast } from '@/composables/useToast'
@@ -169,7 +168,7 @@ const coverPatterns: Record<string, string> = {
       </div>
       <router-link to="/upload" class="btn btn-primary flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold">
         <IconPlus :size="14" />
-        Добавить
+        {{ t('myLibrary.add') }}
       </router-link>
     </div>
 
@@ -300,7 +299,7 @@ const coverPatterns: Record<string, string> = {
             <div class="flex items-center justify-between">
               <span v-if="item.trackCount" class="flex items-center gap-1 text-[11px] text-[--t3]">
                 <IconMusic :size="12" />
-                {{ item.trackCount }} {{ plural(item.trackCount, 'трек', 'трека', 'треков') }}
+                {{ item.trackCount }} {{ t('plural.track', item.trackCount) }}
               </span>
               <button
                 class="rounded-full p-1.5 text-[--t3] opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/15 hover:text-red-400"

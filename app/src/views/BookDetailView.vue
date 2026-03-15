@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { api, coverUrl } from '../api'
+import { formatSizeMB } from '../utils/format'
 import type { Book } from '../types'
 import BookNotes from '../components/book/BookNotes.vue'
 import BookTags from '../components/book/BookTags.vue'
@@ -366,7 +367,7 @@ watch(() => route.params.id, loadBook)
           <div class="mt-4 hidden space-y-2 border-t border-white/[0.04] pt-4 text-[12px] text-[--t3] lg:block">
             <p v-if="book.duration_hours">🕐 {{ formatDuration(book.duration_hours) }}</p>
             <p v-if="book.mp3_count">🎵 {{ book.mp3_count }} {{ t('book.tracks') }}</p>
-            <p v-if="book.size_mb">💾 {{ book.size_mb }} {{ t('common.mb') }}</p>
+            <p v-if="book.size_mb">💾 {{ formatSizeMB(book.size_mb, t) }}</p>
           </div>
         </div>
 
@@ -456,7 +457,7 @@ watch(() => route.params.id, loadBook)
                 <div class="mt-4 flex gap-3 text-[12px] text-[--t3] lg:hidden">
                   <span v-if="book.duration_hours">🕐 {{ formatDuration(book.duration_hours) }}</span>
                   <span v-if="book.mp3_count">🎵 {{ book.mp3_count }} {{ t('book.tracks') }}</span>
-                  <span v-if="book.size_mb">💾 {{ book.size_mb }} {{ t('common.mb') }}</span>
+                  <span v-if="book.size_mb">💾 {{ formatSizeMB(book.size_mb, t) }}</span>
                 </div>
 
                 <!-- Similar books -->
