@@ -2,9 +2,8 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import { api } from '../api'
+import { api, coverUrl } from '../api'
 import type { Book } from '../types'
-import BookInfo from '../components/book/BookInfo.vue'
 import BookNotes from '../components/book/BookNotes.vue'
 import BookTags from '../components/book/BookTags.vue'
 import BookTimeline from '../components/book/BookTimeline.vue'
@@ -20,25 +19,34 @@ import {
   IconX,
   IconShare,
   IconBookmark,
+  IconPlay,
+  IconPause,
+  IconMusic,
 } from '../components/shared/icons'
 import ProgressBar from '../components/shared/ProgressBar.vue'
 import { usePlayer } from '../composables/usePlayer'
 import { useDownloads } from '../composables/useDownloads'
 import { useToast } from '../composables/useToast'
 import { useAuth } from '../composables/useAuth'
+import { useCategories } from '../composables/useCategories'
 
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
 const book = ref<Book | null>(null)
 const loading = ref(true)
+const coverError = ref(false)
+const activeTab = ref<'chapters' | 'notes' | 'quotes' | 'tags' | 'about'>('chapters')
 
 const player = usePlayer()
 const dl = useDownloads()
 const toast = useToast()
 const { isLoggedIn } = useAuth()
+const { gradient: catGradient } = useCategories()
 
 const isCurrentBook = computed(() => player.currentBook.value?.id === book.value?.id)
+const nowPlayingId = computed(() => player.currentBook.value?.id ?? null)
+const isPlaying = computed(() => player.isPlaying.value)
 
 const isDownloaded = computed(() => (book.value ? dl.isBookDownloaded(book.value.id) : false))
 const isDownloading = computed(() => (book.value ? dl.isBookDownloading(book.value.id) : false))
@@ -49,28 +57,45 @@ const dlPercent = computed(() => {
   return Math.round((p.bytesDownloaded / p.bytesTotal) * 100)
 })
 
+const coverSrc = computed(() => {
+  if (!book.value) return ''
+  const id = book.value.id
+  if (id.startsWith('lb:') || id.startsWith('ub:')) return ''
+  return book.value.has_cover ? coverUrl(id) : ''
+})
+
+const isInLibrary = computed(() => !!book.value?.book_status)
+
+const tabs = computed(() => {
+  const t: { key: string; label: string }[] = []
+  if (isLoggedIn.value && book.value?.mp3_count) t.push({ key: 'chapters', label: 'book.contents' })
+  if (isLoggedIn.value) t.push({ key: 'notes', label: 'book.notes' })
+  if (isLoggedIn.value) t.push({ key: 'quotes', label: 'book.quotes' })
+  if (isLoggedIn.value) t.push({ key: 'tags', label: 'book.tagsLabel' })
+  t.push({ key: 'about', label: 'book.aboutBook' })
+  return t
+})
+
 async function startDownload() {
   if (!book.value) return
   const res = await api.getBookTracks(book.value.id)
   dl.downloadBook(book.value, res.tracks)
 }
-
 function cancelDl() {
   if (book.value) dl.cancelDownload(book.value.id)
 }
-
 async function removeDl() {
   if (book.value) await dl.deleteBook(book.value.id)
 }
 
 let loadGeneration = 0
-
 async function loadBook() {
   const gen = ++loadGeneration
   loading.value = true
+  coverError.value = false
   try {
     const result = await api.getBook(route.params.id as string)
-    if (gen !== loadGeneration) return // stale response from previous navigation
+    if (gen !== loadGeneration) return
     book.value = result
     if (book.value) document.title = `${book.value.title} — Leerio`
   } catch {
@@ -90,18 +115,13 @@ async function shareBook() {
     try {
       await navigator.clipboard.writeText(url)
       toast.success(t('book.linkCopied'))
-    } catch {
-      // Clipboard API unavailable (Firefox/Safari restrictions)
-    }
+    } catch {}
   }
 }
 
 async function onRatingChanged(rating: number) {
   if (!book.value) return
-  if (!isLoggedIn.value) {
-    router.push('/login')
-    return
-  }
+  if (!isLoggedIn.value) return router.push('/login')
   try {
     await api.setRating(book.value.id, rating)
     book.value.rating = rating
@@ -111,14 +131,9 @@ async function onRatingChanged(rating: number) {
   }
 }
 
-const isInLibrary = computed(() => !!book.value?.book_status)
-
 async function addToLibrary() {
   if (!book.value) return
-  if (!isLoggedIn.value) {
-    router.push('/login')
-    return
-  }
+  if (!isLoggedIn.value) return router.push('/login')
   try {
     await api.setBookStatus(book.value.id, 'want_to_read')
     book.value.book_status = 'want_to_read'
@@ -130,20 +145,30 @@ async function addToLibrary() {
 
 async function startListening() {
   if (!book.value) return
-  if (!isLoggedIn.value) {
-    router.push('/login')
-    return
-  }
+  if (!isLoggedIn.value) return router.push('/login')
   player.loadBook(book.value)
-  // Auto-set status to "reading" if not already in a terminal state
   if (!book.value.book_status || book.value.book_status === 'want_to_read') {
     try {
       await api.setBookStatus(book.value.id, 'reading')
       book.value.book_status = 'reading'
-    } catch {
-      /* non-critical */
-    }
+    } catch {}
   }
+}
+
+function formatDuration(hours: number | undefined): string {
+  if (!hours) return ''
+  const h = Math.floor(hours)
+  const m = Math.round((hours - h) * 60)
+  return h > 0 ? `${h}${t('common.unitH')} ${m}${t('common.unitM')}` : `${m} ${t('common.unitMin')}`
+}
+
+function formatRemaining(totalHours: number, progress: number): string {
+  const remaining = totalHours * (1 - progress / 100)
+  if (remaining < 1 / 60) return `< 1 ${t('common.unitMin')}`
+  if (remaining < 1) return `${Math.round(remaining * 60)} ${t('common.unitMin')}`
+  const h = Math.floor(remaining)
+  const m = Math.round((remaining - h) * 60)
+  return m > 0 ? `${h}${t('common.unitH')} ${m}${t('common.unitM')}` : `${h}${t('common.unitH')}`
 }
 
 onMounted(loadBook)
@@ -152,153 +177,270 @@ watch(() => route.params.id, loadBook)
 
 <template>
   <div>
-    <div class="mb-4 flex items-center justify-between md:mb-6">
+    <!-- Back + Share -->
+    <div class="mb-4 flex items-center justify-between lg:mb-6">
       <button
-        class="-ml-3 flex min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border-0 bg-transparent px-3 py-2.5 text-[13px] text-[--t3] transition-all hover:bg-white/5 hover:text-[--t1] active:bg-white/8"
+        class="-ml-3 flex min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border-0 bg-transparent px-3 py-2.5 text-[13px] text-[--t3] transition-all hover:bg-white/5 hover:text-[--t1]"
         @click="router.back()"
       >
         <IconArrowLeft :size="15" />
-        <span class="font-medium">{{ t('book.back') }}</span>
+        <span class="font-medium">{{ book?.category || t('book.back') }}</span>
       </button>
       <button
         v-if="book"
-        class="flex min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3.5 py-2 text-[13px] text-[--t2] transition-all hover:bg-white/[0.08] hover:text-[--t1] active:bg-white/10"
+        class="flex min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3.5 py-2 text-[13px] text-[--t2] transition-all hover:bg-white/[0.08]"
         @click="shareBook"
       >
         <IconShare :size="15" />
-        <span class="font-medium">{{ t('book.share') }}</span>
       </button>
     </div>
 
     <!-- Skeleton -->
     <div v-if="loading">
-      <div class="skeleton mb-0 h-48 rounded-t-[20px] rounded-b-none" />
-      <div class="skeleton mb-5 h-24 rounded-t-none rounded-b-[20px] border-t-0" />
-      <div class="skeleton mb-5 h-14" />
-      <div class="skeleton mb-5 h-40" />
-      <div class="grid grid-cols-1 gap-5 lg:grid-cols-3">
-        <div class="space-y-5 lg:col-span-2">
-          <div class="skeleton h-24" />
-          <div class="skeleton h-28" />
-        </div>
-        <div class="space-y-5">
-          <div class="skeleton h-40" />
-          <div class="skeleton h-48" />
+      <div class="flex gap-5">
+        <div class="skeleton h-[120px] w-[120px] rounded-2xl lg:h-[200px] lg:w-[200px]" />
+        <div class="flex-1 space-y-3">
+          <div class="skeleton h-6 w-3/4" />
+          <div class="skeleton h-4 w-1/2" />
+          <div class="skeleton h-12 w-full rounded-xl" />
         </div>
       </div>
     </div>
 
     <div v-else-if="book" class="fade-in">
-      <!-- 1. Hero card -->
-      <BookInfo
-        :book="book"
-        :is-current-book="isCurrentBook"
-        class="mb-5"
-        @listen="startListening"
-        @rating-changed="onRatingChanged"
-      />
-
-      <!-- Login prompt for guests -->
-      <div v-if="!isLoggedIn" class="card mb-5 p-6 text-center">
-        <p class="text-[16px] font-semibold text-[--t1]">{{ t('book.guestTitle') }}</p>
-        <p class="mt-1 text-[13px] text-[--t3]">{{ t('book.guestDesc') }}</p>
-        <router-link
-          to="/login"
-          class="mt-4 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-[14px] font-semibold text-white no-underline"
-          style="background: var(--gradient-accent)"
-        >
-          {{ t('book.guestLogin') }}
-        </router-link>
-      </div>
-
-      <!-- Add to library (for users without a status set) -->
-      <button
-        v-if="isLoggedIn && !isInLibrary"
-        class="mb-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] py-3 text-[14px] font-medium text-[--t2] transition-colors hover:bg-white/[0.08] hover:text-[--t1]"
-        @click="addToLibrary"
-      >
-        <IconBookmark :size="18" />
-        {{ t('book.addToLibrary') }}
-      </button>
-
-      <!-- 2. Action bar: status pills + download (auth only) -->
-      <div v-if="isLoggedIn" class="mb-5 space-y-3">
-        <div class="flex flex-wrap items-center gap-3">
-          <BookActions :book-id="book.id" :book-status="book.book_status" @status-changed="loadBook" />
-
-          <!-- Download controls (native only) — pushed right -->
-          <template v-if="dl.isNative.value && book.mp3_count && book.mp3_count > 0">
-            <div class="ml-auto flex items-center">
-              <!-- Not downloaded -->
-              <button v-if="!isDownloaded && !isDownloading" class="btn btn-ghost" @click="startDownload">
-                <IconDownload :size="16" />
-                {{ t('book.download') }}
-              </button>
-
-              <!-- Downloading -->
-              <div v-else-if="isDownloading" class="flex min-w-[200px] items-center gap-3">
-                <div class="flex-1">
-                  <div class="mb-1 flex items-center justify-between">
-                    <span class="text-[11px] text-[--t3]">
-                      {{
-                        t('player.trackN', {
-                          n: (dlProgress?.currentTrack ?? 0) + 1,
-                          total: dlProgress?.totalTracks ?? 0,
-                        })
-                      }}
-                    </span>
-                    <span class="text-[11px] font-bold text-[--accent]">{{ dlPercent }}%</span>
-                  </div>
-                  <ProgressBar :percent="dlPercent" height="h-1.5" />
-                </div>
-                <button
-                  class="shrink-0 cursor-pointer border-0 bg-transparent p-1.5 text-[--t3] transition-colors hover:text-red-400"
-                  :title="t('book.cancelDownload')"
-                  @click="cancelDl"
-                >
-                  <IconX :size="16" />
-                </button>
+      <!-- Desktop: sidebar layout / Mobile: stacked -->
+      <div class="flex flex-col gap-5 lg:flex-row lg:gap-8">
+        <!-- Sidebar (desktop: sticky, mobile: top section) -->
+        <div class="lg:sticky lg:top-8 lg:w-[260px] lg:shrink-0 lg:self-start">
+          <!-- Mobile: horizontal layout -->
+          <div class="flex gap-4 lg:flex-col lg:gap-0">
+            <!-- Cover -->
+            <router-link
+              :to="`/book/${book.id}`"
+              class="relative h-[120px] w-[120px] shrink-0 overflow-hidden rounded-2xl shadow-lg lg:mx-auto lg:h-[200px] lg:w-[200px]"
+              style="box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4)"
+            >
+              <img
+                v-if="coverSrc && !coverError"
+                :src="coverSrc"
+                :alt="book.title"
+                class="h-full w-full object-cover"
+                @error="coverError = true"
+              />
+              <div
+                v-else
+                class="flex h-full w-full items-center justify-center"
+                :style="{ background: catGradient(book.category ?? '') }"
+              >
+                <IconMusic :size="32" class="text-white/40 lg:!h-12 lg:!w-12" />
               </div>
+            </router-link>
 
-              <!-- Downloaded -->
-              <div v-else class="flex items-center gap-2">
-                <span class="flex items-center gap-1.5 text-[13px] font-medium text-emerald-400">
-                  <IconCheck :size="16" />
-                  {{ t('book.downloaded') }}
-                </span>
+            <!-- Mobile: info next to cover -->
+            <div class="flex min-w-0 flex-1 flex-col justify-center lg:mt-4 lg:text-center">
+              <h1 class="line-clamp-3 text-[18px] leading-tight font-bold text-[--t1] lg:text-[20px]">
+                {{ book.title }}
+              </h1>
+              <p class="mt-1 text-[13px] text-[--t3]">{{ book.author }}</p>
+              <!-- Rating -->
+              <div class="mt-2 flex gap-0.5 lg:justify-center">
                 <button
-                  class="shrink-0 cursor-pointer border-0 bg-transparent p-1.5 text-[--t3] transition-colors hover:text-red-400"
-                  :title="t('book.deleteDownload')"
-                  @click="removeDl"
+                  v-for="i in 5"
+                  :key="i"
+                  class="cursor-pointer border-0 bg-transparent p-0 text-[16px] transition-colors"
+                  :class="i <= (book.rating || 0) ? 'text-amber-400' : 'text-[--t3]/30'"
+                  @click="onRatingChanged(i === book.rating ? 0 : i)"
                 >
-                  <IconTrash :size="15" />
+                  ★
                 </button>
               </div>
             </div>
-          </template>
+          </div>
+
+          <!-- Progress card -->
+          <div
+            v-if="book.progress > 0 || isCurrentBook"
+            class="mt-4 rounded-xl px-4 py-3"
+            style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.04)"
+          >
+            <div class="flex items-center justify-between text-[12px]">
+              <span class="font-semibold text-[--t1]">{{ book.progress }}%</span>
+              <span v-if="book.duration_hours" class="text-[--t3]">
+                {{ formatRemaining(book.duration_hours, book.progress) }} {{ t('common.remaining') }}
+              </span>
+            </div>
+            <div class="mt-2">
+              <ProgressBar :percent="book.progress" height="h-1" />
+            </div>
+          </div>
+
+          <!-- Play button -->
+          <button
+            class="mt-3 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-0 py-3 text-[14px] font-bold text-white transition-all hover:brightness-110"
+            style="
+              background: linear-gradient(135deg, #ff8a00, #e07000);
+              box-shadow: 0 4px 16px rgba(255, 138, 0, 0.25);
+            "
+            @click="startListening"
+          >
+            <component :is="isCurrentBook && isPlaying ? IconPause : IconPlay" :size="16" />
+            {{ isCurrentBook && isPlaying ? t('player.pause') : t('player.play') }}
+          </button>
+
+          <!-- Actions (desktop only, below play) -->
+          <div class="mt-3 hidden flex-col gap-2 lg:flex">
+            <!-- Add to library -->
+            <button
+              v-if="isLoggedIn && !isInLibrary"
+              class="flex w-full cursor-pointer items-center gap-2 rounded-lg border-0 px-3 py-2 text-[12px] text-[--t2] transition-colors hover:bg-white/5"
+              style="background: rgba(255, 255, 255, 0.03)"
+              @click="addToLibrary"
+            >
+              <IconBookmark :size="14" />
+              {{ t('book.addToLibrary') }}
+            </button>
+
+            <!-- Share -->
+            <button
+              class="flex w-full cursor-pointer items-center gap-2 rounded-lg border-0 px-3 py-2 text-[12px] text-[--t2] transition-colors hover:bg-white/5"
+              style="background: rgba(255, 255, 255, 0.03)"
+              @click="shareBook"
+            >
+              <IconShare :size="14" />
+              {{ t('book.share') }}
+            </button>
+
+            <!-- Download (native) -->
+            <template v-if="dl.isNative.value && book.mp3_count && book.mp3_count > 0">
+              <button
+                v-if="!isDownloaded && !isDownloading"
+                class="flex w-full cursor-pointer items-center gap-2 rounded-lg border-0 px-3 py-2 text-[12px] text-[--t2] transition-colors hover:bg-white/5"
+                style="background: rgba(255, 255, 255, 0.03)"
+                @click="startDownload"
+              >
+                <IconDownload :size="14" />
+                {{ t('book.download') }}
+              </button>
+              <div v-else-if="isDownloading" class="px-3 py-2">
+                <ProgressBar :percent="dlPercent" height="h-1" />
+                <div class="mt-1 flex items-center justify-between text-[11px] text-[--t3]">
+                  <span>{{ dlPercent }}%</span>
+                  <button
+                    class="cursor-pointer border-0 bg-transparent text-[--t3] hover:text-red-400"
+                    @click="cancelDl"
+                  >
+                    <IconX :size="12" />
+                  </button>
+                </div>
+              </div>
+              <div v-else class="flex items-center gap-2 px-3 py-2 text-[12px] text-emerald-400">
+                <IconCheck :size="14" />
+                {{ t('book.downloaded') }}
+                <button
+                  class="ml-auto cursor-pointer border-0 bg-transparent text-[--t3] hover:text-red-400"
+                  @click="removeDl"
+                >
+                  <IconTrash :size="12" />
+                </button>
+              </div>
+            </template>
+          </div>
+
+          <!-- Meta (desktop) -->
+          <div class="mt-4 hidden space-y-2 border-t border-white/[0.04] pt-4 text-[12px] text-[--t3] lg:block">
+            <p v-if="book.duration_hours">🕐 {{ formatDuration(book.duration_hours) }}</p>
+            <p v-if="book.mp3_count">🎵 {{ book.mp3_count }} {{ t('book.tracks') }}</p>
+            <p v-if="book.size_mb">💾 {{ book.size_mb }} {{ t('common.mb') }}</p>
+          </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="min-w-0 flex-1">
+          <!-- Mobile: status pills + add to library -->
+          <div class="mb-4 lg:hidden">
+            <div v-if="isLoggedIn" class="flex flex-wrap items-center gap-2">
+              <BookActions :book-id="book.id" :book-status="book.book_status" @status-changed="loadBook" />
+            </div>
+            <button
+              v-else-if="!isLoggedIn"
+              class="w-full rounded-xl py-3 text-center text-[14px] font-semibold text-white no-underline"
+              style="background: var(--gradient-accent)"
+              @click="$router.push('/login')"
+            >
+              {{ t('book.guestLogin') }}
+            </button>
+          </div>
+
+          <!-- Tabs -->
+          <div class="scrollbar-hide flex gap-0 overflow-x-auto border-b border-white/[0.06]">
+            <button
+              v-for="tab in tabs"
+              :key="tab.key"
+              class="cursor-pointer border-0 bg-transparent px-4 py-2.5 text-[13px] font-semibold whitespace-nowrap transition-colors"
+              :class="
+                activeTab === tab.key ? 'border-b-2 border-[--accent] text-[--accent]' : 'text-[--t3] hover:text-[--t2]'
+              "
+              @click="activeTab = tab.key as typeof activeTab"
+            >
+              {{ t(tab.label) }}
+            </button>
+          </div>
+
+          <!-- Tab content -->
+          <div class="mt-4">
+            <!-- Chapters -->
+            <BookChapters
+              v-if="activeTab === 'chapters' && isLoggedIn && book.mp3_count && book.mp3_count > 0"
+              :book="book"
+            />
+
+            <!-- Notes -->
+            <BookNotes
+              v-if="activeTab === 'notes' && isLoggedIn"
+              :book-id="book.id"
+              :title="book.title"
+              :note="book.note"
+            />
+
+            <!-- Quotes -->
+            <BookQuotes
+              v-if="activeTab === 'quotes' && isLoggedIn"
+              :book-title="book.title"
+              :book-author="book.author"
+            />
+
+            <!-- Tags -->
+            <div v-if="activeTab === 'tags' && isLoggedIn" class="space-y-5">
+              <BookTags :book-id="book.id" :title="book.title" :tags="book.tags" @updated="(t) => (book!.tags = t)" />
+              <BookTimeline :entries="book.timeline || []" />
+            </div>
+
+            <!-- About -->
+            <div v-if="activeTab === 'about'">
+              <div v-if="book.description" class="text-[13px] leading-relaxed text-[--t2]">
+                {{ book.description }}
+              </div>
+              <p v-else class="text-[13px] text-[--t3]">{{ t('book.noDescription') }}</p>
+
+              <!-- Meta (mobile only, shown in About tab) -->
+              <div class="mt-4 flex gap-3 text-[12px] text-[--t3] lg:hidden">
+                <span v-if="book.duration_hours">🕐 {{ formatDuration(book.duration_hours) }}</span>
+                <span v-if="book.mp3_count">🎵 {{ book.mp3_count }} {{ t('book.tracks') }}</span>
+                <span v-if="book.size_mb">💾 {{ book.size_mb }} {{ t('common.mb') }}</span>
+              </div>
+
+              <!-- Similar books -->
+              <div class="mt-6">
+                <BookSimilar :book-id="book.id" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- 3. Chapters (auth only) -->
-      <BookChapters v-if="isLoggedIn && book.mp3_count && book.mp3_count > 0" :book="book" class="mb-5" />
-
-      <!-- 5. Two-column layout -->
-      <div class="grid grid-cols-1 gap-5 lg:grid-cols-3">
-        <div v-if="isLoggedIn" class="space-y-5 lg:col-span-2">
-          <BookNotes :book-id="book.id" :title="book.title" :note="book.note" />
-          <BookQuotes :book-title="book.title" :book-author="book.author" />
-        </div>
-        <div :class="isLoggedIn ? 'space-y-5' : 'space-y-5 lg:col-span-3'">
-          <BookTags
-            v-if="isLoggedIn"
-            :book-id="book.id"
-            :title="book.title"
-            :tags="book.tags"
-            @updated="(t) => (book!.tags = t)"
-          />
-          <BookTimeline v-if="isLoggedIn" :entries="book.timeline || []" />
-          <BookSimilar :book-id="book.id" />
-        </div>
+      <!-- Desktop: status pills (below sidebar+content grid) -->
+      <div v-if="isLoggedIn" class="mt-5 hidden lg:block">
+        <BookActions :book-id="book.id" :book-status="book.book_status" @status-changed="loadBook" />
       </div>
     </div>
   </div>
