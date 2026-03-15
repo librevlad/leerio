@@ -86,11 +86,14 @@ onMounted(async () => {
 
     <!-- Track list -->
     <div v-else>
-      <div class="space-y-0.5">
+      <div
+        class="space-y-0.5"
+        :class="expanded && tracks.length > 50 ? 'scrollbar-hide max-h-[60vh] overflow-y-auto' : ''"
+      >
         <button
           v-for="track in visibleTracks"
           :key="track.index"
-          class="flex w-full cursor-pointer flex-col gap-0 rounded-xl border-0 px-3 py-2.5 text-left transition-colors"
+          class="group flex w-full cursor-pointer flex-col gap-0 rounded-xl border-0 px-3 py-2.5 text-left transition-colors"
           :class="
             isCurrentBook && player.currentTrackIndex.value === track.index
               ? 'bg-[--accent-soft] text-[--t1]'
@@ -101,13 +104,16 @@ onMounted(async () => {
         >
           <div class="flex w-full items-center gap-3">
             <!-- Track number / play icon -->
-            <span class="w-6 shrink-0 text-center font-mono text-[12px] text-[--t3]">
+            <span class="relative w-6 shrink-0 text-center font-mono text-[12px] text-[--t3]">
               <IconPlay
                 v-if="isCurrentBook && player.currentTrackIndex.value === track.index && player.isPlaying.value"
                 :size="12"
                 class="inline text-[--accent]"
               />
-              <span v-else>{{ track.index + 1 }}</span>
+              <template v-else>
+                <span class="group-hover:invisible">{{ track.index + 1 }}</span>
+                <IconPlay :size="12" class="absolute inset-0 m-auto hidden text-[--t2] group-hover:block" />
+              </template>
             </span>
             <!-- Track name -->
             <span class="min-w-0 flex-1 truncate text-[13px]">{{ trackName(track, track.index) }}</span>
