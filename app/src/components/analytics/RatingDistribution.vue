@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Bar } from 'vue-chartjs'
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip } from 'chart.js'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip)
 
+const { t } = useI18n()
 const props = defineProps<{ data: Record<string, number> }>()
 
 const hasData = computed(() => Object.values(props.data).some((v) => v > 0))
@@ -15,7 +17,7 @@ const chartData = computed(() => {
     labels: labels.map((l) => l + ' '),
     datasets: [
       {
-        label: 'Оценки',
+        label: t('analytics.ratingsLabel'),
         data: labels.map((l) => props.data[l] || 0),
         backgroundColor: ['#3e3e50', '#3e3e50', '#5a4bb0', '#6d58d6', '#7c5bf0'],
         borderRadius: 6,
@@ -45,11 +47,11 @@ const options = {
 
 <template>
   <div class="card p-6">
-    <h3 class="section-label mb-4">Оценки</h3>
+    <h3 class="section-label mb-4">{{ t('analytics.ratingsTitle') }}</h3>
     <div class="relative h-[200px] sm:h-[250px]">
       <Bar :data="chartData" :options="options" />
       <div v-if="!hasData" class="absolute inset-0 flex items-center justify-center">
-        <p class="text-[13px] text-[--t3]">Оценивайте книги после прослушивания</p>
+        <p class="text-[13px] text-[--t3]">{{ t('analytics.ratingsEmpty') }}</p>
       </div>
     </div>
   </div>

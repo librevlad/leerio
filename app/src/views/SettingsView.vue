@@ -8,8 +8,9 @@ import { useLocalBooks } from '../composables/useLocalBooks'
 import { useOfflineCache } from '../composables/useOfflineCache'
 import { useAuth } from '../composables/useAuth'
 import type { SessionStats } from '../types'
-import { IconTrash, IconDownload, IconHardDrive } from '../components/shared/icons'
+import { IconTrash, IconDownload, IconHardDrive, IconLogout } from '../components/shared/icons'
 import { useLocale } from '../composables/useLocale'
+import { formatSize } from '../utils/format'
 import { version } from '../../package.json'
 
 const router = useRouter()
@@ -66,9 +67,7 @@ async function setSpeed(speed: number) {
 }
 
 function fmtSize(bytes: number): string {
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' ' + t('common.kb')
-  if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' ' + t('common.mb')
-  return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' ' + t('common.gb')
+  return formatSize(bytes, t)
 }
 
 function clearCache() {
@@ -117,20 +116,7 @@ async function handleLogout() {
           </div>
         </div>
         <button class="btn btn-ghost mt-4 text-red-400 hover:text-red-300" @click="handleLogout">
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-            <polyline points="16 17 21 12 16 7" />
-            <line x1="21" y1="12" x2="9" y2="12" />
-          </svg>
+          <IconLogout :size="14" />
           {{ t('settings.logout') }}
         </button>
       </div>

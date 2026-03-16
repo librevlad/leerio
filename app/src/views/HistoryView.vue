@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api, coverUrl } from '../api'
 import type { HistoryEntry } from '../types'
@@ -95,6 +95,9 @@ watch(search, () => {
   searchTimeout = setTimeout(loadHistory, 300)
 })
 watch(actionFilter, loadHistory)
+onUnmounted(() => {
+  if (searchTimeout) clearTimeout(searchTimeout)
+})
 
 // Group entries by date
 const grouped = computed(() => {

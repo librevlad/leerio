@@ -169,6 +169,7 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
         <button
           class="flex h-[42px] w-[42px] flex-shrink-0 cursor-pointer items-center justify-center rounded-xl border border-white/[0.06] bg-white/[0.03] text-[--t3] transition-colors hover:bg-white/[0.08] hover:text-[--accent]"
           :title="t('library.randomBook')"
+          :aria-label="t('library.randomBook')"
           @click="randomBook"
         >
           <IconShuffle :size="16" />
