@@ -75,9 +75,8 @@ export function useFileScanner() {
       return audioFiles.map((f, i) => ({
         index: i,
         filename: f.name,
-        title: cleanTrackTitle(f.name),
         path: `${path}/${f.name}`,
-        size: f.size,
+        duration: 0, // unknown until played
       }))
     } catch {
       return []
@@ -108,12 +107,4 @@ function extractAuthor(folderName: string): string {
     return clean.split(' - ')[0].trim()
   }
   return ''
-}
-
-/** "01 - Chapter One.mp3" → "Chapter One" */
-function cleanTrackTitle(filename: string): string {
-  let name = filename.replace(/\.[^.]+$/, '') // remove extension
-  name = name.replace(/^\d+[\s._-]*/, '') // remove leading numbers
-  name = name.replace(/^[-_.\s]+/, '') // remove leading separators
-  return name.trim() || filename
 }
