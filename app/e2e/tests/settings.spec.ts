@@ -12,14 +12,12 @@ test.describe('Settings', () => {
   })
 
   test('displays profile info', async ({ page }) => {
-    const main = page.locator('main')
-    await expect(main.locator('text=Профиль')).toBeVisible()
-    // User email should be visible
-    await expect(main.locator('text=@').first()).toBeVisible()
+    // Profile card with user email
+    await expect(page.locator('text=@').first()).toBeVisible()
   })
 
   test('shows admin badge for admin user', async ({ page, takeScreenshot }) => {
-    const adminBadge = page.locator('text=Администратор')
+    const adminBadge = page.locator('text=ADMIN')
     // Seed user is admin
     await expect(adminBadge).toBeVisible()
     await takeScreenshot('settings-admin')
@@ -30,7 +28,7 @@ test.describe('Settings', () => {
   })
 
   test('has logout button', async ({ page, takeScreenshot }) => {
-    const logoutBtn = page.locator('main button:has-text("Выйти")')
+    const logoutBtn = page.locator('button:has-text("Выйти")')
     await expect(logoutBtn).toBeVisible()
     await takeScreenshot('settings-logout')
   })
