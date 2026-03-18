@@ -42,6 +42,8 @@ export default {
     currentlyListening: 'Сейчас слушаю',
     continueListening: 'Продолжить слушать',
     startListening: 'Откройте книгу из каталога и начните слушать',
+    recentlyAdded: 'Недавно добавленные',
+    seeAll: 'Все книги',
     recentActivity: 'Последние действия',
     yearlyGoal: 'Годовая цель',
     activity: 'Активность',

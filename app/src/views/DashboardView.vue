@@ -22,6 +22,7 @@ const { gradient: catGradient } = useCategories()
 const data = ref<DashboardData | null>(null)
 const streak = ref({ current: 0, best: 0 })
 const recommendations = ref<ShelfBook[]>([])
+const recentBooks = ref<ShelfBook[]>([])
 const loading = ref(true)
 const coverErrors = reactive(new Set<string>())
 
@@ -82,10 +83,16 @@ async function loadData() {
     return
   }
   try {
-    const [d, st, rec] = await Promise.allSettled([api.getDashboard(), api.getStreak(), api.getRecommendations()])
+    const [d, st, rec, books] = await Promise.allSettled([
+      api.getDashboard(),
+      api.getStreak(),
+      api.getRecommendations(),
+      api.getBooks({ sort: 'recent', limit: '10' }),
+    ])
     if (d.status === 'fulfilled') data.value = d.value
     if (st.status === 'fulfilled') streak.value = st.value
     if (rec.status === 'fulfilled') recommendations.value = rec.value
+    if (books.status === 'fulfilled') recentBooks.value = books.value.slice(0, 10) as ShelfBook[]
   } finally {
     loading.value = false
   }
@@ -405,6 +412,49 @@ onMounted(loadData)
               </p>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Recently Added -->
+      <div v-if="recentBooks.length" class="space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-[15px] font-bold text-[--t1]">{{ t('dashboard.recentlyAdded') }}</h2>
+          <router-link
+            to="/library"
+            class="text-[12px] font-medium text-[--accent] no-underline hover:text-[--accent-2]"
+          >
+            {{ t('dashboard.seeAll') }}
+          </router-link>
+        </div>
+        <div class="scrollbar-hide flex gap-3 overflow-x-auto pb-1">
+          <router-link
+            v-for="(book, i) in recentBooks"
+            :key="book.id"
+            :to="`/book/${book.id}`"
+            class="stagger-item group w-28 flex-shrink-0 no-underline"
+            :style="{ animationDelay: `${i * 50}ms` }"
+          >
+            <div class="mb-2 aspect-square overflow-hidden rounded-xl">
+              <img
+                v-if="book.has_cover"
+                :src="coverUrl(book.id)"
+                :alt="book.title"
+                class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                @error="coverErrors.add(book.id)"
+              />
+              <div
+                v-else
+                class="flex h-full w-full items-center justify-center"
+                :style="{ background: catGradient(book.category ?? '') }"
+              >
+                <IconMusic :size="24" class="text-white/40" />
+              </div>
+            </div>
+            <p class="line-clamp-2 text-[11px] leading-tight font-medium text-[--t2] group-hover:text-[--t1]">
+              {{ book.title }}
+            </p>
+            <p v-if="book.author" class="mt-0.5 truncate text-[10px] text-[--t3]">{{ book.author }}</p>
+          </router-link>
         </div>
       </div>
 

@@ -42,6 +42,8 @@ export default {
     currentlyListening: 'Currently Listening',
     continueListening: 'Continue Listening',
     startListening: 'Open a book from the catalog and start listening',
+    recentlyAdded: 'Recently Added',
+    seeAll: 'All books',
     recentActivity: 'Recent Activity',
     yearlyGoal: 'Yearly Goal',
     activity: 'Activity',

@@ -42,6 +42,8 @@ export default {
     currentlyListening: 'Зараз слухаю',
     continueListening: 'Продовжити слухати',
     startListening: 'Відкрийте книгу з каталогу і почніть слухати',
+    recentlyAdded: 'Нещодавно додані',
+    seeAll: 'Усі книги',
     recentActivity: 'Останні дії',
     yearlyGoal: 'Річна ціль',
     activity: 'Активність',
