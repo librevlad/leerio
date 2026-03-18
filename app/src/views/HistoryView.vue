@@ -166,7 +166,8 @@ function formatTime(ts: string): string {
             v-for="(e, i) in group.entries"
             :key="i"
             v-ripple
-            class="card card-hover flex items-center gap-3.5 p-3.5"
+            class="stagger-item card card-hover flex items-center gap-3.5 p-3.5"
+            :style="{ animationDelay: `${i * 50}ms` }"
           >
             <!-- Action icon -->
             <div

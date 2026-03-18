@@ -69,6 +69,46 @@ body {
   height: 0;
 }
 
+/* ── Stagger List Animations ──────────────────────────────────────────── */
+
+@keyframes stagger-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stagger-item {
+  animation: stagger-in 0.35s ease-out both;
+}
+
+/* transition-group: tag/item add/remove */
+.list-enter-active {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.list-leave-active {
+  transition: all 0.15s ease;
+}
+
+.list-enter-from {
+  opacity: 0;
+  transform: scale(0.85) translateY(4px);
+}
+
+.list-leave-to {
+  opacity: 0;
+  transform: scale(0.85) translateX(8px);
+}
+
+.list-move {
+  transition: transform 0.25s ease;
+}
+
 /* ── Ripple + Active Feedback ─────────────────────────────────────────── */
 
 @keyframes v-ripple {

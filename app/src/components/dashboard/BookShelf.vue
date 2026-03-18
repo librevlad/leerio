@@ -42,10 +42,11 @@ const statusBadge: Record<string, { icon: unknown; bg: string; fg: string }> = {
     <div class="fade-mask-r">
       <div class="flex gap-4 overflow-x-auto pb-2">
         <router-link
-          v-for="book in books"
+          v-for="(book, i) in books"
           :key="book.id"
           :to="`/book/${book.id}`"
-          class="group max-w-[160px] min-w-[160px] flex-shrink-0 no-underline"
+          class="stagger-item group max-w-[160px] min-w-[160px] flex-shrink-0 no-underline"
+          :style="{ animationDelay: `${i * 60}ms` }"
         >
           <!-- Cover -->
           <div class="relative aspect-square overflow-hidden rounded-2xl shadow-md">

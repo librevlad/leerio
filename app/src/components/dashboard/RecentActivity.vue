@@ -77,7 +77,13 @@ function timeAgo(ts: string): string {
       </router-link>
     </div>
     <div class="space-y-2">
-      <div v-for="(e, i) in entries" :key="i" v-ripple class="card card-hover flex items-center gap-3.5 p-3.5">
+      <div
+        v-for="(e, i) in entries"
+        :key="i"
+        v-ripple
+        class="stagger-item card card-hover flex items-center gap-3.5 p-3.5"
+        :style="{ animationDelay: `${i * 50}ms` }"
+      >
         <!-- Action icon -->
         <div
           class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg"

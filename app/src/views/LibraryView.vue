@@ -302,7 +302,13 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
 
     <div v-else-if="filtered.length" class="fade-in">
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        <BookCard v-for="book in visibleBooks" :key="book.id" :book="book" />
+        <BookCard
+          v-for="(book, i) in visibleBooks"
+          :key="book.id"
+          :book="book"
+          class="stagger-item"
+          :style="{ animationDelay: `${Math.min(i, 11) * 40}ms` }"
+        />
       </div>
       <div v-if="hasMore" class="mt-8 flex flex-col items-center gap-2">
         <div class="flex items-center gap-2 text-[12px] text-[--t3]">

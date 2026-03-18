@@ -63,7 +63,7 @@ async function save() {
   <div class="card p-5">
     <h3 class="section-label mb-3">{{ t('book.tags') }}</h3>
 
-    <div v-if="currentTags.length" class="mb-3 flex flex-wrap gap-1.5">
+    <transition-group v-if="currentTags.length" name="list" tag="div" class="mb-3 flex flex-wrap gap-1.5">
       <span
         v-for="tag in currentTags"
         :key="tag"
@@ -78,7 +78,7 @@ async function save() {
           <IconX :size="11" />
         </button>
       </span>
-    </div>
+    </transition-group>
 
     <div class="relative">
       <input
