@@ -143,6 +143,7 @@ async function handleLogout() {
           </div>
           <div class="min-w-0 flex-1">
             <p class="truncate text-[12px] font-medium text-[--t2]">{{ user.name }}</p>
+            <p v-if="user.plan !== 'premium'" class="text-[10px] text-[--t3]">Free</p>
           </div>
         </div>
 

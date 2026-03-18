@@ -12,6 +12,7 @@ import { IconTrash, IconDownload } from '../components/shared/icons'
 import { useLocale } from '../composables/useLocale'
 import { formatSize } from '../utils/format'
 import { useCountUp } from '../composables/useCountUp'
+import PaywallModal from '../components/shared/PaywallModal.vue'
 import { version } from '../../package.json'
 
 const router = useRouter()
@@ -30,6 +31,7 @@ const streak = ref({ current: 0, best: 0 })
 const goalSaving = ref(false)
 const totalBooks = ref<number | null>(null)
 const showShortcuts = ref(false)
+const showPaywall = ref(false)
 
 const speeds = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
 
@@ -343,6 +345,23 @@ async function handleLogout() {
                 {{ user.plan === 'premium' ? 'Premium' : 'Free' }}
               </span>
             </div>
+            <div v-if="user.plan !== 'premium'" class="settings-row">
+              <span class="settings-row-label">{{ t('settings.booksCount') }}</span>
+              <span class="text-[12px] text-[--t3]">{{ totalBooks ?? 0 }} / 20</span>
+            </div>
+            <div v-if="user.plan !== 'premium'" class="settings-row">
+              <button
+                v-ripple
+                class="w-full rounded-lg py-2 text-[13px] font-semibold text-white"
+                style="background: var(--gradient-accent)"
+                @click="showPaywall = true"
+              >
+                {{ t('paywall.upgrade') }}
+              </button>
+            </div>
+            <div v-else class="settings-row">
+              <span class="text-[12px] text-emerald-400">{{ t('settings.unlimitedBooks') }}</span>
+            </div>
           </div>
         </div>
 
@@ -369,6 +388,8 @@ async function handleLogout() {
         {{ t('settings.logout') }}
       </button>
     </div>
+
+    <PaywallModal :open="showPaywall" @close="showPaywall = false" />
   </div>
 </template>
 

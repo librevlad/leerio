@@ -272,6 +272,8 @@ export default {
     shortcutPrev: 'Previous track',
     plan: 'Subscription',
     currentPlan: 'Current plan',
+    booksCount: 'Books',
+    unlimitedBooks: 'Unlimited books enabled',
     about: 'About',
     aboutVersion: 'Version',
     aboutBooks: 'Books in catalog',
@@ -485,7 +487,7 @@ export default {
     uploadSuccess: '{n} files uploaded',
   },
   paywall: {
-    title: 'Your library is full',
+    title: 'Your library is growing',
     subtitle: "You've reached the free limit of 20 audiobooks",
     benefitUnlimited: 'Unlimited books',
     benefitSync: 'Sync across devices',
