@@ -827,7 +827,7 @@ def search_books(
         q = f"%{escaped}%"
         params.extend([q, q, q])
     where = (" WHERE " + " AND ".join(clauses)) if clauses else ""
-    allowed_sorts = {"title": "title", "author": "author", "created_at": "created_at"}
+    allowed_sorts = {"title": "title", "author": "author", "created_at": "created_at", "recent": "id DESC"}
     order = allowed_sorts.get(sort, "title")
     rows = conn.execute(f"SELECT * FROM books{where} ORDER BY {order}", params).fetchall()
     return [dict(r) for r in rows]

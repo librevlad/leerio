@@ -801,6 +801,7 @@ def get_books(
     tag: str | None = Query(None),
     sort: str = Query("title"),
     language: str | None = Query(None),
+    limit: int | None = Query(None),
     user: dict | None = Depends(get_optional_user),
 ):
     uid = user["user_id"] if user else None
@@ -886,6 +887,9 @@ def get_books(
         result.sort(key=lambda x: -x["progress"])
     elif sort == "rating":
         result.sort(key=lambda x: -(x.get("rating") or 0))
+
+    if limit and limit > 0:
+        result = result[:limit]
 
     return result
 
