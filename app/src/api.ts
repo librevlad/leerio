@@ -226,6 +226,8 @@ export const api = {
 
   // User Books (personal library)
   getUserBooks: () => get<UserBook[]>('/user/books'),
+  getPaymentPlan: () => get<{ price_id: string; free_limit: number }>('/payments/plan'),
+
   uploadBook: (formData: FormData) => requestFormData<UserBook>('/user/books', formData),
   getUserBook: (slug: string) => get<UserBook>(`/user/books/${slug}`),
   deleteUserBook: (slug: string) => del<{ ok: boolean }>(`/user/books/${slug}`),

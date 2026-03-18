@@ -122,7 +122,8 @@ function onSeekChange(e: Event) {
   endSeek(val)
 }
 
-const speeds = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
+import { PLAYBACK_SPEEDS } from '../../composables/usePlayer'
+const speeds = PLAYBACK_SPEEDS
 
 function selectSpeed(rate: number) {
   setPlaybackRate(rate)

@@ -96,7 +96,7 @@ def _activate_premium(email: str, paddle_customer_id: str = ""):
         return
     conn = db._get_conn()
     cursor = conn.execute(
-        "UPDATE users SET plan = 'premium', stripe_customer_id = ? WHERE email = ?",
+        "UPDATE users SET plan = 'premium', paddle_customer_id = ? WHERE email = ?",
         (paddle_customer_id, email),
     )
     conn.commit()

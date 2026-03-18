@@ -25,6 +25,8 @@ function t(key: string): string {
 
 // ── Singleton state (shared across all components) ──────────────────────────
 
+export const PLAYBACK_SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2] as const
+
 const currentBook = ref<Book | null>(null)
 const tracks = ref<Track[]>([])
 const currentTrackIndex = ref(0)

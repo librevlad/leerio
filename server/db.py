@@ -74,19 +74,24 @@ def init_db():
                 password_hash TEXT,
                 role TEXT NOT NULL DEFAULT 'user',
                 plan TEXT NOT NULL DEFAULT 'free',
-                stripe_customer_id TEXT,
+                paddle_customer_id TEXT,
                 created_at TEXT NOT NULL DEFAULT (datetime('now')),
                 last_login TEXT
             )
             """
         )
-        # Migrate: add plan/stripe columns if missing
+        # Migrate: add plan/paddle columns if missing
         try:
             conn.execute("ALTER TABLE users ADD COLUMN plan TEXT NOT NULL DEFAULT 'free'")
         except Exception:
             pass
         try:
-            conn.execute("ALTER TABLE users ADD COLUMN stripe_customer_id TEXT")
+            conn.execute("ALTER TABLE users ADD COLUMN paddle_customer_id TEXT")
+        except Exception:
+            pass
+        # Rename legacy stripe_customer_id → paddle_customer_id
+        try:
+            conn.execute("ALTER TABLE users RENAME COLUMN stripe_customer_id TO paddle_customer_id")
         except Exception:
             pass
 

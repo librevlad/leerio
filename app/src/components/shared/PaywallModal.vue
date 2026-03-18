@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { api } from '../../api'
 import { useAuth } from '../../composables/useAuth'
 import { useToast } from '../../composables/useToast'
 import { useTracking } from '../../composables/useTelemetry'
@@ -43,8 +44,7 @@ defineExpose({ freeLimit })
 
 onMounted(async () => {
   try {
-    const res = await fetch('/api/payments/plan')
-    const data = await res.json()
+    const data = await api.getPaymentPlan()
     priceId.value = data.price_id || ''
     if (data.free_limit) freeLimit.value = data.free_limit
   } catch {

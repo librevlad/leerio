@@ -33,7 +33,9 @@ const totalBooks = ref<number | null>(null)
 const showShortcuts = ref(false)
 const showPaywall = ref(false)
 
-const speeds = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
+// Shared constant from usePlayer
+import { PLAYBACK_SPEEDS } from '../composables/usePlayer'
+const speeds = PLAYBACK_SPEEDS
 
 // Count-up animations for stats
 const totalHours = computed(() => (sessionStats.value ? sessionStats.value.total_hours : null))
