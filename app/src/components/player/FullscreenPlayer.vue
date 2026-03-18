@@ -247,7 +247,11 @@ function closeOverlays() {
           <div class="relative z-[1] mb-7">
             <div
               class="h-[220px] w-[220px] overflow-hidden rounded-2xl"
-              style="box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 80px rgba(255, 138, 0, 0.06)"
+              style="
+                box-shadow:
+                  0 20px 60px rgba(0, 0, 0, 0.5),
+                  0 0 80px rgba(255, 138, 0, 0.06);
+              "
             >
               <img
                 v-if="coverSrc && !coverError"
@@ -266,10 +270,25 @@ function closeOverlays() {
             </div>
             <!-- Progress ring -->
             <svg class="absolute -inset-[6px]" viewBox="0 0 232 232">
-              <rect x="0" y="0" width="232" height="232" rx="22" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="3" />
               <rect
-                x="0" y="0" width="232" height="232" rx="22"
-                fill="none" stroke="url(#desktop-progress-grad)" stroke-width="3"
+                x="0"
+                y="0"
+                width="232"
+                height="232"
+                rx="22"
+                fill="none"
+                stroke="rgba(255,255,255,0.04)"
+                stroke-width="3"
+              />
+              <rect
+                x="0"
+                y="0"
+                width="232"
+                height="232"
+                rx="22"
+                fill="none"
+                stroke="url(#desktop-progress-grad)"
+                stroke-width="3"
                 :stroke-dasharray="RING_CIRCUMFERENCE"
                 :stroke-dashoffset="progressRingOffset"
                 stroke-linecap="round"
@@ -303,7 +322,8 @@ function closeOverlays() {
               />
             </p>
             <p class="mt-1.5 text-[11px] text-[--t3]">
-              {{ trackLabel }} · {{ formatDuration(totalElapsed) }} {{ t('player.listened') }} · {{ formatDuration(Math.max(0, totalDuration - totalElapsed)) }} {{ t('player.remaining') }}
+              {{ trackLabel }} · {{ formatDuration(totalElapsed) }} {{ t('player.listened') }} ·
+              {{ formatDuration(Math.max(0, totalDuration - totalElapsed)) }} {{ t('player.remaining') }}
             </p>
           </div>
 
@@ -347,7 +367,9 @@ function closeOverlays() {
               />
             </div>
             <div class="mt-1 flex justify-between text-[12px]">
-              <span class="text-[--t2] tabular-nums">{{ formatTime(seekPreview !== null ? seekPreview : currentTime) }}</span>
+              <span class="text-[--t2] tabular-nums">{{
+                formatTime(seekPreview !== null ? seekPreview : currentTime)
+              }}</span>
               <span class="text-[--t3] tabular-nums">{{ remainingTime }}</span>
             </div>
           </div>
@@ -504,15 +526,16 @@ function closeOverlays() {
         </div>
 
         <!-- Right panel: chapters -->
-        <div
-          class="flex w-[45%] flex-col border-l border-[--border]"
-          style="background: rgba(255, 255, 255, 0.015)"
-        >
+        <div class="flex w-[45%] flex-col border-l border-[--border]" style="background: rgba(255, 255, 255, 0.015)">
           <!-- Tabs -->
           <div class="flex shrink-0 border-b border-[--border] px-4">
             <button
               class="border-0 bg-transparent px-4 py-3.5 text-[12px] font-semibold tracking-wider transition-colors"
-              :class="desktopTab === 'chapters' ? 'text-[--accent] border-b-2 border-[--accent]' : 'text-[--t3] hover:text-[--t2]'"
+              :class="
+                desktopTab === 'chapters'
+                  ? 'border-b-2 border-[--accent] text-[--accent]'
+                  : 'text-[--t3] hover:text-[--t2]'
+              "
               style="border-bottom-style: solid"
               @click="desktopTab = 'chapters'"
             >
@@ -520,7 +543,11 @@ function closeOverlays() {
             </button>
             <button
               class="border-0 bg-transparent px-4 py-3.5 text-[12px] font-semibold tracking-wider transition-colors"
-              :class="desktopTab === 'bookmarks' ? 'text-[--accent] border-b-2 border-[--accent]' : 'text-[--t3] hover:text-[--t2]'"
+              :class="
+                desktopTab === 'bookmarks'
+                  ? 'border-b-2 border-[--accent] text-[--accent]'
+                  : 'text-[--t3] hover:text-[--t2]'
+              "
               style="border-bottom-style: solid"
               @click="desktopTab = 'bookmarks'"
             >
@@ -554,7 +581,7 @@ function closeOverlays() {
             >
               <span
                 class="w-6 shrink-0 text-right text-[11px]"
-                :class="i === currentTrackIndex ? 'text-[--accent] font-semibold' : 'text-[--t3]'"
+                :class="i === currentTrackIndex ? 'font-semibold text-[--accent]' : 'text-[--t3]'"
               >
                 {{ i + 1 }}
               </span>
@@ -578,10 +605,7 @@ function closeOverlays() {
                   />
                 </div>
               </div>
-              <span
-                v-if="i === currentTrackIndex"
-                class="shrink-0 text-[10px] text-[--accent]"
-              >▶</span>
+              <span v-if="i === currentTrackIndex" class="shrink-0 text-[10px] text-[--accent]">▶</span>
               <span
                 v-if="isTrackDownloaded(i)"
                 class="h-2 w-2 shrink-0 rounded-full bg-emerald-400"
@@ -939,7 +963,6 @@ function closeOverlays() {
             </div>
           </div>
         </div>
-
       </div>
 
       <!-- Close overlays on background click -->
