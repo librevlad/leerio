@@ -16,7 +16,7 @@ import { IconMusic, IconPlay, IconPause } from '../components/shared/icons'
 import { usePullToRefresh } from '../composables/usePullToRefresh'
 
 const { t } = useI18n()
-const { user } = useAuth()
+const { user, isGuest } = useAuth()
 const player = usePlayer()
 const { gradient: catGradient } = useCategories()
 const data = ref<DashboardData | null>(null)
@@ -77,6 +77,10 @@ async function playBook(bookId: string) {
 }
 
 async function loadData() {
+  if (isGuest.value) {
+    loading.value = false
+    return
+  }
   try {
     const [d, st, rec] = await Promise.allSettled([api.getDashboard(), api.getStreak(), api.getRecommendations()])
     if (d.status === 'fulfilled') data.value = d.value
@@ -108,6 +112,34 @@ onMounted(loadData)
       <div class="grid grid-cols-2 gap-3">
         <div class="skeleton h-24 rounded-2xl" />
         <div class="skeleton h-24 rounded-2xl" />
+      </div>
+    </div>
+
+    <!-- Guest welcome -->
+    <div v-else-if="isGuest" class="fade-in" style="display: flex; flex-direction: column; gap: 20px">
+      <div>
+        <p class="text-[12px] font-semibold tracking-widest text-[--t3] uppercase">{{ greeting }}</p>
+        <h1 class="mt-1 text-[22px] font-extrabold text-[--t1] md:text-[26px]">Leerio</h1>
+      </div>
+
+      <div
+        class="overflow-hidden rounded-2xl p-6 text-center"
+        style="
+          background: linear-gradient(135deg, rgba(255, 138, 0, 0.08), rgba(255, 138, 0, 0.02));
+          border: 1px solid rgba(255, 138, 0, 0.15);
+        "
+      >
+        <p class="text-[32px]">🎧</p>
+        <h2 class="mt-3 text-[16px] font-bold text-[--t1]">{{ t('dashboard.guestTitle') }}</h2>
+        <p class="mt-2 text-[13px] text-[--t2]">{{ t('dashboard.guestSubtitle') }}</p>
+        <div class="mt-5 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <router-link to="/library" class="btn btn-primary px-6 py-2.5 text-[13px] no-underline">
+            {{ t('dashboard.guestBrowse') }}
+          </router-link>
+          <router-link to="/login" class="btn btn-ghost px-6 py-2.5 text-[13px] no-underline">
+            {{ t('dashboard.guestLogin') }}
+          </router-link>
+        </div>
       </div>
     </div>
 

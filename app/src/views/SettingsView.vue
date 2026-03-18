@@ -97,7 +97,23 @@ async function handleLogout() {
 
     <!-- ── Profile Card with gradient border ─────────────────────── -->
     <div class="settings-profile mb-6">
-      <div v-if="user" class="flex items-center gap-3.5">
+      <!-- Guest prompt -->
+      <div v-if="!user" class="flex items-center gap-3.5">
+        <div
+          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] text-[18px]"
+          style="background: rgba(255, 255, 255, 0.06)"
+        >
+          👤
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="text-[14px] font-semibold text-[--t1]">{{ t('settings.guest') }}</p>
+          <router-link to="/login" class="text-[12px] font-medium text-[--accent] no-underline hover:text-[--accent-2]">
+            {{ t('settings.loginForSync') }}
+          </router-link>
+        </div>
+      </div>
+      <!-- Logged in user -->
+      <div v-else class="flex items-center gap-3.5">
         <img
           v-if="user.picture"
           :src="user.picture"
