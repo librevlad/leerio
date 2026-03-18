@@ -2,10 +2,9 @@
 
 ## Открытые
 
-- [ ] [2026-03-18] Local-first: подключить useLocalData к views (DashboardView, BookDetailView, SettingsView)
-- [ ] [2026-03-18] Local-first: sync engine — двусторонняя синхронизация local ↔ cloud
+- [ ] [2026-03-18] Local-first: sync engine — двусторонняя синхронизация local ↔ cloud при логине
 - [ ] [2026-03-18] Local-first: файловый сканер — сканирование MP3 на устройстве, парсинг ID3
-- [ ] [2026-03-18] Local-first: безаккаунтный режим — guest-friendly UI во всех views
+- [ ] [2026-03-18] Local-first: quotes composable — подключить useLocalData к BookQuotes
 - [ ] [2026-03-18] Починить кнопку "Скачать" в нативном APK (isNativePlatform() возвращает false)
 
 ## Завершённые

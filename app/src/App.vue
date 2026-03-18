@@ -14,6 +14,7 @@ import { useDownloads } from './composables/useDownloads'
 import { useAuth } from './composables/useAuth'
 import { useNetwork } from './composables/useNetwork'
 import { useCategories } from './composables/useCategories'
+import { useSync } from './composables/useSync'
 import { IconWifiOff } from './components/shared/icons'
 
 const { t } = useI18n()
@@ -24,6 +25,7 @@ const downloads = useDownloads()
 const { loading: authLoading } = useAuth()
 const { isOnline } = useNetwork()
 const { load: loadCategories } = useCategories()
+useSync()
 const route = useRoute()
 
 const isLoginPage = computed(() => route.name === 'login')

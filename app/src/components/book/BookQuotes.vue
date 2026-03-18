@@ -3,12 +3,16 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../../api'
 import { useToast } from '../../composables/useToast'
+import { useLocalData } from '../../composables/useLocalData'
+import { useAuth } from '../../composables/useAuth'
 import type { Quote } from '../../types'
 import { IconX } from '../shared/icons'
 
 const { t } = useI18n()
 const props = defineProps<{ bookTitle: string; bookAuthor: string }>()
 const toast = useToast()
+const local = useLocalData()
+const { isLoggedIn } = useAuth()
 
 const allQuotes = ref<Quote[]>([])
 const loading = ref(true)
@@ -17,12 +21,19 @@ const adding = ref(false)
 
 const quotes = computed(() => allQuotes.value.filter((q) => q.book === props.bookTitle))
 
-// TODO: Add server-side filtering (GET /api/quotes?book=...) to avoid fetching all quotes
 onMounted(async () => {
   try {
-    allQuotes.value = await api.getQuotes()
+    // Load local quotes first
+    const localQuotes = await local.getQuotes()
+    if (localQuotes.length) allQuotes.value = localQuotes
+
+    // Merge with server if logged in
+    if (isLoggedIn.value) {
+      const serverQuotes = await api.getQuotes()
+      allQuotes.value = serverQuotes
+    }
   } catch {
-    /* ignore */
+    /* use local data */
   } finally {
     loading.value = false
   }
@@ -33,8 +44,16 @@ async function addQuote() {
   if (!text) return
   adding.value = true
   try {
-    await api.addQuote(text, props.bookTitle, props.bookAuthor)
-    allQuotes.value = await api.getQuotes()
+    const quote = await local.addQuote({
+      text,
+      book: props.bookTitle,
+      author: props.bookAuthor,
+      ts: new Date().toISOString(),
+    })
+    allQuotes.value.push(quote)
+    if (isLoggedIn.value) {
+      await api.addQuote(text, props.bookTitle, props.bookAuthor)
+    }
     newText.value = ''
     toast.success(t('book.quoteAdded'))
   } catch {
@@ -46,8 +65,11 @@ async function addQuote() {
 
 async function removeQuote(quoteId: number) {
   try {
-    await api.deleteQuote(quoteId)
-    allQuotes.value = await api.getQuotes()
+    await local.deleteQuote(quoteId)
+    allQuotes.value = allQuotes.value.filter((q) => q.id !== quoteId)
+    if (isLoggedIn.value) {
+      await api.deleteQuote(quoteId)
+    }
   } catch {
     toast.error(t('book.quoteDeleteError'))
   }
