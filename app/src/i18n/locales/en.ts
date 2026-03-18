@@ -157,6 +157,8 @@ export default {
     deleted: 'Deleted',
     deleteError: 'Delete failed',
     add: 'Add',
+    scan: 'Scan',
+    scanning: 'Scanning...',
   },
   upload: {
     title: 'Upload',

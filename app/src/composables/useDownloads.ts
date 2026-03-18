@@ -45,7 +45,7 @@ const BOOKS_DIR = 'leerio/books'
 
 // ── Singleton state ────────────────────────────────────────────────────────
 
-const isNative = ref(false)
+const isNative = ref(Capacitor.isNativePlatform())
 const meta = ref<DownloadsMeta>({ books: {} })
 const downloading = ref<Record<string, DownloadProgress>>({})
 const abortControllers = new Map<string, Cancellable>()

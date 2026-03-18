@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useUserBooks } from '@/composables/useUserBooks'
 import { useLocalBooks } from '@/composables/useLocalBooks'
 import { useDownloads } from '@/composables/useDownloads'
+import { useFileScanner } from '@/composables/useFileScanner'
 import { useToast } from '@/composables/useToast'
 import { userBookCoverUrl, coverUrl } from '@/api'
 import {
@@ -24,6 +25,7 @@ const toast = useToast()
 const { userBooks, ttsJobs, loading: ubLoading, loadUserBooks, loadTTSJobs, deleteBook, pollJob } = useUserBooks()
 const { localBooks, removeLocalBook } = useLocalBooks()
 const downloads = useDownloads()
+const { scannedBooks, scanning, scan: scanDevice } = useFileScanner()
 
 const activeFilter = ref<'all' | 'downloaded' | 'local' | 'uploaded'>('all')
 const activeJobs = computed(() => ttsJobs.value.filter((j: TTSJob) => j.status === 'processing'))
@@ -72,6 +74,17 @@ const items = computed<UnifiedItem[]>(() => {
         trackCount: lb.tracks.length,
       })
     }
+    // Scanned device books
+    for (const sb of scannedBooks.value) {
+      result.push({
+        id: sb.id,
+        title: sb.title,
+        author: sb.author,
+        source: 'local',
+        hasCover: false,
+        trackCount: sb.tracks.length,
+      })
+    }
   }
 
   // Uploaded / TTS books
@@ -96,11 +109,16 @@ const items = computed<UnifiedItem[]>(() => {
 })
 
 const totalCount = computed(() => {
-  return downloads.downloadedBooks.value.length + localBooks.value.length + userBooks.value.length
+  return (
+    downloads.downloadedBooks.value.length +
+    localBooks.value.length +
+    scannedBooks.value.length +
+    userBooks.value.length
+  )
 })
 
 onMounted(async () => {
-  await Promise.all([loadUserBooks(), loadTTSJobs()])
+  await Promise.all([loadUserBooks(), loadTTSJobs(), scanDevice()])
 
   for (const job of activeJobs.value) {
     pollJob(job.id, (j: TTSJob) => {
@@ -166,10 +184,22 @@ const coverPatterns: Record<string, string> = {
           {{ totalCount > 0 ? `${totalCount} ${t('plural.book', totalCount)}` : t('myLibrary.noBooks') }}
         </p>
       </div>
-      <router-link to="/upload" class="btn btn-primary flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold">
-        <IconPlus :size="14" />
-        {{ t('myLibrary.add') }}
-      </router-link>
+      <div class="flex items-center gap-2">
+        <button
+          v-if="downloads.isNative.value"
+          v-ripple
+          class="btn btn-ghost flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold"
+          :disabled="scanning"
+          @click="scanDevice"
+        >
+          <IconFolder :size="14" />
+          {{ scanning ? t('myLibrary.scanning') : t('myLibrary.scan') }}
+        </button>
+        <router-link to="/upload" class="btn btn-primary flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold">
+          <IconPlus :size="14" />
+          {{ t('myLibrary.add') }}
+        </router-link>
+      </div>
     </div>
 
     <!-- Active TTS Jobs -->

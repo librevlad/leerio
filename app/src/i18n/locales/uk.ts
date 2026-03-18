@@ -157,6 +157,8 @@ export default {
     deleted: 'Видалено',
     deleteError: 'Помилка видалення',
     add: 'Додати',
+    scan: 'Сканувати',
+    scanning: 'Пошук...',
   },
   upload: {
     title: 'Завантажити',
