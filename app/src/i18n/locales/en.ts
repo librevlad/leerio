@@ -416,6 +416,11 @@ export default {
     playbackError: 'Playback error',
     retry: 'Retry',
     skipChapter: 'Skip',
+    listened: 'listened',
+    remaining: 'remaining',
+    bookProgress: 'Book progress',
+    noBookmarks: 'No bookmarks',
+    addBookmarkHint: 'Tap bookmark while listening',
   },
   common: {
     cancel: 'Cancel',

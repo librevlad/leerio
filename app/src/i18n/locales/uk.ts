@@ -416,6 +416,11 @@ export default {
     playbackError: 'Помилка відтворення',
     retry: 'Повторити',
     skipChapter: 'Пропустити',
+    listened: 'прослухано',
+    remaining: 'залишилось',
+    bookProgress: 'Прогрес книги',
+    noBookmarks: 'Немає закладок',
+    addBookmarkHint: 'Натисніть закладку під час прослуховування',
   },
   common: {
     cancel: 'Скасувати',

@@ -416,6 +416,11 @@ export default {
     playbackError: 'Ошибка воспроизведения',
     retry: 'Повторить',
     skipChapter: 'Пропустить',
+    listened: 'прослушано',
+    remaining: 'осталось',
+    bookProgress: 'Прогресс книги',
+    noBookmarks: 'Нет закладок',
+    addBookmarkHint: 'Нажмите закладку во время прослушивания',
   },
   common: {
     cancel: 'Отмена',
