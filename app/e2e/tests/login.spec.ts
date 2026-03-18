@@ -55,8 +55,9 @@ test.describe('Login page', () => {
     await expect(page).toHaveURL('/', { timeout: 10_000 })
   })
 
-  test('unauthenticated user is redirected to login', async ({ page }) => {
+  test('unauthenticated user can access settings (guest mode)', async ({ page }) => {
     await page.goto('/settings')
-    await expect(page).toHaveURL(/\/login/, { timeout: 10_000 })
+    // No redirect — guests can use the app
+    await expect(page).toHaveURL('/settings', { timeout: 10_000 })
   })
 })
