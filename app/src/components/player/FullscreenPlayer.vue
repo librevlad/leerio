@@ -147,10 +147,14 @@ function isTrackDownloaded(index: number) {
   return dl.isNative.value && dl.isTrackDownloaded(currentBook.value.id, index)
 }
 
+const bookmarkPop = ref(false)
+
 async function addBookmark() {
   if (!currentBook.value) return
   try {
     await api.addBookmark(currentBook.value.id, currentTrackIndex.value, currentTime.value)
+    bookmarkPop.value = true
+    setTimeout(() => (bookmarkPop.value = false), 400)
     toast.success(t('player.bookmarkAdded'))
   } catch {
     toast.error(t('player.bookmarkError'))
@@ -519,7 +523,7 @@ function closeOverlays() {
               class="flex flex-col items-center gap-0.5 border-0 bg-transparent px-3 py-1 text-[--t3] transition-colors hover:text-[--t2]"
               @click="addBookmark"
             >
-              <IconBookmark :size="18" />
+              <IconBookmark :size="18" :class="{ 'icon-pop': bookmarkPop }" />
               <span class="text-[10px] font-semibold">{{ t('player.bookmarkLabel') }}</span>
             </button>
 
@@ -733,7 +737,7 @@ function closeOverlays() {
               class="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent text-[--t3] transition-colors hover:text-[--t2]"
               @click="addBookmark"
             >
-              <IconBookmark :size="16" />
+              <IconBookmark :size="16" :class="{ 'icon-pop': bookmarkPop }" />
             </button>
 
             <!-- Volume -->

@@ -418,54 +418,61 @@ watch(() => route.params.id, loadBook)
           <!-- Tab content + desktop context panel -->
           <div class="mt-4 flex gap-5">
             <!-- Main tab content -->
-            <div :key="activeTab" class="tab-content-enter min-w-0 flex-1">
-              <!-- Chapters -->
-              <BookChapters
-                v-if="activeTab === 'chapters' && isLoggedIn && book.mp3_count && book.mp3_count > 0"
-                :book="book"
-              />
+            <transition name="tab-fade" mode="out-in">
+              <div :key="activeTab" class="min-w-0 flex-1">
+                <!-- Chapters -->
+                <BookChapters
+                  v-if="activeTab === 'chapters' && isLoggedIn && book.mp3_count && book.mp3_count > 0"
+                  :book="book"
+                />
 
-              <!-- Notes -->
-              <BookNotes
-                v-if="activeTab === 'notes' && isLoggedIn"
-                :book-id="book.id"
-                :title="book.title"
-                :note="book.note"
-              />
+                <!-- Notes -->
+                <BookNotes
+                  v-if="activeTab === 'notes' && isLoggedIn"
+                  :book-id="book.id"
+                  :title="book.title"
+                  :note="book.note"
+                />
 
-              <!-- Quotes -->
-              <BookQuotes
-                v-if="activeTab === 'quotes' && isLoggedIn"
-                :book-title="book.title"
-                :book-author="book.author"
-              />
+                <!-- Quotes -->
+                <BookQuotes
+                  v-if="activeTab === 'quotes' && isLoggedIn"
+                  :book-title="book.title"
+                  :book-author="book.author"
+                />
 
-              <!-- Tags -->
-              <div v-if="activeTab === 'tags' && isLoggedIn" class="space-y-5">
-                <BookTags :book-id="book.id" :title="book.title" :tags="book.tags" @updated="(t) => (book!.tags = t)" />
-                <BookTimeline :entries="book.timeline || []" />
+                <!-- Tags -->
+                <div v-if="activeTab === 'tags' && isLoggedIn" class="space-y-5">
+                  <BookTags
+                    :book-id="book.id"
+                    :title="book.title"
+                    :tags="book.tags"
+                    @updated="(t) => (book!.tags = t)"
+                  />
+                  <BookTimeline :entries="book.timeline || []" />
+                </div>
+
+                <!-- About -->
+                <div v-if="activeTab === 'about'">
+                  <div v-if="book.description" class="text-[13px] leading-relaxed text-[--t2]">
+                    {{ book.description }}
+                  </div>
+                  <p v-else class="text-[13px] text-[--t3]">{{ t('book.noDescription') }}</p>
+
+                  <!-- Meta (mobile only, shown in About tab) -->
+                  <div class="mt-4 flex gap-3 text-[12px] text-[--t3] lg:hidden">
+                    <span v-if="book.duration_hours">🕐 {{ formatDuration(book.duration_hours) }}</span>
+                    <span v-if="book.mp3_count">🎵 {{ book.mp3_count }} {{ t('book.tracks') }}</span>
+                    <span v-if="book.size_mb">💾 {{ formatSizeMB(book.size_mb, t) }}</span>
+                  </div>
+
+                  <!-- Similar books -->
+                  <div class="mt-6">
+                    <BookSimilar :book-id="book.id" />
+                  </div>
+                </div>
               </div>
-
-              <!-- About -->
-              <div v-if="activeTab === 'about'">
-                <div v-if="book.description" class="text-[13px] leading-relaxed text-[--t2]">
-                  {{ book.description }}
-                </div>
-                <p v-else class="text-[13px] text-[--t3]">{{ t('book.noDescription') }}</p>
-
-                <!-- Meta (mobile only, shown in About tab) -->
-                <div class="mt-4 flex gap-3 text-[12px] text-[--t3] lg:hidden">
-                  <span v-if="book.duration_hours">🕐 {{ formatDuration(book.duration_hours) }}</span>
-                  <span v-if="book.mp3_count">🎵 {{ book.mp3_count }} {{ t('book.tracks') }}</span>
-                  <span v-if="book.size_mb">💾 {{ formatSizeMB(book.size_mb, t) }}</span>
-                </div>
-
-                <!-- Similar books -->
-                <div class="mt-6">
-                  <BookSimilar :book-id="book.id" />
-                </div>
-              </div>
-            </div>
+            </transition>
 
             <!-- Desktop context panel -->
             <div v-if="isLoggedIn && activeTab !== 'about'" class="hidden w-[260px] shrink-0 space-y-4 lg:block">

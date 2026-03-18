@@ -109,6 +109,79 @@ body {
   transition: transform 0.25s ease;
 }
 
+/* ── Micro-interactions ───────────────────────────────────────────────── */
+
+/* Now-playing pulse on book cards */
+@keyframes now-playing-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 138, 0, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(255, 138, 0, 0);
+  }
+}
+
+.now-playing-ring {
+  animation: now-playing-pulse 2s ease-in-out infinite;
+}
+
+/* Bookmark pop */
+@keyframes icon-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.icon-pop {
+  animation: icon-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Shake on error */
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-6px);
+  }
+  40%,
+  80% {
+    transform: translateX(6px);
+  }
+}
+
+.shake {
+  animation: shake 0.4s ease;
+}
+
+/* Tab content transition */
+.tab-fade-enter-active {
+  transition: all 0.2s ease-out;
+}
+
+.tab-fade-leave-active {
+  transition: all 0.12s ease;
+}
+
+.tab-fade-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.tab-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
 /* ── Ripple + Active Feedback ─────────────────────────────────────────── */
 
 @keyframes v-ripple {

@@ -165,7 +165,7 @@ async function handlePasswordLogin() {
         </p>
 
         <div v-if="loading" class="mt-5 text-[13px] text-[--t3]">{{ t('login.loading') }}</div>
-        <div v-if="error" class="mt-5 text-[13px] text-red-400">{{ error }}</div>
+        <div v-if="error" :key="error" class="shake mt-5 text-[13px] text-red-400">{{ error }}</div>
       </div>
 
       <p class="mt-10 text-center text-[11px] text-[--t3] opacity-40">Leerio v{{ version }}</p>

@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import type { Book } from '../../types'
 import { coverUrl } from '../../api'
 import { useCategories } from '../../composables/useCategories'
+import { usePlayer } from '../../composables/usePlayer'
 import CategoryBadge from './CategoryBadge.vue'
 import StatusBadge from './StatusBadge.vue'
 import SourceBadge from './SourceBadge.vue'
@@ -20,6 +21,8 @@ const props = defineProps<{
 }>()
 const dl = useDownloads()
 const { gradient: catGradient } = useCategories()
+const player = usePlayer()
+const isPlaying = computed(() => player.currentBook.value?.id === props.book.id)
 const downloaded = computed(() => dl.isNative.value && dl.isBookDownloaded(props.book.id))
 const coverLoaded = ref(false)
 const coverError = ref(false)
@@ -64,7 +67,10 @@ const coverPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0
     <!-- Floating cover thumbnail -->
     <div class="relative px-4">
       <div class="-mt-10 mb-3 flex items-end gap-3">
-        <div class="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg shadow-lg ring-2 ring-[--card-solid]">
+        <div
+          class="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg shadow-lg ring-2"
+          :class="isPlaying ? 'now-playing-ring ring-[--accent]' : 'ring-[--card-solid]'"
+        >
           <img
             v-if="hasCover"
             :src="coverSrc || coverUrl(book.id)"
