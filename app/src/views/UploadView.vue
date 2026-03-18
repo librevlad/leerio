@@ -30,6 +30,7 @@ const uploadReader = ref('')
 const uploadFiles = ref<File[]>([])
 const uploadCover = ref<File | null>(null)
 const uploading = ref(false)
+const uploadProgress = ref(0)
 const dragOver = ref(false)
 const showPaywall = ref(false)
 
@@ -89,6 +90,7 @@ async function handleUpload() {
   }
 
   uploading.value = true
+  uploadProgress.value = 0
 
   try {
     const formData = new FormData()
@@ -102,7 +104,23 @@ async function handleUpload() {
       formData.append('cover', uploadCover.value)
     }
 
-    await api.uploadBook(formData)
+    // Upload with progress tracking
+    await new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest()
+      xhr.open('POST', '/api/user/books')
+      xhr.withCredentials = true
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) uploadProgress.value = Math.round((e.loaded / e.total) * 100)
+      }
+      xhr.onload = () => {
+        if (xhr.status === 403) reject(new Error('limit_reached'))
+        else if (xhr.status >= 400) reject(new Error(xhr.responseText))
+        else resolve()
+      }
+      xhr.onerror = () => reject(new Error('Network error'))
+      xhr.send(formData)
+    })
+
     toast.success(t('upload.successUploaded'))
     router.push('/my-library')
   } catch (e: unknown) {
@@ -114,6 +132,7 @@ async function handleUpload() {
     }
   } finally {
     uploading.value = false
+    uploadProgress.value = 0
   }
 }
 
@@ -448,9 +467,11 @@ const tabDefs = [
         @click="handleUpload"
       >
         <IconUpload v-if="!uploading" :size="16" />
-        <span v-if="uploading">{{ t('upload.uploadingIndeterminate') }}</span>
+        <span v-if="uploading && uploadProgress > 0">{{ uploadProgress }}%</span>
+        <span v-else-if="uploading">{{ t('upload.uploadingIndeterminate') }}</span>
         <span v-else>{{ t('upload.uploadBtn') }}</span>
       </button>
+      <ProgressBar v-if="uploading" :percent="uploadProgress" height="h-1" class="mt-2" />
     </div>
 
     <!-- TTS Tab -->
