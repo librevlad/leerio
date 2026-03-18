@@ -140,7 +140,7 @@ onMounted(async () => {
           }}
         </p>
       </div>
-      <button class="btn btn-primary flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold" @click="openCreate">
+      <button v-ripple class="btn btn-primary flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold" @click="openCreate">
         <IconPlus :size="14" />
         {{ t('collections.create') }}
       </button>
@@ -162,7 +162,7 @@ onMounted(async () => {
 
     <!-- Collections list -->
     <div v-else-if="!showCreate" class="space-y-4">
-      <div v-for="(col, idx) in collections" :key="col.id" class="card card-hover overflow-hidden">
+      <div v-for="(col, idx) in collections" :key="col.id" v-ripple class="card card-hover overflow-hidden">
         <!-- Collection header — clickable to expand -->
         <button
           class="flex w-full cursor-pointer items-center gap-4 border-0 bg-transparent p-4 text-left transition-colors hover:bg-white/[0.02]"

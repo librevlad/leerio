@@ -60,6 +60,7 @@ async function clearStatus() {
     <button
       v-for="s in statuses"
       :key="s.value"
+      v-ripple
       class="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border px-3.5 py-2 text-[12px] font-medium transition-colors"
       :class="
         bookStatus === s.value

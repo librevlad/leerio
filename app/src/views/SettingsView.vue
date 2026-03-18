@@ -274,7 +274,7 @@ async function handleLogout() {
         <div>
           <p class="settings-group-label">{{ t('settings.shortcuts') }}</p>
           <div class="settings-group">
-            <button class="settings-row w-full" @click="showShortcuts = !showShortcuts">
+            <button v-ripple class="settings-row w-full" @click="showShortcuts = !showShortcuts">
               <span class="settings-row-label">{{ t('settings.shortcuts') }}</span>
               <span class="text-[12px] text-[--t3] transition-transform" :class="showShortcuts ? 'rotate-90' : ''"
                 >▸</span

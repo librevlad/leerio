@@ -69,6 +69,40 @@ body {
   height: 0;
 }
 
+/* ── Ripple + Active Feedback ─────────────────────────────────────────── */
+
+@keyframes v-ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+/* Generic button active feedback (buttons without .btn class) */
+button:not(.btn):not(:disabled):active {
+  transform: scale(0.97);
+  transition: transform 0.06s ease;
+}
+
+/* Status pill pop animation on selection */
+@keyframes status-pop {
+  0% {
+    transform: scale(0.88);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 /* ── Typography ──────────────────────────────────────────────────────── */
 
 .page-title {

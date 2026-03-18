@@ -29,7 +29,7 @@ const coverPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0
 </script>
 
 <template>
-  <router-link :to="to || `/book/${book.id}`" class="card card-hover group relative block overflow-hidden no-underline">
+  <router-link v-ripple :to="to || `/book/${book.id}`" class="card card-hover group relative block overflow-hidden no-underline">
     <!-- Gradient backdrop (shorter) -->
     <div class="relative h-28 overflow-hidden" :style="{ background: catGradient(book.category) }">
       <img

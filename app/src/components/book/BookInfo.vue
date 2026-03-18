@@ -141,6 +141,7 @@ const lastPosition = computed(() => {
         <!-- Listen button (mobile) -->
         <button
           v-if="book.mp3_count && book.mp3_count > 0"
+          v-ripple
           class="btn btn-primary mt-4 w-full px-7 py-3 text-[15px]"
           style="
             box-shadow:
@@ -293,6 +294,7 @@ const lastPosition = computed(() => {
             <div class="mt-4 flex items-center gap-3">
               <button
                 v-if="book.mp3_count && book.mp3_count > 0"
+                v-ripple
                 class="btn btn-primary self-start px-7 py-3 text-[15px]"
                 style="
                   box-shadow:
