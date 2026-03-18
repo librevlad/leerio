@@ -86,6 +86,19 @@ const filtered = computed(() => {
 
 const visibleBooks = computed(() => filtered.value.slice(0, visibleCount.value))
 const hasMore = computed(() => visibleCount.value < filtered.value.length)
+const viewMode = ref<'grid' | 'authors'>('grid')
+
+const groupedByAuthor = computed(() => {
+  const groups: Record<string, typeof filtered.value> = {}
+  for (const b of filtered.value) {
+    const author = b.author || t('library.unknownAuthor')
+    if (!groups[author]) groups[author] = []
+    groups[author].push(b)
+  }
+  return Object.entries(groups)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([author, books]) => ({ author, books }))
+})
 
 const sortOptions = computed(() => [
   { value: 'title', label: t('library.sortTitle') },
@@ -274,6 +287,15 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
           {{ s.label }}
         </button>
       </div>
+      <button
+        class="ml-2 flex-shrink-0 cursor-pointer rounded-full border-0 px-2.5 py-1 text-[11px] font-medium transition-colors"
+        :class="
+          viewMode === 'authors' ? 'bg-[--accent-soft] text-[--accent]' : 'bg-transparent text-[--t3] hover:bg-white/5'
+        "
+        @click="viewMode = viewMode === 'grid' ? 'authors' : 'grid'"
+      >
+        {{ t('library.byAuthor') }}
+      </button>
     </div>
 
     <!-- Active filter summary -->
@@ -301,7 +323,21 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
     </div>
 
     <div v-else-if="filtered.length" class="fade-in">
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <!-- Grouped by author -->
+      <div v-if="viewMode === 'authors'" class="space-y-6">
+        <div v-for="group in groupedByAuthor" :key="group.author">
+          <h3 class="mb-3 text-[13px] font-bold text-[--t2]">
+            {{ group.author }}
+            <span class="ml-1 text-[--t3]">· {{ group.books.length }}</span>
+          </h3>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <BookCard v-for="book in group.books" :key="book.id" :book="book" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid view -->
+      <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <BookCard
           v-for="(book, i) in visibleBooks"
           :key="book.id"

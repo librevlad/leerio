@@ -75,6 +75,8 @@ export default {
     sortCategory: 'Category',
     sortProgress: 'Progress',
     sortRating: 'Rating',
+    byAuthor: 'By author',
+    unknownAuthor: 'Unknown author',
     filterAll: 'All',
     filterListening: 'Listening',
     filterWant: 'Want',

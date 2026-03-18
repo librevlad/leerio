@@ -75,6 +75,8 @@ export default {
     sortCategory: 'Категорія',
     sortProgress: 'Прогрес',
     sortRating: 'Оцінка',
+    byAuthor: 'За авторами',
+    unknownAuthor: 'Невідомий автор',
     filterAll: 'Всі',
     filterListening: 'Слухаю',
     filterWant: 'Хочу',
