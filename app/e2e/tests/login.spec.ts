@@ -59,6 +59,9 @@ test.describe('Login page', () => {
   })
 
   test('unauthenticated user can access settings (guest mode)', async ({ page }) => {
+    // Skip onboarding
+    await page.goto('/settings')
+    await page.evaluate(() => localStorage.setItem('leerio_onboarded', '1'))
     await page.goto('/settings')
     // No redirect — guests can use the app
     await expect(page).toHaveURL('/settings', { timeout: 10_000 })
