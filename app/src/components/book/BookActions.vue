@@ -3,6 +3,8 @@ import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../../api'
 import { useToast } from '../../composables/useToast'
+import { useLocalData } from '../../composables/useLocalData'
+import { useAuth } from '../../composables/useAuth'
 import { IconX } from '../shared/icons'
 import type { BookStatusValue } from '../../types'
 
@@ -13,6 +15,8 @@ const props = defineProps<{
 const emit = defineEmits<{ statusChanged: [] }>()
 
 const toast = useToast()
+const local = useLocalData()
+const { isLoggedIn } = useAuth()
 const { t } = useI18n()
 const loading = ref(false)
 
@@ -29,9 +33,11 @@ async function selectStatus(value: BookStatusValue) {
   loading.value = true
   try {
     if (props.bookStatus === value) {
-      await api.removeBookStatus(props.bookId)
+      await local.removeBookStatus(props.bookId)
+      if (isLoggedIn.value) await api.removeBookStatus(props.bookId)
     } else {
-      await api.setBookStatus(props.bookId, value)
+      await local.setBookStatus(props.bookId, value)
+      if (isLoggedIn.value) await api.setBookStatus(props.bookId, value)
     }
     emit('statusChanged')
   } catch (err: unknown) {
@@ -45,7 +51,8 @@ async function clearStatus() {
   if (loading.value) return
   loading.value = true
   try {
-    await api.removeBookStatus(props.bookId)
+    await local.removeBookStatus(props.bookId)
+    if (isLoggedIn.value) await api.removeBookStatus(props.bookId)
     emit('statusChanged')
   } catch (err: unknown) {
     toast.error(err instanceof Error ? err.message : t('common.error'))

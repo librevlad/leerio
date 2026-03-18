@@ -3,6 +3,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../../api'
 import { useToast } from '../../composables/useToast'
+import { useLocalData } from '../../composables/useLocalData'
+import { useAuth } from '../../composables/useAuth'
 import { IconX } from '../shared/icons'
 
 const { t } = useI18n()
@@ -10,16 +12,27 @@ const props = defineProps<{ bookId: string; title: string; tags: string[] }>()
 const emit = defineEmits<{ updated: [tags: string[]] }>()
 
 const toast = useToast()
+const local = useLocalData()
+const { isLoggedIn } = useAuth()
 const currentTags = ref<string[]>([...props.tags])
 const allTags = ref<string[]>([])
 const input = ref('')
 const showSuggestions = ref(false)
 
 onMounted(async () => {
+  // Load local tags first
+  const localTags = await local.getTags(props.bookId)
+  if (localTags.length) currentTags.value = localTags
+
+  // Load all tag names for suggestions
   try {
-    allTags.value = await api.getAllTags()
+    if (isLoggedIn.value) {
+      allTags.value = await api.getAllTags()
+    } else {
+      allTags.value = await local.getAllTagNames()
+    }
   } catch {
-    /* ignore */
+    allTags.value = await local.getAllTagNames()
   }
 })
 
@@ -51,8 +64,13 @@ function hideSuggestions() {
 
 async function save() {
   try {
-    await api.setTags(props.bookId, currentTags.value)
+    // Always save locally
+    await local.setTags(props.bookId, currentTags.value)
     emit('updated', currentTags.value)
+    // Sync to server if logged in
+    if (isLoggedIn.value) {
+      await api.setTags(props.bookId, currentTags.value)
+    }
   } catch {
     toast.error(t('book.tagsSaveError'))
   }

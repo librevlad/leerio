@@ -73,10 +73,10 @@ const isInLibrary = computed(() => !!book.value?.book_status)
 
 const tabs = computed(() => {
   const t: { key: string; label: string }[] = []
-  if (isLoggedIn.value && book.value?.mp3_count) t.push({ key: 'chapters', label: 'book.contents' })
-  if (isLoggedIn.value) t.push({ key: 'notes', label: 'book.notes' })
-  if (isLoggedIn.value) t.push({ key: 'quotes', label: 'book.quotes' })
-  if (isLoggedIn.value) t.push({ key: 'tags', label: 'book.tagsLabel' })
+  if (book.value?.mp3_count) t.push({ key: 'chapters', label: 'book.contents' })
+  t.push({ key: 'notes', label: 'book.notes' })
+  t.push({ key: 'quotes', label: 'book.quotes' })
+  t.push({ key: 'tags', label: 'book.tagsLabel' })
   t.push({ key: 'about', label: 'book.aboutBook' })
   return t
 })
@@ -410,17 +410,9 @@ watch(() => route.params.id, loadBook)
         <div class="min-w-0 flex-1">
           <!-- Mobile: status pills + add to library -->
           <div class="mb-4 lg:hidden">
-            <div v-if="isLoggedIn" class="flex flex-wrap items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
               <BookActions :book-id="book.id" :book-status="book.book_status" @status-changed="loadBook" />
             </div>
-            <button
-              v-else-if="!isLoggedIn"
-              class="w-full rounded-xl py-3 text-center text-[14px] font-semibold text-white no-underline"
-              style="background: var(--gradient-accent)"
-              @click="$router.push('/login')"
-            >
-              {{ t('book.guestLogin') }}
-            </button>
           </div>
 
           <!-- Tabs: pill segments -->
@@ -456,28 +448,16 @@ watch(() => route.params.id, loadBook)
             <transition name="tab-fade" mode="out-in">
               <div :key="activeTab" class="min-w-0 flex-1">
                 <!-- Chapters -->
-                <BookChapters
-                  v-if="activeTab === 'chapters' && isLoggedIn && book.mp3_count && book.mp3_count > 0"
-                  :book="book"
-                />
+                <BookChapters v-if="activeTab === 'chapters' && book.mp3_count && book.mp3_count > 0" :book="book" />
 
                 <!-- Notes -->
-                <BookNotes
-                  v-if="activeTab === 'notes' && isLoggedIn"
-                  :book-id="book.id"
-                  :title="book.title"
-                  :note="book.note"
-                />
+                <BookNotes v-if="activeTab === 'notes'" :book-id="book.id" :title="book.title" :note="book.note" />
 
                 <!-- Quotes -->
-                <BookQuotes
-                  v-if="activeTab === 'quotes' && isLoggedIn"
-                  :book-title="book.title"
-                  :book-author="book.author"
-                />
+                <BookQuotes v-if="activeTab === 'quotes'" :book-title="book.title" :book-author="book.author" />
 
                 <!-- Tags -->
-                <div v-if="activeTab === 'tags' && isLoggedIn" class="space-y-5">
+                <div v-if="activeTab === 'tags'" class="space-y-5">
                   <BookTags
                     :book-id="book.id"
                     :title="book.title"
@@ -510,7 +490,7 @@ watch(() => route.params.id, loadBook)
             </transition>
 
             <!-- Desktop context panel -->
-            <div v-if="isLoggedIn && activeTab !== 'about'" class="hidden w-[260px] shrink-0 space-y-4 lg:block">
+            <div v-if="activeTab !== 'about'" class="hidden w-[260px] shrink-0 space-y-4 lg:block">
               <!-- Notes preview (when not on notes tab) -->
               <div v-if="activeTab !== 'notes' && book.note" class="card p-4">
                 <p class="section-label mb-2">{{ t('book.notes') }}</p>

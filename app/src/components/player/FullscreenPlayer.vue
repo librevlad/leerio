@@ -6,6 +6,8 @@ import { usePlayer } from '../../composables/usePlayer'
 import { useDownloads } from '../../composables/useDownloads'
 import { useToast } from '../../composables/useToast'
 import { api, coverUrl, userBookCoverUrl } from '../../api'
+import { useLocalData } from '../../composables/useLocalData'
+import { useAuth } from '../../composables/useAuth'
 import {
   IconChevronDown,
   IconChevronUp,
@@ -149,10 +151,17 @@ function isTrackDownloaded(index: number) {
 
 const bookmarkPop = ref(false)
 
+const local = useLocalData()
+const { isLoggedIn } = useAuth()
+
 async function addBookmark() {
   if (!currentBook.value) return
   try {
-    await api.addBookmark(currentBook.value.id, currentTrackIndex.value, currentTime.value)
+    const bm = { track: currentTrackIndex.value, time: currentTime.value, note: '', ts: new Date().toISOString() }
+    await local.addBookmark(currentBook.value.id, bm)
+    if (isLoggedIn.value) {
+      await api.addBookmark(currentBook.value.id, currentTrackIndex.value, currentTime.value)
+    }
     bookmarkPop.value = true
     setTimeout(() => (bookmarkPop.value = false), 400)
     toast.success(t('player.bookmarkAdded'))

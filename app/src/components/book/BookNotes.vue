@@ -1,28 +1,44 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDebounceFn } from '@vueuse/core'
 import { api } from '../../api'
 import { useToast } from '../../composables/useToast'
+import { useLocalData } from '../../composables/useLocalData'
+import { useAuth } from '../../composables/useAuth'
 
 const { t } = useI18n()
 const props = defineProps<{ bookId: string; title: string; note: string }>()
 const toast = useToast()
+const local = useLocalData()
+const { isLoggedIn } = useAuth()
 
 const text = ref(props.note)
 const saving = ref(false)
 
+// Load from local first, then use prop (server) as fallback
+onMounted(async () => {
+  const localNote = await local.getNote(props.bookId)
+  if (localNote !== undefined) text.value = localNote
+})
+
 watch(
   () => props.note,
   (v) => {
-    text.value = v
+    // Only update from server if we don't have local data
+    if (v && !text.value) text.value = v
   },
 )
 
 const save = useDebounceFn(async (val: string) => {
   saving.value = true
   try {
-    await api.setNote(props.bookId, val)
+    // Always save locally
+    await local.setNote(props.bookId, val)
+    // Sync to server if logged in
+    if (isLoggedIn.value) {
+      await api.setNote(props.bookId, val)
+    }
   } catch {
     toast.error(t('book.noteSaveError'))
   } finally {
