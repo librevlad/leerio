@@ -140,7 +140,11 @@ onMounted(async () => {
           }}
         </p>
       </div>
-      <button v-ripple class="btn btn-primary flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold" @click="openCreate">
+      <button
+        v-ripple
+        class="btn btn-primary flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold"
+        @click="openCreate"
+      >
         <IconPlus :size="14" />
         {{ t('collections.create') }}
       </button>
