@@ -6,6 +6,7 @@ export interface User {
   name: string
   picture: string
   role: 'admin' | 'user'
+  plan?: 'free' | 'premium'
 }
 
 export type BookStatusValue = 'want_to_read' | 'reading' | 'paused' | 'done' | 'rejected'

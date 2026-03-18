@@ -1,9 +1,74 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useAuth } from '../../composables/useAuth'
+import { useToast } from '../../composables/useToast'
+
+declare global {
+  interface Window {
+    Paddle?: {
+      Environment: { set: (env: string) => void }
+      Initialize: (opts: { token: string }) => void
+      Checkout: {
+        open: (opts: {
+          items: { priceId: string; quantity: number }[]
+          customer?: { email: string }
+          customData?: Record<string, string>
+          settings?: { theme: string; displayMode: string; successUrl?: string }
+        }) => void
+      }
+    }
+  }
+}
 
 defineProps<{ open: boolean }>()
 const emit = defineEmits<{ close: [] }>()
 const { t } = useI18n()
+const { user } = useAuth()
+const toast = useToast()
+const priceId = ref('')
+const loading = ref(false)
+
+onMounted(async () => {
+  try {
+    const res = await fetch('/api/payments/plan')
+    const data = await res.json()
+    priceId.value = data.price_id || ''
+  } catch {
+    /* optional */
+  }
+})
+
+function openCheckout() {
+  if (!priceId.value) {
+    toast.error('Payment not configured')
+    return
+  }
+
+  if (!window.Paddle) {
+    toast.error('Payment system loading...')
+    // Load Paddle.js dynamically
+    const script = document.createElement('script')
+    script.src = 'https://cdn.paddle.com/paddle/v2/paddle.js'
+    script.onload = () => openCheckout()
+    document.head.appendChild(script)
+    return
+  }
+
+  loading.value = true
+  window.Paddle.Checkout.open({
+    items: [{ priceId: priceId.value, quantity: 1 }],
+    customer: user.value?.email ? { email: user.value.email } : undefined,
+    customData: user.value?.email ? { email: user.value.email } : undefined,
+    settings: {
+      theme: 'dark',
+      displayMode: 'overlay',
+      successUrl: `${window.location.origin}/settings?upgraded=1`,
+    },
+  })
+  loading.value = false
+  emit('close')
+}
 </script>
 
 <template>
@@ -40,7 +105,12 @@ const { t } = useI18n()
             </div>
           </div>
 
-          <button v-ripple class="btn btn-primary mt-6 w-full justify-center py-3 text-[15px]">
+          <button
+            v-ripple
+            class="btn btn-primary mt-6 w-full justify-center py-3 text-[15px]"
+            :disabled="loading"
+            @click="openCheckout"
+          >
             {{ t('paywall.upgrade') }}
           </button>
           <button class="mt-3 w-full py-2 text-[13px] text-[--t3] hover:text-[--t2]" @click="emit('close')">

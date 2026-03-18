@@ -270,6 +270,8 @@ export default {
     shortcutBack: 'Перемотка -15 сек',
     shortcutNext: 'Следующий трек',
     shortcutPrev: 'Предыдущий трек',
+    plan: 'Подписка',
+    currentPlan: 'Текущий план',
     about: 'О приложении',
     aboutVersion: 'Версия',
     aboutBooks: 'Книг в каталоге',

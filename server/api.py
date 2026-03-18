@@ -57,6 +57,7 @@ from .core import (
     reading_velocity,
 )
 from .ingest_api import router as ingest_router
+from .payments import router as payments_router
 from .storage import get_presigned_url, get_s3_object, s3_object_exists
 from .tts_api import router as tts_router
 from .upload import router as upload_router
@@ -389,6 +390,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 app.include_router(upload_router)
 app.include_router(tts_router)
 app.include_router(ingest_router)
+app.include_router(payments_router)
 
 
 # ── Auth endpoints ─────────────────────────────────────────────────────────

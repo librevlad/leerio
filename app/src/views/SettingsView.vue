@@ -330,6 +330,22 @@ async function handleLogout() {
           </div>
         </div>
 
+        <!-- Plan -->
+        <div v-if="user">
+          <p class="settings-group-label">{{ t('settings.plan') }}</p>
+          <div class="settings-group">
+            <div class="settings-row">
+              <span class="settings-row-label">{{ t('settings.currentPlan') }}</span>
+              <span
+                class="rounded px-2 py-0.5 text-[11px] font-bold"
+                :class="user.plan === 'premium' ? 'bg-[--accent] text-[--bg]' : 'bg-white/[0.06] text-[--t2]'"
+              >
+                {{ user.plan === 'premium' ? 'Premium' : 'Free' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
         <!-- About (inline) -->
         <div>
           <p class="settings-group-label">{{ t('settings.about') }}</p>

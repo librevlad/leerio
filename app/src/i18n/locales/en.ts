@@ -270,6 +270,8 @@ export default {
     shortcutBack: 'Skip -15 sec',
     shortcutNext: 'Next track',
     shortcutPrev: 'Previous track',
+    plan: 'Subscription',
+    currentPlan: 'Current plan',
     about: 'About',
     aboutVersion: 'Version',
     aboutBooks: 'Books in catalog',
