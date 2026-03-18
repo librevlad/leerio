@@ -29,13 +29,40 @@ const uploadReader = ref('')
 const uploadFiles = ref<File[]>([])
 const uploadCover = ref<File | null>(null)
 const uploading = ref(false)
+const dragOver = ref(false)
+
+const AUDIO_EXTS = /\.(mp3|m4a|m4b|ogg|opus|flac|wav)$/i
+
+function addAudioFiles(files: FileList | File[]) {
+  for (const f of files) {
+    if (AUDIO_EXTS.test(f.name) && !uploadFiles.value.some((x) => x.name === f.name)) {
+      uploadFiles.value.push(f)
+    }
+  }
+  // Auto-fill title from first file if empty
+  if (!uploadTitle.value && uploadFiles.value.length > 0) {
+    const name = uploadFiles.value[0].name.replace(/\.[^.]+$/, '')
+    // Try "Author - Title" pattern
+    if (name.includes(' - ')) {
+      const parts = name.split(' - ')
+      uploadAuthor.value = parts[0]?.trim() ?? ''
+      uploadTitle.value = parts.slice(1).join(' - ').trim()
+    } else {
+      uploadTitle.value = name
+    }
+  }
+}
 
 function onFilesChange(e: Event) {
   const input = e.target as HTMLInputElement
-  if (input.files) {
-    uploadFiles.value = [...uploadFiles.value, ...Array.from(input.files)]
-  }
+  if (input.files) addAudioFiles(input.files)
   input.value = ''
+}
+
+function onDrop(e: DragEvent) {
+  dragOver.value = false
+  if (!e.dataTransfer?.files) return
+  addAudioFiles(e.dataTransfer.files)
 }
 
 function onCoverChange(e: Event) {
@@ -332,7 +359,15 @@ const tabDefs = [
       <div class="card px-5 py-5">
         <label class="mb-3 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelMp3') }}</label>
         <div
-          class="rounded-xl border-2 border-dashed border-[--border] p-8 text-center transition-all hover:border-white/15 hover:bg-white/[0.02]"
+          class="rounded-xl border-2 border-dashed p-8 text-center transition-all duration-200"
+          :class="
+            dragOver
+              ? 'border-[--accent] bg-[--accent-soft]'
+              : 'border-[--border] hover:border-white/15 hover:bg-white/[0.02]'
+          "
+          @dragover.prevent="dragOver = true"
+          @dragleave="dragOver = false"
+          @drop.prevent="onDrop"
         >
           <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-white/[0.06]">
             <IconMusic :size="24" class="text-[--t2]" />
@@ -344,9 +379,15 @@ const tabDefs = [
           >
             <IconUpload :size="14" />
             {{ t('upload.selectFiles') }}
-            <input type="file" accept=".mp3" multiple class="hidden" @change="onFilesChange" />
+            <input
+              type="file"
+              accept=".mp3,.m4a,.m4b,.ogg,.opus,.flac,.wav"
+              multiple
+              class="hidden"
+              @change="onFilesChange"
+            />
           </label>
-          <p class="mt-2 text-[11px] text-[--t3]">{{ t('upload.formatHint') }}</p>
+          <p class="mt-2 text-[11px] text-[--t3]">MP3, M4A, M4B, OGG, FLAC, WAV</p>
         </div>
 
         <!-- File list -->
