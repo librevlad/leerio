@@ -54,7 +54,7 @@ test.describe('Library', () => {
 
   test('sort options are visible', async ({ page }) => {
     await expect(page.locator('button:has-text("Название")')).toBeVisible()
-    await expect(page.locator('button:has-text("Автор")')).toBeVisible()
+    await expect(page.locator('button:has-text("Автор")').first()).toBeVisible()
   })
 
   test('category filter changes book list', async ({ page }) => {
