@@ -75,9 +75,6 @@ const isSeeking = ref(false)
 const coverError = ref(false)
 const desktopTab = ref<'chapters' | 'bookmarks'>('chapters')
 
-const RING_CIRCUMFERENCE = 710
-const progressRingOffset = computed(() => RING_CIRCUMFERENCE - (RING_CIRCUMFERENCE * overallProgress.value) / 100)
-
 function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600)
   const m = Math.floor((seconds % 3600) / 60)
@@ -271,26 +268,28 @@ function closeOverlays() {
             <!-- Progress ring -->
             <svg class="absolute -inset-[6px]" viewBox="0 0 232 232">
               <rect
-                x="0"
-                y="0"
-                width="232"
-                height="232"
-                rx="22"
+                x="1.5"
+                y="1.5"
+                width="229"
+                height="229"
+                rx="21"
                 fill="none"
                 stroke="rgba(255,255,255,0.04)"
                 stroke-width="3"
+                pathLength="100"
               />
               <rect
-                x="0"
-                y="0"
-                width="232"
-                height="232"
-                rx="22"
+                x="1.5"
+                y="1.5"
+                width="229"
+                height="229"
+                rx="21"
                 fill="none"
                 stroke="url(#desktop-progress-grad)"
                 stroke-width="3"
-                :stroke-dasharray="RING_CIRCUMFERENCE"
-                :stroke-dashoffset="progressRingOffset"
+                pathLength="100"
+                :stroke-dasharray="100"
+                :stroke-dashoffset="100 - overallProgress"
                 stroke-linecap="round"
                 style="transition: stroke-dashoffset 0.3s ease"
               />
@@ -303,6 +302,7 @@ function closeOverlays() {
             </svg>
             <!-- Progress badge -->
             <div
+              v-if="overallProgress > 0"
               class="absolute -right-2 -bottom-2 rounded-full border border-[--border] px-2.5 py-0.5 text-[11px] font-semibold text-[--accent]"
               style="background: var(--card-solid)"
             >
@@ -322,8 +322,12 @@ function closeOverlays() {
               />
             </p>
             <p class="mt-1.5 text-[11px] text-[--t3]">
-              {{ trackLabel }} · {{ formatDuration(totalElapsed) }} {{ t('player.listened') }} ·
-              {{ formatDuration(Math.max(0, totalDuration - totalElapsed)) }} {{ t('player.remaining') }}
+              <template v-if="totalElapsed > 60">
+                {{ trackLabel }} · {{ formatDuration(totalElapsed) }} {{ t('player.listened') }} ·
+                {{ formatDuration(Math.max(0, totalDuration - totalElapsed)) }}
+                {{ t('player.remaining') }}
+              </template>
+              <template v-else> {{ trackLabel }} · {{ formatDuration(totalDuration) }} </template>
             </p>
           </div>
 
@@ -551,7 +555,7 @@ function closeOverlays() {
               style="border-bottom-style: solid"
               @click="desktopTab = 'bookmarks'"
             >
-              {{ t('player.bookmarkLabel') }}
+              {{ t('player.bookmarksTab') }}
             </button>
           </div>
 

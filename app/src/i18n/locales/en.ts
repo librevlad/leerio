@@ -421,6 +421,7 @@ export default {
     bookProgress: 'Book progress',
     noBookmarks: 'No bookmarks',
     addBookmarkHint: 'Tap bookmark while listening',
+    bookmarksTab: 'Bookmarks',
   },
   common: {
     cancel: 'Cancel',

@@ -421,6 +421,7 @@ export default {
     bookProgress: 'Прогресс книги',
     noBookmarks: 'Нет закладок',
     addBookmarkHint: 'Нажмите закладку во время прослушивания',
+    bookmarksTab: 'Закладки',
   },
   common: {
     cancel: 'Отмена',
