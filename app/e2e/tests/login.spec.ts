@@ -48,6 +48,9 @@ test.describe('Login page', () => {
     const email = process.env.E2E_EMAIL || 'librevlad@gmail.com'
     const password = process.env.E2E_PASSWORD || 'librevlad@gmail.com'
 
+    // Skip onboarding
+    await page.evaluate(() => localStorage.setItem('leerio_onboarded', '1'))
+
     await page.locator('input[type="email"]').fill(email)
     await page.locator('input[type="password"]').fill(password)
     await page.locator('button[type="submit"]:has-text("Войти")').click()
