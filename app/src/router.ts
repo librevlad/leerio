@@ -5,6 +5,12 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
+      path: '/welcome',
+      name: 'welcome',
+      component: () => import('./views/WelcomeView.vue'),
+      meta: { public: true, title: 'Welcome' },
+    },
+    {
       path: '/login',
       name: 'login',
       component: () => import('./views/LoginView.vue'),
@@ -76,12 +82,17 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach(async () => {
+router.beforeEach(async (to) => {
   const { checkAuth } = useAuth()
 
   // Check auth in background for all routes — never block navigation
-  // Unauthenticated users get full local functionality
   checkAuth()
+
+  // Onboarding redirect: first visit → /welcome
+  if (to.name !== 'welcome' && to.name !== 'login' && localStorage.getItem('leerio_onboarded') !== '1') {
+    return { name: 'welcome' }
+  }
+
   return true
 })
 

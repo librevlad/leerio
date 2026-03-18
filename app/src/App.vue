@@ -29,8 +29,9 @@ useSync()
 const route = useRoute()
 
 const isLoginPage = computed(() => route.name === 'login')
+const isWelcomePage = computed(() => route.name === 'welcome')
 const isPublicPage = computed(() => !!route.meta.public)
-const showApp = computed(() => !authLoading.value && !isLoginPage.value)
+const showApp = computed(() => !authLoading.value && !isLoginPage.value && !isWelcomePage.value)
 
 // PWA install prompt
 interface BeforeInstallPromptEvent extends Event {
@@ -116,10 +117,10 @@ onUnmounted(() => {
     </div>
   </div>
 
-  <!-- Login page (no sidebar/nav) -->
-  <router-view v-else-if="isLoginPage" />
+  <!-- Login / Welcome page (no sidebar/nav) -->
+  <router-view v-else-if="isLoginPage || isWelcomePage" />
 
-  <!-- Authenticated app layout -->
+  <!-- App layout -->
   <div v-else-if="showApp" class="flex min-h-dvh min-h-screen">
     <AppSidebar v-model:collapsed="sidebarCollapsed" class="hidden md:flex" />
     <main
