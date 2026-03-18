@@ -104,7 +104,7 @@ function cleanTitle(folderName: string): string {
 function extractAuthor(folderName: string): string {
   const clean = folderName.replace(/\s*\[.*?\]\s*$/, '')
   if (clean.includes(' - ')) {
-    return clean.split(' - ')[0].trim()
+    return clean.split(' - ')[0]?.trim() ?? ''
   }
   return ''
 }
