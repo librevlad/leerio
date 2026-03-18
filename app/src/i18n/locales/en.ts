@@ -338,6 +338,8 @@ export default {
     cancelDownload: 'Cancel',
     deleteDownload: 'Delete download',
     download: 'Download',
+    installApp: 'Listen offline',
+    installAppHint: 'Install the app to download books',
     daysInRowBang: '{n} days in a row!',
     streakDays: 'day in a row | days in a row',
     inARow: 'in a row!',

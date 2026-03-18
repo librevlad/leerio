@@ -89,6 +89,12 @@ const tabIcons: Record<string, typeof IconList> = {
   about: IconInfo,
 }
 
+const apkDismissed = ref(localStorage.getItem('apk-prompt-dismissed') === '1')
+function dismissApk() {
+  apkDismissed.value = true
+  localStorage.setItem('apk-prompt-dismissed', '1')
+}
+
 async function startDownload() {
   if (!book.value) return
   const res = await api.getBookTracks(book.value.id)
@@ -331,6 +337,7 @@ watch(() => route.params.id, loadBook)
             <template v-if="dl.isNative.value && book.mp3_count && book.mp3_count > 0">
               <button
                 v-if="!isDownloaded && !isDownloading"
+                v-ripple
                 class="flex w-full cursor-pointer items-center gap-2 rounded-lg border-0 px-3 py-2 text-[12px] text-[--t2] transition-colors hover:bg-white/5"
                 style="background: rgba(255, 255, 255, 0.03)"
                 @click="startDownload"
@@ -361,6 +368,34 @@ watch(() => route.params.id, loadBook)
                 </button>
               </div>
             </template>
+
+            <!-- Install APK prompt (web only) -->
+            <a
+              v-if="!dl.isNative.value && !apkDismissed && book.mp3_count && book.mp3_count > 0"
+              href="https://github.com/librevlad/leerio/releases/download/latest-apk/leerio.apk"
+              class="apk-prompt group relative flex items-center gap-3 rounded-xl px-3.5 py-3 no-underline transition-all hover:brightness-110"
+              target="_blank"
+            >
+              <div
+                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[16px]"
+                style="background: var(--accent-soft)"
+              >
+                📱
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="text-[12px] font-semibold text-[--t1]">{{ t('book.installApp') }}</p>
+                <p class="text-[10px] text-[--t3]">{{ t('book.installAppHint') }}</p>
+              </div>
+              <span class="text-[11px] font-semibold text-[--accent] transition-colors group-hover:text-[--accent-2]"
+                >APK</span
+              >
+              <button
+                class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-0 bg-[--card] text-[10px] text-[--t3] opacity-0 transition-opacity group-hover:opacity-100 hover:text-[--t1]"
+                @click.prevent.stop="dismissApk"
+              >
+                ✕
+              </button>
+            </a>
           </div>
 
           <!-- Meta (desktop) -->
@@ -522,3 +557,10 @@ watch(() => route.params.id, loadBook)
     </div>
   </div>
 </template>
+
+<style scoped>
+.apk-prompt {
+  background: linear-gradient(135deg, rgba(255, 138, 0, 0.08), rgba(255, 138, 0, 0.02));
+  border: 1px solid rgba(255, 138, 0, 0.15);
+}
+</style>

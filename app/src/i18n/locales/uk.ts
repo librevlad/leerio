@@ -338,6 +338,8 @@ export default {
     cancelDownload: 'Скасувати',
     deleteDownload: 'Видалити завантаження',
     download: 'Завантажити',
+    installApp: 'Слухати офлайн',
+    installAppHint: 'Встановіть додаток для завантаження книг',
     daysInRowBang: '{n} день поспіль! | {n} дні поспіль! | {n} днів поспіль!',
     streakDays: 'день | дні | днів',
     inARow: 'поспіль!',

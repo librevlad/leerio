@@ -338,6 +338,8 @@ export default {
     cancelDownload: 'Отменить',
     deleteDownload: 'Удалить загрузку',
     download: 'Скачать',
+    installApp: 'Слушать офлайн',
+    installAppHint: 'Установите приложение для скачивания книг',
     daysInRowBang: '{n} день подряд! | {n} дня подряд! | {n} дней подряд!',
     streakDays: 'день | дня | дней',
     inARow: 'подряд!',
