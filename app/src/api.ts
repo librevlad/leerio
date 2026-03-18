@@ -186,7 +186,7 @@ export const api = {
   // Collections
   getCollections: () => get<Collection[]>('/collections'),
   createCollection: (name: string, books: number[] = [], description = '') =>
-    post<{ ok: boolean }>('/collections', { name, books, description }),
+    post<{ ok: boolean; id?: number }>('/collections', { name, books, description }),
   updateCollection: (id: number, name: string, books: number[], description: string) =>
     put<{ ok: boolean }>(`/collections/${id}`, { name, books, description }),
   deleteCollection: (id: number) => del<{ ok: boolean }>(`/collections/${id}`),

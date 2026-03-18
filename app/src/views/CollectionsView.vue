@@ -4,12 +4,16 @@ import { useI18n } from 'vue-i18n'
 import { api, coverUrl } from '../api'
 import { useBooks } from '../composables/useBooks'
 import { useToast } from '../composables/useToast'
+import { useLocalData } from '../composables/useLocalData'
+import { useAuth } from '../composables/useAuth'
 import type { Collection, Book } from '../types'
 import { IconPlus, IconTrash, IconEdit, IconX, IconCheck, IconBookmark, IconSearch } from '../components/shared/icons'
 import EmptyState from '../components/shared/EmptyState.vue'
 
 const { t } = useI18n()
 const toast = useToast()
+const local = useLocalData()
+const { isLoggedIn } = useAuth()
 const { books, load: loadBooks } = useBooks()
 
 const collections = ref<Collection[]>([])
@@ -45,9 +49,24 @@ const filteredBooks = computed(() => {
 async function loadCollections() {
   loading.value = true
   try {
-    collections.value = await api.getCollections()
+    // Load local first
+    const localCols = await local.getCollections()
+    if (localCols.length) collections.value = localCols
+
+    // Merge from server if logged in
+    if (isLoggedIn.value) {
+      const serverCols = await api.getCollections()
+      collections.value = serverCols
+      // Cache to local
+      for (const col of serverCols) await local.saveCollection(col)
+    }
   } catch {
-    toast.error(t('collections.loadError'))
+    // Use local data on error
+    if (!collections.value.length) {
+      const localCols = await local.getCollections()
+      collections.value = localCols
+    }
+    if (!collections.value.length) toast.error(t('collections.loadError'))
   } finally {
     loading.value = false
   }
@@ -95,13 +114,33 @@ async function save() {
     return
   }
   try {
-    if (editId.value !== null) {
-      await api.updateCollection(editId.value, formName.value.trim(), formBooks.value, formDesc.value.trim())
-      toast.success(t('collections.updated'))
-    } else {
-      await api.createCollection(formName.value.trim(), formBooks.value, formDesc.value.trim())
-      toast.success(t('collections.created'))
+    const col: Collection = {
+      id: editId.value ?? Date.now(),
+      name: formName.value.trim(),
+      books: formBooks.value,
+      description: formDesc.value.trim(),
+      created: new Date().toISOString(),
     }
+
+    // Always save locally
+    await local.saveCollection(col)
+
+    // Sync to server if logged in
+    if (isLoggedIn.value) {
+      if (editId.value !== null) {
+        await api.updateCollection(editId.value, col.name, col.books, col.description)
+      } else {
+        const res = await api.createCollection(col.name, col.books, col.description)
+        // Update local with server-assigned ID
+        if (res.id) {
+          await local.deleteCollection(col.id)
+          col.id = res.id
+          await local.saveCollection(col)
+        }
+      }
+    }
+
+    toast.success(editId.value !== null ? t('collections.updated') : t('collections.created'))
     closeForm()
     await loadCollections()
   } catch {
@@ -112,7 +151,10 @@ async function save() {
 async function remove(col: Collection) {
   if (!confirm(t('collections.deleteConfirm', { name: col.name }))) return
   try {
-    await api.deleteCollection(col.id)
+    await local.deleteCollection(col.id)
+    if (isLoggedIn.value) {
+      await api.deleteCollection(col.id)
+    }
     toast.success(t('collections.deleted'))
     expandedIdx.value = null
     await loadCollections()
