@@ -28,7 +28,7 @@ test.describe('Settings', () => {
   })
 
   test('has logout button', async ({ page, takeScreenshot }) => {
-    const logoutBtn = page.locator('button:has-text("Выйти")')
+    const logoutBtn = page.locator('main button:has-text("Выйти"), main >> text=Выйти').first()
     await expect(logoutBtn).toBeVisible()
     await takeScreenshot('settings-logout')
   })

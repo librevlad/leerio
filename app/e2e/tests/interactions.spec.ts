@@ -222,7 +222,7 @@ test.describe('Settings interactions', () => {
 
 // ── Library: Search & Sort ───────────────────────────────────────────────
 
-test.describe('Library interactions', () => {
+test.describe('Library interactions', { tag: '@needs-books' }, () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/library')
     await expect(page.locator('a.card.card-hover').first()).toBeVisible({ timeout: 15_000 })
