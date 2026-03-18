@@ -44,7 +44,7 @@ export function useLocalData() {
   }
 
   async function getAllBookStatuses(): Promise<Record<string, LocalBookStatus>> {
-    const all = await entries<LocalBookStatus>(statusStore)
+    const all = (await entries(statusStore)) as unknown as [IDBValidKey, LocalBookStatus][]
     const map: Record<string, LocalBookStatus> = {}
     for (const [k, v] of all) map[String(k)] = v
     return map
@@ -60,7 +60,7 @@ export function useLocalData() {
   }
 
   async function getAllProgress(): Promise<Record<string, number>> {
-    const all = await entries<number>(progressStore)
+    const all = (await entries(progressStore)) as unknown as [IDBValidKey, number][]
     const map: Record<string, number> = {}
     for (const [k, v] of all) map[String(k)] = v
     return map
@@ -120,7 +120,7 @@ export function useLocalData() {
   }
 
   async function getAllTagNames(): Promise<string[]> {
-    const all = await entries<string[]>(tagStore)
+    const all = (await entries(tagStore)) as unknown as [IDBValidKey, string[]][]
     const tagSet = new Set<string>()
     for (const [, tags] of all) {
       for (const t of tags) tagSet.add(t)
@@ -139,7 +139,7 @@ export function useLocalData() {
 
   // ── Quotes ───────────────────────────────────────────────────
   async function getQuotes(): Promise<Quote[]> {
-    const all = await entries<Quote>(quoteStore)
+    const all = (await entries(quoteStore)) as unknown as [IDBValidKey, Quote][]
     return all.map(([, v]) => v)
   }
 
@@ -155,7 +155,7 @@ export function useLocalData() {
 
   // ── Collections ──────────────────────────────────────────────
   async function getCollections(): Promise<Collection[]> {
-    const all = await entries<Collection>(collectionStore)
+    const all = (await entries(collectionStore)) as unknown as [IDBValidKey, Collection][]
     return all.map(([, v]) => v)
   }
 
