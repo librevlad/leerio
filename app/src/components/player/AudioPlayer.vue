@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayer } from '../../composables/usePlayer'
+import { trackDisplayName as _trackDisplayName } from '../../utils/format'
 import { api } from '../../api'
 import type { Bookmark } from '../../types'
 import {
@@ -47,9 +48,7 @@ const {
 const seekPercent = computed(() => (duration.value > 0 ? (currentTime.value / duration.value) * 100 : 0))
 
 function trackDisplayName(filename: string, index: number): string {
-  const name = filename.replace(/\.\w+$/, '')
-  if (/^\d+$/.test(name)) return t('book.chapterN', { n: index + 1 })
-  return name
+  return _trackDisplayName(filename, index, t)
 }
 
 function onSeekInput() {

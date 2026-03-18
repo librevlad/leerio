@@ -6,6 +6,7 @@ import { usePlayer } from '../../composables/usePlayer'
 import { useDownloads } from '../../composables/useDownloads'
 import { useToast } from '../../composables/useToast'
 import { api, coverUrl, userBookCoverUrl } from '../../api'
+import { trackDisplayName as _trackDisplayName } from '../../utils/format'
 import { useLocalData } from '../../composables/useLocalData'
 import { useAuth } from '../../composables/useAuth'
 import {
@@ -83,9 +84,7 @@ function formatDuration(seconds: number): string {
 }
 
 function trackDisplayName(filename: string, index: number): string {
-  const name = filename.replace(/\.\w+$/, '')
-  if (/^\d+$/.test(name)) return t('book.chapterN', { n: index + 1 })
-  return name
+  return _trackDisplayName(filename, index, t)
 }
 
 const coverSrc = computed(() => {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { usePlayer } from '../../composables/usePlayer'
+import { trackDisplayName as _trackDisplayName } from '../../utils/format'
 import { IconPlay, IconPause, IconXCircle, IconForward30, IconRewind15 } from '../shared/icons'
 
 const { t } = useI18n()
@@ -26,9 +27,7 @@ const {
 } = usePlayer()
 
 function trackDisplayName(filename: string, index: number): string {
-  const name = filename.replace(/\.\w+$/, '')
-  if (/^\d+$/.test(name)) return t('book.chapterN', { n: index + 1 })
-  return name
+  return _trackDisplayName(filename, index, t)
 }
 </script>
 

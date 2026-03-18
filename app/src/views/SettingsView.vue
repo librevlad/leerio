@@ -89,9 +89,17 @@ function clearCache() {
   cacheBytes.value = 0
 }
 
+const loggingOut = ref(false)
+
 async function handleLogout() {
-  await logout()
-  router.push('/login')
+  if (loggingOut.value) return
+  loggingOut.value = true
+  try {
+    await logout()
+    router.push('/login')
+  } finally {
+    loggingOut.value = false
+  }
 }
 </script>
 
@@ -388,8 +396,12 @@ async function handleLogout() {
 
     <!-- ── Logout ─────────────────────────────────────────────── -->
     <div class="mt-6 text-center">
-      <button class="text-[13px] font-medium text-red-400 transition-colors hover:text-red-300" @click="handleLogout">
-        {{ t('settings.logout') }}
+      <button
+        class="text-[13px] font-medium text-red-400 transition-colors hover:text-red-300 disabled:opacity-50"
+        :disabled="loggingOut"
+        @click="handleLogout"
+      >
+        {{ loggingOut ? '...' : t('settings.logout') }}
       </button>
     </div>
 

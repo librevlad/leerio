@@ -122,7 +122,7 @@ docker compose up --build
 
 ## Monetization
 
-- **Free plan**: max 20 uploaded books (enforced in `server/upload.py`, `FREE_BOOK_LIMIT`)
+- **Free plan**: max 10 uploaded books (enforced in `server/upload.py`, `FREE_BOOK_LIMIT`, env-configurable)
 - **Premium**: unlimited books, $4/month via Paddle
 - Paywall triggers on upload at limit (403 `limit_reached` → `PaywallModal`)
 - `server/payments.py`: Paddle webhook handler (subscription.activated/canceled)
