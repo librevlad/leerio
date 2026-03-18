@@ -124,7 +124,7 @@ async function handleLogout() {
       <div v-else-if="sessionStats" class="settings-stat-bar mt-4">
         <div class="settings-stat-cell">
           <p class="settings-stat-num text-[--accent]">{{ sessionStats.total_hours.toFixed(1) }}</p>
-          <p class="settings-stat-label">{{ t('settings.statTotalHours') }}</p>
+          <p class="settings-stat-label">{{ t('settings.unitH') }}</p>
         </div>
         <div class="settings-stat-cell">
           <p class="settings-stat-num">
@@ -141,8 +141,10 @@ async function handleLogout() {
         <div class="settings-stat-cell">
           <p class="settings-stat-num">🔥 {{ streak.current }}</p>
           <p class="settings-stat-label">
-            {{ t('settings.streakTitle') }}
-            <span v-if="streak.best > 0" class="text-[--t3]"> · {{ t('settings.streakBest') }} {{ streak.best }}</span>
+            {{ t('plural.day', streak.current) }}
+            <span v-if="streak.best > 0" class="hidden text-[--t3] sm:inline">
+              · {{ t('settings.streakBest') }} {{ streak.best }}</span
+            >
           </p>
         </div>
         <div v-if="sessionStats.peak_hour !== null" class="settings-stat-cell">
@@ -160,9 +162,9 @@ async function handleLogout() {
         <div>
           <p class="settings-group-label">{{ t('settings.playback') }}</p>
           <div class="settings-group">
-            <div class="settings-row">
-              <span class="settings-row-label">{{ t('settings.defaultSpeed') }}</span>
-              <div class="flex flex-wrap gap-1.5">
+            <div class="settings-row flex-wrap md:flex-nowrap">
+              <span class="settings-row-label shrink-0">{{ t('settings.defaultSpeed') }}</span>
+              <div class="flex flex-wrap gap-1.5 md:flex-nowrap">
                 <button
                   v-for="s in speeds"
                   :key="s"
