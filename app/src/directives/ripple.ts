@@ -1,11 +1,17 @@
 import type { Directive } from 'vue'
 
-const ripple: Directive = {
-  mounted(el: HTMLElement) {
+const HANDLER_KEY = '__rippleHandler'
+
+interface RippleElement extends HTMLElement {
+  [HANDLER_KEY]?: (e: PointerEvent) => void
+}
+
+const ripple: Directive<RippleElement> = {
+  mounted(el) {
     el.style.position = el.style.position || 'relative'
     el.style.overflow = 'hidden'
 
-    el.addEventListener('pointerdown', (e: PointerEvent) => {
+    const handler = (e: PointerEvent) => {
       const rect = el.getBoundingClientRect()
       const x = e.clientX - rect.left
       const y = e.clientY - rect.top
@@ -26,7 +32,15 @@ const ripple: Directive = {
       `
       el.appendChild(span)
       span.addEventListener('animationend', () => span.remove())
-    })
+    }
+
+    el[HANDLER_KEY] = handler
+    el.addEventListener('pointerdown', handler, { passive: true })
+  },
+  unmounted(el) {
+    if (el[HANDLER_KEY]) {
+      el.removeEventListener('pointerdown', el[HANDLER_KEY])
+    }
   },
 }
 

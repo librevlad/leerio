@@ -27,7 +27,7 @@ export function useTracking() {
       }
       const body = JSON.stringify(payload)
       if (navigator.sendBeacon) {
-        navigator.sendBeacon(ENDPOINT, body)
+        navigator.sendBeacon(ENDPOINT, new Blob([body], { type: 'application/json' }))
       } else {
         fetch(ENDPOINT, {
           method: 'POST',

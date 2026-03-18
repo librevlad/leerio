@@ -95,12 +95,15 @@ def _activate_premium(email: str, paddle_customer_id: str = ""):
         logger.warning("Cannot activate: no email")
         return
     conn = db._get_conn()
-    conn.execute(
+    cursor = conn.execute(
         "UPDATE users SET plan = 'premium', stripe_customer_id = ? WHERE email = ?",
         (paddle_customer_id, email),
     )
     conn.commit()
-    logger.info("Premium activated for %s", email)
+    if cursor.rowcount == 0:
+        logger.warning("Premium activation: no user found for email %s", email)
+    else:
+        logger.info("Premium activated for %s", email)
 
 
 def _deactivate_premium(email: str):

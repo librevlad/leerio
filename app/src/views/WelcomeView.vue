@@ -2,8 +2,10 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { api } from '../api'
 import { useToast } from '../composables/useToast'
 import { useTracking } from '../composables/useTelemetry'
+import { formatSize } from '../utils/format'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -48,16 +50,15 @@ function removeFile(idx: number) {
   files.value.splice(idx, 1)
 }
 
-function formatSize(bytes: number): string {
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+function fmtSize(bytes: number): string {
+  return formatSize(bytes, t)
 }
 
 async function finish() {
   track('onboarding_completed', { files: files.value.length })
   localStorage.setItem('leerio_onboarded', '1')
 
-  // If files were added, upload them
+  // If files were added, upload them via API module
   if (files.value.length > 0) {
     uploading.value = true
     try {
@@ -66,7 +67,7 @@ async function finish() {
         formData.append('files', file)
         formData.append('title', file.name.replace(/\.[^.]+$/, ''))
         formData.append('author', '')
-        await fetch('/api/user/books', { method: 'POST', body: formData, credentials: 'include' }).catch(() => {})
+        await api.uploadBook(formData).catch(() => {})
       }
       toast.success(t('welcome.uploadSuccess', { n: files.value.length }))
     } catch {
@@ -154,7 +155,7 @@ async function finish() {
             >
               <span class="text-[14px]">🎵</span>
               <span class="min-w-0 flex-1 truncate text-[--t2]">{{ f.name }}</span>
-              <span class="shrink-0 text-[--t3]">{{ formatSize(f.size) }}</span>
+              <span class="shrink-0 text-[--t3]">{{ fmtSize(f.size) }}</span>
               <button class="shrink-0 text-[--t3] hover:text-red-400" @click.stop="removeFile(i)">✕</button>
             </div>
           </div>

@@ -161,7 +161,7 @@ async function handleLogout() {
         </div>
         <div class="settings-stat-cell">
           <p class="settings-stat-num">
-            4<span class="text-[12px] text-[--t3]">/{{ yearlyGoal }}</span>
+            {{ totalBooks ?? 0 }}<span class="text-[12px] text-[--t3]">/{{ yearlyGoal }}</span>
           </p>
           <p class="settings-stat-label">{{ t('settings.yearlyGoal') }}</p>
         </div>

@@ -25,6 +25,7 @@ const recommendations = ref<ShelfBook[]>([])
 const recentBooks = ref<ShelfBook[]>([])
 const loading = ref(true)
 const coverErrors = reactive(new Set<string>())
+const upgradeBannerDismissed = ref(localStorage.getItem('upgrade-banner-dismissed') === '1')
 
 const greeting = computed(() => {
   const h = new Date().getHours()
@@ -417,7 +418,7 @@ onMounted(loadData)
 
       <!-- Time investment banner (free users who listened >1h) -->
       <div
-        v-if="data.total_hours >= 1 && user?.plan !== 'premium' && !localStorage.getItem('upgrade-banner-dismissed')"
+        v-if="data.total_hours >= 1 && user?.plan !== 'premium' && !upgradeBannerDismissed"
         class="flex items-center gap-3 rounded-xl px-4 py-3"
         style="
           background: linear-gradient(135deg, rgba(255, 138, 0, 0.08), rgba(255, 138, 0, 0.02));

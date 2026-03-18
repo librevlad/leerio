@@ -10,31 +10,40 @@ import { useAuth } from './useAuth'
 import { useLocalData } from './useLocalData'
 import { useNetwork } from './useNetwork'
 import { api } from '../api'
+import type { Quote } from '../types'
 
 let synced = false
+let reconnectRegistered = false
 
 export function useSync() {
   const { isLoggedIn } = useAuth()
   const local = useLocalData()
-  const { onReconnect } = useNetwork()
 
-  // Sync on login
+  // Sync on login, reset on logout
   watch(
     isLoggedIn,
     async (loggedIn) => {
-      if (!loggedIn || synced) return
+      if (!loggedIn) {
+        synced = false
+        return
+      }
+      if (synced) return
       synced = true
       await syncAll(local)
     },
     { immediate: true },
   )
 
-  // Re-sync on reconnect (if logged in)
-  onReconnect(async () => {
-    if (isLoggedIn.value) {
-      await syncAll(local)
-    }
-  })
+  // Re-sync on reconnect (register only once)
+  if (!reconnectRegistered) {
+    reconnectRegistered = true
+    const { onReconnect } = useNetwork()
+    onReconnect(async () => {
+      if (isLoggedIn.value) {
+        await syncAll(local)
+      }
+    })
+  }
 }
 
 async function syncAll(local: ReturnType<typeof useLocalData>) {
@@ -75,9 +84,15 @@ async function syncSettings(local: ReturnType<typeof useLocalData>) {
 async function syncQuotes(local: ReturnType<typeof useLocalData>) {
   try {
     const serverQuotes = await api.getQuotes()
-    // Import server quotes (server wins for existing, keep local-only)
+    // Deduplicate by text+book (server IDs may differ from local Date.now() IDs)
+    const existing = await local.getQuotes()
+    const existingKeys = new Set(existing.map((q: Quote) => `${q.text}::${q.book}`))
     for (const q of serverQuotes) {
-      await local.addQuote({ text: q.text, book: q.book, author: q.author, ts: q.ts })
+      const key = `${q.text}::${q.book}`
+      if (!existingKeys.has(key)) {
+        await local.addQuote({ text: q.text, book: q.book, author: q.author, ts: q.ts })
+        existingKeys.add(key)
+      }
     }
   } catch {
     // Quotes sync is optional

@@ -89,6 +89,7 @@ const hasMore = computed(() => visibleCount.value < filtered.value.length)
 const viewMode = ref<'grid' | 'authors'>('grid')
 
 const groupedByAuthor = computed(() => {
+  if (viewMode.value !== 'authors') return []
   const groups: Record<string, typeof filtered.value> = {}
   for (const b of filtered.value) {
     const author = b.author || t('library.unknownAuthor')
