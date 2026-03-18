@@ -270,7 +270,7 @@ function closeOverlays() {
           </button>
           <div class="min-w-0 flex-1 px-3 text-center">
             <p class="text-[10px] font-semibold tracking-widest text-[--t3] uppercase">
-              {{ t('player.nowPlaying') }}
+              {{ t('nav.nowPlaying') }}
             </p>
           </div>
           <button
