@@ -16,6 +16,7 @@ from .core import UserData, count_mp3, estimate_duration_hours, folder_size_mb, 
 logger = logging.getLogger("leerio.upload")
 
 MAX_UPLOAD_SIZE = 500 * 1024 * 1024  # 500 MB (matches nginx)
+FREE_BOOK_LIMIT = 20
 VALID_IMAGE_HEADERS = [b"\xff\xd8\xff", b"\x89PNG"]
 
 router = APIRouter(prefix="/api/user/books", tags=["user-books"])
@@ -60,6 +61,15 @@ async def upload_book(
     user: dict = Depends(get_current_user),
 ):
     ud = _user_data(user)
+
+    # Check free plan book limit
+    if user.get("plan", "free") == "free":
+        current_count = len(ud.user_books_list())
+        if current_count >= FREE_BOOK_LIMIT:
+            raise HTTPException(
+                403,
+                {"error": "limit_reached", "limit": FREE_BOOK_LIMIT, "count": current_count},
+            )
 
     # Validate files are MP3
     for f in files:

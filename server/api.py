@@ -441,6 +441,7 @@ def auth_me(user: dict = Depends(get_current_user)):
         "name": user["name"],
         "picture": user["picture"],
         "role": user["role"],
+        "plan": user.get("plan", "free"),
     }
 
 

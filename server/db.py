@@ -73,11 +73,23 @@ def init_db():
                 picture TEXT NOT NULL DEFAULT '',
                 password_hash TEXT,
                 role TEXT NOT NULL DEFAULT 'user',
+                plan TEXT NOT NULL DEFAULT 'free',
+                stripe_customer_id TEXT,
                 created_at TEXT NOT NULL DEFAULT (datetime('now')),
                 last_login TEXT
             )
             """
         )
+        # Migrate: add plan/stripe columns if missing
+        try:
+            conn.execute("ALTER TABLE users ADD COLUMN plan TEXT NOT NULL DEFAULT 'free'")
+        except Exception:
+            pass
+        try:
+            conn.execute("ALTER TABLE users ADD COLUMN stripe_customer_id TEXT")
+        except Exception:
+            pass
+
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS allowed_emails (

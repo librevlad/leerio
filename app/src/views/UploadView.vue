@@ -8,6 +8,7 @@ import { useUserBooks } from '@/composables/useUserBooks'
 import { useLocalBooks } from '@/composables/useLocalBooks'
 import { useNetwork } from '@/composables/useNetwork'
 import ProgressBar from '@/components/shared/ProgressBar.vue'
+import PaywallModal from '@/components/shared/PaywallModal.vue'
 import { IconUpload, IconMicrophone, IconMusic, IconX, IconSmartphone, IconCheck } from '@/components/shared/icons'
 import type { TTSVoice, TTSEngine } from '@/types'
 
@@ -30,6 +31,7 @@ const uploadFiles = ref<File[]>([])
 const uploadCover = ref<File | null>(null)
 const uploading = ref(false)
 const dragOver = ref(false)
+const showPaywall = ref(false)
 
 const AUDIO_EXTS = /\.(mp3|m4a|m4b|ogg|opus|flac|wav)$/i
 
@@ -104,7 +106,12 @@ async function handleUpload() {
     toast.success(t('upload.successUploaded'))
     router.push('/my-library')
   } catch (e: unknown) {
-    toast.error(t('common.errorPrefix', { msg: e instanceof Error ? e.message : t('common.unknownError') }))
+    const msg = e instanceof Error ? e.message : ''
+    if (msg.includes('limit_reached') || msg.includes('403')) {
+      showPaywall.value = true
+    } else {
+      toast.error(t('common.errorPrefix', { msg: msg || t('common.unknownError') }))
+    }
   } finally {
     uploading.value = false
   }
@@ -733,5 +740,7 @@ const tabDefs = [
     >
       {{ t('upload.offlineNote') }}
     </div>
+
+    <PaywallModal :open="showPaywall" @close="showPaywall = false" />
   </div>
 </template>

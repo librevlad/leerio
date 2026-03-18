@@ -482,4 +482,13 @@ export default {
     start: 'Start listening',
     uploadSuccess: '{n} files uploaded',
   },
+  paywall: {
+    title: 'Your library is full',
+    subtitle: "You've reached the free limit of 20 audiobooks",
+    benefitUnlimited: 'Unlimited books',
+    benefitSync: 'Sync across devices',
+    benefitAccess: 'Access anywhere',
+    upgrade: 'Upgrade for $4/month',
+    notNow: 'Not now',
+  },
 }

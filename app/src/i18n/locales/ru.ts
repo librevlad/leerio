@@ -482,4 +482,13 @@ export default {
     start: 'Начать слушать',
     uploadSuccess: '{n} файлов загружено',
   },
+  paywall: {
+    title: 'Библиотека заполнена',
+    subtitle: 'Вы достигли лимита в 20 аудиокниг',
+    benefitUnlimited: 'Неограниченное количество книг',
+    benefitSync: 'Синхронизация между устройствами',
+    benefitAccess: 'Доступ отовсюду',
+    upgrade: 'Перейти на Premium — $4/мес',
+    notNow: 'Не сейчас',
+  },
 }
