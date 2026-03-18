@@ -37,9 +37,7 @@ def _verify_signature(raw_body: bytes, signature: str) -> bool:
         return False
 
     signed_payload = f"{ts}:{raw_body.decode()}"
-    expected = hmac.new(
-        PADDLE_WEBHOOK_SECRET.encode(), signed_payload.encode(), hashlib.sha256
-    ).hexdigest()
+    expected = hmac.new(PADDLE_WEBHOOK_SECRET.encode(), signed_payload.encode(), hashlib.sha256).hexdigest()
 
     return hmac.compare_digest(expected, h1)
 

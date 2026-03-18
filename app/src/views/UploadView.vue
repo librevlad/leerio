@@ -44,7 +44,7 @@ function addAudioFiles(files: FileList | File[]) {
   }
   // Auto-fill title from first file if empty
   if (!uploadTitle.value && uploadFiles.value.length > 0) {
-    const name = uploadFiles.value[0].name.replace(/\.[^.]+$/, '')
+    const name = uploadFiles.value[0]!.name.replace(/\.[^.]+$/, '')
     // Try "Author - Title" pattern
     if (name.includes(' - ')) {
       const parts = name.split(' - ')
