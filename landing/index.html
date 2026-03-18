@@ -1,25 +1,24 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Leerio — Аудіокнижкова бібліотека</title>
-  <meta name="description" content="Організуй колекцію аудіокниг, стеж за прогресом, слухай будь-де. Веб-застосунок та Android.">
+  <title>Leerio — Your Audiobook Library</title>
+  <meta name="description" content="Upload your audiobooks, organize automatically, listen anywhere with progress tracking and sync.">
   <meta name="theme-color" content="#07070e">
   <link rel="icon" type="image/png" href="/img/logo.png">
 
   <!-- OG -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Leerio — Аудіокнижкова бібліотека">
-  <meta property="og:description" content="Організуй колекцію аудіокниг, стеж за прогресом, слухай будь-де.">
+  <meta property="og:title" content="Leerio — Your Audiobook Library">
+  <meta property="og:description" content="Upload your audiobooks and listen anywhere — with progress, chapters, and sync.">
   <meta property="og:image" content="https://leerio.app/img/desktop-dashboard.png">
   <meta property="og:url" content="https://leerio.app">
-  <meta property="og:site_name" content="Leerio">
 
-  <!-- Twitter Card -->
+  <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Leerio — Аудіокнижкова бібліотека">
-  <meta name="twitter:description" content="Організуй колекцію аудіокниг, стеж за прогресом, слухай будь-де.">
+  <meta name="twitter:title" content="Leerio — Your Audiobook Library">
+  <meta name="twitter:description" content="Upload your audiobooks and listen anywhere — with progress, chapters, and sync.">
   <meta name="twitter:image" content="https://leerio.app/img/desktop-dashboard.png">
 
   <!-- Fonts -->
@@ -31,7 +30,7 @@
 </head>
 <body>
 
-  <!-- ── Sticky Nav ────────────────────────────────────────────────────── -->
+  <!-- ── Nav ───────────────────────────────────────────────────────────── -->
   <nav class="site-nav">
     <div class="container nav-inner">
       <a href="/" class="nav-brand">
@@ -39,13 +38,9 @@
         <span>Leerio</span>
       </a>
       <div class="nav-links">
-        <a href="#features" data-uk="Можливості" data-ru="Возможности">Можливості</a>
-        <a href="#gallery" data-uk="Скріншоти" data-ru="Скриншоты">Скріншоти</a>
-        <a class="btn btn-primary btn-sm" href="https://app.leerio.app" data-uk="Відкрити застосунок" data-ru="Открыть приложение">Відкрити застосунок</a>
-        <div class="lang-toggle">
-          <button class="lang-btn active" data-lang="uk" onclick="setLang('uk')">UA</button>
-          <button class="lang-btn" data-lang="ru" onclick="setLang('ru')">RU</button>
-        </div>
+        <a href="#how">How it works</a>
+        <a href="#pricing">Pricing</a>
+        <a class="btn btn-primary btn-sm" href="https://app.leerio.app">Open App</a>
       </div>
     </div>
   </nav>
@@ -53,321 +48,135 @@
   <!-- ── Hero ──────────────────────────────────────────────────────────── -->
   <section class="hero">
     <div class="hero-glow"></div>
-    <div class="hero-grid-bg"></div>
     <div class="container hero-inner">
-      <div class="hero-badge reveal" data-uk="Безкоштовно та без реклами" data-ru="Бесплатно и без рекламы">
-        <span class="hero-badge-dot"></span>
-        Безкоштовно та без реклами
-      </div>
-
       <h1 class="reveal">
-        <span data-uk="Ваша" data-ru="Ваша">Ваша</span> <span class="gradient-text" data-uk="аудіокнижкова" data-ru="аудиокнижная">аудіокнижкова</span><br><span data-uk="бібліотека" data-ru="библиотека">бібліотека</span>
+        Your audiobook library.<br><span class="gradient-text">Finally organized.</span>
       </h1>
-      <p class="hero-sub reveal" data-uk="Організуй колекцію, стеж за прогресом, слухай будь-де — у браузері або на Android." data-ru="Организуй коллекцию, следи за прогрессом, слушай где угодно — в браузере или на Android.">
-        Організуй колекцію, стеж за прогресом, слухай будь-де — у браузері або на Android.
+      <p class="hero-sub reveal">
+        Upload your audiobooks and listen anywhere — with progress, chapters, and sync.
       </p>
-
-      <div class="hero-features reveal">
-        <span data-uk="&#10003; 270+ аудіокниг" data-ru="&#10003; 270+ аудиокниг">&#10003; 270+ аудіокниг</span>
-        <span data-uk="&#10003; Без реєстрації для перегляду" data-ru="&#10003; Без регистрации для просмотра">&#10003; Без реєстрації для перегляду</span>
-        <span data-uk="&#10003; Завантажуйте свої книги" data-ru="&#10003; Загружайте свои книги">&#10003; Завантажуйте свої книги</span>
-      </div>
 
       <div class="hero-ctas reveal">
         <a class="btn btn-primary" href="https://app.leerio.app">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-          <span data-uk="Відкрити застосунок" data-ru="Открыть приложение">Відкрити застосунок</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          Open App
         </a>
-        <a class="btn btn-ghost" href="https://github.com/librevlad/leerio/releases/download/latest-apk/leerio.apk">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          <span data-uk="Завантажити APK" data-ru="Скачать APK">Завантажити APK</span>
-        </a>
+        <a class="btn btn-ghost" href="#how">See how it works</a>
       </div>
 
+      <p class="hero-note reveal">Free plan: up to 10 books</p>
+
+      <!-- Hero screenshot -->
       <div class="hero-screenshot reveal">
-        <div class="hero-screenshot-desktop browser-frame">
-          <div class="browser-frame-bar">
-            <span class="browser-dot"></span>
-            <span class="browser-dot"></span>
-            <span class="browser-dot"></span>
-            <span class="browser-url">app.leerio.app</span>
-          </div>
-          <img src="/img/desktop-dashboard.png" alt="Leerio — дашборд" width="1280" height="800">
+        <img src="/img/desktop-dashboard.png" alt="Leerio dashboard — library, player, continue listening" loading="lazy">
+      </div>
+    </div>
+  </section>
+
+  <!-- ── How it works ──────────────────────────────────────────────────── -->
+  <section id="how" class="section">
+    <div class="container">
+      <h2 class="section-title reveal">How it works</h2>
+      <div class="steps">
+        <div class="step reveal">
+          <div class="step-num">1</div>
+          <h3>Upload your audiobooks</h3>
+          <p>Drag & drop MP3, M4B, or ZIP files. We handle the rest.</p>
         </div>
-        <div class="hero-screenshot-mobile phone-frame">
-          <div class="phone-frame-notch"><span class="phone-frame-notch-pill"></span></div>
-          <img src="/img/mobile-dashboard.png" alt="Leerio — мобільна версія" width="480" height="1039">
+        <div class="step reveal">
+          <div class="step-num">2</div>
+          <h3>We organize everything</h3>
+          <p>Covers, chapters, progress — your library builds itself.</p>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">3</div>
+          <h3>Press play and continue anytime</h3>
+          <p>Resume exactly where you stopped. On any device.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ── Stats Strip ───────────────────────────────────────────────────── -->
-  <section class="stats-strip">
+  <!-- ── Why Leerio ────────────────────────────────────────────────────── -->
+  <section class="section">
     <div class="container">
-      <div class="stats-grid reveal">
-        <div class="stat-item">
-          <span class="stat-number">270+</span>
-          <span class="stat-label" data-uk="аудіокниг" data-ru="аудиокниг">аудіокниг</span>
+      <h2 class="section-title reveal">Better than a basic player</h2>
+      <div class="features-grid reveal">
+        <div class="feature-item">✔ Remembers where you stopped</div>
+        <div class="feature-item">✔ Organizes your library automatically</div>
+        <div class="feature-item">✔ Works on all your devices</div>
+        <div class="feature-item">✔ Fast, distraction-free</div>
+        <div class="feature-item">✔ Built for long listening sessions</div>
+        <div class="feature-item">✔ Background play + lock screen controls</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Use case ──────────────────────────────────────────────────────── -->
+  <section class="section">
+    <div class="container" style="text-align: center;">
+      <h2 class="section-title reveal">Built for real audiobook collections</h2>
+      <p class="section-sub reveal">If you have 20, 50, or 200 audiobooks — Leerio turns them into a real library.</p>
+    </div>
+  </section>
+
+  <!-- ── Pricing ───────────────────────────────────────────────────────── -->
+  <section id="pricing" class="section">
+    <div class="container">
+      <h2 class="section-title reveal">Free to start</h2>
+      <p class="section-sub reveal">Upload up to 10 books for free. Upgrade anytime for unlimited library.</p>
+
+      <div class="pricing-grid reveal">
+        <div class="pricing-card">
+          <h3>Free</h3>
+          <div class="pricing-price">$0</div>
+          <ul>
+            <li>Up to 10 books</li>
+            <li>Full player</li>
+            <li>Progress tracking</li>
+          </ul>
+          <a class="btn btn-ghost" href="https://app.leerio.app">Start free</a>
         </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-          <span class="stat-number">6</span>
-          <span class="stat-label" data-uk="категорій" data-ru="категорий">категорій</span>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-          <span class="stat-number">2</span>
-          <span class="stat-label" data-uk="платформи" data-ru="платформы">платформи</span>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-          <span class="stat-number">0 $</span>
-          <span class="stat-label" data-uk="назавжди" data-ru="навсегда">назавжди</span>
+        <div class="pricing-card pricing-featured">
+          <h3>Premium</h3>
+          <div class="pricing-price">$4<span>/month</span></div>
+          <ul>
+            <li>Unlimited books</li>
+            <li>Sync across devices</li>
+            <li>Access anywhere</li>
+          </ul>
+          <a class="btn btn-primary" href="https://app.leerio.app">Start free</a>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ── Features ──────────────────────────────────────────────────────── -->
-  <section class="features" id="features">
-    <div class="container">
-      <div class="section-header reveal">
-        <span class="section-tag" data-uk="Можливості" data-ru="Возможности">Можливості</span>
-        <h2 data-uk="Усе для аудіокниг" data-ru="Всё для аудиокниг">Усе для аудіокниг</h2>
-        <p data-uk="Одна програма — повний контроль над колекцією" data-ru="Одна программа — полный контроль над коллекцией">Одна програма — повний контроль над колекцією</p>
-      </div>
-
-      <div class="features-grid">
-        <div class="feature-card reveal" style="--delay: 0s">
-          <div class="feature-icon" style="--icon-bg: rgba(232, 146, 58, 0.12); --icon-fg: #e8923a">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-          </div>
-          <h3 data-uk="Бібліотека" data-ru="Библиотека">Бібліотека</h3>
-          <p data-uk="Категорії, пошук, фільтри — швидкий доступ до будь-якої книги" data-ru="Категории, поиск, фильтры — быстрый доступ к любой книге">Категорії, пошук, фільтри — швидкий доступ до будь-якої книги</p>
-        </div>
-
-        <div class="feature-card reveal" style="--delay: 0.06s">
-          <div class="feature-icon" style="--icon-bg: rgba(192, 132, 252, 0.12); --icon-fg: #c084fc">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          </div>
-          <h3 data-uk="Плеєр" data-ru="Плеер">Плеєр</h3>
-          <p data-uk="Трекліст, швидкість відтворення, таймер сну, закладки" data-ru="Треклист, скорость воспроизведения, таймер сна, закладки">Трекліст, швидкість відтворення, таймер сну, закладки</p>
-        </div>
-
-        <div class="feature-card reveal" style="--delay: 0.12s">
-          <div class="feature-icon" style="--icon-bg: rgba(52, 211, 153, 0.12); --icon-fg: #34d399">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
-          </div>
-          <h3 data-uk="Аналітика" data-ru="Аналитика">Аналітика</h3>
-          <p data-uk="Статистика прослуховування, теплова карта, щоденні цілі" data-ru="Статистика прослушивания, тепловая карта, ежедневные цели">Статистика прослуховування, теплова карта, щоденні цілі</p>
-        </div>
-
-        <div class="feature-card reveal" style="--delay: 0.18s">
-          <div class="feature-icon" style="--icon-bg: rgba(96, 165, 250, 0.12); --icon-fg: #60a5fa">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          </div>
-          <h3 data-uk="Завантаження" data-ru="Загрузка">Завантаження</h3>
-          <p data-uk="Додавайте власні аудіокниги — завантажте ZIP або окремі файли" data-ru="Добавляйте свои аудиокниги — загрузите ZIP или отдельные файлы">Додавайте власні аудіокниги — завантажте ZIP або окремі файли</p>
-        </div>
-
-        <div class="feature-card reveal" style="--delay: 0.24s">
-          <div class="feature-icon" style="--icon-bg: rgba(251, 191, 36, 0.12); --icon-fg: #fbbf24">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-          </div>
-          <h3 data-uk="Веб і Android" data-ru="Веб и Android">Веб і Android</h3>
-          <p data-uk="Браузер та APK — слухайте на будь-якому пристрої" data-ru="Браузер и APK — слушайте на любом устройстве">Браузер та APK — слухайте на будь-якому пристрої</p>
-        </div>
-
-        <div class="feature-card reveal" style="--delay: 0.3s">
-          <div class="feature-icon" style="--icon-bg: rgba(248, 113, 113, 0.12); --icon-fg: #f87171">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-          </div>
-          <h3 data-uk="Нотатки та цитати" data-ru="Заметки и цитаты">Нотатки та цитати</h3>
-          <p data-uk="Зберігайте думки та улюблені моменти до кожної книги" data-ru="Сохраняйте мысли и любимые моменты к каждой книге">Зберігайте думки та улюблені моменти до кожної книги</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Screenshots Gallery ───────────────────────────────────────────── -->
-  <section class="gallery" id="gallery">
-    <div class="container">
-      <div class="section-header reveal">
-        <span class="section-tag" data-uk="Інтерфейс" data-ru="Интерфейс">Інтерфейс</span>
-        <h2 data-uk="Як це виглядає" data-ru="Как это выглядит">Як це виглядає</h2>
-        <p data-uk="Реальні скріншоти застосунку" data-ru="Реальные скриншоты приложения">Реальні скріншоти застосунку</p>
-      </div>
-
-      <div class="gallery-tabs reveal">
-        <button class="gallery-tab active" data-target="desktop" data-uk="Десктоп" data-ru="Десктоп">Десктоп</button>
-        <button class="gallery-tab" data-target="mobile" data-uk="Мобільна" data-ru="Мобильная">Мобільна</button>
-      </div>
-
-      <div class="gallery-desktop gallery-panel active reveal" id="gallery-desktop">
-        <div class="browser-frame">
-          <div class="browser-frame-bar">
-            <span class="browser-dot"></span>
-            <span class="browser-dot"></span>
-            <span class="browser-dot"></span>
-            <span class="browser-url">app.leerio.app/library</span>
-          </div>
-          <img src="/img/desktop-library.png" alt="Бібліотека" loading="lazy" width="1280" height="800">
-        </div>
-
-        <div class="browser-frame">
-          <div class="browser-frame-bar">
-            <span class="browser-dot"></span>
-            <span class="browser-dot"></span>
-            <span class="browser-dot"></span>
-            <span class="browser-url">app.leerio.app/player</span>
-          </div>
-          <img src="/img/desktop-player.png" alt="Плеєр" loading="lazy" width="1280" height="800">
-        </div>
-
-        <div class="browser-frame">
-          <div class="browser-frame-bar">
-            <span class="browser-dot"></span>
-            <span class="browser-dot"></span>
-            <span class="browser-dot"></span>
-            <span class="browser-url">app.leerio.app/analytics</span>
-          </div>
-          <img src="/img/desktop-analytics.png" alt="Аналітика" loading="lazy" width="1280" height="800">
-        </div>
-
-        <div class="browser-frame">
-          <div class="browser-frame-bar">
-            <span class="browser-dot"></span>
-            <span class="browser-dot"></span>
-            <span class="browser-dot"></span>
-            <span class="browser-url">app.leerio.app/book</span>
-          </div>
-          <img src="/img/desktop-book-detail.png" alt="Сторінка книги" loading="lazy" width="1280" height="800">
-        </div>
-      </div>
-
-      <div class="gallery-mobile-wrap gallery-panel" id="gallery-mobile">
-        <div class="gallery-mobile-scroll">
-          <div class="phone-frame">
-            <div class="phone-frame-notch"><span class="phone-frame-notch-pill"></span></div>
-            <img src="/img/mobile-dashboard.png" alt="Головна" loading="lazy" width="480" height="1039">
-          </div>
-          <div class="phone-frame">
-            <div class="phone-frame-notch"><span class="phone-frame-notch-pill"></span></div>
-            <img src="/img/mobile-library.png" alt="Бібліотека" loading="lazy" width="480" height="1039">
-          </div>
-          <div class="phone-frame">
-            <div class="phone-frame-notch"><span class="phone-frame-notch-pill"></span></div>
-            <img src="/img/mobile-player.png" alt="Плеєр" loading="lazy" width="480" height="1039">
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Bottom CTA ────────────────────────────────────────────────────── -->
-  <section class="bottom-cta">
-    <div class="container">
-      <div class="bottom-cta-card reveal">
-        <div class="bottom-cta-glow"></div>
-        <h2><span data-uk="Почніть слухати" data-ru="Начните слушать">Почніть слухати</span><br><span class="gradient-text" data-uk="прямо зараз" data-ru="прямо сейчас">прямо зараз</span></h2>
-
-        <div class="hero-ctas">
-          <a class="btn btn-primary" href="https://app.leerio.app">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-            <span data-uk="Відкрити застосунок" data-ru="Открыть приложение">Відкрити застосунок</span>
-          </a>
-          <a class="btn btn-ghost" href="https://github.com/librevlad/leerio/releases/download/latest-apk/leerio.apk">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            <span data-uk="Завантажити APK" data-ru="Скачать APK">Завантажити APK</span>
-          </a>
-        </div>
-
-        <p class="bottom-cta-note" data-uk="Безкоштовно. Без реклами. Назавжди." data-ru="Бесплатно. Без рекламы. Навсегда.">Безкоштовно. Без реклами. Назавжди.</p>
-      </div>
+  <!-- ── Final CTA ─────────────────────────────────────────────────────── -->
+  <section class="section cta-section">
+    <div class="container" style="text-align: center;">
+      <h2 class="section-title reveal">Start building your audiobook library</h2>
+      <a class="btn btn-primary btn-lg reveal" href="https://app.leerio.app">Open App</a>
+      <p class="reveal" style="margin-top: 12px; font-size: 13px; color: var(--t3);">Takes less than a minute</p>
     </div>
   </section>
 
   <!-- ── Footer ────────────────────────────────────────────────────────── -->
-  <footer>
+  <footer class="site-footer">
     <div class="container footer-inner">
-      <div class="footer-brand">
-        <img src="/img/logo.png" alt="Leerio" width="24" height="24">
-        <span>Leerio &copy; 2026</span>
-      </div>
+      <span>© 2025 Leerio</span>
       <div class="footer-links">
-        <a href="https://github.com/librevlad/leerio" aria-label="GitHub">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
-        </a>
+        <a href="https://github.com/librevlad/leerio" target="_blank">GitHub</a>
+        <a href="mailto:librevlad@gmail.com">Contact</a>
       </div>
     </div>
   </footer>
 
-  <!-- ── Scripts ───────────────────────────────────────────────────────── -->
   <script>
-    // Language switcher
-    function setLang(lang) {
-      document.querySelectorAll('[data-' + lang + ']').forEach(function (el) {
-        // For hero-badge, preserve the dot child
-        if (el.classList.contains('hero-badge')) {
-          var dot = el.querySelector('.hero-badge-dot');
-          el.textContent = '';
-          if (dot) el.appendChild(dot);
-          el.appendChild(document.createTextNode(' ' + el.getAttribute('data-' + lang)));
-        } else {
-          el.textContent = el.getAttribute('data-' + lang);
-        }
-      });
-      document.querySelectorAll('.lang-btn').forEach(function (b) { b.classList.remove('active'); });
-      var activeBtn = document.querySelector('.lang-btn[data-lang="' + lang + '"]');
-      if (activeBtn) activeBtn.classList.add('active');
-      document.documentElement.lang = lang;
-      localStorage.setItem('leerio-lang', lang);
-    }
-
-    // Scroll reveal with staggered delays
-    document.addEventListener('DOMContentLoaded', function () {
-      var els = document.querySelectorAll('.reveal');
-      if (!('IntersectionObserver' in window)) {
-        els.forEach(function (el) { el.classList.add('visible'); });
-        return;
-      }
-      var observer = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-            observer.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.1 });
-      els.forEach(function (el) { observer.observe(el); });
-
-      // Gallery tabs
-      var tabs = document.querySelectorAll('.gallery-tab');
-      function activateGalleryTab(target) {
-        tabs.forEach(function (t) { t.classList.remove('active'); });
-        document.querySelector('.gallery-tab[data-target="' + target + '"]').classList.add('active');
-        document.querySelectorAll('.gallery-panel').forEach(function (p) { p.classList.remove('active'); });
-        document.getElementById('gallery-' + target).classList.add('active');
-      }
-      tabs.forEach(function (tab) {
-        tab.addEventListener('click', function () { activateGalleryTab(tab.dataset.target); });
-      });
-      // Default to mobile gallery on small screens
-      if (window.innerWidth < 768) { activateGalleryTab('mobile'); }
-
-      // Shrink nav on scroll
-      var nav = document.querySelector('.site-nav');
-      window.addEventListener('scroll', function () {
-        nav.classList.toggle('scrolled', window.scrollY > 40);
-      }, { passive: true });
-
-      // Auto-detect language
-      var saved = localStorage.getItem('leerio-lang');
-      var browser = navigator.language.startsWith('ru') ? 'ru' : 'uk';
-      setLang(saved || browser);
-    });
+    // Reveal on scroll
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target) } })
+    }, { threshold: 0.1 })
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el))
   </script>
-
 </body>
 </html>
