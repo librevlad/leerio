@@ -144,6 +144,30 @@ Google Sign-In (frontend) → POST /api/auth/google { id_token }
 ### Migration
 - Run `python -m server.migrate_to_multitenancy` once to copy `data/*.json` → `data/users/{admin-id}/`
 
+## Interaction Verification Rule
+
+**Every interactive UI element MUST be verified end-to-end before considering work complete.**
+
+When creating or modifying any `@click`, `@submit`, `v-on` handler, or interactive element:
+
+1. **Trace the full chain**: `@click` → handler function → API call / store mutation → backend endpoint → DB effect
+2. **If ANY link is missing** — implement it. Never leave stubs, no-ops, or TODO handlers.
+3. **Add E2E test**: Every new interactive feature needs a Playwright test in `app/e2e/tests/` that:
+   - Clicks the element
+   - Verifies the **result** (not just that the element exists)
+   - Example: click bookmark → verify toast appears AND bookmark shows in list
+4. **Run `make e2e`** after creating interactive features to catch wiring issues
+
+### What counts as verified
+- Button click → visible state change (toast, list update, navigation, class toggle)
+- Form submit → API call succeeds → data persists (reload page → still there)
+- Toggle → both states work (on→off, off→on)
+
+### What does NOT count
+- Element `toBeVisible()` — only proves rendering, not functionality
+- Mocked unit test — proves function exists, not that it's wired to UI
+- "It compiles" — TypeScript won't catch a `@click` pointing to a no-op function
+
 ## Dev Workflow
 
 ### First-time setup

@@ -28,6 +28,16 @@ declare global {
 }
 
 onMounted(() => {
+  // Reuse existing Google script if already loaded (e.g. on remount)
+  if (window.google?.accounts?.id) {
+    initializeGsi()
+    return
+  }
+  const existing = document.querySelector('script[src*="accounts.google.com/gsi/client"]')
+  if (existing) {
+    existing.addEventListener('load', initializeGsi, { once: true })
+    return
+  }
   const script = document.createElement('script')
   script.src = 'https://accounts.google.com/gsi/client'
   script.async = true

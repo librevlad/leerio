@@ -8,7 +8,7 @@ import { useLocalBooks } from '../composables/useLocalBooks'
 import { useOfflineCache } from '../composables/useOfflineCache'
 import { useAuth } from '../composables/useAuth'
 import type { SessionStats } from '../types'
-import { IconTrash, IconDownload, IconHardDrive, IconLogout } from '../components/shared/icons'
+import { IconTrash, IconDownload } from '../components/shared/icons'
 import { useLocale } from '../composables/useLocale'
 import { formatSize } from '../utils/format'
 import { version } from '../../package.json'
@@ -28,6 +28,7 @@ const playbackSpeed = ref(1.0)
 const streak = ref({ current: 0, best: 0 })
 const goalSaving = ref(false)
 const totalBooks = ref<number | null>(null)
+const showShortcuts = ref(false)
 
 const speeds = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
 
@@ -83,301 +84,394 @@ async function handleLogout() {
 
 <template>
   <div>
-    <h1 class="page-title mb-8">{{ t('settings.title') }}</h1>
+    <h1 class="page-title mb-6">{{ t('settings.title') }}</h1>
 
-    <div class="max-w-2xl space-y-5">
-      <!-- Profile -->
-      <div class="card p-5">
-        <h3 class="section-label mb-4">{{ t('settings.profile') }}</h3>
-        <div v-if="user" class="flex items-center gap-4">
-          <img
-            v-if="user.picture"
-            :src="user.picture"
-            :alt="user.name"
-            class="h-14 w-14 rounded-full object-cover ring-2 ring-[--border]"
-            referrerpolicy="no-referrer"
-          />
-          <div
-            v-else
-            class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full text-[18px] font-bold text-[--t2]"
-            style="background: rgba(255, 255, 255, 0.08)"
-          >
-            {{ user.name?.charAt(0) || '?' }}
-          </div>
-          <div class="min-w-0 flex-1">
-            <p class="text-[15px] font-semibold text-[--t1]">{{ user.name }}</p>
-            <p class="text-[13px] text-[--t3]">{{ user.email }}</p>
-            <span
-              v-if="isAdmin"
-              class="mt-1 inline-block rounded-md bg-[--accent-soft] px-2 py-0.5 text-[11px] font-medium text-[--accent]"
-            >
-              {{ t('settings.admin') }}
+    <!-- ── Profile Card with gradient border ─────────────────────── -->
+    <div class="settings-profile mb-6">
+      <div v-if="user" class="flex items-center gap-3.5">
+        <img
+          v-if="user.picture"
+          :src="user.picture"
+          :alt="user.name"
+          class="h-12 w-12 rounded-[14px] object-cover"
+          referrerpolicy="no-referrer"
+        />
+        <div
+          v-else
+          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] text-[18px] font-bold text-[--card]"
+          style="background: var(--gradient-accent)"
+        >
+          {{ user.name?.charAt(0) || '?' }}
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-2">
+            <p class="text-[16px] font-bold text-[--t1]">{{ user.name }}</p>
+            <span v-if="isAdmin" class="rounded bg-[--accent] px-1.5 py-0.5 text-[9px] font-bold text-[--bg]">
+              ADMIN
             </span>
           </div>
-        </div>
-        <button class="btn btn-ghost mt-4 text-red-400 hover:text-red-300" @click="handleLogout">
-          <IconLogout :size="14" />
-          {{ t('settings.logout') }}
-        </button>
-      </div>
-
-      <!-- Language -->
-      <div class="card p-5">
-        <h3 class="section-label mb-4">{{ t('settings.language') }}</h3>
-        <div class="grid grid-cols-3 gap-2">
-          <button
-            v-for="locale in LOCALES"
-            :key="locale.code"
-            class="relative flex flex-col items-center gap-1.5 rounded-xl px-3 py-3.5 text-[13px] font-semibold transition-all duration-200"
-            :class="
-              currentLocale === locale.code
-                ? 'bg-[--accent] text-white shadow-[0_0_20px_rgba(255,138,0,0.25)]'
-                : 'bg-white/[0.04] text-[--t2] hover:bg-white/[0.08] hover:text-[--t1]'
-            "
-            @click="setLocale(locale.code)"
-          >
-            <span class="text-[22px] leading-none">{{ locale.flag }}</span>
-            <span class="text-[12px] font-semibold">{{ locale.label }}</span>
-            <span
-              v-if="currentLocale === locale.code"
-              class="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-white/60"
-            />
-          </button>
+          <p class="text-[12px] text-[--t2]">{{ user.email }}</p>
         </div>
       </div>
 
-      <!-- Listening stats: skeleton -->
-      <div v-if="statsLoading" class="card p-5">
-        <div class="skeleton mb-4 h-4 w-48 rounded" />
-        <div class="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
-          <div v-for="i in 4" :key="i">
-            <div class="skeleton mb-2 h-3 w-16 rounded" />
-            <div class="skeleton h-7 w-14 rounded" />
-          </div>
+      <!-- Stats bar -->
+      <div v-if="statsLoading" class="settings-stat-bar mt-4">
+        <div v-for="i in 4" :key="i" class="settings-stat-cell">
+          <div class="skeleton h-5 w-10 rounded" />
+          <div class="skeleton mt-1 h-2.5 w-12 rounded" />
         </div>
       </div>
-
-      <!-- Listening stats -->
-      <div v-else-if="sessionStats" class="card p-5">
-        <h3 class="section-label mb-4">{{ t('settings.statsTitle') }}</h3>
-        <div class="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
-          <div>
-            <p class="mb-1 text-[11px] font-semibold text-[--t3]">{{ t('settings.statTotalHours') }}</p>
-            <p class="text-[22px] leading-none font-bold tracking-tight text-[--t1]">
-              {{ sessionStats.total_hours.toFixed(1) }}
-            </p>
-          </div>
-          <div>
-            <p class="mb-1 text-[11px] font-semibold text-[--t3]">{{ t('settings.statToday') }}</p>
-            <p class="text-[22px] leading-none font-bold tracking-tight text-[--t1]">
-              {{ sessionStats.today_min
-              }}<span class="ml-0.5 text-[12px] text-[--t3]">{{ t('settings.unitMin') }}</span>
-            </p>
-          </div>
-          <div>
-            <p class="mb-1 text-[11px] font-semibold text-[--t3]">{{ t('settings.statWeek') }}</p>
-            <p class="text-[22px] leading-none font-bold tracking-tight text-[--t1]">
-              {{ sessionStats.week_hours.toFixed(1)
-              }}<span class="ml-0.5 text-[12px] text-[--t3]">{{ t('settings.unitH') }}</span>
-            </p>
-          </div>
-          <div v-if="sessionStats.peak_hour !== null">
-            <p class="mb-1 text-[11px] font-semibold text-[--t3]">{{ t('settings.statPeak') }}</p>
-            <p class="gradient-text text-[22px] leading-none font-bold tracking-tight">
-              {{ sessionStats.peak_hour }}:00
-            </p>
-          </div>
+      <div v-else-if="sessionStats" class="settings-stat-bar mt-4">
+        <div class="settings-stat-cell">
+          <p class="settings-stat-num text-[--accent]">{{ sessionStats.total_hours.toFixed(1) }}</p>
+          <p class="settings-stat-label">{{ t('settings.statTotalHours') }}</p>
         </div>
-      </div>
-
-      <!-- Downloads (native only) -->
-      <div v-if="dl.isNative.value" class="card p-5">
-        <h3 class="section-label mb-4">
-          <span class="flex items-center gap-2">
-            <IconDownload :size="16" />
-            {{ t('settings.downloads') }}
-          </span>
-        </h3>
-
-        <div v-if="dl.downloadedBooks.value.length" class="space-y-2">
-          <div
-            v-for="b in dl.downloadedBooks.value"
-            :key="b.bookId"
-            class="flex items-center justify-between gap-3 rounded-xl bg-white/[0.03] px-3.5 py-3"
-          >
-            <div class="min-w-0 flex-1">
-              <p class="truncate text-[13px] font-medium text-[--t1]">{{ b.title }}</p>
-              <p class="text-[11px] text-[--t3]">
-                {{ b.tracks.length }} {{ t('plural.track', b.tracks.length) }} ·
-                {{ fmtSize(b.totalSize) }}
-              </p>
-            </div>
-            <button
-              class="shrink-0 rounded-full p-2 text-[--t3] transition-colors hover:bg-red-500/15 hover:text-red-400"
-              :title="t('common.delete')"
-              @click="dl.deleteBook(b.bookId)"
-            >
-              <IconTrash :size="14" />
-            </button>
-          </div>
-          <p class="pt-1 text-[12px] text-[--t3]">
-            {{ t('settings.totalSize') }}:
-            <span class="font-semibold text-[--t2]">{{ fmtSize(dl.totalDownloadedSize.value) }}</span>
+        <div class="settings-stat-cell">
+          <p class="settings-stat-num">
+            {{ sessionStats.today_min }}<span class="text-[11px] text-[--t3]">{{ t('settings.unitMin') }}</span>
           </p>
-          <button
-            v-if="dl.downloadedBooks.value.length > 1"
-            class="btn btn-ghost mt-2 text-red-400 hover:text-red-300"
-            @click="dl.deleteAllBooks()"
-          >
-            <IconTrash :size="14" />
-            {{ t('settings.deleteAllDownloads') }}
-          </button>
+          <p class="settings-stat-label">{{ t('settings.statToday') }}</p>
         </div>
-
-        <p v-else class="text-[12px] text-[--t3]">{{ t('settings.noDownloads') }}</p>
-      </div>
-
-      <!-- Listening Streak -->
-      <div class="card p-5">
-        <h3 class="section-label mb-4">{{ t('settings.streakTitle') }}</h3>
-        <div class="flex items-center gap-6">
-          <div class="text-center">
-            <p
-              class="text-[32px] leading-none font-bold tracking-tight"
-              :class="streak.current > 0 ? 'text-[--accent]' : 'text-[--t3]'"
-            >
-              {{ streak.current }}
-            </p>
-            <p class="mt-1 text-[11px] font-semibold text-[--t3]">
-              {{ t('plural.day', streak.current) }}
-            </p>
-          </div>
-          <div class="h-10 w-px" style="background: var(--border)" />
-          <div class="text-center">
-            <p class="text-[22px] leading-none font-bold tracking-tight text-[--t2]">
-              {{ streak.best }}
-            </p>
-            <p class="mt-1 text-[11px] font-semibold text-[--t3]">{{ t('settings.streakBest') }}</p>
-          </div>
+        <div class="settings-stat-cell">
+          <p class="settings-stat-num">
+            4<span class="text-[12px] text-[--t3]">/{{ yearlyGoal }}</span>
+          </p>
+          <p class="settings-stat-label">{{ t('settings.yearlyGoal') }}</p>
+        </div>
+        <div class="settings-stat-cell">
+          <p class="settings-stat-num">🔥 {{ streak.current }}</p>
+          <p class="settings-stat-label">
+            {{ t('settings.streakTitle') }}
+            <span v-if="streak.best > 0" class="text-[--t3]"> · {{ t('settings.streakBest') }} {{ streak.best }}</span>
+          </p>
+        </div>
+        <div v-if="sessionStats.peak_hour !== null" class="settings-stat-cell">
+          <p class="settings-stat-num gradient-text">{{ sessionStats.peak_hour }}:00</p>
+          <p class="settings-stat-label">{{ t('settings.statPeak') }}</p>
         </div>
       </div>
+    </div>
 
-      <!-- Playback Preferences -->
-      <div class="card p-5">
-        <h3 class="section-label mb-4">{{ t('settings.playback') }}</h3>
+    <!-- ── Settings groups (2-col on desktop) ─────────────────────── -->
+    <div class="grid gap-4 md:grid-cols-2">
+      <!-- LEFT column -->
+      <div class="space-y-4">
+        <!-- Playback -->
+        <div>
+          <p class="settings-group-label">{{ t('settings.playback') }}</p>
+          <div class="settings-group">
+            <div class="settings-row">
+              <span class="settings-row-label">{{ t('settings.defaultSpeed') }}</span>
+              <div class="flex flex-wrap gap-1.5">
+                <button
+                  v-for="s in speeds"
+                  :key="s"
+                  class="settings-speed-pill"
+                  :class="playbackSpeed === s ? 'settings-speed-active' : 'settings-speed-inactive'"
+                  @click="setSpeed(s)"
+                >
+                  {{ s }}x
+                </button>
+              </div>
+            </div>
+            <div class="settings-row">
+              <span class="settings-row-label">{{ t('settings.yearlyGoal') }}</span>
+              <div class="flex items-center gap-3">
+                <input
+                  v-model.number="yearlyGoal"
+                  type="range"
+                  min="1"
+                  max="100"
+                  class="w-36 accent-[--accent]"
+                  @change="saveGoal"
+                />
+                <span class="text-[14px] font-bold text-[--accent]">{{ yearlyGoal }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-        <div class="space-y-5">
-          <!-- Default playback speed -->
-          <div>
-            <p class="mb-2.5 text-[12px] font-semibold text-[--t3]">{{ t('settings.defaultSpeed') }}</p>
-            <div class="flex flex-wrap gap-2">
-              <button
-                v-for="s in speeds"
-                :key="s"
-                class="rounded-lg px-3 py-1.5 text-[13px] font-semibold transition-colors"
-                :class="
-                  playbackSpeed === s ? 'bg-[--accent] text-white' : 'bg-white/[0.06] text-[--t2] hover:bg-white/[0.1]'
-                "
-                @click="setSpeed(s)"
+        <!-- Language -->
+        <div>
+          <p class="settings-group-label">{{ t('settings.language') }}</p>
+          <div class="settings-group">
+            <div class="settings-row">
+              <span class="settings-row-label">{{ t('settings.language') }}</span>
+              <div class="settings-segment">
+                <button
+                  v-for="locale in LOCALES"
+                  :key="locale.code"
+                  class="settings-segment-btn"
+                  :class="currentLocale === locale.code ? 'settings-segment-active' : ''"
+                  @click="setLocale(locale.code)"
+                >
+                  {{ locale.flag }} {{ locale.label }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Downloads (native only) -->
+        <div v-if="dl.isNative.value">
+          <p class="settings-group-label">
+            <IconDownload :size="14" class="inline" />
+            {{ t('settings.downloads') }}
+          </p>
+          <div class="settings-group">
+            <div v-if="dl.downloadedBooks.value.length" class="space-y-0">
+              <div v-for="b in dl.downloadedBooks.value" :key="b.bookId" class="settings-row">
+                <div class="min-w-0 flex-1">
+                  <p class="truncate text-[13px] font-medium text-[--t1]">{{ b.title }}</p>
+                  <p class="text-[11px] text-[--t3]">
+                    {{ b.tracks.length }} {{ t('plural.track', b.tracks.length) }} · {{ fmtSize(b.totalSize) }}
+                  </p>
+                </div>
+                <button
+                  class="shrink-0 rounded-full p-2 text-[--t3] transition-colors hover:bg-red-500/15 hover:text-red-400"
+                  @click="dl.deleteBook(b.bookId)"
+                >
+                  <IconTrash :size="14" />
+                </button>
+              </div>
+            </div>
+            <div v-else class="settings-row">
+              <span class="text-[12px] text-[--t3]">{{ t('settings.noDownloads') }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT column -->
+      <div class="space-y-4">
+        <!-- Data -->
+        <div>
+          <p class="settings-group-label">{{ t('settings.storage') }}</p>
+          <div class="settings-group">
+            <div class="settings-row">
+              <span class="settings-row-label">{{ t('settings.storageCache') }}</span>
+              <div class="flex items-center gap-2.5">
+                <span class="text-[12px] text-[--t3]">{{ fmtSize(cacheBytes) }}</span>
+                <button
+                  v-if="cacheBytes > 0"
+                  class="text-[12px] font-medium text-[--accent] transition-colors hover:text-[--accent-2]"
+                  @click="clearCache"
+                >
+                  {{ t('settings.clearCache') }}
+                </button>
+              </div>
+            </div>
+            <div class="settings-row">
+              <span class="settings-row-label">{{ t('settings.storageLocal') }}</span>
+              <span class="text-[12px] text-[--t3]">{{ localBooks.length }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Shortcuts (collapsible) -->
+        <div>
+          <p class="settings-group-label">{{ t('settings.shortcuts') }}</p>
+          <div class="settings-group">
+            <button class="settings-row w-full" @click="showShortcuts = !showShortcuts">
+              <span class="settings-row-label">{{ t('settings.shortcuts') }}</span>
+              <span class="text-[12px] text-[--t3] transition-transform" :class="showShortcuts ? 'rotate-90' : ''"
+                >▸</span
               >
-                {{ s }}x
-              </button>
+            </button>
+            <template v-if="showShortcuts">
+              <div class="settings-row">
+                <span class="text-[12px] text-[--t3]">{{ t('settings.shortcutPlayPause') }}</span>
+                <kbd class="settings-kbd">Space</kbd>
+              </div>
+              <div class="settings-row">
+                <span class="text-[12px] text-[--t3]">{{ t('settings.shortcutForward') }}</span>
+                <kbd class="settings-kbd">&rarr;</kbd>
+              </div>
+              <div class="settings-row">
+                <span class="text-[12px] text-[--t3]">{{ t('settings.shortcutBack') }}</span>
+                <kbd class="settings-kbd">&larr;</kbd>
+              </div>
+              <div class="settings-row">
+                <span class="text-[12px] text-[--t3]">{{ t('settings.shortcutNext') }}</span>
+                <kbd class="settings-kbd">Shift + &rarr;</kbd>
+              </div>
+              <div class="settings-row">
+                <span class="text-[12px] text-[--t3]">{{ t('settings.shortcutPrev') }}</span>
+                <kbd class="settings-kbd">Shift + &larr;</kbd>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- About (inline) -->
+        <div>
+          <p class="settings-group-label">{{ t('settings.about') }}</p>
+          <div class="settings-group">
+            <div class="settings-row">
+              <span class="settings-row-label">{{ t('settings.aboutVersion') }}</span>
+              <span class="text-[12px] text-[--t3]">{{ version }}</span>
             </div>
-          </div>
-
-          <!-- Yearly goal -->
-          <div>
-            <p class="mb-2.5 text-[12px] font-semibold text-[--t3]">{{ t('settings.yearlyGoal') }}</p>
-            <div class="flex items-center gap-3">
-              <input
-                v-model.number="yearlyGoal"
-                type="range"
-                min="1"
-                max="100"
-                class="flex-1 accent-[--accent]"
-                @change="saveGoal"
-              />
-              <span class="min-w-[2.5rem] text-center text-[16px] font-bold text-[--t1]">
-                {{ yearlyGoal }}
-              </span>
+            <div class="settings-row">
+              <span class="settings-row-label">{{ t('settings.aboutBooks') }}</span>
+              <span class="text-[12px] text-[--t3]">{{ totalBooks ?? '—' }}</span>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Storage & Cache -->
-      <div class="card p-5">
-        <h3 class="section-label mb-4">
-          <span class="flex items-center gap-2">
-            <IconHardDrive :size="16" />
-            {{ t('settings.storage') }}
-          </span>
-        </h3>
-        <div class="flex flex-wrap gap-x-8 gap-y-3">
-          <div v-if="dl.isNative.value">
-            <p class="mb-1 text-[11px] font-semibold text-[--t3]">{{ t('settings.storageDownloaded') }}</p>
-            <p class="text-[18px] leading-none font-bold text-[--t1]">{{ fmtSize(dl.totalDownloadedSize.value) }}</p>
-          </div>
-          <div>
-            <p class="mb-1 text-[11px] font-semibold text-[--t3]">{{ t('settings.storageLocal') }}</p>
-            <p class="text-[18px] leading-none font-bold text-[--t1]">{{ localBooks.length }}</p>
-          </div>
-          <div>
-            <p class="mb-1 text-[11px] font-semibold text-[--t3]">{{ t('settings.storageCache') }}</p>
-            <p class="text-[18px] leading-none font-bold text-[--t1]">{{ fmtSize(cacheBytes) }}</p>
-          </div>
-        </div>
-        <button v-if="cacheBytes > 0" class="btn btn-ghost mt-4" @click="clearCache">
-          <IconTrash :size="14" />
-          {{ t('settings.clearCache') }}
-        </button>
-      </div>
-
-      <!-- Keyboard Shortcuts -->
-      <div class="card p-5">
-        <h3 class="section-label mb-4">{{ t('settings.shortcuts') }}</h3>
-        <div class="space-y-2 text-[13px]">
-          <div class="flex items-center justify-between">
-            <span class="text-[--t3]">{{ t('settings.shortcutPlayPause') }}</span>
-            <kbd class="rounded bg-white/[0.06] px-2 py-0.5 font-mono text-[11px] text-[--t2]">Space</kbd>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-[--t3]">{{ t('settings.shortcutForward') }}</span>
-            <kbd class="rounded bg-white/[0.06] px-2 py-0.5 font-mono text-[11px] text-[--t2]">&rarr;</kbd>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-[--t3]">{{ t('settings.shortcutBack') }}</span>
-            <kbd class="rounded bg-white/[0.06] px-2 py-0.5 font-mono text-[11px] text-[--t2]">&larr;</kbd>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-[--t3]">{{ t('settings.shortcutNext') }}</span>
-            <kbd class="rounded bg-white/[0.06] px-2 py-0.5 font-mono text-[11px] text-[--t2]">Shift + &rarr;</kbd>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-[--t3]">{{ t('settings.shortcutPrev') }}</span>
-            <kbd class="rounded bg-white/[0.06] px-2 py-0.5 font-mono text-[11px] text-[--t2]">Shift + &larr;</kbd>
-          </div>
-        </div>
-      </div>
-
-      <!-- About -->
-      <div class="card p-5">
-        <h3 class="section-label mb-4">{{ t('settings.about') }}</h3>
-        <div class="space-y-2 text-[13px]">
-          <div class="flex justify-between">
-            <span class="text-[--t3]">{{ t('settings.aboutVersion') }}</span>
-            <span class="font-medium text-[--t2]">{{ version }}</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-[--t3]">{{ t('settings.aboutBooks') }}</span>
-            <span class="font-medium text-[--t2]">{{ totalBooks ?? '—' }}</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-[--t3]">{{ t('settings.aboutPlatform') }}</span>
-            <span class="font-medium text-[--t2]">Web</span>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- ── Logout ─────────────────────────────────────────────── -->
+    <div class="mt-6 text-center">
+      <button class="text-[13px] font-medium text-red-400 transition-colors hover:text-red-300" @click="handleLogout">
+        {{ t('settings.logout') }}
+      </button>
+    </div>
   </div>
 </template>
+
+<style scoped>
+/* ── Profile card ────────────────────────────────────────────── */
+.settings-profile {
+  background: linear-gradient(135deg, rgba(255, 138, 0, 0.12), rgba(255, 138, 0, 0.02));
+  border: 1px solid rgba(255, 138, 0, 0.2);
+  border-radius: 16px;
+  padding: 20px;
+}
+
+/* ── Stat bar ────────────────────────────────────────────────── */
+.settings-stat-bar {
+  display: flex;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.settings-stat-cell {
+  flex: 1;
+  padding: 12px 8px;
+  text-align: center;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.settings-stat-cell:last-child {
+  border-right: none;
+}
+
+.settings-stat-num {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--t1);
+}
+
+.settings-stat-label {
+  font-size: 9px;
+  color: var(--t3);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-top: 4px;
+}
+
+/* ── Settings groups (iOS-style rows) ────────────────────────── */
+.settings-group-label {
+  font-size: 10px;
+  color: var(--t3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+
+.settings-group {
+  background: var(--card);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.settings-row {
+  padding: 13px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+
+.settings-row:last-child {
+  border-bottom: none;
+}
+
+.settings-row-label {
+  font-size: 13px;
+  color: var(--t1);
+}
+
+/* ── Speed pills ─────────────────────────────────────────────── */
+.settings-speed-pill {
+  padding: 6px 11px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.15s;
+  cursor: pointer;
+}
+
+.settings-speed-pill:hover {
+  transform: scale(1.05);
+}
+
+.settings-speed-active {
+  background: var(--gradient-accent);
+  color: var(--bg);
+  box-shadow: 0 0 14px rgba(255, 138, 0, 0.25);
+}
+
+.settings-speed-inactive {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--t2);
+}
+
+.settings-speed-inactive:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ── Language segment ────────────────────────────────────────── */
+.settings-segment {
+  display: flex;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  padding: 3px;
+}
+
+.settings-segment-btn {
+  flex: 1;
+  text-align: center;
+  padding: 7px 10px;
+  font-size: 12px;
+  border-radius: 8px;
+  color: var(--t3);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.settings-segment-btn:hover {
+  color: var(--t2);
+}
+
+.settings-segment-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ── Keyboard badge ──────────────────────────────────────────── */
+.settings-kbd {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--t2);
+}
+</style>

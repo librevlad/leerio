@@ -6,6 +6,7 @@ const user = ref<User | null>(null)
 const loading = ref(true)
 const checked = ref(false)
 let checkPromise: Promise<boolean> | null = null
+let checkAbort: AbortController | null = null
 
 export function useAuth() {
   const isLoggedIn = computed(() => !!user.value)
@@ -14,10 +15,14 @@ export function useAuth() {
   async function checkAuth(): Promise<boolean> {
     if (checked.value) return !!user.value
     if (checkPromise) return checkPromise
+    checkAbort = new AbortController()
     checkPromise = (async () => {
       loading.value = true
       try {
-        const res = await fetch(apiUrl('/auth/me'), { credentials: 'include' })
+        const res = await fetch(apiUrl('/auth/me'), {
+          credentials: 'include',
+          signal: checkAbort!.signal,
+        })
         if (res.ok) {
           user.value = await res.json()
           try {
@@ -27,9 +32,16 @@ export function useAuth() {
           }
           return true
         }
-        user.value = null
-        return false
-      } catch {
+        // Don't overwrite user if a login completed while we were fetching
+        if (!user.value) {
+          user.value = null
+        }
+        return !!user.value
+      } catch (e) {
+        if (e instanceof DOMException && e.name === 'AbortError') {
+          // Login cancelled this check — return current state
+          return !!user.value
+        }
         // Offline — try cached user
         try {
           const cached = localStorage.getItem('leerio_user')
@@ -40,18 +52,30 @@ export function useAuth() {
         } catch {
           /* parse error */
         }
-        user.value = null
+        if (!user.value) {
+          user.value = null
+        }
         return false
       } finally {
         loading.value = false
         checked.value = true
         checkPromise = null
+        checkAbort = null
       }
     })()
     return checkPromise
   }
 
+  function cancelPendingCheck() {
+    if (checkAbort) {
+      checkAbort.abort()
+      checkAbort = null
+    }
+    checkPromise = null
+  }
+
   async function loginWithGoogle(idToken: string): Promise<User> {
+    cancelPendingCheck()
     const res = await fetch(apiUrl('/auth/google'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -72,6 +96,7 @@ export function useAuth() {
     const data = await res.json()
     user.value = data
     checked.value = true
+    loading.value = false
     try {
       localStorage.setItem('leerio_user', JSON.stringify(data))
     } catch {
@@ -81,6 +106,7 @@ export function useAuth() {
   }
 
   async function loginWithPassword(email: string, password: string): Promise<User> {
+    cancelPendingCheck()
     const res = await fetch(apiUrl('/auth/login'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -101,6 +127,7 @@ export function useAuth() {
     const data = await res.json()
     user.value = data
     checked.value = true
+    loading.value = false
     try {
       localStorage.setItem('leerio_user', JSON.stringify(data))
     } catch {
