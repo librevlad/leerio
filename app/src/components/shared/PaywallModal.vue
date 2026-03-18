@@ -22,7 +22,7 @@ declare global {
   }
 }
 
-const props = defineProps<{ open: boolean }>()
+const props = defineProps<{ open: boolean; bookCount?: number }>()
 const emit = defineEmits<{ close: [] }>()
 const { t } = useI18n()
 const { user } = useAuth()
@@ -36,13 +36,17 @@ watch(
   },
 )
 const priceId = ref('')
+const freeLimit = ref(10)
 const loading = ref(false)
+
+defineExpose({ freeLimit })
 
 onMounted(async () => {
   try {
     const res = await fetch('/api/payments/plan')
     const data = await res.json()
     priceId.value = data.price_id || ''
+    if (data.free_limit) freeLimit.value = data.free_limit
   } catch {
     /* optional */
   }
@@ -98,7 +102,10 @@ function openCheckout() {
           </div>
 
           <h2 class="text-[18px] font-extrabold text-[--t1]">{{ t('paywall.title') }}</h2>
-          <p class="mt-2 text-[13px] text-[--t2]">{{ t('paywall.subtitle') }}</p>
+          <p v-if="props.bookCount" class="mt-2 text-[13px] text-[--t2]">
+            {{ t('paywall.subtitleDynamic', { count: props.bookCount }) }}
+          </p>
+          <p v-else class="mt-2 text-[13px] text-[--t2]">{{ t('paywall.subtitle', { n: freeLimit }) }}</p>
 
           <div class="mt-5 space-y-2 text-left">
             <div class="flex items-center gap-2.5 rounded-lg px-3 py-2" style="background: rgba(255, 255, 255, 0.03)">

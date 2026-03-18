@@ -5,6 +5,7 @@ Handles personal audiobook uploads (MP3 files) with metadata.
 """
 
 import logging
+import os
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
@@ -16,7 +17,7 @@ from .core import UserData, count_mp3, estimate_duration_hours, folder_size_mb, 
 logger = logging.getLogger("leerio.upload")
 
 MAX_UPLOAD_SIZE = 500 * 1024 * 1024  # 500 MB (matches nginx)
-FREE_BOOK_LIMIT = 20
+FREE_BOOK_LIMIT = int(os.environ.get("FREE_BOOK_LIMIT", "10"))
 VALID_IMAGE_HEADERS = [b"\xff\xd8\xff", b"\x89PNG"]
 
 router = APIRouter(prefix="/api/user/books", tags=["user-books"])

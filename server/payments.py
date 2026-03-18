@@ -115,6 +115,7 @@ def _deactivate_premium(email: str):
 
 @router.get("/plan")
 async def get_plan(request: Request):
-    """Public endpoint to get Paddle price ID for checkout."""
+    """Public endpoint to get Paddle price ID and limits for checkout."""
     price_id = os.environ.get("PADDLE_PRICE_ID", "")
-    return {"price_id": price_id}
+    free_limit = int(os.environ.get("FREE_BOOK_LIMIT", "10"))
+    return {"price_id": price_id, "free_limit": free_limit}

@@ -347,7 +347,9 @@ async function handleLogout() {
             </div>
             <div v-if="user.plan !== 'premium'" class="settings-row">
               <span class="settings-row-label">{{ t('settings.booksCount') }}</span>
-              <span class="text-[12px] text-[--t3]">{{ totalBooks ?? 0 }} / 20</span>
+              <span class="text-[12px]" :class="(totalBooks ?? 0) >= 10 ? 'font-bold text-[--accent]' : 'text-[--t3]'"
+                >{{ totalBooks ?? 0 }} / 10</span
+              >
             </div>
             <div v-if="user.plan !== 'premium'" class="settings-row">
               <button

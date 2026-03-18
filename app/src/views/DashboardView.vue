@@ -415,6 +415,24 @@ onMounted(loadData)
         </div>
       </div>
 
+      <!-- Time investment banner (free users who listened >1h) -->
+      <div
+        v-if="data.total_hours >= 1 && user?.plan !== 'premium' && !localStorage.getItem('upgrade-banner-dismissed')"
+        class="flex items-center gap-3 rounded-xl px-4 py-3"
+        style="
+          background: linear-gradient(135deg, rgba(255, 138, 0, 0.08), rgba(255, 138, 0, 0.02));
+          border: 1px solid rgba(255, 138, 0, 0.15);
+        "
+      >
+        <span class="text-[20px]">⏱</span>
+        <div class="min-w-0 flex-1">
+          <p class="text-[12px] font-semibold text-[--t1]">{{ t('dashboard.valueMessage') }}</p>
+        </div>
+        <router-link to="/settings" class="shrink-0 text-[11px] font-semibold text-[--accent] no-underline">
+          {{ t('paywall.upgrade') }}
+        </router-link>
+      </div>
+
       <!-- Recently Added -->
       <div v-if="recentBooks.length" class="space-y-3">
         <div class="flex items-center justify-between">
