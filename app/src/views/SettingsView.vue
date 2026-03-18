@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { api } from '../api'
@@ -11,6 +11,7 @@ import type { SessionStats } from '../types'
 import { IconTrash, IconDownload } from '../components/shared/icons'
 import { useLocale } from '../composables/useLocale'
 import { formatSize } from '../utils/format'
+import { useCountUp } from '../composables/useCountUp'
 import { version } from '../../package.json'
 
 const router = useRouter()
@@ -31,6 +32,14 @@ const totalBooks = ref<number | null>(null)
 const showShortcuts = ref(false)
 
 const speeds = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
+
+// Count-up animations for stats
+const totalHours = computed(() => (sessionStats.value ? sessionStats.value.total_hours : null))
+const todayMin = computed(() => (sessionStats.value ? sessionStats.value.today_min : null))
+const streakCurrent = computed(() => streak.value.current)
+const animHours = useCountUp(totalHours, { duration: 800, decimals: 1 })
+const animToday = useCountUp(todayMin, { duration: 600 })
+const animStreak = useCountUp(streakCurrent, { duration: 500 })
 
 onMounted(async () => {
   const [, settings, streakData, dash] = await Promise.allSettled([
@@ -123,12 +132,12 @@ async function handleLogout() {
       </div>
       <div v-else-if="sessionStats" class="settings-stat-bar mt-4">
         <div class="settings-stat-cell">
-          <p class="settings-stat-num text-[--accent]">{{ sessionStats.total_hours.toFixed(1) }}</p>
+          <p class="settings-stat-num text-[--accent]">{{ animHours }}</p>
           <p class="settings-stat-label">{{ t('settings.unitH') }}</p>
         </div>
         <div class="settings-stat-cell">
           <p class="settings-stat-num">
-            {{ sessionStats.today_min }}<span class="text-[11px] text-[--t3]">{{ t('settings.unitMin') }}</span>
+            {{ animToday }}<span class="text-[11px] text-[--t3]">{{ t('settings.unitMin') }}</span>
           </p>
           <p class="settings-stat-label">{{ t('settings.statToday') }}</p>
         </div>
@@ -139,7 +148,7 @@ async function handleLogout() {
           <p class="settings-stat-label">{{ t('settings.yearlyGoal') }}</p>
         </div>
         <div class="settings-stat-cell">
-          <p class="settings-stat-num">🔥 {{ streak.current }}</p>
+          <p class="settings-stat-num">🔥 {{ animStreak }}</p>
           <p class="settings-stat-label">
             {{ t('plural.day', streak.current) }}
             <span v-if="streak.best > 0" class="hidden text-[--t3] sm:inline">

@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ProgressBar from '../shared/ProgressBar.vue'
+import { useCountUp } from '../../composables/useCountUp'
 
 const { t } = useI18n()
 const props = defineProps<{
@@ -10,6 +11,7 @@ const props = defineProps<{
 }>()
 
 const percent = computed(() => Math.min(100, Math.round((props.done / Math.max(1, props.goal)) * 100)))
+const animPercent = useCountUp(percent, { duration: 900 })
 
 const pace = computed(() => {
   const now = new Date()
@@ -31,7 +33,7 @@ const pace = computed(() => {
       <span class="text-[12px] font-medium text-[--t3]">{{ done }}/{{ goal }}</span>
     </div>
     <ProgressBar :percent="percent" height="h-1.5" />
-    <p class="gradient-text mt-3 text-[24px] leading-none font-bold tracking-tight">{{ percent }}%</p>
+    <p class="gradient-text mt-3 text-[24px] leading-none font-bold tracking-tight">{{ animPercent }}%</p>
     <p class="mt-1 text-[12px] text-[--t3]">
       <template v-if="done >= goal"> {{ t('dashboard.goalReached') }} </template>
       <template v-else>

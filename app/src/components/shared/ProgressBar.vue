@@ -1,11 +1,28 @@
 <script setup lang="ts">
-withDefaults(
+import { ref, onMounted, watch } from 'vue'
+
+const props = withDefaults(
   defineProps<{
     percent: number
     height?: string
   }>(),
   {
     height: 'h-[3px]',
+  },
+)
+
+const animatedWidth = ref(0)
+
+onMounted(() => {
+  requestAnimationFrame(() => {
+    animatedWidth.value = props.percent
+  })
+})
+
+watch(
+  () => props.percent,
+  (val) => {
+    animatedWidth.value = val
   },
 )
 </script>
@@ -15,7 +32,7 @@ withDefaults(
     <div
       class="h-full rounded-full transition-all duration-700 ease-out"
       style="background: var(--gradient-bar)"
-      :style="{ width: `${Math.min(100, Math.max(0, percent))}%` }"
+      :style="{ width: `${Math.min(100, Math.max(0, animatedWidth))}%` }"
     />
   </div>
 </template>
