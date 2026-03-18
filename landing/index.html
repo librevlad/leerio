@@ -177,6 +177,13 @@
       entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target) } })
     }, { threshold: 0.1 })
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el))
+
+    // Track CTA clicks + scroll depth
+    function t(e, d) { navigator.sendBeacon && navigator.sendBeacon('https://app.leerio.app/api/telemetry', new Blob([JSON.stringify({event: e, ts: new Date().toISOString(), ...d})], {type: 'application/json'})) }
+    document.querySelectorAll('a[href="https://app.leerio.app"]').forEach(a => a.addEventListener('click', () => t('landing_cta_click', {text: a.textContent.trim()})))
+    let maxScroll = 0
+    window.addEventListener('scroll', () => { const pct = Math.round(window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100); if (pct > maxScroll) maxScroll = pct }, {passive: true})
+    window.addEventListener('beforeunload', () => t('landing_scroll_depth', {pct: maxScroll}))
   </script>
 </body>
 </html>
