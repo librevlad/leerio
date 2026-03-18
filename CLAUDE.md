@@ -87,6 +87,9 @@ docker compose up --build
 - `TTS_OPENAI_BASE_URL` — OpenAI-compatible TTS endpoint (e.g. `http://openedai-speech:8000/v1` or `https://api.openai.com/v1`). Engine selector appears when set.
 - `TTS_OPENAI_API_KEY` — API key for OpenAI-compatible TTS (can be dummy for openedai-speech)
 - `TTS_OPENAI_MODEL` — model name for OpenAI-compatible TTS (default: `tts-1`)
+- `PADDLE_API_KEY` — Paddle API key for payment verification
+- `PADDLE_PRICE_ID` — Paddle price ID for checkout ($4/month subscription)
+- `PADDLE_WEBHOOK_SECRET` — HMAC secret for Paddle webhook signature verification
 
 ## Key Conventions
 
@@ -101,6 +104,31 @@ docker compose up --build
 - CORS: env-based origins via `CORS_ORIGINS`; global exception handler logs unhandled errors
 - Root `.dockerignore` excludes `.git`, tests, caches from server build context
 - Node version pinned: `app/.nvmrc` (20) + `engines.node` in `package.json`
+- `v-ripple` directive registered globally in `main.ts` — use on buttons, cards, clickable rows
+- `.stagger-item` CSS class + inline `animationDelay` for list entrance animations
+- `useCountUp` composable for animated number transitions
+- Design tokens in `app/src/style.css` — always use CSS variables (`--bg`, `--accent`, `--t1`/`--t2`/`--t3`), never hardcode colors
+- `useLocalData` composable: IndexedDB primary store for all user data (idb-keyval)
+- Auth is optional: router never blocks guests, API 401 doesn't redirect to login
+
+## Local-First Architecture
+
+- **Primary data store**: IndexedDB via `useLocalData` composable
+- All user data (notes, tags, statuses, bookmarks, quotes, collections) writes to IndexedDB first, syncs to server if logged in
+- `useSync` composable: pulls server data into IndexedDB on login + reconnect
+- `useFileScanner`: Capacitor-native device scanner for `/Audiobooks/` folder
+- `isGuest` computed in `useAuth` — true when no user logged in
+- Guest views: DashboardView shows welcome card, SettingsView shows "Guest" profile
+
+## Monetization
+
+- **Free plan**: max 20 uploaded books (enforced in `server/upload.py`, `FREE_BOOK_LIMIT`)
+- **Premium**: unlimited books, $4/month via Paddle
+- Paywall triggers on upload at limit (403 `limit_reached` → `PaywallModal`)
+- `server/payments.py`: Paddle webhook handler (subscription.activated/canceled)
+- User model: `plan` (free/premium), `stripe_customer_id` (Paddle customer ID)
+- Settings: plan badge + X/20 counter + upgrade button
+- Onboarding: `/welcome` route, 3 screens, triggered on first visit (`localStorage: leerio_onboarded`)
 
 ## Authentication & Multi-Tenancy
 
@@ -205,6 +233,11 @@ make app-test      # vitest --coverage
 - Dev dependencies: `server/requirements-dev.txt` (extends requirements.txt)
 - Coverage config: `pyproject.toml` (Python), `app/vite.config.ts` (frontend)
 - Coverage thresholds enforced: Python 30% (`fail_under`), frontend 3% lines (`thresholds`) — raise as coverage improves
+- **E2E tests**: `app/e2e/tests/` — run with `make e2e` (Playwright)
+  - `interactions.spec.ts` — smoke tests that click buttons and verify results (not just visibility)
+  - Tag `@needs-books` for tests requiring book data (skipped in CI without S3 books)
+  - Auth setup: `e2e/auth.setup.ts` (local email/password login, not Google OAuth)
+  - Telemetry: `POST /api/telemetry` logs events (fire-and-forget, no DB)
 
 ### Git hooks
 Runs automatically on `git commit` (after `make setup`):
