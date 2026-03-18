@@ -46,6 +46,12 @@ const {
 
 const seekPercent = computed(() => (duration.value > 0 ? (currentTime.value / duration.value) * 100 : 0))
 
+function trackDisplayName(filename: string, index: number): string {
+  const name = filename.replace(/\.\w+$/, '')
+  if (/^\d+$/.test(name)) return t('book.chapterN', { n: index + 1 })
+  return name
+}
+
 function onSeekInput() {
   startSeek()
 }
@@ -136,7 +142,7 @@ const SLEEP_OPTIONS = computed(() => [
     <!-- Now playing -->
     <div class="mb-4">
       <p class="truncate text-[14px] font-semibold text-[--t1]">
-        {{ currentTrack?.filename ?? '—' }}
+        {{ currentTrack ? trackDisplayName(currentTrack.filename, currentTrackIndex) : '—' }}
       </p>
       <p class="text-[12px] text-[--t3]">
         {{ t('player.trackN', { n: currentTrackIndex + 1, total: tracks.length }) }}
@@ -369,7 +375,7 @@ const SLEEP_OPTIONS = computed(() => [
             {{ track.index + 1 }}
           </span>
           <span class="flex-1 truncate text-[13px] font-medium">
-            {{ track.filename }}
+            {{ trackDisplayName(track.filename, track.index) }}
           </span>
           <span v-if="track.duration" class="shrink-0 text-[11px] text-[--t3]">
             {{ formatTime(track.duration) }}

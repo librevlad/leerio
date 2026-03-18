@@ -10,6 +10,7 @@ const {
   isPlayerVisible,
   isFullscreen,
   currentTrack,
+  currentTrackIndex,
   overallProgress,
   totalElapsed,
   totalDuration,
@@ -23,6 +24,12 @@ const {
   audioError,
   retryAudio,
 } = usePlayer()
+
+function trackDisplayName(filename: string, index: number): string {
+  const name = filename.replace(/\.\w+$/, '')
+  if (/^\d+$/.test(name)) return t('book.chapterN', { n: index + 1 })
+  return name
+}
 </script>
 
 <template>
@@ -68,7 +75,9 @@ const {
             {{ currentBook.author }}
           </p>
           <p class="mt-0.5 flex items-center gap-1.5 truncate text-[11px] leading-tight text-[--t3]">
-            <span class="truncate">{{ currentTrack?.filename ?? '' }}</span>
+            <span class="truncate">{{
+              currentTrack ? trackDisplayName(currentTrack.filename, currentTrackIndex) : ''
+            }}</span>
             <span v-if="totalDuration > 0" class="shrink-0 tabular-nums">
               {{ formatTime(totalElapsed) }} / {{ formatTime(totalDuration) }}
             </span>

@@ -82,6 +82,12 @@ function formatDuration(seconds: number): string {
   return `${m}м`
 }
 
+function trackDisplayName(filename: string, index: number): string {
+  const name = filename.replace(/\.\w+$/, '')
+  if (/^\d+$/.test(name)) return t('book.chapterN', { n: index + 1 })
+  return name
+}
+
 const coverSrc = computed(() => {
   if (!currentBook.value) return ''
   const id = currentBook.value.id
@@ -594,7 +600,7 @@ function closeOverlays() {
                   class="truncate text-[13px]"
                   :class="i === currentTrackIndex ? 'font-semibold text-[--t1]' : 'text-[--t2]'"
                 >
-                  {{ track.filename }}
+                  {{ trackDisplayName(track.filename, i) }}
                 </p>
                 <!-- Mini progress for current track -->
                 <div
@@ -803,12 +809,12 @@ function closeOverlays() {
               <IconSkipBack :size="22" />
             </button>
             <button
-              class="flex h-10 w-10 items-center justify-center rounded-full border-0 text-[13px] font-bold text-[--t2] transition-colors hover:text-[--t1]"
+              class="flex h-10 w-10 items-center justify-center rounded-full border-0 text-[--t2] transition-colors hover:text-[--t1]"
               style="background: rgba(255, 255, 255, 0.06)"
               :aria-label="t('player.back15')"
               @click="skipBackward()"
             >
-              -15
+              <IconRewind15 :size="22" />
             </button>
             <button
               class="flex h-16 w-16 items-center justify-center rounded-full border-0 transition-all"
@@ -819,12 +825,12 @@ function closeOverlays() {
               <component :is="isPlaying ? IconPause : IconPlay" :size="24" style="color: #fff" />
             </button>
             <button
-              class="flex h-10 w-10 items-center justify-center rounded-full border-0 text-[13px] font-bold text-[--t2] transition-colors hover:text-[--t1]"
+              class="flex h-10 w-10 items-center justify-center rounded-full border-0 text-[--t2] transition-colors hover:text-[--t1]"
               style="background: rgba(255, 255, 255, 0.06)"
               :aria-label="t('player.forward30')"
               @click="skipForward(30)"
             >
-              +30
+              <IconForward30 :size="22" />
             </button>
             <button
               class="flex h-11 w-11 items-center justify-center rounded-full border-0 bg-transparent text-[--t2] transition-colors hover:text-[--t1]"
@@ -954,7 +960,7 @@ function closeOverlays() {
                 @click="playTrack(i)"
               >
                 <span class="w-6 text-right text-[11px] text-[--t3]">{{ i + 1 }}</span>
-                <span class="min-w-0 flex-1 truncate text-[12px]">{{ track.filename }}</span>
+                <span class="min-w-0 flex-1 truncate text-[12px]">{{ trackDisplayName(track.filename, i) }}</span>
                 <span
                   v-if="isTrackDownloaded(i)"
                   class="h-2 w-2 flex-shrink-0 rounded-full bg-emerald-400"
