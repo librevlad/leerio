@@ -29,8 +29,18 @@ export function useSync() {
 async function pullFromServer(local: ReturnType<typeof useLocalData>) {
   try {
     const results = await Promise.allSettled([
-      api.getAllBookStatuses().then((data) => local.importStatuses(data)),
-      api.getAllProgress().then((data) => local.importProgress(data)),
+      api.getAllBookStatuses().then((data) => {
+        const mapped: Record<string, { status: string; updated: string }> = {}
+        for (const [k, v] of Object.entries(data)) {
+          if (v.status) mapped[k] = { status: v.status, updated: v.updated ?? new Date().toISOString() }
+        }
+        return local.importStatuses(mapped)
+      }),
+      api.getAllProgress().then((data) => {
+        const mapped: Record<string, number> = {}
+        for (const [k, v] of Object.entries(data)) mapped[k] = v.pct
+        return local.importProgress(mapped)
+      }),
       api.getUserSettings().then((s) => local.setSettings(s)),
     ])
 
