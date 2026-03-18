@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useToast } from '../composables/useToast'
+import { useTracking } from '../composables/useTelemetry'
 
 const router = useRouter()
 const { t } = useI18n()
 const toast = useToast()
+const { track } = useTracking()
+
+onMounted(() => track('onboarding_started'))
 
 const step = ref(1)
 const files = ref<File[]>([])
@@ -50,6 +54,7 @@ function formatSize(bytes: number): string {
 }
 
 async function finish() {
+  track('onboarding_completed', { files: files.value.length })
   localStorage.setItem('leerio_onboarded', '1')
 
   // If files were added, upload them

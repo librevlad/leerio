@@ -447,6 +447,17 @@ def auth_me(user: dict = Depends(get_current_user)):
     }
 
 
+@app.post("/api/telemetry")
+async def telemetry(request: Request):
+    """Fire-and-forget telemetry. Logs events for analytics."""
+    try:
+        data = await request.json()
+        logger.info("telemetry: %s %s", data.get("event", "?"), {k: v for k, v in data.items() if k != "event"})
+    except Exception:
+        pass
+    return {"ok": True}
+
+
 @app.post("/api/auth/logout")
 def auth_logout():
     response = JSONResponse(content={"ok": True})

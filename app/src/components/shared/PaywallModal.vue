@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuth } from '../../composables/useAuth'
 import { useToast } from '../../composables/useToast'
+import { useTracking } from '../../composables/useTelemetry'
 
 declare global {
   interface Window {
@@ -21,11 +22,19 @@ declare global {
   }
 }
 
-defineProps<{ open: boolean }>()
+const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ close: [] }>()
 const { t } = useI18n()
 const { user } = useAuth()
 const toast = useToast()
+const { track } = useTracking()
+
+watch(
+  () => props.open,
+  (v) => {
+    if (v) track('paywall_shown')
+  },
+)
 const priceId = ref('')
 const loading = ref(false)
 
@@ -40,6 +49,7 @@ onMounted(async () => {
 })
 
 function openCheckout() {
+  track('upgrade_clicked')
   if (!priceId.value) {
     toast.error('Payment not configured')
     return
