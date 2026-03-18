@@ -10,6 +10,7 @@ let checkAbort: AbortController | null = null
 
 export function useAuth() {
   const isLoggedIn = computed(() => !!user.value)
+  const isGuest = computed(() => !user.value)
   const isAdmin = computed(() => user.value?.role === 'admin')
 
   async function checkAuth(): Promise<boolean> {
@@ -147,6 +148,7 @@ export function useAuth() {
     user,
     loading,
     isLoggedIn,
+    isGuest,
     isAdmin,
     checkAuth,
     loginWithGoogle,

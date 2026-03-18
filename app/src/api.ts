@@ -1,5 +1,4 @@
 import { Capacitor } from '@capacitor/core'
-import router from './router'
 import { useNetwork } from './composables/useNetwork'
 import { useOfflineCache } from './composables/useOfflineCache'
 import { useOfflineQueue } from './composables/useOfflineQueue'
@@ -17,7 +16,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     ...options,
   })
   if (res.status === 401) {
-    router.push('/login')
+    // Don't redirect — guest users can use app without login
     throw new Error('Not authenticated')
   }
   if (!res.ok) {
@@ -34,7 +33,6 @@ async function requestFormData<T>(path: string, formData: FormData): Promise<T> 
     body: formData,
   })
   if (res.status === 401) {
-    router.push('/login')
     throw new Error('Not authenticated')
   }
   if (!res.ok) {

@@ -76,20 +76,12 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach(async (to) => {
+router.beforeEach(async () => {
   const { checkAuth } = useAuth()
 
-  if (to.meta.public) {
-    // Still check auth in background to populate user state
-    checkAuth()
-    return true
-  }
-
-  const authed = await checkAuth()
-  if (!authed) {
-    return { name: 'login' }
-  }
-
+  // Check auth in background for all routes — never block navigation
+  // Unauthenticated users get full local functionality
+  checkAuth()
   return true
 })
 

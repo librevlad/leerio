@@ -21,16 +21,14 @@ const sidebarCollapsed = ref(false)
 const player = usePlayer()
 const { isPlayerVisible } = player
 const downloads = useDownloads()
-const { loading: authLoading, isLoggedIn } = useAuth()
+const { loading: authLoading } = useAuth()
 const { isOnline } = useNetwork()
 const { load: loadCategories } = useCategories()
 const route = useRoute()
 
 const isLoginPage = computed(() => route.name === 'login')
 const isPublicPage = computed(() => !!route.meta.public)
-const showApp = computed(
-  () => (!authLoading.value || isPublicPage.value) && (isLoggedIn.value || isPublicPage.value) && !isLoginPage.value,
-)
+const showApp = computed(() => !authLoading.value && !isLoginPage.value)
 
 // PWA install prompt
 interface BeforeInstallPromptEvent extends Event {
