@@ -104,16 +104,18 @@ function seekToBookmark(bm: Bookmark) {
 watch(currentBook, () => loadBookmarks())
 
 // ── Speed control ──
+const speeds = PLAYBACK_SPEEDS
 const showSpeedPicker = ref(false)
 
 function cycleSpeed() {
-  const speeds = [...PLAYBACK_SPEEDS]
-  const idx = speeds.indexOf(playbackRate.value)
-  setPlaybackRate(speeds[(idx + 1) % speeds.length] ?? 1)
+  const arr = speeds as readonly number[]
+  const idx = arr.indexOf(playbackRate.value)
+  const next = arr[(idx + 1) % arr.length] ?? 1
+  setPlaybackRate(next)
 }
 
-function pickSpeed(s: (typeof PLAYBACK_SPEEDS)[number]) {
-  setPlaybackRate(s)
+function pickSpeed(rate: number) {
+  setPlaybackRate(rate)
   showSpeedPicker.value = false
 }
 
@@ -252,7 +254,7 @@ const SLEEP_OPTIONS = computed(() => [
           style="background: var(--bg-card)"
         >
           <button
-            v-for="s in PLAYBACK_SPEEDS"
+            v-for="s in speeds"
             :key="s"
             class="block w-full cursor-pointer border-0 bg-transparent px-4 py-1.5 text-left text-[12px] transition-colors hover:bg-white/5"
             :class="s === playbackRate ? 'font-semibold text-[--accent]' : 'text-[--t2]'"
