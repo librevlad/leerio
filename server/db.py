@@ -80,21 +80,6 @@ def init_db():
             )
             """
         )
-        # Migrate: add plan/paddle columns if missing
-        try:
-            conn.execute("ALTER TABLE users ADD COLUMN plan TEXT NOT NULL DEFAULT 'free'")
-        except sqlite3.OperationalError:
-            pass
-        try:
-            conn.execute("ALTER TABLE users ADD COLUMN paddle_customer_id TEXT")
-        except sqlite3.OperationalError:
-            pass
-        # Rename legacy stripe_customer_id → paddle_customer_id
-        try:
-            conn.execute("ALTER TABLE users RENAME COLUMN stripe_customer_id TO paddle_customer_id")
-        except sqlite3.OperationalError:
-            pass
-
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS allowed_emails (
@@ -130,19 +115,6 @@ def init_db():
             )
             """
         )
-
-        # Migrate: add columns for ingestion pipeline (safe to re-run)
-        for col, default in [
-            ("description TEXT DEFAULT ''", None),
-            ("language TEXT DEFAULT 'ru'", None),
-            ("source TEXT DEFAULT 'manual'", None),
-            ("external_id TEXT", None),
-            ("fingerprint TEXT", None),
-        ]:
-            try:
-                conn.execute(f"ALTER TABLE books ADD COLUMN {col}")
-            except Exception:
-                pass  # Column already exists
 
         conn.execute(
             """
