@@ -5,6 +5,7 @@ vi.mock('./useNetwork', () => ({
     isOnline: { value: true },
     onReconnect: vi.fn(),
   }),
+  onReconnectPermanent: vi.fn(),
 }))
 
 import { useOfflineQueue } from './useOfflineQueue'
