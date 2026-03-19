@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { api, coverUrl } from '../api'
 import { formatSizeMB, formatRemaining as _formatRemaining } from '../utils/format'
+import { STORAGE } from '../constants/storage'
 import type { Book } from '../types'
 import BookNotes from '../components/book/BookNotes.vue'
 import BookTags from '../components/book/BookTags.vue'
@@ -89,10 +90,10 @@ const tabIcons: Record<string, typeof IconList> = {
   about: IconInfo,
 }
 
-const apkDismissed = ref(localStorage.getItem('apk-prompt-dismissed') === '1')
+const apkDismissed = ref(localStorage.getItem(STORAGE.APK_DISMISSED) === '1')
 function dismissApk() {
   apkDismissed.value = true
-  localStorage.setItem('apk-prompt-dismissed', '1')
+  localStorage.setItem(STORAGE.APK_DISMISSED, '1')
 }
 
 async function startDownload() {

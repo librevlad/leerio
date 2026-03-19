@@ -1,3 +1,5 @@
+import { STORAGE } from '../constants/storage'
+
 const DEFAULT_TTL = 24 * 60 * 60 * 1000 // 24 hours
 
 interface CacheEntry<T> {
@@ -36,14 +38,14 @@ export function useOfflineCache() {
   }
 
   function clear() {
-    const keys = Object.keys(localStorage).filter((k) => k.startsWith('leerio_cache_'))
+    const keys = Object.keys(localStorage).filter((k) => k.startsWith(STORAGE.CACHE_PREFIX))
     keys.forEach((k) => localStorage.removeItem(k))
   }
 
   function cacheSize(): number {
     let total = 0
     for (const key of Object.keys(localStorage)) {
-      if (key.startsWith('leerio_cache_')) {
+      if (key.startsWith(STORAGE.CACHE_PREFIX)) {
         total += (localStorage.getItem(key) ?? '').length * 2 // rough byte estimate
       }
     }

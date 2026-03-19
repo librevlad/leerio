@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { api } from '../api'
+import { STORAGE } from '../constants/storage'
 import { useDownloads } from '../composables/useDownloads'
 import { useLocalBooks } from '../composables/useLocalBooks'
 import { useOfflineCache } from '../composables/useOfflineCache'
@@ -76,7 +77,7 @@ async function saveGoal() {
 
 async function setSpeed(speed: number) {
   playbackSpeed.value = speed
-  localStorage.setItem('leerio_playback_rate', String(speed))
+  localStorage.setItem(STORAGE.PLAYBACK_RATE, String(speed))
   await api.updateUserSettings({ playback_speed: speed }).catch(() => {})
 }
 

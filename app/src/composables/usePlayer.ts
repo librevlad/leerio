@@ -5,6 +5,7 @@ import { useLocalBooks } from './useLocalBooks'
 import { useNetwork } from './useNetwork'
 import { useToast } from './useToast'
 import type { Book, Track } from '../types'
+import { STORAGE } from '../constants/storage'
 
 // Cached i18n instance (lazy-loaded to avoid circular dependency in tests)
 let _i18n: { global: { t: (key: string) => string } } | null = null
@@ -37,7 +38,7 @@ const duration = ref(0)
 const volume = ref(1)
 const isPlayerVisible = ref(false)
 const playingOffline = ref(false)
-const playbackRate = ref(parseFloat(localStorage.getItem('leerio_playback_rate') || '1'))
+const playbackRate = ref(parseFloat(localStorage.getItem(STORAGE.PLAYBACK_RATE) || '1'))
 const sleepTimer = ref<number | null>(null)
 const isFullscreen = ref(false)
 const audioError = ref(false)
@@ -170,7 +171,7 @@ function savePosition() {
   // Always save to localStorage for offline fallback
   try {
     localStorage.setItem(
-      `leerio_pos_${currentBook.value.id}`,
+      `${STORAGE.POSITION_PREFIX}${currentBook.value.id}`,
       JSON.stringify({ track_index: currentTrackIndex.value, position: currentTime.value }),
     )
   } catch {
@@ -341,7 +342,7 @@ async function loadBook(book: Book) {
       // Restore position from localStorage
       let pos = { track_index: 0, position: 0 }
       try {
-        const savedPos = localStorage.getItem(`leerio_pos_${book.id}`)
+        const savedPos = localStorage.getItem(`${STORAGE.POSITION_PREFIX}${book.id}`)
         if (savedPos) pos = JSON.parse(savedPos)
       } catch {
         /* corrupted localStorage */
@@ -393,7 +394,7 @@ async function loadBook(book: Book) {
     } catch {
       // Offline — try localStorage fallback
       try {
-        const savedPos = localStorage.getItem(`leerio_pos_${book.id}`)
+        const savedPos = localStorage.getItem(`${STORAGE.POSITION_PREFIX}${book.id}`)
         if (savedPos) pos = JSON.parse(savedPos)
       } catch {
         /* corrupted localStorage */
@@ -501,7 +502,7 @@ function setVolume(v: number) {
 function setPlaybackRate(rate: number) {
   playbackRate.value = rate
   if (audio) audio.playbackRate = rate
-  localStorage.setItem('leerio_playback_rate', String(rate))
+  localStorage.setItem(STORAGE.PLAYBACK_RATE, String(rate))
   updatePositionState()
 }
 

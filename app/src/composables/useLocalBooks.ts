@@ -1,7 +1,8 @@
 import { ref } from 'vue'
 import type { LocalBook, LocalTrack } from '../types'
+import { STORAGE } from '../constants/storage'
 
-const STORAGE_KEY = 'leerio_local_books'
+const STORAGE_KEY = STORAGE.LOCAL_BOOKS
 const DB_NAME = 'leerio_local_audio'
 const DB_STORE = 'tracks'
 

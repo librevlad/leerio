@@ -6,6 +6,7 @@ import { useAuth } from '../composables/useAuth'
 import { usePlayer } from '../composables/usePlayer'
 import { useCategories } from '../composables/useCategories'
 import { formatRemaining } from '../utils/format'
+import { STORAGE } from '../constants/storage'
 import { useToast } from '../composables/useToast'
 import type { DashboardData, ShelfBook } from '../types'
 import ActivityHeatmap from '../components/dashboard/ActivityHeatmap.vue'
@@ -28,7 +29,7 @@ const recommendations = ref<ShelfBook[]>([])
 const recentBooks = ref<ShelfBook[]>([])
 const loading = ref(true)
 const coverErrors = reactive(new Set<string>())
-const upgradeBannerDismissed = ref(localStorage.getItem('upgrade-banner-dismissed') === '1')
+const upgradeBannerDismissed = ref(localStorage.getItem(STORAGE.UPGRADE_DISMISSED) === '1')
 
 const greeting = computed(() => {
   const h = new Date().getHours()
