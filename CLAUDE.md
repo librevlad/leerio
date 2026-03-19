@@ -54,11 +54,15 @@ uvicorn server.api:app --reload
 # or: make server-dev
 ```
 
+**Note:** Backend requires S3 credentials to complete startup (`sync_books()`). Without `S3_*` env vars, uvicorn hangs after "S3 not configured" warning. Test UI changes by deploying to production.
+
 ### Frontend
 ```bash
 cd app && npm install && npm run dev
 # or: make app-dev
 ```
+
+Vite dev server must run from `app/` directory (`cd app && npx vite`), not project root.
 
 ### TUI
 ```bash
@@ -110,12 +114,18 @@ docker compose up --build
 - Design tokens in `app/src/style.css` — always use CSS variables (`--bg`, `--accent`, `--t1`/`--t2`/`--t3`), never hardcode colors
 - `useLocalData` composable: IndexedDB primary store for all user data (idb-keyval)
 - Auth is optional: router never blocks guests, API 401 doesn't redirect to login
+- Never use `.catch(() => {})` on API calls — silently swallows 403 paywall and other meaningful errors. Use try/catch with explicit error handling.
+- Range inputs: use `-webkit-slider-runnable-track` (not `-webkit-slider-track`) for cross-browser consistency
+- db.py schema: all columns defined in CREATE TABLE — no ALTER TABLE migrations (collapsed for pre-production)
+- App-level error boundary (`onErrorCaptured` in App.vue) catches uncaught component errors with recovery UI
 
 ## Local-First Architecture
 
 - **Primary data store**: IndexedDB via `useLocalData` composable
 - All user data (notes, tags, statuses, bookmarks, quotes, collections) writes to IndexedDB first, syncs to server if logged in
-- `useSync` composable: pulls server data into IndexedDB on login + reconnect
+- `useSync` composable: syncs 8 data types on login + reconnect (statuses, progress, settings, quotes, bookmarks, collections, notes, tags)
+- Bulk sync endpoints: `GET /api/user/{bookmarks,notes,tags}/all` — return `Record<bookId, data>` maps
+- `trackDisplayName()` in `utils/format.ts` — converts numeric filenames ("0101.mp3") to "Глава N"
 - `useFileScanner`: Capacitor-native device scanner for `/Audiobooks/` folder
 - `isGuest` computed in `useAuth` — true when no user logged in
 - Guest views: DashboardView shows welcome card, SettingsView shows "Guest" profile
