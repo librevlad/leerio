@@ -30,6 +30,7 @@ def _sanitize_filename(name: str) -> str:
     name = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", name)  # replace unsafe chars
     return name or "track.mp3"
 
+
 router = APIRouter(prefix="/api/user/books", tags=["user-books"])
 
 
