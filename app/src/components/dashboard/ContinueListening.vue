@@ -7,11 +7,13 @@ import ProgressBar from '../shared/ProgressBar.vue'
 import { IconMusic, IconPlay } from '../shared/icons'
 import { useCategories } from '../../composables/useCategories'
 import { usePlayer } from '../../composables/usePlayer'
+import { useToast } from '../../composables/useToast'
 import { api } from '../../api'
 
 const props = defineProps<{ books: ActiveBook[] }>()
 
 const { t } = useI18n()
+const toast = useToast()
 const activeBooks = computed(() => props.books.filter((b) => b.progress > 0))
 const { currentBook, loadBook, togglePlay } = usePlayer()
 const nowPlayingId = computed(() => currentBook.value?.id ?? null)
@@ -32,8 +34,12 @@ async function playBook(bookId: string) {
   if (nowPlayingId.value === bookId) {
     togglePlay()
   } else {
-    const book = await api.getBook(bookId)
-    loadBook(book)
+    try {
+      const book = await api.getBook(bookId)
+      loadBook(book)
+    } catch {
+      toast.error(t('player.tracksLoadError'))
+    }
   }
 }
 </script>

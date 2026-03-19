@@ -5,6 +5,7 @@ import { api, coverUrl } from '../api'
 import { useAuth } from '../composables/useAuth'
 import { usePlayer } from '../composables/usePlayer'
 import { useCategories } from '../composables/useCategories'
+import { useToast } from '../composables/useToast'
 import type { DashboardData, ShelfBook } from '../types'
 import ActivityHeatmap from '../components/dashboard/ActivityHeatmap.vue'
 import YearlyGoal from '../components/dashboard/YearlyGoal.vue'
@@ -16,6 +17,7 @@ import { IconMusic, IconPlay, IconPause } from '../components/shared/icons'
 import { usePullToRefresh } from '../composables/usePullToRefresh'
 
 const { t } = useI18n()
+const toast = useToast()
 const { user, isGuest } = useAuth()
 const player = usePlayer()
 const { gradient: catGradient } = useCategories()
@@ -73,8 +75,12 @@ async function playBook(bookId: string) {
   if (nowPlayingId.value === bookId) {
     player.togglePlay()
   } else {
-    const book = await api.getBook(bookId)
-    player.loadBook(book)
+    try {
+      const book = await api.getBook(bookId)
+      player.loadBook(book)
+    } catch {
+      toast.error(t('player.tracksLoadError'))
+    }
   }
 }
 
@@ -391,10 +397,11 @@ onMounted(loadData)
               class="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl"
             >
               <img
-                v-if="smartRecommendation.has_cover"
+                v-if="smartRecommendation.has_cover && !coverErrors.has(String(smartRecommendation.id))"
                 :src="coverUrl(smartRecommendation.id)"
                 :alt="smartRecommendation.title"
                 class="h-full w-full object-cover"
+                @error="coverErrors.add(String(smartRecommendation.id))"
               />
               <div v-else class="flex h-full w-full items-center justify-center bg-[--card-hover]">
                 <IconMusic :size="18" class="text-[--t3]" />
