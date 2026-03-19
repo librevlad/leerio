@@ -83,16 +83,16 @@ def init_db():
         # Migrate: add plan/paddle columns if missing
         try:
             conn.execute("ALTER TABLE users ADD COLUMN plan TEXT NOT NULL DEFAULT 'free'")
-        except Exception:
+        except sqlite3.OperationalError:
             pass
         try:
             conn.execute("ALTER TABLE users ADD COLUMN paddle_customer_id TEXT")
-        except Exception:
+        except sqlite3.OperationalError:
             pass
         # Rename legacy stripe_customer_id → paddle_customer_id
         try:
             conn.execute("ALTER TABLE users RENAME COLUMN stripe_customer_id TO paddle_customer_id")
-        except Exception:
+        except sqlite3.OperationalError:
             pass
 
         conn.execute(
