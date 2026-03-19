@@ -4,17 +4,25 @@ import type { Book } from '../types'
 
 const books = ref<Book[]>([])
 const loading = ref(false)
+let inflight: Promise<void> | null = null
 
 export function useBooks() {
   async function load(params?: Record<string, string>) {
+    if (inflight) return inflight
     loading.value = true
-    try {
-      books.value = await api.getBooks(params)
-    } catch {
-      books.value = []
-    } finally {
-      loading.value = false
-    }
+    inflight = api
+      .getBooks(params)
+      .then((b) => {
+        books.value = b
+      })
+      .catch(() => {
+        books.value = []
+      })
+      .finally(() => {
+        loading.value = false
+        inflight = null
+      })
+    return inflight
   }
 
   const categories = computed(() => {

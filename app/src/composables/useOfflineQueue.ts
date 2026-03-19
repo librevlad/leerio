@@ -1,4 +1,4 @@
-import { useNetwork } from './useNetwork'
+import { onReconnectPermanent } from './useNetwork'
 import { STORAGE } from '../constants/storage'
 
 interface QueuedRequest {
@@ -54,8 +54,7 @@ export function useOfflineQueue() {
 
   if (!replayRegistered) {
     replayRegistered = true
-    const { onReconnect } = useNetwork()
-    onReconnect(() => replay())
+    onReconnectPermanent(() => replay())
   }
 
   return { enqueue, replay }

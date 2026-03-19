@@ -8,7 +8,7 @@
 import { watch } from 'vue'
 import { useAuth } from './useAuth'
 import { useLocalData } from './useLocalData'
-import { useNetwork } from './useNetwork'
+import { onReconnectPermanent } from './useNetwork'
 import { api } from '../api'
 import type { Collection, Quote } from '../types'
 
@@ -34,11 +34,10 @@ export function useSync() {
     { immediate: true },
   )
 
-  // Re-sync on reconnect (register only once)
+  // Re-sync on reconnect (permanent — lives for app lifetime)
   if (!reconnectRegistered) {
     reconnectRegistered = true
-    const { onReconnect } = useNetwork()
-    onReconnect(async () => {
+    onReconnectPermanent(async () => {
       if (isLoggedIn.value) {
         await syncAll(local)
       }

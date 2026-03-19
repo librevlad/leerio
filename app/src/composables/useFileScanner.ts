@@ -38,7 +38,7 @@ export function useFileScanner() {
 
         // Each folder = one book
         const bookPath = `${SCAN_DIR}/${entry.name}`
-        const tracks = await scanFolder(bookPath, entry.name)
+        const tracks = await scanFolder(bookPath)
 
         if (tracks.length > 0) {
           books.push({
@@ -61,7 +61,7 @@ export function useFileScanner() {
     }
   }
 
-  async function scanFolder(path: string, _folderName: string): Promise<LocalTrack[]> {
+  async function scanFolder(path: string): Promise<LocalTrack[]> {
     try {
       const result = await Filesystem.readdir({
         path,

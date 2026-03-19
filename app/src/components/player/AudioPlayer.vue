@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { usePlayer } from '../../composables/usePlayer'
+import { usePlayer, PLAYBACK_SPEEDS } from '../../composables/usePlayer'
 import { trackDisplayName as _trackDisplayName } from '../../utils/format'
 import { api } from '../../api'
 import type { Bookmark } from '../../types'
@@ -104,7 +104,7 @@ function seekToBookmark(bm: Bookmark) {
 watch(currentBook, () => loadBookmarks())
 
 // ── Speed control ──
-const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
+const SPEEDS = PLAYBACK_SPEEDS
 const showSpeedPicker = ref(false)
 
 function cycleSpeed() {

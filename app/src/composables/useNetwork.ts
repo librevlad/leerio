@@ -24,9 +24,15 @@ function init() {
   })
 }
 
+/** Register a permanent reconnect callback (never removed, for singleton composables). */
+export function onReconnectPermanent(callback: () => void) {
+  reconnectCallbacks.push(callback)
+}
+
 export function useNetwork() {
   init()
 
+  /** Register a reconnect callback that is removed when the calling component unmounts. */
   function onReconnect(callback: () => void) {
     reconnectCallbacks.push(callback)
     onUnmounted(() => {

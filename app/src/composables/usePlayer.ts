@@ -44,6 +44,7 @@ const isFullscreen = ref(false)
 const audioError = ref(false)
 
 let sleepTimerId: ReturnType<typeof setTimeout> | null = null
+let sleepAtTrackEnd = false
 
 const downloads = useDownloads()
 const toast = useToast()
@@ -95,6 +96,12 @@ function ensureAudio(): HTMLAudioElement {
     })
 
     audio.addEventListener('ended', () => {
+      if (sleepAtTrackEnd) {
+        sleepAtTrackEnd = false
+        audio.pause()
+        isPlaying.value = false
+        return
+      }
       nextTrack()
     })
 
@@ -533,21 +540,16 @@ function setSleepTimer(minutes: number | null) {
   }
   if (minutes === null) {
     sleepTimer.value = null
+    sleepAtTrackEnd = false
     return
   }
   if (minutes === -1) {
-    // End of current track
-    sleepTimer.value = null
-    const onEnded = () => {
-      const a = ensureAudio()
-      a.pause()
-      a.removeEventListener('ended', onEnded)
-    }
-    const a = ensureAudio()
-    a.addEventListener('ended', onEnded, { once: true })
+    // Pause at end of current track (flag checked in main ended handler)
+    sleepAtTrackEnd = true
     sleepTimer.value = 0
     return
   }
+  sleepAtTrackEnd = false
   sleepTimer.value = minutes
   // Countdown every minute
   const tick = () => {
