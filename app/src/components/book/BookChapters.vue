@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../../api'
+import { trackDisplayName as _trackDisplayName } from '../../utils/format'
 import { usePlayer } from '../../composables/usePlayer'
 import { IconChevronDown, IconChevronUp, IconPlay } from '../shared/icons'
 import type { Book, Track } from '../../types'
@@ -40,14 +41,7 @@ function formatDuration(sec: number): string {
 }
 
 function trackName(track: Track, index: number): string {
-  const fn = track.filename
-  // If filename looks like a raw file (e.g. "0101.mp3", "003.mp3"), show "Глава N"
-  if (/^\d+\.mp3$/i.test(fn)) return t('book.chapterN', { n: index + 1 })
-  // Strip .mp3 extension for display
-  const name = fn.replace(/\.mp3$/i, '')
-  // If it's still just digits, show "Глава N"
-  if (/^\d+$/.test(name)) return t('book.chapterN', { n: index + 1 })
-  return name
+  return _trackDisplayName(track.filename, index, t)
 }
 
 async function handleTrackClick(index: number) {

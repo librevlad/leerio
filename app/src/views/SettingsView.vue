@@ -14,6 +14,7 @@ import { useLocale } from '../composables/useLocale'
 import { formatSize } from '../utils/format'
 import { useCountUp } from '../composables/useCountUp'
 import PaywallModal from '../components/shared/PaywallModal.vue'
+import { PLAYBACK_SPEEDS } from '../composables/usePlayer'
 import { version } from '../../package.json'
 
 const router = useRouter()
@@ -34,8 +35,6 @@ const totalBooks = ref<number | null>(null)
 const showShortcuts = ref(false)
 const showPaywall = ref(false)
 
-// Shared constant from usePlayer
-import { PLAYBACK_SPEEDS } from '../composables/usePlayer'
 const speeds = PLAYBACK_SPEEDS
 
 // Count-up animations for stats
