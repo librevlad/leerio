@@ -111,9 +111,10 @@ async function deleteBookmark(bm: Bookmark) {
 
 function seekToBookmark(bm: Bookmark) {
   if (bm.track !== currentTrackIndex.value) {
-    playTrack(bm.track)
+    playTrack(bm.track, bm.time)
+  } else {
+    endSeek(bm.time)
   }
-  endSeek(bm.time)
   closeFullscreen()
 }
 

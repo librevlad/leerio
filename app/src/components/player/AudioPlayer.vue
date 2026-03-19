@@ -4,6 +4,9 @@ import { useI18n } from 'vue-i18n'
 import { usePlayer, PLAYBACK_SPEEDS } from '../../composables/usePlayer'
 import { trackDisplayName as _trackDisplayName } from '../../utils/format'
 import { api } from '../../api'
+import { useLocalData } from '../../composables/useLocalData'
+import { useAuth } from '../../composables/useAuth'
+import { useToast } from '../../composables/useToast'
 import type { Bookmark } from '../../types'
 import {
   IconPlay,
@@ -20,6 +23,9 @@ import {
 } from '../shared/icons'
 
 const { t } = useI18n()
+const local = useLocalData()
+const { isLoggedIn } = useAuth()
+const toast = useToast()
 const {
   currentBook,
   tracks,
@@ -67,9 +73,16 @@ const bookmarkNote = ref('')
 const showBookmarkInput = ref(false)
 
 async function loadBookmarks() {
-  if (!currentBook.value) return
+  if (!currentBook.value) {
+    bookmarks.value = []
+    return
+  }
   try {
-    bookmarks.value = await api.getBookmarks(currentBook.value.id)
+    const bms = await local.getBookmarks(currentBook.value.id)
+    bookmarks.value = (bms ?? []).sort((a: Bookmark, b: Bookmark) => {
+      if (a.track !== b.track) return a.track - b.track
+      return a.time - b.time
+    })
   } catch {
     bookmarks.value = []
   }
@@ -77,25 +90,38 @@ async function loadBookmarks() {
 
 async function addBookmark() {
   if (!currentBook.value) return
-  await api.addBookmark(currentBook.value.id, currentTrackIndex.value, currentTime.value, bookmarkNote.value)
-  bookmarkNote.value = ''
-  showBookmarkInput.value = false
-  await loadBookmarks()
+  try {
+    const bm = { track: currentTrackIndex.value, time: currentTime.value, note: bookmarkNote.value, ts: new Date().toISOString() }
+    await local.addBookmark(currentBook.value.id, bm)
+    if (isLoggedIn.value) {
+      await api.addBookmark(currentBook.value.id, currentTrackIndex.value, currentTime.value, bookmarkNote.value).catch(() => {})
+    }
+    bookmarkNote.value = ''
+    showBookmarkInput.value = false
+    toast.success(t('player.bookmarkAdded'))
+    await loadBookmarks()
+  } catch {
+    toast.error(t('player.bookmarkError'))
+  }
 }
 
 async function removeBookmark(bookmarkId: number) {
-  await api.removeBookmark(bookmarkId)
-  await loadBookmarks()
+  if (!currentBook.value) return
+  try {
+    await local.removeBookmark(currentBook.value.id, bookmarkId)
+    if (isLoggedIn.value && bookmarkId) {
+      await api.removeBookmark(bookmarkId).catch(() => {})
+    }
+    toast.success(t('player.bookmarkDeleted'))
+    await loadBookmarks()
+  } catch {
+    toast.error(t('player.bookmarkError'))
+  }
 }
 
 function seekToBookmark(bm: Bookmark) {
   if (bm.track !== currentTrackIndex.value) {
-    playTrack(bm.track)
-    // After track loads, seek to position
-    const unwatch = watch(currentTime, () => {
-      endSeek(bm.time)
-      unwatch()
-    })
+    playTrack(bm.track, bm.time)
   } else {
     endSeek(bm.time)
   }

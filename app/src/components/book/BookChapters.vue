@@ -13,6 +13,7 @@ const props = defineProps<{ book: Book }>()
 const player = usePlayer()
 const tracks = ref<Track[]>([])
 const loading = ref(true)
+const loadError = ref(false)
 const expanded = ref(false)
 
 const COLLAPSED_LIMIT = 8
@@ -48,22 +49,25 @@ async function handleTrackClick(index: number) {
   if (isCurrentBook.value) {
     player.playTrack(index)
   } else {
-    await player.loadBook(props.book)
-    player.playTrack(index)
+    await player.loadBook(props.book, index)
   }
   player.openFullscreen()
 }
 
-onMounted(async () => {
+async function loadTracks() {
+  loading.value = true
+  loadError.value = false
   try {
     const res = await api.getBookTracks(props.book.id)
     tracks.value = res.tracks
   } catch {
-    // silent — no tracks
+    loadError.value = true
   } finally {
     loading.value = false
   }
-})
+}
+
+onMounted(loadTracks)
 </script>
 
 <template>
@@ -73,6 +77,17 @@ onMounted(async () => {
     <!-- Skeleton -->
     <div v-if="loading" class="space-y-2">
       <div v-for="i in 4" :key="i" class="skeleton h-10 rounded-xl" />
+    </div>
+
+    <!-- Error -->
+    <div v-else-if="loadError" class="flex items-center gap-3 py-2">
+      <p class="text-[13px] text-[--t3]">{{ t('player.tracksLoadError') }}</p>
+      <button
+        class="rounded-lg border-0 bg-white/10 px-3 py-1.5 text-[12px] font-semibold text-[--t1] transition-colors hover:bg-white/15"
+        @click="loadTracks"
+      >
+        {{ t('player.retry') }}
+      </button>
     </div>
 
     <!-- Empty -->
