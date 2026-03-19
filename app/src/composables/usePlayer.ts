@@ -325,6 +325,11 @@ async function loadBook(book: Book) {
   isLoading.value = true
   currentBook.value = book
   isPlayerVisible.value = true
+  try {
+    localStorage.setItem(STORAGE.LAST_PLAYED, JSON.stringify({ id: book.id, title: book.title, author: book.author }))
+  } catch {
+    /* full */
+  }
   isFullscreen.value = true
 
   try {

@@ -12,4 +12,5 @@ export const STORAGE = {
   /** Dynamic: append book ID */
   POSITION_PREFIX: 'leerio_pos_',
   CACHE_PREFIX: 'leerio_cache_',
+  LAST_PLAYED: 'leerio_last_played',
 } as const

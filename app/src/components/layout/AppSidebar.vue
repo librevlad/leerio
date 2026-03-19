@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuth } from '../../composables/useAuth'
 import { usePlayer } from '../../composables/usePlayer'
+import { STORAGE } from '../../constants/storage'
 import {
   IconHome,
   IconLibrary,
@@ -24,7 +25,23 @@ const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
 const { user, isLoggedIn, logout } = useAuth()
-const { currentBook, isPlayerVisible, openFullscreen } = usePlayer()
+const { currentBook, openFullscreen } = usePlayer()
+
+const lastPlayed = ref<{ id: string; title: string; author: string } | null>(null)
+onMounted(() => {
+  try {
+    const raw = localStorage.getItem(STORAGE.LAST_PLAYED)
+    if (raw) lastPlayed.value = JSON.parse(raw)
+  } catch {
+    /* ignore */
+  }
+})
+
+const sidebarBook = computed(() => {
+  if (currentBook.value) return { ...currentBook.value, isPlaying: true }
+  if (lastPlayed.value) return { ...lastPlayed.value, isPlaying: false }
+  return null
+})
 
 const publicLinks = computed(() => [{ path: '/library', label: t('nav.catalog'), icon: IconLibrary }])
 
@@ -96,17 +113,24 @@ async function handleLogout() {
       </router-link>
     </nav>
 
-    <!-- Now Playing (sidebar) -->
+    <!-- Last played / Now playing -->
     <button
-      v-if="isPlayerVisible && currentBook"
+      v-if="sidebarBook"
       class="mx-2.5 mb-2 flex cursor-pointer items-center gap-2.5 rounded-xl border-0 px-3 py-2.5 text-left transition-colors hover:bg-[--card-hover]"
-      style="background: rgba(255, 138, 0, 0.06); border: 1px solid rgba(255, 138, 0, 0.1)"
-      @click="openFullscreen"
+      :style="
+        sidebarBook.isPlaying
+          ? 'background: rgba(255, 138, 0, 0.06); border: 1px solid rgba(255, 138, 0, 0.1)'
+          : 'background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.04)'
+      "
+      @click="sidebarBook.isPlaying ? openFullscreen() : router.push(`/book/${sidebarBook.id}`)"
     >
-      <span class="now-playing-bars inline-flex shrink-0 items-end gap-px"> <span /><span /><span /> </span>
+      <span v-if="sidebarBook.isPlaying" class="now-playing-bars inline-flex shrink-0 items-end gap-px">
+        <span /><span /><span />
+      </span>
+      <span v-else class="shrink-0 text-[14px]">🎧</span>
       <span v-if="!collapsed" class="min-w-0 flex-1">
-        <span class="block truncate text-[12px] font-semibold text-[--t1]">{{ currentBook.title }}</span>
-        <span class="block truncate text-[10px] text-[--t3]">{{ currentBook.author }}</span>
+        <span class="block truncate text-[12px] font-semibold text-[--t1]">{{ sidebarBook.title }}</span>
+        <span class="block truncate text-[10px] text-[--t3]">{{ sidebarBook.author }}</span>
       </span>
     </button>
 

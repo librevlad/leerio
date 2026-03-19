@@ -2,8 +2,7 @@
 
 ## Открытые
 
-- [ ] [2026-03-18] Paddle: настроить credentials на VPS (PADDLE_API_KEY, PADDLE_PRICE_ID, PADDLE_WEBHOOK_SECRET)
-- [ ] [2026-03-18] Paddle: добавить webhook URL в Paddle Dashboard → app.leerio.app/api/payments/paddle-webhook
+- [ ] [ОТЛОЖЕНО] Paddle: настроить credentials на VPS + webhook URL
 - [x] [2026-03-18] Upload: серверная поддержка M4A/M4B/OGG/FLAC/WAV (сделано 2026-03-19)
 - [x] [2026-03-18] Upload: ZIP распаковка на бэкенде (сделано 2026-03-19)
 - [x] [2026-03-18] Telemetry: resume_clicked, upload_started/completed, book_played (сделано 2026-03-19)
@@ -15,7 +14,7 @@
 - [x] [2026-03-19] Кнопка загрузки + пометка в каталоге — уже реализовано (BookDetailView + BookCard, native-only)
 - [x] [2026-03-19] Пагинация: infinite scroll с IntersectionObserver вместо кнопки
 - [ ] [2026-03-19] Найти и заполнить описания ко всем книгам каталога через Claude Code
-- [ ] [2026-03-19] BUG: загруженная книга "Цель 3" не играет
+- [x] [2026-03-19] BUG: "Цель 3" — TTS job записал 45-байтный пустой MP3 (TTS pipeline баг, не player)
 - [ ] [2026-03-19] Заменить кривые иконки ±сек на нормальные готовые иконки во всех местах
 - [x] [2026-03-19] Закладки: подключены в fullscreen player — загрузка, отображение, seek, удаление
 - [x] [2026-03-19] Loading spinner на play кнопке при загрузке трека (FullscreenPlayer + MiniPlayer)
