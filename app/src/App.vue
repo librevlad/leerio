@@ -15,10 +15,12 @@ import { useAuth } from './composables/useAuth'
 import { useNetwork } from './composables/useNetwork'
 import { useCategories } from './composables/useCategories'
 import { useSync } from './composables/useSync'
-import { IconWifiOff } from './components/shared/icons'
+import { IconWifiOff, IconX } from './components/shared/icons'
+import { STORAGE } from './constants/storage'
 
 const { t } = useI18n()
 const sidebarCollapsed = ref(false)
+const apkBannerDismissed = ref(localStorage.getItem(STORAGE.APK_DISMISSED) === '1')
 const player = usePlayer()
 const { isPlayerVisible } = player
 const downloads = useDownloads()
@@ -27,6 +29,13 @@ const { isOnline } = useNetwork()
 const { load: loadCategories } = useCategories()
 useSync()
 const route = useRoute()
+
+const isMobileWeb = computed(() => !downloads.isNative.value && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent))
+const showApkBanner = computed(() => isMobileWeb.value && !apkBannerDismissed.value)
+function dismissApkBanner() {
+  apkBannerDismissed.value = true
+  localStorage.setItem(STORAGE.APK_DISMISSED, '1')
+}
 
 const isLoginPage = computed(() => route.name === 'login')
 const isWelcomePage = computed(() => route.name === 'welcome')
@@ -148,6 +157,32 @@ onUnmounted(() => {
           {{ t('common.offlineMsg') }}
         </div>
       </transition>
+
+      <!-- APK install banner (mobile web only) -->
+      <div
+        v-if="showApkBanner"
+        class="flex items-center gap-3 px-4 py-2.5"
+        style="background: rgba(232, 146, 58, 0.1); border-bottom: 1px solid rgba(232, 146, 58, 0.15)"
+      >
+        <img src="/logo.png" alt="" class="h-8 w-8 rounded-lg" />
+        <div class="min-w-0 flex-1">
+          <p class="text-[12px] font-semibold text-[--t1]">{{ t('book.installApp') }}</p>
+          <p class="text-[10px] text-[--t3]">{{ t('book.installAppHint') }}</p>
+        </div>
+        <a
+          href="https://github.com/librevlad/leerio/releases/download/latest-apk/leerio.apk"
+          class="shrink-0 rounded-lg border-0 px-3 py-1.5 text-[12px] font-bold text-white no-underline"
+          style="background: var(--gradient-accent)"
+        >
+          APK
+        </a>
+        <button
+          class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-0 bg-transparent text-[--t3] hover:text-[--t1]"
+          @click="dismissApkBanner"
+        >
+          <IconX :size="14" />
+        </button>
+      </div>
 
       <div
         class="mx-auto px-4 py-5 md:px-8 md:py-8 md:pb-8"
