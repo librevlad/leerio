@@ -183,6 +183,11 @@ export const api = {
   addQuote: (text: string, book: string, author = '') => post<{ ok: boolean }>('/quotes', { text, book, author }),
   deleteQuote: (quoteId: number) => del<{ ok: boolean }>(`/quotes/${quoteId}`),
 
+  // Bulk sync endpoints
+  getAllBookmarksMap: () => get<Record<string, unknown[]>>('/user/bookmarks/all'),
+  getAllNotesMap: () => get<Record<string, string>>('/user/notes/all'),
+  getAllTagsMap: () => get<Record<string, string[]>>('/user/tags/all'),
+
   // Collections
   getCollections: () => get<Collection[]>('/collections'),
   createCollection: (name: string, books: number[] = [], description = '') =>

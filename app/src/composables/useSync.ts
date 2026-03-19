@@ -10,7 +10,7 @@ import { useAuth } from './useAuth'
 import { useLocalData } from './useLocalData'
 import { useNetwork } from './useNetwork'
 import { api } from '../api'
-import type { Quote } from '../types'
+import type { Collection, Quote } from '../types'
 
 let synced = false
 let reconnectRegistered = false
@@ -52,6 +52,10 @@ async function syncAll(local: ReturnType<typeof useLocalData>) {
     syncProgress(local),
     syncSettings(local),
     syncQuotes(local),
+    syncBookmarks(local),
+    syncCollections(local),
+    syncNotes(local),
+    syncTags(local),
   ])
 
   const failed = results.filter((r) => r.status === 'rejected').length
@@ -84,7 +88,6 @@ async function syncSettings(local: ReturnType<typeof useLocalData>) {
 async function syncQuotes(local: ReturnType<typeof useLocalData>) {
   try {
     const serverQuotes = await api.getQuotes()
-    // Deduplicate by text+book (server IDs may differ from local Date.now() IDs)
     const existing = await local.getQuotes()
     const existingKeys = new Set(existing.map((q: Quote) => `${q.text}::${q.book}`))
     for (const q of serverQuotes) {
@@ -95,6 +98,49 @@ async function syncQuotes(local: ReturnType<typeof useLocalData>) {
       }
     }
   } catch {
-    // Quotes sync is optional
+    // optional
+  }
+}
+
+async function syncBookmarks(local: ReturnType<typeof useLocalData>) {
+  try {
+    const data = await api.getAllBookmarksMap()
+    await local.importBookmarks(data)
+  } catch {
+    // optional
+  }
+}
+
+async function syncCollections(local: ReturnType<typeof useLocalData>) {
+  try {
+    const serverCols = await api.getCollections()
+    const existing = await local.getCollections()
+    const ids = new Set(existing.map((c: Collection) => c.id))
+    for (const col of serverCols) {
+      if (!ids.has(col.id)) {
+        await local.saveCollection(col)
+        ids.add(col.id)
+      }
+    }
+  } catch {
+    // optional
+  }
+}
+
+async function syncNotes(local: ReturnType<typeof useLocalData>) {
+  try {
+    const data = await api.getAllNotesMap()
+    await local.importNotes(data)
+  } catch {
+    // optional
+  }
+}
+
+async function syncTags(local: ReturnType<typeof useLocalData>) {
+  try {
+    const data = await api.getAllTagsMap()
+    await local.importTags(data)
+  } catch {
+    // optional
   }
 }

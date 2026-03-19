@@ -1509,6 +1509,21 @@ def set_rating(book_id: str, rating: int = Body(..., ge=0, le=5, embed=True), us
 # ── Bookmarks ──────────────────────────────────────────────────────────────
 
 
+@app.get("/api/user/bookmarks/all")
+def get_all_bookmarks(user: dict = Depends(get_current_user)):
+    return db.get_all_user_bookmarks_map(user["user_id"])
+
+
+@app.get("/api/user/notes/all")
+def get_all_notes(user: dict = Depends(get_current_user)):
+    return db.get_all_user_notes_map(user["user_id"])
+
+
+@app.get("/api/user/tags/all")
+def get_all_tags_map(user: dict = Depends(get_current_user)):
+    return db.get_all_user_tags_map(user["user_id"])
+
+
 @app.get("/api/user/bookmarks/{book_id}")
 def get_bookmarks(book_id: str, user: dict = Depends(get_current_user)):
     bid = _parse_book_id(book_id)

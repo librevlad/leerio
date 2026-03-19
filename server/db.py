@@ -1278,6 +1278,19 @@ def get_session_stats(user_id: str, days: int = 7) -> dict:
 # ===========================================================================
 
 
+def get_all_user_bookmarks_map(user_id: str) -> dict[int, list[dict]]:
+    """Return {book_id: [bookmark, ...]} for all books with bookmarks."""
+    conn = _get_conn()
+    rows = conn.execute(
+        "SELECT * FROM user_bookmarks WHERE user_id = ? ORDER BY book_id, created_at",
+        (user_id,),
+    ).fetchall()
+    result: dict[int, list[dict]] = {}
+    for r in rows:
+        result.setdefault(r["book_id"], []).append(dict(r))
+    return result
+
+
 def get_user_bookmarks(user_id: str, book_id: int) -> list[dict]:
     conn = _get_conn()
     rows = conn.execute(

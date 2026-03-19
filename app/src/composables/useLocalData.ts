@@ -186,6 +186,18 @@ export function useLocalData() {
     for (const [k, v] of Object.entries(data)) await set(k, v, progressStore)
   }
 
+  async function importBookmarks(data: Record<string, unknown[]>): Promise<void> {
+    for (const [k, v] of Object.entries(data)) await set(k, v, bookmarkStore)
+  }
+
+  async function importNotes(data: Record<string, string>): Promise<void> {
+    for (const [k, v] of Object.entries(data)) await set(k, v, noteStore)
+  }
+
+  async function importTags(data: Record<string, string[]>): Promise<void> {
+    for (const [k, v] of Object.entries(data)) await set(k, v, tagStore)
+  }
+
   // ── Key counts (for UI) ──────────────────────────────────────
   async function bookmarkCount(): Promise<number> {
     return (await keys(bookmarkStore)).length
@@ -207,6 +219,10 @@ export function useLocalData() {
     setProgress,
     getAllProgress,
     importProgress,
+    // Bulk imports (for sync)
+    importBookmarks,
+    importNotes,
+    importTags,
     // Position
     getPosition,
     setPosition,
