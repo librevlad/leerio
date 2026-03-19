@@ -98,7 +98,7 @@ function ensureAudio(): HTMLAudioElement {
     audio.addEventListener('ended', () => {
       if (sleepAtTrackEnd) {
         sleepAtTrackEnd = false
-        audio.pause()
+        audio?.pause()
         isPlaying.value = false
         return
       }
