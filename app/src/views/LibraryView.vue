@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { useBooks } from '../composables/useBooks'
@@ -160,6 +160,26 @@ const BOOK_LANGS = [
 ]
 
 const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
+
+// Auto-load more on scroll (intersection observer)
+const loadMoreRef = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | null = null
+
+onMounted(() => {
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0]?.isIntersecting && hasMore.value) showMore()
+    },
+    { rootMargin: '200px' },
+  )
+})
+
+onUnmounted(() => observer?.disconnect())
+
+watch(loadMoreRef, (el) => {
+  observer?.disconnect()
+  if (el) observer?.observe(el)
+})
 </script>
 
 <template>
@@ -348,19 +368,17 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
           :style="{ animationDelay: `${Math.min(i, 11) * 40}ms` }"
         />
       </div>
-      <div v-if="hasMore" class="mt-8 flex flex-col items-center gap-2">
-        <div class="flex items-center gap-2 text-[12px] text-[--t3]">
-          <div class="h-1 w-24 overflow-hidden rounded-full bg-white/[0.06]">
+      <!-- Infinite scroll trigger -->
+      <div v-if="hasMore" ref="loadMoreRef" class="mt-6 flex justify-center py-4">
+        <div class="flex items-center gap-3 text-[12px] text-[--t3]">
+          <div class="h-1 w-20 overflow-hidden rounded-full bg-white/[0.06]">
             <div
               class="h-full rounded-full bg-[--accent] transition-all duration-300"
               :style="{ width: `${(visibleCount / filtered.length) * 100}%` }"
             />
           </div>
-          <span>{{ visibleCount }} {{ t('library.of') }} {{ filtered.length }}</span>
+          <span class="tabular-nums">{{ visibleCount }} {{ t('library.of') }} {{ filtered.length }}</span>
         </div>
-        <button class="btn btn-ghost px-8 py-2.5 text-[13px] font-semibold" @click="showMore">
-          {{ t('library.showMore') }} {{ Math.min(PAGE_SIZE, filtered.length - visibleCount) }}
-        </button>
       </div>
     </div>
 

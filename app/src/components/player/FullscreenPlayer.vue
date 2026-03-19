@@ -578,32 +578,33 @@ function closeOverlays() {
         </div>
 
         <!-- Right panel: chapters -->
-        <div class="flex w-[45%] flex-col border-l border-[--border]" style="background: rgba(255, 255, 255, 0.015)">
+        <div
+          class="flex w-[45%] flex-col"
+          style="background: rgba(255, 255, 255, 0.015); border-left: 1px solid rgba(255, 255, 255, 0.04)"
+        >
           <!-- Tabs -->
-          <div class="flex shrink-0 border-b border-[--border] px-4">
+          <div class="relative flex shrink-0 px-4" style="border-bottom: 1px solid rgba(255, 255, 255, 0.04)">
             <button
-              class="border-0 bg-transparent px-4 py-3.5 text-[12px] font-semibold tracking-wider transition-colors"
-              :class="
-                desktopTab === 'chapters'
-                  ? 'border-b-2 border-[--accent] text-[--accent]'
-                  : 'text-[--t3] hover:text-[--t2]'
-              "
-              style="border-bottom-style: solid"
+              class="relative border-0 bg-transparent px-4 py-3 text-[12px] font-semibold tracking-wider transition-colors"
+              :class="desktopTab === 'chapters' ? 'text-[--accent]' : 'text-[--t3] hover:text-[--t2]'"
               @click="desktopTab = 'chapters'"
             >
               {{ t('player.tracks') }}
+              <span
+                v-if="desktopTab === 'chapters'"
+                class="absolute right-2 bottom-0 left-2 h-[2px] rounded-full bg-[--accent]"
+              />
             </button>
             <button
-              class="border-0 bg-transparent px-4 py-3.5 text-[12px] font-semibold tracking-wider transition-colors"
-              :class="
-                desktopTab === 'bookmarks'
-                  ? 'border-b-2 border-[--accent] text-[--accent]'
-                  : 'text-[--t3] hover:text-[--t2]'
-              "
-              style="border-bottom-style: solid"
+              class="relative border-0 bg-transparent px-4 py-3 text-[12px] font-semibold tracking-wider transition-colors"
+              :class="desktopTab === 'bookmarks' ? 'text-[--accent]' : 'text-[--t3] hover:text-[--t2]'"
               @click="desktopTab = 'bookmarks'"
             >
               {{ t('player.bookmarksTab') }}
+              <span
+                v-if="desktopTab === 'bookmarks'"
+                class="absolute right-2 bottom-0 left-2 h-[2px] rounded-full bg-[--accent]"
+              />
             </button>
           </div>
 
