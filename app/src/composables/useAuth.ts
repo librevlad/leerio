@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import type { User } from '../types'
 import { apiUrl } from '../api'
+import { STORAGE } from '../constants/storage'
 
 const user = ref<User | null>(null)
 const loading = ref(true)
@@ -27,7 +28,7 @@ export function useAuth() {
         if (res.ok) {
           user.value = await res.json()
           try {
-            localStorage.setItem('leerio_user', JSON.stringify(user.value))
+            localStorage.setItem(STORAGE.USER, JSON.stringify(user.value))
           } catch {
             /* full */
           }
@@ -45,7 +46,7 @@ export function useAuth() {
         }
         // Offline — try cached user
         try {
-          const cached = localStorage.getItem('leerio_user')
+          const cached = localStorage.getItem(STORAGE.USER)
           if (cached) {
             user.value = JSON.parse(cached)
             return true
@@ -99,7 +100,7 @@ export function useAuth() {
     checked.value = true
     loading.value = false
     try {
-      localStorage.setItem('leerio_user', JSON.stringify(data))
+      localStorage.setItem(STORAGE.USER, JSON.stringify(data))
     } catch {
       /* full */
     }
@@ -130,7 +131,7 @@ export function useAuth() {
     checked.value = true
     loading.value = false
     try {
-      localStorage.setItem('leerio_user', JSON.stringify(data))
+      localStorage.setItem(STORAGE.USER, JSON.stringify(data))
     } catch {
       /* full */
     }
@@ -145,7 +146,7 @@ export function useAuth() {
     }
     user.value = null
     checked.value = false
-    localStorage.removeItem('leerio_user')
+    localStorage.removeItem(STORAGE.USER)
   }
 
   return {

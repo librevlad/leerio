@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuth } from './composables/useAuth'
+import { STORAGE } from './constants/storage'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -89,7 +90,7 @@ router.beforeEach(async (to) => {
   checkAuth()
 
   // Onboarding redirect: first visit → /welcome
-  if (to.name !== 'welcome' && to.name !== 'login' && localStorage.getItem('leerio_onboarded') !== '1') {
+  if (to.name !== 'welcome' && to.name !== 'login' && localStorage.getItem(STORAGE.ONBOARDED) !== '1') {
     return { name: 'welcome' }
   }
 

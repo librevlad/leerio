@@ -5,7 +5,6 @@ Handles personal audiobook uploads (MP3 files) with metadata.
 """
 
 import logging
-import os
 import re
 from pathlib import Path
 
@@ -13,15 +12,10 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 
 from .auth import get_current_user
+from .constants import FREE_BOOK_LIMIT, MAX_COVER_SIZE, MAX_UPLOAD_SIZE, VALID_IMAGE_HEADERS, VALID_MP3_HEADERS
 from .core import UserData, count_mp3, estimate_duration_hours, folder_size_mb, make_slug
 
 logger = logging.getLogger("leerio.upload")
-
-MAX_UPLOAD_SIZE = 500 * 1024 * 1024  # 500 MB (matches nginx)
-MAX_COVER_SIZE = 50 * 1024 * 1024  # 50 MB
-FREE_BOOK_LIMIT = int(os.environ.get("FREE_BOOK_LIMIT", "10"))
-VALID_IMAGE_HEADERS = [b"\xff\xd8\xff", b"\x89PNG"]
-VALID_MP3_HEADERS = [b"\xff\xfb", b"\xff\xfa", b"\xff\xf3", b"\xff\xf2", b"ID3"]
 
 
 def _sanitize_filename(name: str) -> str:

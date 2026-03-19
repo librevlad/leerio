@@ -6,6 +6,7 @@ import { api } from '../api'
 import { useToast } from '../composables/useToast'
 import { useTracking } from '../composables/useTelemetry'
 import { formatSize } from '../utils/format'
+import { STORAGE } from '../constants/storage'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -58,7 +59,7 @@ function fmtSize(bytes: number): string {
 
 async function finish() {
   track('onboarding_completed', { files: files.value.length })
-  localStorage.setItem('leerio_onboarded', '1')
+  localStorage.setItem(STORAGE.ONBOARDED, '1')
 
   // If files were added, upload them via API module
   if (files.value.length > 0) {

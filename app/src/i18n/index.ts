@@ -27,7 +27,9 @@ function slavicPluralRule(choice: number): number {
   return 2
 }
 
-const savedLocale = (localStorage.getItem('leerio_locale') as LocaleCode) || 'ru'
+import { STORAGE } from '../constants/storage'
+
+const savedLocale = (localStorage.getItem(STORAGE.LOCALE) as LocaleCode) || 'ru'
 
 const i18n = createI18n({
   legacy: false,

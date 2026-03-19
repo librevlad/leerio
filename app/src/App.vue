@@ -16,6 +16,7 @@ import { useNetwork } from './composables/useNetwork'
 import { useCategories } from './composables/useCategories'
 import { useSync } from './composables/useSync'
 import { IconWifiOff } from './components/shared/icons'
+import { STORAGE } from './constants/storage'
 
 const { t } = useI18n()
 const sidebarCollapsed = ref(false)
@@ -44,7 +45,7 @@ const showInstallBanner = ref(false)
 function handleBeforeInstallPrompt(e: Event) {
   e.preventDefault()
   deferredPrompt.value = e as BeforeInstallPromptEvent
-  if (!localStorage.getItem('pwa-install-dismissed')) {
+  if (!localStorage.getItem(STORAGE.PWA_DISMISSED)) {
     showInstallBanner.value = true
   }
 }
@@ -61,7 +62,7 @@ async function installPwa() {
 
 function dismissInstall() {
   showInstallBanner.value = false
-  localStorage.setItem('pwa-install-dismissed', '1')
+  localStorage.setItem(STORAGE.PWA_DISMISSED, '1')
 }
 
 function onKeydown(e: KeyboardEvent) {

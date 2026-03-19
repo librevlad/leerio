@@ -1,4 +1,5 @@
 import { useNetwork } from './useNetwork'
+import { STORAGE } from '../constants/storage'
 
 interface QueuedRequest {
   method: string
@@ -6,7 +7,7 @@ interface QueuedRequest {
   body?: string
 }
 
-const STORAGE_KEY = 'leerio_offline_queue'
+const STORAGE_KEY = STORAGE.OFFLINE_QUEUE
 
 function loadQueue(): QueuedRequest[] {
   try {

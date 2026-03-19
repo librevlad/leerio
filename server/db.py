@@ -366,18 +366,22 @@ def _migrate_password_column(conn: sqlite3.Connection):
 
 def _hash_password(password: str) -> str:
     """Hash a password with a random salt using PBKDF2."""
+    from .constants import PBKDF2_ALGORITHM, PBKDF2_ITERATIONS
+
     salt = secrets.token_hex(16)
-    h = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100_000).hex()
+    h = hashlib.pbkdf2_hmac(PBKDF2_ALGORITHM, password.encode(), salt.encode(), PBKDF2_ITERATIONS).hex()
     return f"{salt}:{h}"
 
 
 def _verify_password(password: str, stored: str) -> bool:
     """Verify a password against a stored hash."""
+    from .constants import PBKDF2_ALGORITHM, PBKDF2_ITERATIONS
+
     try:
         salt, h = stored.split(":", 1)
     except ValueError:
         return False
-    check = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100_000).hex()
+    check = hashlib.pbkdf2_hmac(PBKDF2_ALGORITHM, password.encode(), salt.encode(), PBKDF2_ITERATIONS).hex()
     return secrets.compare_digest(h, check)
 
 

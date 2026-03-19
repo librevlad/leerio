@@ -119,5 +119,7 @@ async def get_plan(request: Request):
     """Public endpoint to get Paddle price ID, client token, and limits for checkout."""
     price_id = os.environ.get("PADDLE_PRICE_ID", "")
     client_token = os.environ.get("PADDLE_CLIENT_TOKEN", "")
-    free_limit = int(os.environ.get("FREE_BOOK_LIMIT", "10"))
+    from .constants import FREE_BOOK_LIMIT
+
+    free_limit = FREE_BOOK_LIMIT
     return {"price_id": price_id, "client_token": client_token, "free_limit": free_limit}
