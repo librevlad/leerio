@@ -5,6 +5,7 @@ export default {
     library: 'Library',
     myLibrary: 'My',
     collections: 'Collections',
+    wantToRead: 'Want to Read',
     history: 'History',
     analytics: 'Analytics',
     upload: 'Upload',

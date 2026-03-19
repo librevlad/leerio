@@ -5,6 +5,7 @@ export default {
     library: 'Бібліотека',
     myLibrary: 'Моя',
     collections: 'Колекції',
+    wantToRead: 'Хочу прочитати',
     history: 'Історія',
     analytics: 'Аналітика',
     upload: 'Завантажити',

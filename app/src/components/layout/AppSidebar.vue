@@ -15,6 +15,7 @@ import {
   IconUpload,
   IconChart,
   IconQueue,
+  IconBookmark,
 } from '../shared/icons'
 
 defineProps<{ collapsed: boolean }>()
@@ -32,6 +33,7 @@ const mainLinks = computed(() => [
   { path: '/library', label: t('nav.catalog'), icon: IconLibrary },
   { path: '/my-library', label: t('nav.library'), icon: IconFolder },
   { path: '/collections', label: t('nav.collections'), icon: IconQueue },
+  { path: '/library?status=want_to_read', label: t('nav.wantToRead'), icon: IconBookmark },
   { path: '/history', label: t('nav.history'), icon: IconHistory },
   { path: '/analytics', label: t('nav.analytics'), icon: IconChart },
   { path: '/upload', label: t('nav.upload'), icon: IconUpload },
@@ -41,6 +43,10 @@ const navLinks = computed(() => (isLoggedIn.value ? mainLinks.value : publicLink
 
 const isActive = (path: string) => {
   if (path === '/') return route.path === '/'
+  if (path.includes('?')) {
+    const [base, query] = path.split('?')
+    return route.path === base && route.fullPath.includes(query!)
+  }
   return route.path.startsWith(path)
 }
 
