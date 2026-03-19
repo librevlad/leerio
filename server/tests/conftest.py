@@ -78,7 +78,16 @@ def api_client(tmp_data_dir, monkeypatch):
     client = TestClient(api_mod.app)
     yield client
 
-    # Clean up overrides
+    # Clean up overrides (also handled by _reset_overrides autouse fixture)
+    api_mod.app.dependency_overrides.clear()
+
+
+@pytest.fixture(autouse=True)
+def _reset_overrides():
+    """Ensure dependency overrides are always cleared, even if a fixture crashes."""
+    yield
+    import server.api as api_mod
+
     api_mod.app.dependency_overrides.clear()
 
 
