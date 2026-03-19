@@ -4,8 +4,10 @@ server/upload.py — User book upload API.
 Handles personal audiobook uploads (MP3 files) with metadata.
 """
 
+import io
 import logging
 import re
+import zipfile
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
@@ -84,17 +86,43 @@ async def upload_book(
                 {"error": "limit_reached", "limit": FREE_BOOK_LIMIT, "count": current_count},
             )
 
-    # Validate files are supported audio formats (extension + magic bytes)
+    # Extract audio from ZIP files, validate all others
+    audio_files: list[tuple[str, bytes]] = []  # (filename, content)
     for f in files:
         if not f.filename:
             raise HTTPException(400, "Missing filename")
         ext = "." + f.filename.rsplit(".", 1)[-1].lower() if "." in f.filename else ""
-        if ext not in VALID_AUDIO_EXTENSIONS:
-            raise HTTPException(400, f"Unsupported format: {f.filename}. Allowed: MP3, M4A, M4B, OGG, FLAC, WAV")
-        header = await f.read(12)
-        await f.seek(0)
-        if not any(header[offset:].startswith(h) for h in VALID_AUDIO_HEADERS for offset in (0, 4)):
-            raise HTTPException(400, f"Invalid audio file: {f.filename}")
+
+        if ext == ".zip":
+            # Extract audio files from ZIP
+            zip_data = await f.read(MAX_UPLOAD_SIZE + 1)
+            if len(zip_data) > MAX_UPLOAD_SIZE:
+                raise HTTPException(413, "ZIP too large (max 500 MB)")
+            try:
+                with zipfile.ZipFile(io.BytesIO(zip_data)) as zf:
+                    for info in sorted(zf.infolist(), key=lambda i: i.filename):
+                        if info.is_dir():
+                            continue
+                        name = Path(info.filename).name
+                        zext = "." + name.rsplit(".", 1)[-1].lower() if "." in name else ""
+                        if zext in VALID_AUDIO_EXTENSIONS:
+                            audio_files.append((name, zf.read(info)))
+            except zipfile.BadZipFile:
+                raise HTTPException(400, f"Invalid ZIP file: {f.filename}")
+        elif ext in VALID_AUDIO_EXTENSIONS:
+            header = await f.read(12)
+            await f.seek(0)
+            if not any(header[offset:].startswith(h) for h in VALID_AUDIO_HEADERS for offset in (0, 4)):
+                raise HTTPException(400, f"Invalid audio file: {f.filename}")
+            content = await f.read(MAX_UPLOAD_SIZE + 1)
+            if len(content) > MAX_UPLOAD_SIZE:
+                raise HTTPException(413, "File too large (max 500 MB)")
+            audio_files.append((_sanitize_filename(f.filename or "track.mp3"), content))
+        else:
+            raise HTTPException(400, f"Unsupported format: {f.filename}. Allowed: MP3, M4A, M4B, OGG, FLAC, WAV, ZIP")
+
+    if not audio_files:
+        raise HTTPException(400, "No audio files found")
 
     slug = make_slug(title, author)
 
@@ -112,14 +140,11 @@ async def upload_book(
 
     book_dir = ud.user_book_create(slug, title, author, reader, source="upload")
 
-    # Save MP3 files
-    for i, f in enumerate(files, 1):
-        safe_name = _sanitize_filename(f.filename or "track.mp3")
+    # Save audio files
+    for i, (name, content) in enumerate(audio_files, 1):
+        safe_name = _sanitize_filename(name)
         filename = f"{i:02d}. {safe_name}"
         file_path = book_dir / filename
-        content = await f.read(MAX_UPLOAD_SIZE + 1)
-        if len(content) > MAX_UPLOAD_SIZE:
-            raise HTTPException(413, "File too large (max 500 MB)")
         file_path.write_bytes(content)
         logger.info("Saved track: %s (%d bytes)", filename, len(content))
 
