@@ -26,18 +26,14 @@ test.describe('Library', () => {
   })
 
   test('search input filters books', async ({ page, takeScreenshot }) => {
-    const search = page.getByPlaceholder('Поиск...')
-    await expect(search).toBeVisible()
-
-    const cardsBefore = await page.locator('a.card.card-hover').count()
-    await search.fill('test-nonexistent-book-xyz')
-    // Wait for debounce
-    await page.waitForTimeout(500)
+    // Use global search via URL query (local search was removed)
+    await page.goto('/library?q=test-nonexistent-book-xyz')
+    await page.waitForTimeout(1000)
 
     // Either fewer cards or empty state
     const cardsAfter = await page.locator('a.card.card-hover').count()
     const emptyVisible = await page.locator('text=Книги не найдены').isVisible()
-    expect(cardsAfter < cardsBefore || emptyVisible).toBeTruthy()
+    expect(cardsAfter === 0 || emptyVisible).toBeTruthy()
     await takeScreenshot('library-search')
   })
 
@@ -68,9 +64,8 @@ test.describe('Library', () => {
   })
 
   test('empty state shows reset button', async ({ page, takeScreenshot }) => {
-    const search = page.getByPlaceholder('Поиск...')
-    await search.fill('zzzznonexistent12345')
-    await page.waitForTimeout(500)
+    await page.goto('/library?q=zzzznonexistent12345')
+    await page.waitForTimeout(1000)
 
     const emptyState = page.locator('text=Книги не найдены')
     if (await emptyState.isVisible({ timeout: 3_000 }).catch(() => false)) {
