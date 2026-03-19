@@ -37,6 +37,7 @@ watch(
   },
 )
 const priceId = ref('')
+const clientToken = ref('')
 const freeLimit = ref(10)
 const loading = ref(false)
 
@@ -46,6 +47,7 @@ onMounted(async () => {
   try {
     const data = await api.getPaymentPlan()
     priceId.value = data.price_id || ''
+    clientToken.value = data.client_token || ''
     if (data.free_limit) freeLimit.value = data.free_limit
   } catch {
     /* optional */
@@ -60,13 +62,17 @@ function openCheckout() {
   }
 
   if (!window.Paddle) {
-    toast.error('Payment system loading...')
     // Load Paddle.js dynamically
     const script = document.createElement('script')
     script.src = 'https://cdn.paddle.com/paddle/v2/paddle.js'
     script.onload = () => openCheckout()
     document.head.appendChild(script)
     return
+  }
+
+  // Initialize Paddle SDK if client token available
+  if (clientToken.value) {
+    window.Paddle.Initialize({ token: clientToken.value })
   }
 
   loading.value = true
