@@ -613,4 +613,67 @@ describe('usePlayer', () => {
       })
     })
   })
+
+  // ── Regression: position 0 must not be saved during load ──────────────
+  describe('position save guard', () => {
+    it('does not save position 0 while loading', async () => {
+      const { api } = await import('../api')
+      const mockSetPos = api.setPlaybackPosition as ReturnType<typeof vi.fn>
+      mockSetPos.mockClear()
+
+      const p = usePlayer()
+      p.currentBook.value = {
+        id: 'guard-test',
+        folder: '',
+        category: '',
+        author: '',
+        title: 'Guard Test',
+        reader: '',
+        path: '',
+        progress: 0,
+        tags: [],
+        note: '',
+      }
+      p.tracks.value = [{ index: 0, filename: 'a.mp3', path: '', duration: 300 }]
+      p.currentTrackIndex.value = 0
+      p.isLoading.value = true
+      p.currentTime.value = 0
+
+      // Simulate pause event calling savePosition internally —
+      // trigger the save timer which calls savePosition
+      mockAudio._emit('pause')
+
+      // Position 0 during loading should NOT be saved to API
+      expect(mockSetPos).not.toHaveBeenCalled()
+    })
+
+    it('saves position when not loading', async () => {
+      const { api } = await import('../api')
+      const mockSetPos = api.setPlaybackPosition as ReturnType<typeof vi.fn>
+      mockSetPos.mockClear()
+
+      const p = usePlayer()
+      p.currentBook.value = {
+        id: 'save-test',
+        folder: '',
+        category: '',
+        author: '',
+        title: 'Save Test',
+        reader: '',
+        path: '',
+        progress: 0,
+        tags: [],
+        note: '',
+      }
+      p.tracks.value = [{ index: 0, filename: 'a.mp3', path: '', duration: 300 }]
+      p.currentTrackIndex.value = 0
+      p.isLoading.value = false
+      p.currentTime.value = 120
+
+      mockAudio._emit('pause')
+
+      // Position 120 with isLoading=false should be saved
+      expect(mockSetPos).toHaveBeenCalledWith('save-test', 0, 120, 'a.mp3')
+    })
+  })
 })

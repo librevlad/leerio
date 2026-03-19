@@ -177,6 +177,8 @@ function ensureAudio(): HTMLAudioElement {
 
 function savePosition() {
   if (!currentBook.value || !currentTrack.value) return
+  // Don't save position 0 during loading — seek hasn't happened yet
+  if (isLoading.value && currentTime.value === 0) return
 
   // Always save to localStorage for offline fallback
   try {
