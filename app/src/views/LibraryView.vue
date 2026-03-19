@@ -136,6 +136,11 @@ function randomBook() {
   router.push(`/book/${pick.id}`)
 }
 
+function selectStatus(value: BookStatusValue | '') {
+  statusFilter.value = value
+  showStatusMenu.value = false
+}
+
 function resetFilters() {
   search.value = ''
   category.value = ''
@@ -259,10 +264,7 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
             :key="sp.value"
             class="block w-full cursor-pointer rounded-lg border-0 bg-transparent px-3 py-2 text-left text-[12px] whitespace-nowrap transition-colors"
             :class="statusFilter === sp.value ? 'text-[--accent]' : 'text-[--t2] hover:bg-white/5'"
-            @click="
-              statusFilter = sp.value
-              showStatusMenu = false
-            "
+            @click="selectStatus(sp.value)"
           >
             {{ sp.label }}
             <span v-if="sp.count" class="ml-1 text-[10px] opacity-50">{{ sp.count }}</span>
