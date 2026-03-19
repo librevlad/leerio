@@ -7,8 +7,24 @@
 - [ ] [2026-03-18] Upload: серверная поддержка M4A/M4B/OGG/FLAC (сейчас только MP3 на бэкенде)
 - [ ] [2026-03-18] Upload: ZIP распаковка на бэкенде
 - [ ] [2026-03-18] Telemetry: добавить resume_clicked, upload_started/completed, book_played к соответствующим компонентам
+- [ ] [2026-03-19] PWA: кешировать /api/audio/* для офлайн-воспроизведения
+- [ ] [2026-03-19] useSync: добавить синхронизацию collections, notes, tags, bookmarks, sessions
+- [ ] [2026-03-19] Caddyfile: добавить security headers (HSTS, CSP) на уровне reverse proxy
+- [ ] [2026-03-19] E2E: покрытие offline flow, logout, collections CRUD, payment paywall
 
 ## Завершённые
+
+- [x] [2026-03-19] Редизайн desktop fullscreen player — Split Layout с прогресс-кольцом
+- [x] [2026-03-19] SVG иконки skip -15/+30 вместо текста (все плееры)
+- [x] [2026-03-19] trackDisplayName: "0101.mp3" → "Глава 1" (shared util)
+- [x] [2026-03-19] Security: user book access bypass fix (audio streaming)
+- [x] [2026-03-19] Security: Paddle webhook reject без secret
+- [x] [2026-03-19] Security: password hash crash protection
+- [x] [2026-03-19] Stability: offline queue res.ok check
+- [x] [2026-03-19] Stability: app error boundary с recovery UI
+- [x] [2026-03-19] Stability: logout graceful network error handling
+- [x] [2026-03-19] i18n: login email placeholder
+- [x] [2026-03-19] Оптимизация logo.png (183KB → 143KB)
 
 - [x] [2026-03-18] Починить логин race condition (useAuth AbortController)
 - [x] [2026-03-18] Редизайн SettingsView (iOS-style)
@@ -26,8 +42,8 @@
 - [x] [2026-03-18] Sync engine + файловый сканер
 - [x] [2026-03-18] Onboarding wizard (3 экрана)
 - [x] [2026-03-18] Upload: drag & drop + расширенные форматы + auto-fill metadata + progress bar
-- [x] [2026-03-18] Free plan limit 20 книг + paywall modal + Paddle integration
-- [x] [2026-03-18] Settings: plan badge + X/20 counter + upgrade button
+- [x] [2026-03-18] Free plan limit 10 книг + paywall modal + Paddle integration
+- [x] [2026-03-18] Settings: plan badge + X/10 counter + upgrade button
 - [x] [2026-03-18] Telemetry composable + backend endpoint
 - [x] [2026-03-18] Dashboard: "Recently Added" shelf + sort=recent API
 - [x] [2026-03-18] Library: "By author" grouped view
