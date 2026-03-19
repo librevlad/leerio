@@ -382,13 +382,17 @@ async function loadBook(book: Book, startTrackIndex?: number) {
 
       if (seekPos > 0) {
         const onLoaded = () => {
-          if (loadOpId === opId) a.currentTime = seekPos
+          if (loadOpId === opId) {
+            a.currentTime = seekPos
+            currentTime.value = seekPos
+          }
           a.removeEventListener('loadedmetadata', onLoaded)
+          a.play().catch((e) => console.warn('Auto-play blocked:', e))
         }
         a.addEventListener('loadedmetadata', onLoaded)
+      } else {
+        a.play().catch((e) => console.warn('Auto-play blocked:', e))
       }
-
-      a.play().catch((e) => console.warn('Auto-play blocked:', e))
 
       await loadCoverBlobUrl(book)
       if (loadOpId !== opId) return
@@ -440,16 +444,20 @@ async function loadBook(book: Book, startTrackIndex?: number) {
     if (loadOpId !== opId) return
     a.load()
 
-    // Seek to saved position after metadata loads
+    // Seek to saved position after metadata loads, THEN play
     if (seekPos > 0) {
       const onLoaded = () => {
-        if (loadOpId === opId) a.currentTime = seekPos
+        if (loadOpId === opId) {
+          a.currentTime = seekPos
+          currentTime.value = seekPos
+        }
         a.removeEventListener('loadedmetadata', onLoaded)
+        a.play().catch((e) => console.warn('Auto-play blocked:', e))
       }
       a.addEventListener('loadedmetadata', onLoaded)
+    } else {
+      a.play().catch((e) => console.warn('Auto-play blocked:', e))
     }
-
-    a.play().catch((e) => console.warn('Auto-play blocked:', e))
 
     await loadCoverBlobUrl(book)
     if (loadOpId !== opId) return
@@ -485,7 +493,9 @@ async function playTrack(index: number, seekTo?: number) {
   nextTrackUrl = null
   nextTrackIndex = null
 
-  // Seek after metadata loads if requested
+  a.load()
+
+  // Seek after metadata loads if requested, THEN play
   if (seekTo !== undefined && seekTo > 0) {
     const onLoaded = () => {
       if (playOpId === opId) {
@@ -493,14 +503,16 @@ async function playTrack(index: number, seekTo?: number) {
         currentTime.value = seekTo
       }
       a.removeEventListener('loadedmetadata', onLoaded)
+      a.play().catch(() => {
+        if (playOpId === opId) toast.error(t('player.playbackError'))
+      })
     }
     a.addEventListener('loadedmetadata', onLoaded)
+  } else {
+    a.play().catch(() => {
+      if (playOpId === opId) toast.error(t('player.playbackError'))
+    })
   }
-
-  a.load()
-  a.play().catch(() => {
-    if (playOpId === opId) toast.error(t('player.playbackError'))
-  })
   updateMediaSession()
   preloadNextTrack()
 }
