@@ -12,6 +12,7 @@ const {
   isFullscreen,
   currentTrack,
   currentTrackIndex,
+  isLoading,
   overallProgress,
   totalElapsed,
   totalDuration,
@@ -107,9 +108,11 @@ function trackDisplayName(filename: string, index: number): string {
           class="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 transition-all"
           style="background: var(--gradient-accent); box-shadow: 0 2px 12px rgba(232, 146, 58, 0.25)"
           :aria-label="isPlaying ? t('player.pause') : t('player.play')"
+          :disabled="isLoading"
           @click="togglePlay"
         >
-          <component :is="isPlaying ? IconPause : IconPlay" :size="16" style="color: #fff" />
+          <div v-if="isLoading" class="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+          <component v-else :is="isPlaying ? IconPause : IconPlay" :size="16" style="color: #fff" />
         </button>
 
         <!-- +30s skip -->

@@ -50,6 +50,7 @@ const {
   totalDuration,
   totalElapsed,
   overallProgress,
+  isLoading,
   togglePlay,
   startSeek,
   endSeek,
@@ -447,9 +448,11 @@ function closeOverlays() {
               class="flex h-14 w-14 items-center justify-center rounded-full border-0 transition-all"
               style="background: var(--gradient-accent); box-shadow: 0 4px 24px rgba(232, 146, 58, 0.4)"
               :aria-label="isPlaying ? t('player.pause') : t('player.play')"
+              :disabled="isLoading"
               @click="togglePlay"
             >
-              <component :is="isPlaying ? IconPause : IconPlay" :size="22" style="color: #fff" />
+              <div v-if="isLoading" class="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+              <component v-else :is="isPlaying ? IconPause : IconPlay" :size="22" style="color: #fff" />
             </button>
             <button
               class="flex h-11 w-11 items-center justify-center rounded-full border-0 text-[--t2] transition-colors hover:text-[--t1]"
@@ -889,9 +892,11 @@ function closeOverlays() {
               class="flex h-16 w-16 items-center justify-center rounded-full border-0 transition-all"
               style="background: var(--gradient-accent); box-shadow: 0 4px 24px rgba(232, 146, 58, 0.4)"
               :aria-label="isPlaying ? t('player.pause') : t('player.play')"
+              :disabled="isLoading"
               @click="togglePlay"
             >
-              <component :is="isPlaying ? IconPause : IconPlay" :size="24" style="color: #fff" />
+              <div v-if="isLoading" class="h-6 w-6 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+              <component v-else :is="isPlaying ? IconPause : IconPlay" :size="24" style="color: #fff" />
             </button>
             <button
               class="flex h-10 w-10 items-center justify-center rounded-full border-0 text-[--t2] transition-colors hover:text-[--t1]"
