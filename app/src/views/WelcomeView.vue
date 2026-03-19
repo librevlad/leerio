@@ -65,24 +65,27 @@ async function finish() {
   if (files.value.length > 0) {
     uploading.value = true
     let uploaded = 0
-    for (const file of files.value) {
-      try {
-        const formData = new FormData()
-        formData.append('files', file)
-        formData.append('title', file.name.replace(/\.[^.]+$/, ''))
-        formData.append('author', '')
-        await api.uploadBook(formData)
-        uploaded++
-      } catch {
-        break // stop on first failure (likely limit reached)
+    try {
+      for (const file of files.value) {
+        try {
+          const formData = new FormData()
+          formData.append('files', file)
+          formData.append('title', file.name.replace(/\.[^.]+$/, ''))
+          formData.append('author', '')
+          await api.uploadBook(formData)
+          uploaded++
+        } catch {
+          break
+        }
       }
+      if (uploaded > 0) {
+        toast.success(t('welcome.uploadSuccess', { n: uploaded }))
+      } else {
+        toast.error(t('welcome.uploadFailed'))
+      }
+    } finally {
+      uploading.value = false
     }
-    if (uploaded > 0) {
-      toast.success(t('welcome.uploadSuccess', { n: uploaded }))
-    } else {
-      toast.error(t('welcome.uploadFailed'))
-    }
-    uploading.value = false
   }
 
   router.push('/library')

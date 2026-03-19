@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { ref, nextTick, onMounted, onUnmounted } from 'vue'
 
-defineProps<{ open: boolean }>()
+const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{ close: [] }>()
 
 const sheetRef = ref<HTMLElement>()
 let previousFocus: HTMLElement | null = null
 
 function handleKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') emit('close')
+  if (e.key === 'Escape' && props.open) emit('close')
 }
 
 onMounted(() => {

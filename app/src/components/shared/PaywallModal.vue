@@ -62,10 +62,18 @@ function openCheckout() {
   }
 
   if (!window.Paddle) {
-    // Load Paddle.js dynamically
+    if (loading.value) return // prevent double-click during script load
+    loading.value = true
     const script = document.createElement('script')
     script.src = 'https://cdn.paddle.com/paddle/v2/paddle.js'
-    script.onload = () => openCheckout()
+    script.onload = () => {
+      loading.value = false
+      openCheckout()
+    }
+    script.onerror = () => {
+      loading.value = false
+      toast.error('Payment system unavailable')
+    }
     document.head.appendChild(script)
     return
   }

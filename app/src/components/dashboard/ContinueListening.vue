@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import type { ActiveBook } from '../../types'
 import { coverUrl } from '../../api'
 import ProgressBar from '../shared/ProgressBar.vue'
-import { IconMusic, IconPlay } from '../shared/icons'
+import { IconMusic, IconPlay, IconPause } from '../shared/icons'
 import { useCategories } from '../../composables/useCategories'
 import { formatRemaining as _formatRemaining } from '../../utils/format'
 import { usePlayer } from '../../composables/usePlayer'
@@ -16,7 +16,7 @@ const props = defineProps<{ books: ActiveBook[] }>()
 const { t } = useI18n()
 const toast = useToast()
 const activeBooks = computed(() => props.books.filter((b) => b.progress > 0))
-const { currentBook, loadBook, togglePlay } = usePlayer()
+const { currentBook, isPlaying, loadBook, togglePlay } = usePlayer()
 const nowPlayingId = computed(() => currentBook.value?.id ?? null)
 
 const coverErrors = reactive(new Set<string>())
@@ -101,7 +101,11 @@ async function playBook(bookId: string) {
             :aria-label="nowPlayingId === book.id ? t('book.pauseAria') : t('book.continueAria')"
             @click.prevent="playBook(book.id)"
           >
-            <IconPlay :size="14" style="color: #fff" />
+            <component
+              :is="nowPlayingId === book.id && isPlaying ? IconPause : IconPlay"
+              :size="14"
+              style="color: #fff"
+            />
           </button>
         </div>
       </div>

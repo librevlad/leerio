@@ -11,11 +11,11 @@ interface CacheEntry<T> {
 export function useOfflineCache() {
   function get<T>(key: string): T | null {
     try {
-      const raw = localStorage.getItem(`leerio_cache_${key}`)
+      const raw = localStorage.getItem(`${STORAGE.CACHE_PREFIX}${key}`)
       if (!raw) return null
       const entry: CacheEntry<T> = JSON.parse(raw)
       if (Date.now() - entry.ts > entry.ttl) {
-        localStorage.removeItem(`leerio_cache_${key}`)
+        localStorage.removeItem(`${STORAGE.CACHE_PREFIX}${key}`)
         return null
       }
       return entry.data
@@ -27,14 +27,14 @@ export function useOfflineCache() {
   function set<T>(key: string, data: T, ttl = DEFAULT_TTL) {
     try {
       const entry: CacheEntry<T> = { data, ts: Date.now(), ttl }
-      localStorage.setItem(`leerio_cache_${key}`, JSON.stringify(entry))
+      localStorage.setItem(`${STORAGE.CACHE_PREFIX}${key}`, JSON.stringify(entry))
     } catch {
       // localStorage full — ignore
     }
   }
 
   function remove(key: string) {
-    localStorage.removeItem(`leerio_cache_${key}`)
+    localStorage.removeItem(`${STORAGE.CACHE_PREFIX}${key}`)
   }
 
   function clear() {
