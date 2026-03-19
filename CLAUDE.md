@@ -94,6 +94,7 @@ docker compose up --build
 - `PADDLE_API_KEY` — Paddle API key for payment verification
 - `PADDLE_PRICE_ID` — Paddle price ID for checkout ($4/month subscription)
 - `PADDLE_WEBHOOK_SECRET` — HMAC secret for Paddle webhook signature verification
+- `PADDLE_CLIENT_TOKEN` — Paddle client-side token for SDK initialization (used in PaywallModal)
 
 ## Key Conventions
 
