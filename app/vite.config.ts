@@ -30,6 +30,16 @@ export default defineConfig({
               expiration: { maxEntries: 300, maxAgeSeconds: 604800 },
             },
           },
+          {
+            urlPattern: /\/api\/audio\/.+\/\d+/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'audio-cache',
+              expiration: { maxEntries: 50, maxAgeSeconds: 604800 },
+              networkTimeoutSeconds: 5,
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
         ],
       },
       manifest: false, // use existing public/manifest.json
