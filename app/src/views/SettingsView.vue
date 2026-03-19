@@ -32,6 +32,7 @@ const playbackSpeed = ref(1.0)
 const streak = ref({ current: 0, best: 0 })
 const goalSaving = ref(false)
 const totalBooks = ref<number | null>(null)
+const totalDone = ref(0)
 const showShortcuts = ref(false)
 const showPaywall = ref(false)
 
@@ -61,6 +62,7 @@ onMounted(async () => {
   }
   if (dash.status === 'fulfilled') {
     totalBooks.value = dash.value.total_books
+    totalDone.value = dash.value.total_done ?? 0
   }
   statsLoading.value = false
 })
@@ -171,7 +173,7 @@ async function handleLogout() {
         </div>
         <div class="settings-stat-cell">
           <p class="settings-stat-num">
-            {{ totalBooks ?? 0 }}<span class="text-[12px] text-[--t3]">/{{ yearlyGoal }}</span>
+            {{ totalDone }}<span class="text-[12px] text-[--t3]">/{{ yearlyGoal }}</span>
           </p>
           <p class="settings-stat-label">{{ t('settings.yearlyGoal') }}</p>
         </div>

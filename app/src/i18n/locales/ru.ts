@@ -47,7 +47,7 @@ export default {
     recentlyAdded: 'Недавно добавленные',
     seeAll: 'Все книги',
     recentActivity: 'Последние действия',
-    yearlyGoal: 'Годовая цель',
+    yearlyGoal: 'Прослушано / цель',
     activity: 'Активность',
     activityLess: 'Меньше',
     activityMore: 'Больше',
