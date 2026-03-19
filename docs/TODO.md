@@ -7,9 +7,7 @@
 - [ ] [2026-03-18] Upload: серверная поддержка M4A/M4B/OGG/FLAC (сейчас только MP3 на бэкенде)
 - [ ] [2026-03-18] Upload: ZIP распаковка на бэкенде
 - [ ] [2026-03-18] Telemetry: добавить resume_clicked, upload_started/completed, book_played к соответствующим компонентам
-- [ ] [2026-03-19] PWA: кешировать /api/audio/* для офлайн-воспроизведения
 - [ ] [2026-03-19] useSync: добавить синхронизацию collections, notes, tags, bookmarks, sessions
-- [ ] [2026-03-19] Caddyfile: добавить security headers (HSTS, CSP) на уровне reverse proxy
 - [ ] [2026-03-19] E2E: покрытие offline flow, logout, collections CRUD, payment paywall
 
 ## Завершённые
@@ -25,6 +23,8 @@
 - [x] [2026-03-19] Stability: logout graceful network error handling
 - [x] [2026-03-19] i18n: login email placeholder
 - [x] [2026-03-19] Оптимизация logo.png (183KB → 143KB)
+- [x] [2026-03-19] Caddyfile: security headers для app.leerio.app
+- [x] [2026-03-19] PWA: NetworkFirst caching для /api/audio/* (офлайн-воспроизведение)
 
 - [x] [2026-03-18] Починить логин race condition (useAuth AbortController)
 - [x] [2026-03-18] Редизайн SettingsView (iOS-style)
