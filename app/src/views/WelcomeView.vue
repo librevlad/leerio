@@ -20,9 +20,11 @@ const uploading = ref(false)
 const dragOver = ref(false)
 
 function next() {
-  if (step.value < 3) {
-    step.value++
-  }
+  if (step.value < 3) step.value++
+}
+
+function prev() {
+  if (step.value > 1) step.value--
 }
 
 function handleDrop(e: DragEvent) {
@@ -61,17 +63,23 @@ async function finish() {
   // If files were added, upload them via API module
   if (files.value.length > 0) {
     uploading.value = true
-    try {
-      for (const file of files.value) {
+    let uploaded = 0
+    for (const file of files.value) {
+      try {
         const formData = new FormData()
         formData.append('files', file)
         formData.append('title', file.name.replace(/\.[^.]+$/, ''))
         formData.append('author', '')
-        await api.uploadBook(formData).catch(() => {})
+        await api.uploadBook(formData)
+        uploaded++
+      } catch {
+        break // stop on first failure (likely limit reached)
       }
-      toast.success(t('welcome.uploadSuccess', { n: files.value.length }))
-    } catch {
-      // Upload failures are non-blocking
+    }
+    if (uploaded > 0) {
+      toast.success(t('welcome.uploadSuccess', { n: uploaded }))
+    } else {
+      toast.error(t('welcome.uploadFailed'))
     }
     uploading.value = false
   }
@@ -167,9 +175,14 @@ async function finish() {
           <button v-ripple class="btn btn-primary mt-6 w-full justify-center py-3 text-[15px]" @click="next">
             {{ t('welcome.continue') }}
           </button>
-          <button class="mt-2 w-full py-2 text-center text-[12px] text-[--t3] hover:text-[--t2]" @click="next">
-            {{ t('welcome.skip') }}
-          </button>
+          <div class="mt-2 flex justify-center gap-4">
+            <button class="py-2 text-[12px] text-[--t3] hover:text-[--t2]" @click="prev">
+              {{ t('common.back') }}
+            </button>
+            <button class="py-2 text-[12px] text-[--t3] hover:text-[--t2]" @click="next">
+              {{ t('welcome.skip') }}
+            </button>
+          </div>
         </div>
 
         <!-- Step 3: Done -->
@@ -192,6 +205,9 @@ async function finish() {
             @click="finish"
           >
             {{ uploading ? t('welcome.uploading') : t('welcome.start') }}
+          </button>
+          <button class="mt-2 w-full py-2 text-center text-[12px] text-[--t3] hover:text-[--t2]" @click="prev">
+            {{ t('common.back') }}
           </button>
         </div>
       </transition>

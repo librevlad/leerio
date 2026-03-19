@@ -432,6 +432,7 @@ export default {
     confirm: 'Confirm',
     error: 'Error',
     errorOccurred: 'Something went wrong',
+    back: 'Back',
     unknownError: 'Unknown error',
     errorPrefix: 'Error: {msg}',
     loadError: 'Failed to load data',
@@ -498,6 +499,7 @@ export default {
     uploading: 'Uploading...',
     start: 'Start listening',
     uploadSuccess: '{n} files uploaded',
+    uploadFailed: 'Failed to upload files',
   },
   paywall: {
     title: "You've built your library",

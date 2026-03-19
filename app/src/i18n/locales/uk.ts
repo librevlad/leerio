@@ -432,6 +432,7 @@ export default {
     confirm: 'Підтвердити',
     error: 'Помилка',
     errorOccurred: 'Щось пішло не так',
+    back: 'Назад',
     unknownError: 'Невідома помилка',
     errorPrefix: 'Помилка: {msg}',
     loadError: 'Не вдалося завантажити дані',
@@ -498,6 +499,7 @@ export default {
     uploading: 'Завантаження...',
     start: 'Почати слухати',
     uploadSuccess: '{n} файлів завантажено',
+    uploadFailed: 'Не вдалося завантажити файли',
   },
   paywall: {
     title: 'Ви зібрали свою бібліотеку',

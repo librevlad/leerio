@@ -432,6 +432,7 @@ export default {
     confirm: 'Подтвердить',
     error: 'Ошибка',
     errorOccurred: 'Произошла ошибка',
+    back: 'Назад',
     unknownError: 'Неизвестная ошибка',
     errorPrefix: 'Ошибка: {msg}',
     loadError: 'Не удалось загрузить данные',
@@ -498,6 +499,7 @@ export default {
     uploading: 'Загрузка...',
     start: 'Начать слушать',
     uploadSuccess: '{n} файлов загружено',
+    uploadFailed: 'Не удалось загрузить файлы',
   },
   paywall: {
     title: 'Вы собрали свою библиотеку',
