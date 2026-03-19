@@ -3,7 +3,6 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { useBooks } from '../composables/useBooks'
-import SearchInput from '../components/shared/SearchInput.vue'
 import BookCard from '../components/shared/BookCard.vue'
 import EmptyState from '../components/shared/EmptyState.vue'
 import PullIndicator from '../components/shared/PullIndicator.vue'
@@ -168,7 +167,7 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
     <PullIndicator :progress="pullProgress" :refreshing="refreshing" />
 
     <!-- Header -->
-    <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
+    <div class="mb-4 flex items-end justify-between">
       <div>
         <h1 class="page-title">{{ t('library.title') }}</h1>
         <p class="mt-1 text-[13px] text-[--t3]">
@@ -176,17 +175,14 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
           {{ t('plural.book', filtered.length) }}
         </p>
       </div>
-      <div class="flex items-center gap-2">
-        <SearchInput v-model="search" :placeholder="t('library.search')" class="w-full sm:w-56" />
-        <button
-          class="flex h-[42px] w-[42px] flex-shrink-0 cursor-pointer items-center justify-center rounded-xl border border-white/[0.06] bg-white/[0.03] text-[--t3] transition-colors hover:bg-white/[0.08] hover:text-[--accent]"
-          :title="t('library.randomBook')"
-          :aria-label="t('library.randomBook')"
-          @click="randomBook"
-        >
-          <IconShuffle :size="16" />
-        </button>
-      </div>
+      <button
+        class="flex h-9 w-9 flex-shrink-0 cursor-pointer items-center justify-center rounded-xl border border-white/[0.06] bg-white/[0.03] text-[--t3] transition-colors hover:bg-white/[0.08] hover:text-[--accent]"
+        :title="t('library.randomBook')"
+        :aria-label="t('library.randomBook')"
+        @click="randomBook"
+      >
+        <IconShuffle :size="16" />
+      </button>
     </div>
 
     <!-- Category pills -->
