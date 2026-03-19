@@ -7,6 +7,7 @@ import { usePlayer } from '../composables/usePlayer'
 import { useCategories } from '../composables/useCategories'
 import { formatRemaining } from '../utils/format'
 import { STORAGE } from '../constants/storage'
+import { useTracking } from '../composables/useTelemetry'
 import { useToast } from '../composables/useToast'
 import type { DashboardData, ShelfBook } from '../types'
 import ActivityHeatmap from '../components/dashboard/ActivityHeatmap.vue'
@@ -20,6 +21,7 @@ import { usePullToRefresh } from '../composables/usePullToRefresh'
 
 const { t } = useI18n()
 const toast = useToast()
+const { track } = useTracking()
 const { user, isGuest } = useAuth()
 const player = usePlayer()
 const { gradient: catGradient } = useCategories()
@@ -69,12 +71,14 @@ function fmtRemaining(totalHours: number, progress: number): string {
 }
 
 async function playBook(bookId: string) {
+  track('resume_clicked', { book: bookId })
   if (nowPlayingId.value === bookId) {
     player.togglePlay()
   } else {
     try {
       const book = await api.getBook(bookId)
       player.loadBook(book)
+      track('book_played', { book: bookId })
     } catch {
       toast.error(t('player.tracksLoadError'))
     }

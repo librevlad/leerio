@@ -6,6 +6,7 @@ import { api } from '@/api'
 import { useToast } from '@/composables/useToast'
 import { useUserBooks } from '@/composables/useUserBooks'
 import { useLocalBooks } from '@/composables/useLocalBooks'
+import { useTracking } from '@/composables/useTelemetry'
 import { useNetwork } from '@/composables/useNetwork'
 import ProgressBar from '@/components/shared/ProgressBar.vue'
 import PaywallModal from '@/components/shared/PaywallModal.vue'
@@ -13,6 +14,7 @@ import { IconUpload, IconMicrophone, IconMusic, IconX, IconSmartphone, IconCheck
 import type { TTSVoice, TTSEngine } from '@/types'
 
 const router = useRouter()
+const { track } = useTracking()
 const toast = useToast()
 const { t } = useI18n()
 const { pollJob } = useUserBooks()
@@ -91,6 +93,7 @@ async function handleUpload() {
 
   uploading.value = true
   uploadProgress.value = 0
+  track('upload_started', { files: uploadFiles.value.length })
 
   try {
     const formData = new FormData()
@@ -121,6 +124,7 @@ async function handleUpload() {
       xhr.send(formData)
     })
 
+    track('upload_completed', { files: uploadFiles.value.length })
     toast.success(t('upload.successUploaded'))
     router.push('/my-library')
   } catch (e: unknown) {

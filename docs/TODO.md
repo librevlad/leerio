@@ -4,7 +4,7 @@
 
 - [ ] [2026-03-18] Paddle: настроить credentials на VPS (PADDLE_API_KEY, PADDLE_PRICE_ID, PADDLE_WEBHOOK_SECRET)
 - [ ] [2026-03-18] Paddle: добавить webhook URL в Paddle Dashboard → app.leerio.app/api/payments/paddle-webhook
-- [ ] [2026-03-18] Upload: серверная поддержка M4A/M4B/OGG/FLAC (сейчас только MP3 на бэкенде)
+- [x] [2026-03-18] Upload: серверная поддержка M4A/M4B/OGG/FLAC/WAV (сделано 2026-03-19)
 - [ ] [2026-03-18] Upload: ZIP распаковка на бэкенде
 - [ ] [2026-03-18] Telemetry: добавить resume_clicked, upload_started/completed, book_played к соответствующим компонентам
 - [ ] [2026-03-19] E2E: покрытие offline flow, payment paywall
