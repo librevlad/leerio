@@ -54,7 +54,7 @@ async function handleLogout() {
   <aside
     class="fixed top-0 left-0 z-40 flex h-screen flex-col transition-all duration-300"
     :class="collapsed ? 'w-16' : 'w-60'"
-    style="background: #0e0e14; border-right: 1px solid var(--border)"
+    style="background: var(--sidebar); border-right: 1px solid var(--border)"
   >
     <div class="flex h-16 items-center gap-3 px-4">
       <button

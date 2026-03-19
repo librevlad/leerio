@@ -17,7 +17,7 @@
   --accent: #ff8a00;
   --accent-2: #ffaa40;
   --accent-soft: rgba(255, 138, 0, 0.12);
-  --accent-glow: rgba(255, 138, 0, 0.15);
+  --sidebar: #0e0e14;
   --gradient-accent: linear-gradient(135deg, #ff8a00 0%, #e07000 100%);
   --gradient-bar: linear-gradient(90deg, #ff8a00, #ffaa40, #ffc878);
 }
@@ -199,21 +199,6 @@ body {
 button:not(.btn):not(:disabled):active {
   transform: scale(0.97);
   transition: transform 0.06s ease;
-}
-
-/* Status pill pop animation on selection */
-@keyframes status-pop {
-  0% {
-    transform: scale(0.88);
-    opacity: 0.5;
-  }
-  50% {
-    transform: scale(1.04);
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
 }
 
 /* ── Typography ──────────────────────────────────────────────────────── */
@@ -443,19 +428,6 @@ button:not(.btn):not(:disabled):active {
 .fade-in {
   animation: fadeIn 0.4s ease-out;
 }
-.tab-content-enter {
-  animation: tabEnter 0.2s ease-out;
-}
-@keyframes tabEnter {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -619,24 +591,6 @@ select option {
 .fade-mask-r {
   -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
   mask-image: linear-gradient(to right, black 85%, transparent 100%);
-}
-
-/* ── Category stripes (legacy, used in Queue cards) ──────────────────── */
-
-.stripe-business {
-  border-left: 3px solid #f59e0b;
-}
-.stripe-relations {
-  border-left: 3px solid #ec4899;
-}
-.stripe-selfdev {
-  border-left: 3px solid #e8923a;
-}
-.stripe-fiction {
-  border-left: 3px solid #06b6d4;
-}
-.stripe-languages {
-  border-left: 3px solid #10b981;
 }
 
 /* ── Glow accent utilities ───────────────────────────────────────────── */

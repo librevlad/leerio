@@ -127,7 +127,7 @@ onMounted(loadData)
     </div>
 
     <!-- Guest welcome -->
-    <div v-else-if="isGuest" class="fade-in" style="display: flex; flex-direction: column; gap: 20px">
+    <div v-else-if="isGuest" class="fade-in flex flex-col gap-5">
       <div>
         <p class="text-[12px] font-semibold tracking-widest text-[--t3] uppercase">{{ greeting }}</p>
         <h1 class="mt-1 text-[22px] font-extrabold text-[--t1] md:text-[26px]">Leerio</h1>
@@ -154,7 +154,7 @@ onMounted(loadData)
       </div>
     </div>
 
-    <div v-else-if="data" class="fade-in" style="display: flex; flex-direction: column; gap: 20px">
+    <div v-else-if="data" class="fade-in flex flex-col gap-5">
       <!-- Greeting -->
       <div>
         <p class="text-[12px] font-semibold tracking-widest text-[--t3] uppercase">{{ greeting }}</p>

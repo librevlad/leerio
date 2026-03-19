@@ -683,7 +683,7 @@ function closeOverlays() {
           />
 
           <!-- Vinyl disc -->
-          <div class="vinyl-disc relative z-[1]">
+          <div class="relative z-[1]">
             <div
               class="flex h-[240px] w-[240px] items-center justify-center rounded-full"
               style="

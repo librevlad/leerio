@@ -348,7 +348,7 @@ onMounted(async () => {
       <transition name="dialog">
         <div
           v-if="showCreate"
-          class="dialog-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
+          class="dialog-overlay fixed inset-0 z-[80] flex items-center justify-center p-4"
           @click.self="closeForm"
         >
           <div
