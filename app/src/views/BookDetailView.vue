@@ -3,7 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { api, coverUrl } from '../api'
-import { formatSizeMB } from '../utils/format'
+import { formatSizeMB, formatRemaining as _formatRemaining } from '../utils/format'
 import type { Book } from '../types'
 import BookNotes from '../components/book/BookNotes.vue'
 import BookTags from '../components/book/BookTags.vue'
@@ -186,12 +186,7 @@ function formatDuration(hours: number | undefined): string {
 }
 
 function formatRemaining(totalHours: number, progress: number): string {
-  const remaining = totalHours * (1 - progress / 100)
-  if (remaining < 1 / 60) return `< 1 ${t('common.unitMin')}`
-  if (remaining < 1) return `${Math.round(remaining * 60)} ${t('common.unitMin')}`
-  const h = Math.floor(remaining)
-  const m = Math.round((remaining - h) * 60)
-  return m > 0 ? `${h}${t('common.unitH')} ${m}${t('common.unitM')}` : `${h}${t('common.unitH')}`
+  return _formatRemaining(totalHours, progress, t)
 }
 
 onMounted(loadBook)

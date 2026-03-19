@@ -9,7 +9,7 @@
  *   await local.setProgress('book-123', 42)
  *   const pct = await local.getProgress('book-123')  // 42
  */
-import { createStore, get, set, del, keys, entries } from 'idb-keyval'
+import { createStore, get, set, setMany, del, keys, entries } from 'idb-keyval'
 import type { Bookmark, Quote, Collection, PlaybackPosition } from '../types'
 
 // Separate IndexedDB stores for different data domains
@@ -178,25 +178,16 @@ export function useLocalData() {
   }
 
   // ── Bulk import (for initial sync from server) ────────────────
-  async function importStatuses(data: Record<string, LocalBookStatus>): Promise<void> {
-    for (const [k, v] of Object.entries(data)) await set(k, v, statusStore)
+  async function bulkImport<T>(data: Record<string, T>, store: ReturnType<typeof createStore>): Promise<void> {
+    const entries = Object.entries(data) as [IDBValidKey, T][]
+    if (entries.length) await setMany(entries, store)
   }
 
-  async function importProgress(data: Record<string, number>): Promise<void> {
-    for (const [k, v] of Object.entries(data)) await set(k, v, progressStore)
-  }
-
-  async function importBookmarks(data: Record<string, unknown[]>): Promise<void> {
-    for (const [k, v] of Object.entries(data)) await set(k, v, bookmarkStore)
-  }
-
-  async function importNotes(data: Record<string, string>): Promise<void> {
-    for (const [k, v] of Object.entries(data)) await set(k, v, noteStore)
-  }
-
-  async function importTags(data: Record<string, string[]>): Promise<void> {
-    for (const [k, v] of Object.entries(data)) await set(k, v, tagStore)
-  }
+  const importStatuses = (data: Record<string, LocalBookStatus>) => bulkImport(data, statusStore)
+  const importProgress = (data: Record<string, number>) => bulkImport(data, progressStore)
+  const importBookmarks = (data: Record<string, unknown[]>) => bulkImport(data, bookmarkStore)
+  const importNotes = (data: Record<string, string>) => bulkImport(data, noteStore)
+  const importTags = (data: Record<string, string[]>) => bulkImport(data, tagStore)
 
   // ── Key counts (for UI) ──────────────────────────────────────
   async function bookmarkCount(): Promise<number> {

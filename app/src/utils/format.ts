@@ -17,6 +17,18 @@ export function formatSizeMB(mb: number, t: (key: string) => string): string {
 }
 
 /**
+ * Format remaining listening time from total hours and progress percentage.
+ */
+export function formatRemaining(totalHours: number, progress: number, t: (key: string) => string): string {
+  const remaining = totalHours * (1 - progress / 100)
+  if (remaining < 1 / 60) return `< 1 ${t('common.unitMin')}`
+  if (remaining < 1) return `${Math.round(remaining * 60)} ${t('common.unitMin')}`
+  const h = Math.floor(remaining)
+  const m = Math.round((remaining - h) * 60)
+  return m > 0 ? `${h}${t('common.unitH')} ${m}${t('common.unitM')}` : `${h}${t('common.unitH')}`
+}
+
+/**
  * Format track filename to readable chapter name.
  * Numeric-only filenames (e.g. "0101.mp3") → "Глава 1" via i18n.
  * Other filenames → strip extension.

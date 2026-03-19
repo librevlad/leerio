@@ -6,6 +6,7 @@ import { coverUrl } from '../../api'
 import ProgressBar from '../shared/ProgressBar.vue'
 import { IconMusic, IconPlay } from '../shared/icons'
 import { useCategories } from '../../composables/useCategories'
+import { formatRemaining as _formatRemaining } from '../../utils/format'
 import { usePlayer } from '../../composables/usePlayer'
 import { useToast } from '../../composables/useToast'
 import { api } from '../../api'
@@ -22,12 +23,7 @@ const coverErrors = reactive(new Set<string>())
 const { gradient: catGradient } = useCategories()
 
 function formatRemaining(totalHours: number, progress: number): string {
-  const remaining = totalHours * (1 - progress / 100)
-  if (remaining < 1 / 60) return `< 1 ${t('common.unitMin')}`
-  if (remaining < 1) return `${Math.round(remaining * 60)} ${t('common.unitMin')}`
-  const h = Math.floor(remaining)
-  const m = Math.round((remaining - h) * 60)
-  return m > 0 ? `${h}${t('common.unitH')} ${m}${t('common.unitM')}` : `${h}${t('common.unitH')}`
+  return _formatRemaining(totalHours, progress, t)
 }
 
 async function playBook(bookId: string) {

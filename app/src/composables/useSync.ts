@@ -102,13 +102,19 @@ async function syncQuotes(local: ReturnType<typeof useLocalData>) {
   }
 }
 
-async function syncBookmarks(local: ReturnType<typeof useLocalData>) {
+async function syncMap<T>(fetch: () => Promise<T>, store: (data: T) => Promise<void>) {
   try {
-    const data = await api.getAllBookmarksMap()
-    await local.importBookmarks(data)
+    await store(await fetch())
   } catch {
-    // optional
+    // optional — sync failures are non-blocking
   }
+}
+
+async function syncBookmarks(local: ReturnType<typeof useLocalData>) {
+  await syncMap(
+    () => api.getAllBookmarksMap(),
+    (d) => local.importBookmarks(d),
+  )
 }
 
 async function syncCollections(local: ReturnType<typeof useLocalData>) {
@@ -128,19 +134,15 @@ async function syncCollections(local: ReturnType<typeof useLocalData>) {
 }
 
 async function syncNotes(local: ReturnType<typeof useLocalData>) {
-  try {
-    const data = await api.getAllNotesMap()
-    await local.importNotes(data)
-  } catch {
-    // optional
-  }
+  await syncMap(
+    () => api.getAllNotesMap(),
+    (d) => local.importNotes(d),
+  )
 }
 
 async function syncTags(local: ReturnType<typeof useLocalData>) {
-  try {
-    const data = await api.getAllTagsMap()
-    await local.importTags(data)
-  } catch {
-    // optional
-  }
+  await syncMap(
+    () => api.getAllTagsMap(),
+    (d) => local.importTags(d),
+  )
 }

@@ -126,6 +126,7 @@ def _enrich_catalog_book(
     tags_map: dict | None = None,
     notes_map: dict | None = None,
     statuses_map: dict | None = None,
+    cats_map: dict | None = None,
     rating: int = 0,
 ) -> dict:
     """Convert a DB book row to the API response shape."""
@@ -135,7 +136,7 @@ def _enrich_catalog_book(
     note = (notes_map or {}).get(book_id, "") if notes_map else ""
 
     cat_name = _normalize_category(b["category"])
-    cat_info = db.get_category_by_name(cat_name)
+    cat_info = (cats_map or {}).get(cat_name) if cats_map else db.get_category_by_name(cat_name)
 
     result = {
         "id": str(book_id),
@@ -818,6 +819,7 @@ def get_books(
         tags_map = {}
         notes_map = {}
 
+    cats_map = {c["name"]: c for c in db.get_all_categories()}
     result = []
     search_lower = search.lower() if search else None
     for b in books:
@@ -827,6 +829,7 @@ def get_books(
             tags_map=tags_map,
             notes_map=notes_map,
             statuses_map=statuses,
+            cats_map=cats_map,
         )
         if tag and tag not in enriched["tags"]:
             continue
@@ -839,7 +842,12 @@ def get_books(
         all_books = db.search_books(category=category, sort=sort, language=language)
         for b in all_books:
             enriched = _enrich_catalog_book(
-                b, progress_map=progress, tags_map=tags_map, notes_map=notes_map, statuses_map=statuses
+                b,
+                progress_map=progress,
+                tags_map=tags_map,
+                notes_map=notes_map,
+                statuses_map=statuses,
+                cats_map=cats_map,
             )
             if str(enriched["id"]) in matched_ids or enriched["id"] in matched_ids:
                 continue

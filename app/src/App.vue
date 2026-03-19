@@ -92,6 +92,12 @@ function onKeydown(e: KeyboardEvent) {
 }
 
 const appError = ref(false)
+const appKey = ref(0)
+
+function retryApp() {
+  appError.value = false
+  appKey.value++
+}
 
 onErrorCaptured((err) => {
   console.error('[App] Uncaught component error:', err)
@@ -123,7 +129,7 @@ onUnmounted(() => {
     <button
       class="rounded-lg px-4 py-2 text-[13px] font-semibold text-white"
       style="background: var(--gradient-accent)"
-      @click="appError = false"
+      @click="retryApp"
     >
       {{ t('common.retry') }}
     </button>
@@ -145,7 +151,7 @@ onUnmounted(() => {
   <router-view v-else-if="isLoginPage || isWelcomePage" />
 
   <!-- App layout -->
-  <div v-else-if="showApp" class="flex min-h-dvh min-h-screen">
+  <div v-else-if="showApp" :key="appKey" class="flex min-h-dvh min-h-screen">
     <AppSidebar v-model:collapsed="sidebarCollapsed" class="hidden md:flex" />
     <main
       class="flex-1 overflow-y-auto scroll-smooth transition-all duration-300"

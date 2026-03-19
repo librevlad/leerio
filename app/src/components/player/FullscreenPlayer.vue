@@ -977,7 +977,7 @@ function closeOverlays() {
       <!-- Close overlays on background click -->
       <div
         v-if="showSpeedMenu || showSleepMenu || showVolumeSlider"
-        class="fixed inset-0 z-[5]"
+        class="fixed inset-0 z-[9]"
         @click="closeOverlays"
       />
     </div>

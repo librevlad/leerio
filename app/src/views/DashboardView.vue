@@ -5,6 +5,7 @@ import { api, coverUrl } from '../api'
 import { useAuth } from '../composables/useAuth'
 import { usePlayer } from '../composables/usePlayer'
 import { useCategories } from '../composables/useCategories'
+import { formatRemaining } from '../utils/format'
 import { useToast } from '../composables/useToast'
 import type { DashboardData, ShelfBook } from '../types'
 import ActivityHeatmap from '../components/dashboard/ActivityHeatmap.vue'
@@ -62,13 +63,8 @@ const smartRecommendation = computed(() => {
 const nowPlayingId = computed(() => player.currentBook.value?.id ?? null)
 const isPlaying = computed(() => player.isPlaying.value)
 
-function formatRemaining(totalHours: number, progress: number): string {
-  const remaining = totalHours * (1 - progress / 100)
-  if (remaining < 1 / 60) return `< 1 ${t('common.unitMin')}`
-  if (remaining < 1) return `${Math.round(remaining * 60)} ${t('common.unitMin')}`
-  const h = Math.floor(remaining)
-  const m = Math.round((remaining - h) * 60)
-  return m > 0 ? `${h}${t('common.unitH')} ${m}${t('common.unitM')}` : `${h}${t('common.unitH')}`
+function fmtRemaining(totalHours: number, progress: number): string {
+  return formatRemaining(totalHours, progress, t)
 }
 
 async function playBook(bookId: string) {
@@ -239,7 +235,7 @@ onMounted(loadData)
                 nowPlayingId === heroBook.id && isPlaying
                   ? t('player.pause')
                   : heroBook.duration_hours
-                    ? `${t('player.play')} · ${formatRemaining(heroBook.duration_hours, heroBook.progress)} ${t('common.remaining')}`
+                    ? `${t('player.play')} · ${fmtRemaining(heroBook.duration_hours, heroBook.progress)} ${t('common.remaining')}`
                     : t('player.play')
               }}
             </button>
@@ -360,7 +356,7 @@ onMounted(loadData)
               <p class="text-[11px] text-[--t3]">
                 {{ book.progress }}%
                 <template v-if="book.duration_hours">
-                  · {{ formatRemaining(book.duration_hours, book.progress) }}
+                  · {{ fmtRemaining(book.duration_hours, book.progress) }}
                 </template>
               </p>
             </router-link>
