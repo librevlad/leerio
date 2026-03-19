@@ -93,6 +93,7 @@ export default {
     byAuthor: 'By author',
     unknownAuthor: 'Unknown author',
     filterAll: 'All',
+    filterStatus: 'Status',
     filterListening: 'Listening',
     filterWant: 'Want',
     filterDone: 'Done',

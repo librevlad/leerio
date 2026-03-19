@@ -93,6 +93,7 @@ export default {
     byAuthor: 'По авторам',
     unknownAuthor: 'Неизвестный автор',
     filterAll: 'Все',
+    filterStatus: 'Статус',
     filterListening: 'Слушаю',
     filterWant: 'Хочу',
     filterDone: 'Готово',

@@ -22,6 +22,7 @@ const sort = ref((route.query.sort as string) || 'title')
 const statusFilter = ref<BookStatusValue | ''>((route.query.status as BookStatusValue) || '')
 const langFilter = ref((route.query.lang as string) || '')
 const visibleCount = ref(40)
+const showStatusMenu = ref(false)
 
 const PAGE_SIZE = 40
 
@@ -154,14 +155,6 @@ const BOOK_LANGS = [
   { code: 'en', key: 'common.langEn', flag: '🇬🇧', ariaLabel: 'English' },
 ]
 
-const langCounts = computed(() => {
-  const counts: Record<string, number> = {}
-  for (const b of books.value) {
-    if (b.language) counts[b.language] = (counts[b.language] || 0) + 1
-  }
-  return counts
-})
-
 const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
 </script>
 
@@ -192,7 +185,7 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
     </div>
 
     <!-- Category pills -->
-    <div class="scrollbar-hide fade-mask-r mb-3 flex gap-2 overflow-x-auto pb-0.5">
+    <div class="scrollbar-hide fade-mask-r mb-2 flex gap-1.5 overflow-x-auto pb-0.5">
       <button
         class="flex-shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
         :class="
@@ -220,76 +213,83 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
       </button>
     </div>
 
-    <!-- Language filter pills -->
-    <div class="scrollbar-hide fade-mask-r mb-3 flex gap-2 overflow-x-auto pb-0.5">
-      <button
-        class="flex-shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
-        :class="
-          langFilter === ''
-            ? 'border-white/10 bg-white/[0.08] text-[--t1]'
-            : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
-        "
-        @click="langFilter = ''"
-      >
-        {{ t('library.filterAll') }}
-      </button>
+    <!-- Secondary: lang flags | status dropdown | sort | view toggle -->
+    <div class="mb-5 flex items-center gap-1.5 overflow-x-auto">
+      <!-- Language flags (compact) -->
       <button
         v-for="lang in BOOK_LANGS"
         :key="lang.code"
         :aria-label="lang.ariaLabel"
-        class="flex-shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
+        class="flex-shrink-0 cursor-pointer rounded-full border px-2 py-1 text-[12px] transition-colors"
         :class="
           langFilter === lang.code
-            ? 'border-white/10 bg-white/[0.08] text-[--t1]'
-            : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
+            ? 'border-white/10 bg-white/[0.08]'
+            : langFilter === ''
+              ? 'border-transparent opacity-60 hover:opacity-100'
+              : 'border-transparent opacity-30 hover:opacity-60'
         "
-        @click="langFilter = lang.code"
+        @click="langFilter = langFilter === lang.code ? '' : lang.code"
       >
-        {{ lang.flag }} {{ t(lang.key) }}
-        <span v-if="langCounts[lang.code]" class="ml-0.5 text-[10px] opacity-50">{{ langCounts[lang.code] }}</span>
+        {{ lang.flag }}
       </button>
-    </div>
 
-    <!-- Status + Sort row -->
-    <div class="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-      <div class="scrollbar-hide fade-mask-r flex gap-1.5 overflow-x-auto pb-0.5">
+      <div class="mx-1 hidden h-4 w-px bg-white/[0.06] sm:block" />
+
+      <!-- Status dropdown -->
+      <div class="relative flex-shrink-0">
         <button
-          v-for="sp in statusPills"
-          :key="sp.value"
-          class="flex flex-shrink-0 cursor-pointer items-center gap-1 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
+          class="flex cursor-pointer items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors"
           :class="
-            statusFilter === sp.value
+            statusFilter
               ? 'border-white/10 bg-white/[0.08] text-[--t1]'
-              : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
+              : 'border-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
           "
-          @click="statusFilter = sp.value"
+          @click="showStatusMenu = !showStatusMenu"
         >
-          {{ sp.label }}
-          <span
-            v-if="sp.count"
-            class="ml-0.5 rounded-md bg-white/[0.08] px-1.5 py-0.5 text-[10px] leading-none text-[--t3]"
+          {{ statusFilter ? statusPills.find((p) => p.value === statusFilter)?.label : t('library.filterStatus') }}
+          <span class="text-[9px] opacity-50">▾</span>
+        </button>
+        <div
+          v-if="showStatusMenu"
+          class="absolute top-full left-0 z-20 mt-1 rounded-xl border border-[--border] p-1"
+          style="background: var(--card-solid)"
+        >
+          <button
+            v-for="sp in statusPills"
+            :key="sp.value"
+            class="block w-full cursor-pointer rounded-lg border-0 bg-transparent px-3 py-2 text-left text-[12px] whitespace-nowrap transition-colors"
+            :class="statusFilter === sp.value ? 'text-[--accent]' : 'text-[--t2] hover:bg-white/5'"
+            @click="
+              statusFilter = sp.value
+              showStatusMenu = false
+            "
           >
-            {{ sp.count }}
-          </span>
-        </button>
+            {{ sp.label }}
+            <span v-if="sp.count" class="ml-1 text-[10px] opacity-50">{{ sp.count }}</span>
+          </button>
+        </div>
       </div>
-      <div class="scrollbar-hide flex flex-shrink-0 items-center gap-1 overflow-x-auto">
-        <button
-          v-for="s in sortOptions"
-          :key="s.value"
-          class="cursor-pointer rounded-full border-0 px-2.5 py-1 text-[11px] font-medium transition-colors"
-          :class="
-            sort === s.value
-              ? 'bg-[--accent-soft] text-[--accent]'
-              : 'bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
-          "
-          @click="sort = s.value"
-        >
-          {{ s.label }}
-        </button>
-      </div>
+
+      <div class="mx-1 hidden h-4 w-px bg-white/[0.06] sm:block" />
+
+      <!-- Sort buttons -->
       <button
-        class="ml-2 flex-shrink-0 cursor-pointer rounded-full border-0 px-2.5 py-1 text-[11px] font-medium transition-colors"
+        v-for="s in sortOptions"
+        :key="s.value"
+        class="flex-shrink-0 cursor-pointer rounded-full border-0 px-2 py-1 text-[11px] font-medium transition-colors"
+        :class="
+          sort === s.value
+            ? 'bg-[--accent-soft] text-[--accent]'
+            : 'bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
+        "
+        @click="sort = s.value"
+      >
+        {{ s.label }}
+      </button>
+
+      <!-- View toggle -->
+      <button
+        class="flex-shrink-0 cursor-pointer rounded-full border-0 px-2 py-1 text-[11px] font-medium transition-colors"
         :class="
           viewMode === 'authors' ? 'bg-[--accent-soft] text-[--accent]' : 'bg-transparent text-[--t3] hover:bg-white/5'
         "
@@ -298,6 +298,9 @@ const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
         {{ t('library.byAuthor') }}
       </button>
     </div>
+
+    <!-- Status menu overlay -->
+    <div v-if="showStatusMenu" class="fixed inset-0 z-10" @click="showStatusMenu = false" />
 
     <!-- Active filter summary -->
     <div v-if="hasActiveFilters && !loading" class="mb-4 flex items-center gap-2 text-[12px] text-[--t3]">
