@@ -209,11 +209,11 @@ def process_book(book_dir: Path, tracker: dict):
     logger.info("Processing: %s", name)
     logger.info("  Author: %s  |  Reader: %s", author or "—", reader or "—")
 
+    cover_status = "not found"
     cover = standardize_cover(book_dir)
     if cover:
         cover_status = "exists"
-
-    if not cover:
+    else:
         time.sleep(API_DELAY)
         cover = download_cover(author, title, book_dir, is_english)
         cover_status = "downloaded" if cover else "not found"

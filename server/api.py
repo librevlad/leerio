@@ -614,13 +614,8 @@ def get_dashboard(user: dict = Depends(get_current_user)):
         for b in data["active"]
     ]
 
-    # Build book_id→title lookup from history for recent activity
-    # (only need titles for history entries with book_ids)
-    book_ids_in_hist = {h["book_id"] for h in hist[:8] if h.get("book_id")}
-    if book_ids_in_hist:
-        book_titles = {b["id"]: b["title"] for b in (db.get_book_by_id(bid) for bid in book_ids_in_hist) if b}
-    else:
-        book_titles = {}
+    # book_titles built from all_books below (avoid N+1 per-book queries)
+    book_titles: dict = {}
 
     # Recent activity
     recent = []
@@ -648,8 +643,9 @@ def get_dashboard(user: dict = Depends(get_current_user)):
             if day:
                 day_counts[day] += 1
 
-    # Category counts — lightweight query (no per-row Python work)
+    # All books — used for category counts and book_titles lookup
     all_books = db.get_all_books()
+    book_titles = {b["id"]: b["title"] for b in all_books}
     cat_counts = Counter(_normalize_category(b["category"]) for b in all_books)
 
     return {

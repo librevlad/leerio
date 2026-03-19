@@ -498,8 +498,6 @@ def get_user_by_id(user_id: str) -> dict | None:
 
 def create_or_update_user(email: str, name: str, picture: str) -> dict:
     """Find existing user or create new one. Updates name/picture on login."""
-    import hashlib
-
     conn = _get_conn()
     row = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
     if row:
@@ -1500,7 +1498,8 @@ def update_category_by_id(cat_id: int, **fields) -> dict | None:
     existing = conn.execute("SELECT * FROM categories WHERE id = ?", (cat_id,)).fetchone()
     if not existing:
         return None
-    updates = {k: v for k, v in fields.items() if v is not None}
+    allowed = {"name", "color", "gradient", "sort_order"}
+    updates = {k: v for k, v in fields.items() if v is not None and k in allowed}
     if not updates:
         return dict(existing)
     set_clause = ", ".join(f"{k} = ?" for k in updates)
