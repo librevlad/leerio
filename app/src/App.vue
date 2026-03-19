@@ -16,7 +16,6 @@ import { useNetwork } from './composables/useNetwork'
 import { useCategories } from './composables/useCategories'
 import { useSync } from './composables/useSync'
 import { IconWifiOff } from './components/shared/icons'
-import { STORAGE } from './constants/storage'
 
 const { t } = useI18n()
 const sidebarCollapsed = ref(false)
@@ -33,37 +32,6 @@ const isLoginPage = computed(() => route.name === 'login')
 const isWelcomePage = computed(() => route.name === 'welcome')
 const isPublicPage = computed(() => !!route.meta.public)
 const showApp = computed(() => !authLoading.value && !isLoginPage.value && !isWelcomePage.value)
-
-// PWA install prompt
-interface BeforeInstallPromptEvent extends Event {
-  prompt(): Promise<void>
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
-}
-const deferredPrompt = ref<BeforeInstallPromptEvent | null>(null)
-const showInstallBanner = ref(false)
-
-function handleBeforeInstallPrompt(e: Event) {
-  e.preventDefault()
-  deferredPrompt.value = e as BeforeInstallPromptEvent
-  if (!localStorage.getItem(STORAGE.PWA_DISMISSED)) {
-    showInstallBanner.value = true
-  }
-}
-
-async function installPwa() {
-  if (!deferredPrompt.value) return
-  deferredPrompt.value.prompt()
-  const result = await deferredPrompt.value.userChoice
-  if (result.outcome === 'accepted') {
-    showInstallBanner.value = false
-  }
-  deferredPrompt.value = null
-}
-
-function dismissInstall() {
-  showInstallBanner.value = false
-  localStorage.setItem(STORAGE.PWA_DISMISSED, '1')
-}
 
 function onKeydown(e: KeyboardEvent) {
   const tag = (e.target as HTMLElement)?.tagName
@@ -110,12 +78,10 @@ onMounted(() => {
   downloads.init()
   loadCategories()
   window.addEventListener('keydown', onKeydown)
-  window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', onKeydown)
-  window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
 })
 </script>
 
@@ -202,29 +168,5 @@ onUnmounted(() => {
     <BottomNav />
     <ScrollToTop />
     <AppToast />
-
-    <!-- PWA Install Banner -->
-    <div
-      v-if="showInstallBanner"
-      class="fixed right-0 bottom-16 left-0 z-50 flex items-center justify-between gap-3 border-t border-white/10 px-4 py-3 backdrop-blur-xl md:right-4 md:bottom-4 md:left-auto md:w-80 md:rounded-xl md:border"
-      style="background: var(--card)"
-    >
-      <div class="min-w-0">
-        <p class="text-[13px] font-semibold text-[--t1]">{{ t('common.installTitle') }}</p>
-        <p class="text-[11px] text-[--t3]">{{ t('common.installDesc') }}</p>
-      </div>
-      <div class="flex shrink-0 gap-2">
-        <button class="rounded-lg px-3 py-1.5 text-[12px] text-[--t3]" @click="dismissInstall">
-          {{ t('common.later') }}
-        </button>
-        <button
-          class="rounded-lg px-3 py-1.5 text-[12px] font-semibold text-white"
-          style="background: var(--gradient-accent)"
-          @click="installPwa"
-        >
-          {{ t('common.install') }}
-        </button>
-      </div>
-    </div>
   </div>
 </template>

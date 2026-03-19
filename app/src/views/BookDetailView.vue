@@ -365,11 +365,12 @@ watch(() => route.params.id, loadBook)
               </div>
             </template>
 
-            <!-- Install APK prompt (web only) -->
+            <!-- Install APK prompt (web only, for offline downloads) -->
             <a
               v-if="!dl.isNative.value && !apkDismissed && book.mp3_count && book.mp3_count > 0"
               href="https://github.com/librevlad/leerio/releases/download/latest-apk/leerio.apk"
-              class="apk-prompt group relative flex items-center gap-3 rounded-xl px-3.5 py-3 no-underline transition-all hover:brightness-110"
+              class="group relative flex items-center gap-3 rounded-xl px-3.5 py-3 no-underline transition-all hover:brightness-110"
+              style="background: var(--card)"
               target="_blank"
             >
               <div
