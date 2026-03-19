@@ -1054,7 +1054,7 @@ def get_book_tracks(book_id: str, user: dict = Depends(get_current_user)):
 
                 audio = MP3(str(f))
                 dur = audio.info.length
-            except Exception:
+            except (OSError, Exception):
                 pass
             tracks.append(
                 {
@@ -1685,7 +1685,7 @@ def get_user_book_tracks(slug: str, user: dict = Depends(get_current_user)):
 
             audio = MP3(str(f))
             dur = audio.info.length
-        except Exception:
+        except (OSError, Exception):
             pass
         tracks.append(
             {

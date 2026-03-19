@@ -19,6 +19,7 @@ export default {
   login: {
     subtitle: 'Sign in to start listening',
     noAccount: 'No account? Sign in with Google to register',
+    email: 'Email',
     password: 'Password',
     signIn: 'Sign In',
     or: 'or',

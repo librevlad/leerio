@@ -19,6 +19,7 @@ export default {
   login: {
     subtitle: 'Увійдіть, щоб почати слухати',
     noAccount: 'Немає акаунту? Увійдіть через Google для реєстрації',
+    email: 'Email',
     password: 'Пароль',
     signIn: 'Увійти',
     or: 'або',

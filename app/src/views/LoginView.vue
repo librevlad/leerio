@@ -130,7 +130,7 @@ async function handlePasswordLogin() {
           <input
             v-model="email"
             type="email"
-            placeholder="Email"
+            :placeholder="t('login.email')"
             autocomplete="email"
             class="input-field w-full px-4 py-2.5"
           />
