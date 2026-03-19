@@ -22,6 +22,18 @@ RATE_LIMIT_LOGIN = "5/minute"
 # ── Category fallback ─────────────────────────────────────────────────
 DEFAULT_CATEGORY_GRADIENT = "linear-gradient(135deg, #334155 0%, #64748b 100%)"
 
-# ── MP3 validation ────────────────────────────────────────────────────
+# ── File validation ───────────────────────────────────────────────────
 VALID_IMAGE_HEADERS = [b"\xff\xd8\xff", b"\x89PNG"]
 VALID_MP3_HEADERS = [b"\xff\xfb", b"\xff\xfa", b"\xff\xf3", b"\xff\xf2", b"ID3"]
+VALID_AUDIO_EXTENSIONS = {".mp3", ".m4a", ".m4b", ".ogg", ".opus", ".flac", ".wav"}
+VALID_AUDIO_HEADERS = [
+    b"\xff\xfb",
+    b"\xff\xfa",
+    b"\xff\xf3",
+    b"\xff\xf2",
+    b"ID3",  # MP3
+    b"ftyp",  # M4A/M4B (offset 4, but first 4 bytes vary)
+    b"OggS",  # OGG/Opus
+    b"fLaC",  # FLAC
+    b"RIFF",  # WAV
+]

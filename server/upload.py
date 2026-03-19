@@ -12,7 +12,14 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 
 from .auth import get_current_user
-from .constants import FREE_BOOK_LIMIT, MAX_COVER_SIZE, MAX_UPLOAD_SIZE, VALID_IMAGE_HEADERS, VALID_MP3_HEADERS
+from .constants import (
+    FREE_BOOK_LIMIT,
+    MAX_COVER_SIZE,
+    MAX_UPLOAD_SIZE,
+    VALID_AUDIO_EXTENSIONS,
+    VALID_AUDIO_HEADERS,
+    VALID_IMAGE_HEADERS,
+)
 from .core import UserData, count_mp3, estimate_duration_hours, folder_size_mb, make_slug
 
 logger = logging.getLogger("leerio.upload")
@@ -77,14 +84,17 @@ async def upload_book(
                 {"error": "limit_reached", "limit": FREE_BOOK_LIMIT, "count": current_count},
             )
 
-    # Validate files are MP3 (extension + magic bytes)
+    # Validate files are supported audio formats (extension + magic bytes)
     for f in files:
-        if not f.filename or not f.filename.lower().endswith(".mp3"):
-            raise HTTPException(400, f"Only MP3 files allowed, got: {f.filename}")
-        header = await f.read(4)
+        if not f.filename:
+            raise HTTPException(400, "Missing filename")
+        ext = "." + f.filename.rsplit(".", 1)[-1].lower() if "." in f.filename else ""
+        if ext not in VALID_AUDIO_EXTENSIONS:
+            raise HTTPException(400, f"Unsupported format: {f.filename}. Allowed: MP3, M4A, M4B, OGG, FLAC, WAV")
+        header = await f.read(12)
         await f.seek(0)
-        if not any(header.startswith(h) for h in VALID_MP3_HEADERS):
-            raise HTTPException(400, f"Invalid MP3 file: {f.filename}")
+        if not any(header[offset:].startswith(h) for h in VALID_AUDIO_HEADERS for offset in (0, 4)):
+            raise HTTPException(400, f"Invalid audio file: {f.filename}")
 
     slug = make_slug(title, author)
 
@@ -180,16 +190,21 @@ def get_user_book_tracks(slug: str, user: dict = Depends(get_current_user)):
         raise HTTPException(404, "Book not found")
 
     book_dir = Path(meta["path"])
-    mp3s = sorted(book_dir.rglob("*.mp3"), key=lambda f: str(f))
+    audio_exts = {".mp3", ".m4a", ".m4b", ".ogg", ".opus", ".flac", ".wav"}
+    audio_files = sorted(
+        (f for f in book_dir.rglob("*") if f.suffix.lower() in audio_exts),
+        key=lambda f: str(f),
+    )
     tracks = []
-    for i, f in enumerate(mp3s):
+    for i, f in enumerate(audio_files):
         dur = 0.0
         try:
-            from mutagen.mp3 import MP3
+            from mutagen import File as MutagenFile
 
-            audio = MP3(str(f))
-            dur = audio.info.length
-        except Exception:
+            audio = MutagenFile(str(f))
+            if audio and audio.info:
+                dur = audio.info.length
+        except (OSError, Exception):
             pass
         tracks.append(
             {
