@@ -35,8 +35,8 @@ docker-logs: ## Tail container logs
 lint: server-lint app-lint ## Lint both projects
 
 server-lint: ## Ruff check + format check
-	ruff check server/
-	ruff format --check server/
+	python -m ruff check server/
+	python -m ruff format --check server/
 
 app-lint: ## ESLint + Prettier check
 	cd app && npx eslint src/
@@ -47,8 +47,8 @@ app-lint: ## ESLint + Prettier check
 format: server-format app-format ## Auto-fix formatting
 
 server-format: ## Ruff fix + format
-	ruff check --fix server/
-	ruff format server/
+	python -m ruff check --fix server/
+	python -m ruff format server/
 
 app-format: ## Prettier write
 	cd app && npx prettier --write src/

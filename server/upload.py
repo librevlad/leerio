@@ -6,6 +6,7 @@ Handles personal audiobook uploads (MP3 files) with metadata.
 
 import logging
 import os
+import re
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
@@ -17,8 +18,17 @@ from .core import UserData, count_mp3, estimate_duration_hours, folder_size_mb, 
 logger = logging.getLogger("leerio.upload")
 
 MAX_UPLOAD_SIZE = 500 * 1024 * 1024  # 500 MB (matches nginx)
+MAX_COVER_SIZE = 50 * 1024 * 1024  # 50 MB
 FREE_BOOK_LIMIT = int(os.environ.get("FREE_BOOK_LIMIT", "10"))
 VALID_IMAGE_HEADERS = [b"\xff\xd8\xff", b"\x89PNG"]
+VALID_MP3_HEADERS = [b"\xff\xfb", b"\xff\xfa", b"\xff\xf3", b"\xff\xf2", b"ID3"]
+
+
+def _sanitize_filename(name: str) -> str:
+    """Strip path separators, traversal, and control chars from filename."""
+    name = Path(name).name  # strip directory components
+    name = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", name)  # replace unsafe chars
+    return name or "track.mp3"
 
 router = APIRouter(prefix="/api/user/books", tags=["user-books"])
 
@@ -72,10 +82,14 @@ async def upload_book(
                 {"error": "limit_reached", "limit": FREE_BOOK_LIMIT, "count": current_count},
             )
 
-    # Validate files are MP3
+    # Validate files are MP3 (extension + magic bytes)
     for f in files:
         if not f.filename or not f.filename.lower().endswith(".mp3"):
             raise HTTPException(400, f"Only MP3 files allowed, got: {f.filename}")
+        header = await f.read(4)
+        await f.seek(0)
+        if not any(header.startswith(h) for h in VALID_MP3_HEADERS):
+            raise HTTPException(400, f"Invalid MP3 file: {f.filename}")
 
     slug = make_slug(title, author)
 
@@ -95,7 +109,8 @@ async def upload_book(
 
     # Save MP3 files
     for i, f in enumerate(files, 1):
-        filename = f"{i:02d}. {f.filename}"
+        safe_name = _sanitize_filename(f.filename or "track.mp3")
+        filename = f"{i:02d}. {safe_name}"
         file_path = book_dir / filename
         content = await f.read(MAX_UPLOAD_SIZE + 1)
         if len(content) > MAX_UPLOAD_SIZE:
@@ -103,10 +118,12 @@ async def upload_book(
         file_path.write_bytes(content)
         logger.info("Saved track: %s (%d bytes)", filename, len(content))
 
-    # Save cover if provided
+    # Save cover if provided (validate type + size)
     if cover and cover.filename:
-        cover_data = await cover.read()
-        if cover_data and any(cover_data.startswith(h) for h in VALID_IMAGE_HEADERS):
+        cover_data = await cover.read(MAX_COVER_SIZE + 1)
+        if len(cover_data) > MAX_COVER_SIZE:
+            logger.warning("Cover too large (%d bytes), skipping", len(cover_data))
+        elif cover_data and any(cover_data.startswith(h) for h in VALID_IMAGE_HEADERS):
             (book_dir / "cover.jpg").write_bytes(cover_data)
 
     book_id = f"ub:{user['user_id']}:{slug}"
