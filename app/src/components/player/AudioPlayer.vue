@@ -107,8 +107,9 @@ watch(currentBook, () => loadBookmarks())
 const showSpeedPicker = ref(false)
 
 function cycleSpeed() {
-  const idx = PLAYBACK_SPEEDS.indexOf(playbackRate.value)
-  setPlaybackRate(PLAYBACK_SPEEDS[(idx + 1) % PLAYBACK_SPEEDS.length] as (typeof PLAYBACK_SPEEDS)[number])
+  const speeds = [...PLAYBACK_SPEEDS]
+  const idx = speeds.indexOf(playbackRate.value)
+  setPlaybackRate(speeds[(idx + 1) % speeds.length] ?? 1)
 }
 
 function pickSpeed(s: (typeof PLAYBACK_SPEEDS)[number]) {
