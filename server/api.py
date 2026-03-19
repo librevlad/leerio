@@ -1043,7 +1043,7 @@ def get_similar(book_id: str, user: dict | None = Depends(get_optional_user)):
 @app.get("/api/books/{book_id}/tracks")
 def get_book_tracks(book_id: str, user: dict = Depends(get_current_user)):
     # User books
-    ub_path = _resolve_user_book_path(book_id)
+    ub_path = _resolve_user_book_path(book_id, user)
     if ub_path:
         mp3s = sorted(ub_path.rglob("*.mp3"), key=lambda f: str(f))
         tracks = []
@@ -1165,7 +1165,7 @@ def _s3_stream(body, chunk_size=64 * 1024):
 @app.get("/api/audio/{book_id}/{track_index}")
 def stream_audio(book_id: str, track_index: int, request: Request, user: dict = Depends(get_current_user)):
     # User books — always filesystem
-    ub_path = _resolve_user_book_path(book_id)
+    ub_path = _resolve_user_book_path(book_id, user)
     if ub_path:
         return _stream_from_filesystem(ub_path, track_index, request)
 

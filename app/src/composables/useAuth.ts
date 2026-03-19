@@ -138,7 +138,11 @@ export function useAuth() {
   }
 
   async function logout() {
-    await fetch(apiUrl('/auth/logout'), { method: 'POST', credentials: 'include' })
+    try {
+      await fetch(apiUrl('/auth/logout'), { method: 'POST', credentials: 'include' })
+    } catch {
+      /* network error — still clear local state */
+    }
     user.value = null
     checked.value = false
     localStorage.removeItem('leerio_user')

@@ -37,12 +37,13 @@ export function useOfflineQueue() {
     const failed: QueuedRequest[] = []
     for (const req of queue) {
       try {
-        await fetch(req.url, {
+        const res = await fetch(req.url, {
           method: req.method,
           headers: req.body ? { 'Content-Type': 'application/json' } : undefined,
           credentials: 'include',
           body: req.body,
         })
+        if (!res.ok && res.status !== 409) failed.push(req)
       } catch {
         failed.push(req)
       }

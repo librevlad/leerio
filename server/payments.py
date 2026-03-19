@@ -25,8 +25,8 @@ PADDLE_WEBHOOK_SECRET = os.environ.get("PADDLE_WEBHOOK_SECRET", "")
 def _verify_signature(raw_body: bytes, signature: str) -> bool:
     """Verify Paddle webhook signature."""
     if not PADDLE_WEBHOOK_SECRET:
-        logger.warning("PADDLE_WEBHOOK_SECRET not set, skipping verification")
-        return True
+        logger.error("PADDLE_WEBHOOK_SECRET not set, rejecting webhook")
+        return False
 
     # Paddle sends: ts=timestamp;h1=hash
     parts = dict(p.split("=", 1) for p in signature.split(";") if "=" in p)

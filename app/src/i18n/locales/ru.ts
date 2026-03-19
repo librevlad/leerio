@@ -430,6 +430,7 @@ export default {
     edit: 'Редактировать',
     confirm: 'Подтвердить',
     error: 'Ошибка',
+    errorOccurred: 'Произошла ошибка',
     unknownError: 'Неизвестная ошибка',
     errorPrefix: 'Ошибка: {msg}',
     loadError: 'Не удалось загрузить данные',

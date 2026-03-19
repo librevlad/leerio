@@ -430,6 +430,7 @@ export default {
     edit: 'Edit',
     confirm: 'Confirm',
     error: 'Error',
+    errorOccurred: 'Something went wrong',
     unknownError: 'Unknown error',
     errorPrefix: 'Error: {msg}',
     loadError: 'Failed to load data',

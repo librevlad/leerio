@@ -401,7 +401,10 @@ def _hash_password(password: str) -> str:
 
 def _verify_password(password: str, stored: str) -> bool:
     """Verify a password against a stored hash."""
-    salt, h = stored.split(":", 1)
+    try:
+        salt, h = stored.split(":", 1)
+    except ValueError:
+        return False
     check = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100_000).hex()
     return secrets.compare_digest(h, check)
 

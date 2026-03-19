@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, onErrorCaptured } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AppSidebar from './components/layout/AppSidebar.vue'
@@ -91,6 +91,14 @@ function onKeydown(e: KeyboardEvent) {
   }
 }
 
+const appError = ref(false)
+
+onErrorCaptured((err) => {
+  console.error('[App] Uncaught component error:', err)
+  appError.value = true
+  return false
+})
+
 onMounted(() => {
   downloads.init()
   loadCategories()
@@ -105,6 +113,22 @@ onUnmounted(() => {
 </script>
 
 <template>
+  <!-- Error boundary fallback -->
+  <div
+    v-if="appError"
+    class="flex min-h-dvh min-h-screen flex-col items-center justify-center gap-4"
+    style="background: var(--bg)"
+  >
+    <p class="text-[16px] font-semibold text-[--t1]">{{ t('common.errorOccurred') }}</p>
+    <button
+      class="rounded-lg px-4 py-2 text-[13px] font-semibold text-white"
+      style="background: var(--gradient-accent)"
+      @click="appError = false"
+    >
+      {{ t('common.retry') }}
+    </button>
+  </div>
+
   <!-- Auth loading spinner (skip for public pages) -->
   <div
     v-if="authLoading && !isLoginPage && !isPublicPage"

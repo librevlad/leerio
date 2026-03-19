@@ -430,6 +430,7 @@ export default {
     edit: 'Редагувати',
     confirm: 'Підтвердити',
     error: 'Помилка',
+    errorOccurred: 'Щось пішло не так',
     unknownError: 'Невідома помилка',
     errorPrefix: 'Помилка: {msg}',
     loadError: 'Не вдалося завантажити дані',
