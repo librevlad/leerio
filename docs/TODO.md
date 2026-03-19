@@ -6,6 +6,8 @@
 - [x] [2026-03-18] Upload: серверная поддержка M4A/M4B/OGG/FLAC/WAV (сделано 2026-03-19)
 - [x] [2026-03-18] Upload: ZIP распаковка на бэкенде (сделано 2026-03-19)
 - [x] [2026-03-18] Telemetry: resume_clicked, upload_started/completed, book_played (сделано 2026-03-19)
+- [ ] [2026-03-19] Иконка APK покорёженная (SVG в nav лендинга)
+- [ ] [2026-03-19] Онбординг: выбор папки с книгами на устройстве в APK + кнопка заливки в облако (масштабная фича)
 - [ ] [2026-03-19] E2E: покрытие offline flow, payment paywall
 - [x] [2026-03-19] User stories E2E: 7 критических потоков (browse→play, status, bookmark, settings, notes, nav, guest)
 - [x] [2026-03-19] PWA banner убран, APK prompt оставлен на странице книги

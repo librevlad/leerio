@@ -1,227 +1,254 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Leerio — Your Audiobook Library</title>
-  <meta name="description" content="Upload your audiobooks, organize automatically, listen anywhere with progress tracking and sync.">
-  <meta name="theme-color" content="#07070e">
-  <link rel="icon" type="image/png" href="/img/logo.png">
+  <title>Leerio — Ваша аудиобиблиотека</title>
+  <meta name="description" content="Загрузите свои аудиокниги — слушайте где угодно с прогрессом, главами и синхронизацией.">
+  <meta name="theme-color" content="#0b0b0f">
+  <link rel="icon" type="image/png" href="/landing/img/logo.png">
 
   <!-- OG -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Leerio — Your Audiobook Library">
-  <meta property="og:description" content="Upload your audiobooks and listen anywhere — with progress, chapters, and sync.">
-  <meta property="og:image" content="https://leerio.app/img/desktop-dashboard.png">
+  <meta property="og:title" content="Leerio — Ваша аудиобиблиотека">
+  <meta property="og:description" content="Загрузите свои аудиокниги — слушайте где угодно с прогрессом, главами и синхронизацией.">
   <meta property="og:url" content="https://leerio.app">
 
   <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Leerio — Your Audiobook Library">
-  <meta name="twitter:description" content="Upload your audiobooks and listen anywhere — with progress, chapters, and sync.">
-  <meta name="twitter:image" content="https://leerio.app/img/desktop-dashboard.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Leerio — Ваша аудиобиблиотека">
+  <meta name="twitter:description" content="Загрузите свои аудиокниги — слушайте где угодно с прогрессом, главами и синхронизацией.">
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/landing/style.css">
 </head>
 <body>
 
-  <!-- ── Nav ───────────────────────────────────────────────────────────── -->
-  <nav class="site-nav">
+  <!-- Nav -->
+  <nav class="site-nav" id="nav">
     <div class="container nav-inner">
       <a href="/" class="nav-brand">
-        <img src="/img/logo.png" alt="Leerio" width="32" height="32">
+        <img src="/landing/img/logo.png" alt="Leerio" width="32" height="32">
         <span>Leerio</span>
       </a>
       <div class="nav-links">
-        <a href="#how">How it works</a>
-        <a href="#pricing">Pricing</a>
-        <a class="btn btn-ghost btn-sm apk-link" href="https://github.com/librevlad/leerio/releases/download/latest-apk/leerio.apk">
-          <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M17.523 2.227 12 7.749 6.477 2.227 5.063 3.64l5.522 5.523H7.5v2h4v4h-2l3.5 4.5 3.5-4.5h-2v-4h4v-2h-3.086l5.523-5.522-1.414-1.414z"/></svg>
+        <a href="#pricing" class="nav-link">Цены</a>
+        <a class="btn btn-accent btn-sm apk-btn" href="https://github.com/librevlad/leerio/releases/download/latest-apk/leerio.apk">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           APK
         </a>
-        <a class="btn btn-primary btn-sm" href="https://app.leerio.app">Open App</a>
+        <a class="btn btn-primary btn-sm" href="https://app.leerio.app">Открыть</a>
       </div>
     </div>
   </nav>
 
-  <!-- ── Hero ──────────────────────────────────────────────────────────── -->
+  <!-- Hero -->
   <section class="hero">
     <div class="hero-glow"></div>
     <div class="container hero-inner">
       <h1 class="reveal">
-        Your audiobook library.<br><span class="gradient-text">Finally organized.</span>
+        Ваша аудиобиблиотека.<br><span class="gradient-text">Наконец в порядке.</span>
       </h1>
       <p class="hero-sub reveal">
-        Upload your audiobooks and listen anywhere — with progress, chapters, and sync.
+        Загрузите свои аудиокниги — слушайте где угодно с прогрессом, главами и синхронизацией.
       </p>
-
       <div class="hero-ctas reveal">
         <a class="btn btn-primary" href="https://app.leerio.app">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-          Open App
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          Открыть приложение
         </a>
         <a class="btn btn-ghost" href="https://github.com/librevlad/leerio/releases/download/latest-apk/leerio.apk">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Download APK
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Скачать APK
         </a>
       </div>
-
-      <p class="hero-note reveal">Free plan: up to 10 books</p>
-
-      <!-- Hero screenshot -->
-      <div class="hero-screenshot reveal">
-        <img src="/img/desktop-dashboard.png" alt="Leerio dashboard — library, player, continue listening" loading="lazy">
-      </div>
+      <p class="hero-note reveal">Бесплатный план: до 10 книг</p>
     </div>
   </section>
 
-  <!-- ── Trust Hook ─────────────────────────────────────────────────── -->
-  <section class="section">
-    <div class="container" style="text-align: center; max-width: 640px;">
-      <h2 class="section-title reveal">Still using AIMP or VLC for audiobooks?</h2>
-      <p class="section-sub reveal" style="margin-top: 16px;">
-        Losing your place, no chapters, no real library?<br>
-        <strong style="color: var(--t1);">Leerio fixes that.</strong>
-      </p>
-    </div>
-  </section>
-
-  <!-- ── How it works ──────────────────────────────────────────────────── -->
-  <section id="how" class="section">
+  <!-- Why Leerio -->
+  <section id="why" class="section">
     <div class="container">
-      <h2 class="section-title reveal">How it works</h2>
-      <div class="steps">
-        <div class="step reveal">
-          <div class="step-num">1</div>
-          <h3>Upload your audiobooks</h3>
-          <p>Drag & drop MP3, M4B, or ZIP files. We handle the rest.</p>
+      <h2 class="section-title reveal">Почему Leerio</h2>
+      <p class="section-sub reveal">Не просто плеер. Полноценная библиотека для ваших аудиокниг.</p>
+      <div class="features-grid">
+
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <h3>Помнит где вы остановились</h3>
+          <p>Продолжайте с точного места на любом устройстве. Прогресс сохраняется автоматически.</p>
         </div>
-        <div class="step reveal">
-          <div class="step-num">2</div>
-          <h3>We organize everything</h3>
-          <p>Covers, chapters, progress — your library builds itself.</p>
+
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="13" y2="11"/></svg>
+          </div>
+          <h3>Настоящая библиотека</h3>
+          <p>Обложки, главы, прогресс — ваша коллекция организуется сама.</p>
         </div>
-        <div class="step reveal">
-          <div class="step-num">3</div>
-          <h3>Press play and continue anytime</h3>
-          <p>Resume exactly where you stopped. On any device.</p>
+
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.56 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+          </div>
+          <h3>Работает офлайн</h3>
+          <p>Скачайте книги в приложение. Слушайте без интернета.</p>
         </div>
+
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <h3>Быстрый и простой</h3>
+          <p>Никаких лишних экранов. Открыл — слушаешь.</p>
+        </div>
+
       </div>
     </div>
   </section>
 
-  <!-- ── Product Feel ──────────────────────────────────────────────────── -->
-  <section class="section">
-    <div class="container" style="text-align: center;">
-      <h2 class="section-title reveal">Built for long listening sessions</h2>
-      <p class="section-sub reveal" style="margin-top: 12px;">Continue listening, player, progress, chapters — everything a real audiobook player needs.</p>
-      <div class="hero-screenshot reveal" style="margin-top: 32px;">
-        <img src="/img/mobile-player.png" alt="Leerio player — continue listening, chapters, progress" loading="lazy" onerror="this.parentElement.style.display='none'">
+  <!-- For real collections -->
+  <section class="section section-collection">
+    <div class="container collection-inner reveal">
+      <div class="collection-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
       </div>
+      <h2>Для настоящих коллекций</h2>
+      <p>Если у вас 20, 50 или 200 аудиокниг — Leerio превращает их в полноценную библиотеку с обложками, главами и прогрессом. Не папка с файлами, а настоящая полка.</p>
     </div>
   </section>
 
-  <!-- ── Why Leerio ────────────────────────────────────────────────────── -->
-  <section class="section">
-    <div class="container">
-      <h2 class="section-title reveal">Better than a basic player</h2>
-      <div class="features-grid reveal">
-        <div class="feature-item">✔ Remembers where you stopped</div>
-        <div class="feature-item">✔ Organizes your library automatically</div>
-        <div class="feature-item">✔ Works on all your devices</div>
-        <div class="feature-item">✔ Fast, distraction-free</div>
-        <div class="feature-item">✔ Built for long listening sessions</div>
-        <div class="feature-item">✔ Background play + lock screen controls</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Use case ──────────────────────────────────────────────────────── -->
-  <section class="section">
-    <div class="container" style="text-align: center;">
-      <h2 class="section-title reveal">Built for real audiobook collections</h2>
-      <p class="section-sub reveal">If you have 20, 50, or 200 audiobooks — Leerio turns them into a real library.</p>
-    </div>
-  </section>
-
-  <!-- ── Social Proof ──────────────────────────────────────────────────── -->
-  <section class="section">
-    <div class="container" style="text-align: center;">
-      <p class="reveal" style="font-size: 14px; color: var(--t3); font-style: italic;">
-        Built for personal use. Now available to everyone.
-      </p>
-    </div>
-  </section>
-
-  <!-- ── Pricing ───────────────────────────────────────────────────────── -->
+  <!-- Pricing -->
   <section id="pricing" class="section">
     <div class="container">
-      <h2 class="section-title reveal">Free to start</h2>
-      <p class="section-sub reveal">Upload up to 10 books for free. Upgrade anytime for unlimited library.</p>
-
-      <div class="pricing-grid reveal">
-        <div class="pricing-card">
+      <h2 class="section-title reveal">Начните бесплатно</h2>
+      <p class="section-sub reveal">Загрузите до 10 книг бесплатно. Расширьте библиотеку когда понадобится.</p>
+      <div class="pricing-grid">
+        <div class="pricing-card reveal">
           <h3>Free</h3>
           <div class="pricing-price">$0</div>
           <ul>
-            <li>Up to 10 books</li>
-            <li>Full player</li>
-            <li>Progress tracking</li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              До 10 книг
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Полный плеер
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Сохранение прогресса
+            </li>
           </ul>
-          <a class="btn btn-ghost" href="https://app.leerio.app">Start free</a>
+          <a class="btn btn-ghost btn-card" href="https://app.leerio.app">Начать бесплатно</a>
         </div>
-        <div class="pricing-card pricing-featured">
+        <div class="pricing-card pricing-featured reveal">
+          <div class="pricing-badge">Популярный</div>
           <h3>Premium</h3>
-          <div class="pricing-price">$4<span>/month</span></div>
+          <div class="pricing-price">$4<span>/мес</span></div>
           <ul>
-            <li>Unlimited books</li>
-            <li>Sync across devices</li>
-            <li>Access anywhere</li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Безлимит книг
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Синхронизация устройств
+            </li>
+            <li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Доступ отовсюду
+            </li>
           </ul>
-          <a class="btn btn-primary" href="https://app.leerio.app">Start free</a>
+          <a class="btn btn-primary btn-card" href="https://app.leerio.app">Начать бесплатно</a>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ── Final CTA ─────────────────────────────────────────────────────── -->
+  <!-- Final CTA -->
   <section class="section cta-section">
-    <div class="container" style="text-align: center;">
-      <h2 class="section-title reveal">Start building your audiobook library</h2>
-      <a class="btn btn-primary btn-lg reveal" href="https://app.leerio.app">Open App</a>
-      <p class="reveal" style="margin-top: 12px; font-size: 13px; color: var(--t3);">Takes less than a minute</p>
+    <div class="container">
+      <div class="cta-card reveal">
+        <div class="cta-glow"></div>
+        <h2>Соберите свою аудиобиблиотеку</h2>
+        <p>Загрузите книги, нажмите play — готово.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-primary" href="https://app.leerio.app">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            Открыть приложение
+          </a>
+          <a class="btn btn-ghost" href="https://github.com/librevlad/leerio/releases/download/latest-apk/leerio.apk">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Скачать APK
+          </a>
+        </div>
+        <p class="cta-note">Занимает меньше минуты</p>
+      </div>
     </div>
   </section>
 
-  <!-- ── Footer ────────────────────────────────────────────────────────── -->
+  <!-- Footer -->
   <footer class="site-footer">
     <div class="container footer-inner">
-      <span>© 2025 Leerio</span>
+      <span>&copy; 2025 Leerio</span>
       <div class="footer-links">
-        <a href="https://github.com/librevlad/leerio" target="_blank">GitHub</a>
-        <a href="mailto:librevlad@gmail.com">Contact</a>
+        <a href="https://github.com/librevlad/leerio" target="_blank" rel="noopener">GitHub</a>
+        <a href="mailto:librevlad@gmail.com">Контакт</a>
       </div>
     </div>
   </footer>
 
   <script>
-    // Reveal on scroll
+    // Scroll reveal
     const observer = new IntersectionObserver((entries) => {
-      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target) } })
-    }, { threshold: 0.1 })
-    document.querySelectorAll('.reveal').forEach(el => observer.observe(el))
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-    // Track CTA clicks + scroll depth
-    function t(e, d) { navigator.sendBeacon && navigator.sendBeacon('https://app.leerio.app/api/telemetry', new Blob([JSON.stringify({event: e, ts: new Date().toISOString(), ...d})], {type: 'application/json'})) }
-    document.querySelectorAll('a[href="https://app.leerio.app"]').forEach(a => a.addEventListener('click', () => t('landing_cta_click', {text: a.textContent.trim()})))
-    let maxScroll = 0
-    window.addEventListener('scroll', () => { const pct = Math.round(window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100); if (pct > maxScroll) maxScroll = pct }, {passive: true})
-    window.addEventListener('beforeunload', () => t('landing_scroll_depth', {pct: maxScroll}))
+    // Nav scroll — backdrop blur + shrink
+    const nav = document.getElementById('nav');
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          if (window.scrollY > 40) {
+            nav.classList.add('scrolled');
+          } else {
+            nav.classList.remove('scrolled');
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, { passive: true });
+
+    // Telemetry
+    function t(e, d) {
+      navigator.sendBeacon && navigator.sendBeacon('https://app.leerio.app/api/telemetry',
+        new Blob([JSON.stringify({ event: e, ts: new Date().toISOString(), ...d })], { type: 'application/json' }));
+    }
+    document.querySelectorAll('a[href="https://app.leerio.app"]').forEach(a =>
+      a.addEventListener('click', () => t('landing_cta_click', { text: a.textContent.trim() }))
+    );
+    let maxScroll = 0;
+    window.addEventListener('scroll', () => {
+      const pct = Math.round(window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100);
+      if (pct > maxScroll) maxScroll = pct;
+    }, { passive: true });
+    window.addEventListener('beforeunload', () => t('landing_scroll_depth', { pct: maxScroll }));
   </script>
 </body>
 </html>
