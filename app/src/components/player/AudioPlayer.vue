@@ -91,10 +91,17 @@ async function loadBookmarks() {
 async function addBookmark() {
   if (!currentBook.value) return
   try {
-    const bm = { track: currentTrackIndex.value, time: currentTime.value, note: bookmarkNote.value, ts: new Date().toISOString() }
+    const bm = {
+      track: currentTrackIndex.value,
+      time: currentTime.value,
+      note: bookmarkNote.value,
+      ts: new Date().toISOString(),
+    }
     await local.addBookmark(currentBook.value.id, bm)
     if (isLoggedIn.value) {
-      await api.addBookmark(currentBook.value.id, currentTrackIndex.value, currentTime.value, bookmarkNote.value).catch(() => {})
+      await api
+        .addBookmark(currentBook.value.id, currentTrackIndex.value, currentTime.value, bookmarkNote.value)
+        .catch(() => {})
     }
     bookmarkNote.value = ''
     showBookmarkInput.value = false
