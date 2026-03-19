@@ -410,6 +410,7 @@ export default {
     volumeLabel: 'Звук',
     closePlayer: 'Закрыть плеер',
     bookmarkAdded: 'Закладка добавлена',
+    bookmarkDeleted: 'Закладка удалена',
     bookmarkError: 'Не удалось добавить закладку',
     progressAria: 'Прогресс воспроизведения',
     playTrackAria: 'Воспроизвести трек {index}',

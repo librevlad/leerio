@@ -410,6 +410,7 @@ export default {
     volumeLabel: 'Volume',
     closePlayer: 'Close player',
     bookmarkAdded: 'Bookmark added',
+    bookmarkDeleted: 'Bookmark deleted',
     bookmarkError: 'Failed to add bookmark',
     progressAria: 'Playback progress',
     playTrackAria: 'Play track {index}',

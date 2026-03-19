@@ -6,7 +6,7 @@
 - [ ] [2026-03-18] Paddle: добавить webhook URL в Paddle Dashboard → app.leerio.app/api/payments/paddle-webhook
 - [x] [2026-03-18] Upload: серверная поддержка M4A/M4B/OGG/FLAC/WAV (сделано 2026-03-19)
 - [ ] [2026-03-18] Upload: ZIP распаковка на бэкенде
-- [ ] [2026-03-18] Telemetry: добавить resume_clicked, upload_started/completed, book_played к соответствующим компонентам
+- [x] [2026-03-18] Telemetry: resume_clicked, upload_started/completed, book_played (сделано 2026-03-19)
 - [ ] [2026-03-19] E2E: покрытие offline flow, payment paywall
 - [ ] [2026-03-19] Написать user stories для всех сценариев и покрыть браузерными E2E тестами
 - [ ] [2026-03-19] Сайт продвигает PWA вместо APK (install prompt, landing page)

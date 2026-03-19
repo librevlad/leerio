@@ -9,6 +9,7 @@ import { api, coverUrl, userBookCoverUrl } from '../../api'
 import { trackDisplayName as _trackDisplayName } from '../../utils/format'
 import { useLocalData } from '../../composables/useLocalData'
 import { useAuth } from '../../composables/useAuth'
+import type { Bookmark } from '../../types'
 import {
   IconChevronDown,
   IconChevronUp,
@@ -75,6 +76,47 @@ const seekPreview = ref<number | null>(null)
 const isSeeking = ref(false)
 const coverError = ref(false)
 const desktopTab = ref<'chapters' | 'bookmarks'>('chapters')
+const bookmarks = ref<Bookmark[]>([])
+
+async function loadBookmarks() {
+  if (!currentBook.value) {
+    bookmarks.value = []
+    return
+  }
+  try {
+    const bms = await local.getBookmarks(currentBook.value.id)
+    bookmarks.value = (bms ?? []).sort((a: Bookmark, b: Bookmark) => {
+      if (a.track !== b.track) return a.track - b.track
+      return a.time - b.time
+    })
+  } catch {
+    bookmarks.value = []
+  }
+}
+
+async function deleteBookmark(bm: Bookmark) {
+  if (!currentBook.value) return
+  try {
+    await local.removeBookmark(currentBook.value.id, bm.id)
+    if (isLoggedIn.value && bm.id) {
+      await api.removeBookmark(bm.id).catch(() => {})
+    }
+    await loadBookmarks()
+    toast.success(t('player.bookmarkDeleted'))
+  } catch {
+    toast.error(t('player.bookmarkError'))
+  }
+}
+
+function seekToBookmark(bm: Bookmark) {
+  if (bm.track !== currentTrackIndex.value) {
+    playTrack(bm.track)
+  }
+  endSeek(bm.time)
+  closeFullscreen()
+}
+
+watch(currentBook, () => loadBookmarks(), { immediate: true })
 
 function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600)
@@ -185,6 +227,7 @@ async function addBookmark() {
     bookmarkPop.value = true
     setTimeout(() => (bookmarkPop.value = false), 400)
     toast.success(t('player.bookmarkAdded'))
+    await loadBookmarks()
   } catch {
     toast.error(t('player.bookmarkError'))
   }
@@ -631,11 +674,37 @@ function closeOverlays() {
           </div>
 
           <!-- Bookmarks tab -->
-          <div v-else class="flex flex-1 items-center justify-center p-6">
-            <div class="text-center">
-              <IconBookmark :size="32" class="mx-auto mb-3 text-[--t3] opacity-30" />
-              <p class="text-[13px] text-[--t3]">{{ t('player.noBookmarks') }}</p>
-              <p class="mt-1 text-[11px] text-[--t3] opacity-60">{{ t('player.addBookmarkHint') }}</p>
+          <div v-else class="flex-1 overflow-y-auto">
+            <div v-if="bookmarks.length === 0" class="flex h-full items-center justify-center p-6">
+              <div class="text-center">
+                <IconBookmark :size="32" class="mx-auto mb-3 text-[--t3] opacity-30" />
+                <p class="text-[13px] text-[--t3]">{{ t('player.noBookmarks') }}</p>
+                <p class="mt-1 text-[11px] text-[--t3] opacity-60">{{ t('player.addBookmarkHint') }}</p>
+              </div>
+            </div>
+            <div v-else class="p-2">
+              <div
+                v-for="bm in bookmarks"
+                :key="`${bm.track}-${bm.time}`"
+                class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-white/[0.03]"
+                @click="seekToBookmark(bm)"
+              >
+                <IconBookmark :size="14" class="shrink-0 text-[--accent]" />
+                <div class="min-w-0 flex-1">
+                  <p class="text-[13px] text-[--t2]">
+                    {{ trackDisplayName(tracks[bm.track]?.filename ?? '', bm.track) }}
+                    · {{ formatTime(bm.time) }}
+                  </p>
+                  <p v-if="bm.note" class="mt-0.5 truncate text-[11px] text-[--t3]">{{ bm.note }}</p>
+                </div>
+                <button
+                  class="shrink-0 rounded-md border-0 bg-transparent p-1 text-[--t3] opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
+                  style="opacity: 0.4"
+                  @click.stop="deleteBookmark(bm)"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
           </div>
         </div>
