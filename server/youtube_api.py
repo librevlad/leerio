@@ -1,0 +1,139 @@
+"""YouTube metadata resolution and audio streaming."""
+
+import asyncio
+import json
+import re
+
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
+
+from .auth import get_current_user
+
+router = APIRouter(prefix="/api/youtube", tags=["youtube"])
+
+_YT_ID_RE = re.compile(r"^[a-zA-Z0-9_-]{11}$")
+_YT_URL_RE = re.compile(
+    r"(?:https?://)?(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/|youtube\.com/shorts/)([a-zA-Z0-9_-]{11})"
+)
+_MAX_DURATION = 24 * 3600
+
+
+class ResolveRequest(BaseModel):
+    url: str
+
+
+class Chapter(BaseModel):
+    title: str
+    start: float
+    end: float
+
+
+class ResolveResponse(BaseModel):
+    video_id: str
+    title: str
+    author: str
+    duration: float
+    thumbnail: str
+    chapters: list[Chapter]
+
+
+def _parse_author(title: str) -> tuple[str, str]:
+    """Try to extract author from 'Author — Title' pattern."""
+    for sep in (" — ", " – ", " - "):
+        if sep in title:
+            parts = title.split(sep, 1)
+            return parts[0].strip(), parts[1].strip()
+    return "", title
+
+
+def _extract_video_id(url: str) -> str | None:
+    m = _YT_URL_RE.search(url)
+    return m.group(1) if m else None
+
+
+async def _yt_dlp_json(video_id: str) -> dict:
+    proc = await asyncio.create_subprocess_exec(
+        "yt-dlp",
+        "--dump-json",
+        "--no-download",
+        "--no-warnings",
+        f"https://www.youtube.com/watch?v={video_id}",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    stdout, stderr = await proc.communicate()
+    if proc.returncode != 0:
+        err = stderr.decode(errors="replace").strip()
+        if "Private video" in err or "Video unavailable" in err:
+            raise HTTPException(404, "Video not found or private")
+        raise HTTPException(400, f"yt-dlp error: {err[:200]}")
+    return json.loads(stdout)
+
+
+@router.post("/resolve", response_model=ResolveResponse)
+async def resolve(body: ResolveRequest, _user=Depends(get_current_user)):
+    video_id = _extract_video_id(body.url)
+    if not video_id:
+        raise HTTPException(400, "Invalid YouTube URL")
+
+    info = await _yt_dlp_json(video_id)
+
+    duration = info.get("duration") or 0
+    if duration > _MAX_DURATION:
+        raise HTTPException(413, f"Video too long ({duration}s > {_MAX_DURATION}s)")
+
+    raw_title = info.get("title", "")
+    author, title = _parse_author(raw_title)
+
+    chapters: list[Chapter] = []
+    for ch in info.get("chapters") or []:
+        start = ch.get("start_time", 0)
+        end = ch.get("end_time", 0)
+        if end > start:
+            chapters.append(Chapter(title=ch.get("title", ""), start=start, end=end))
+
+    thumbnail = info.get("thumbnail", "")
+
+    return ResolveResponse(
+        video_id=video_id,
+        title=title,
+        author=author,
+        duration=duration,
+        thumbnail=thumbnail,
+        chapters=chapters,
+    )
+
+
+@router.get("/stream/{video_id}")
+async def stream_audio(video_id: str, _user=Depends(get_current_user)):
+    if not _YT_ID_RE.match(video_id):
+        raise HTTPException(400, "Invalid video ID")
+
+    proc = await asyncio.create_subprocess_exec(
+        "yt-dlp",
+        "-f",
+        "bestaudio",
+        "-o",
+        "-",
+        f"https://www.youtube.com/watch?v={video_id}",
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+
+    async def generate():
+        try:
+            while True:
+                chunk = await proc.stdout.read(64 * 1024)
+                if not chunk:
+                    break
+                yield chunk
+        finally:
+            if proc.returncode is None:
+                proc.kill()
+
+    return StreamingResponse(
+        generate(),
+        media_type="audio/webm",
+        headers={"Cache-Control": "no-store"},
+    )

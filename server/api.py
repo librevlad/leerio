@@ -61,6 +61,7 @@ from .payments import router as payments_router
 from .storage import get_presigned_url, get_s3_object, s3_object_exists
 from .tts_api import router as tts_router
 from .upload import router as upload_router
+from .youtube_api import router as youtube_router
 
 logging.basicConfig(
     level=getattr(logging, os.environ.get("LEERIO_LOG_LEVEL", "INFO").upper(), logging.INFO),
@@ -392,6 +393,7 @@ app.include_router(upload_router)
 app.include_router(tts_router)
 app.include_router(ingest_router)
 app.include_router(payments_router)
+app.include_router(youtube_router)
 
 
 # ── Auth endpoints ─────────────────────────────────────────────────────────
