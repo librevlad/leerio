@@ -593,7 +593,7 @@ async def run_tts_job(
 
     except Exception as e:
         logger.error("TTS job %s failed: %s", job_id, e, exc_info=True)
-        user_data.tts_job_update(job_id, status="error", error=str(e))
+        user_data.tts_job_update(job_id, status="error", error=f"Processing failed: {type(e).__name__}")
     finally:
         # Clean up source file even on error
         try:

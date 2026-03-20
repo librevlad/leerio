@@ -99,13 +99,20 @@ def _resolve_user_book_path(book_id: str, user: dict | None = None) -> Path | No
         return None
     if user and uid != user["user_id"]:
         return None
-    book_dir = (
+    books_dir = (
         Path(os.environ.get("LEERIO_DATA", str(Path(__file__).resolve().parent.parent / "data")))
         / "users"
         / uid
         / "books"
-        / slug
     )
+    book_dir = books_dir / slug
+    # Ensure resolved path stays within books directory
+    try:
+        resolved = book_dir.resolve()
+        if not str(resolved).startswith(str(books_dir.resolve())):
+            return None
+    except (OSError, ValueError):
+        return None
     return book_dir if book_dir.exists() else None
 
 
