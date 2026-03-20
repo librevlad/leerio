@@ -34,6 +34,15 @@ vi.mock('./useLocalBooks', () => ({
   }),
 }))
 
+vi.mock('./useLocalData', () => ({
+  useLocalData: () => ({
+    setPosition: vi.fn().mockResolvedValue(undefined),
+    getPosition: vi.fn().mockResolvedValue(undefined),
+    setProgress: vi.fn().mockResolvedValue(undefined),
+    getProgress: vi.fn().mockResolvedValue(undefined),
+  }),
+}))
+
 vi.mock('./useNetwork', () => ({
   useNetwork: () => ({
     isOnline: { value: true },
@@ -184,9 +193,9 @@ describe('usePlayer', () => {
       expect(usePlayer().formatTime(Infinity)).toBe('0:00')
     })
 
-    it('handles negative values (no guard in source)', () => {
-      // formatTime doesn't guard negatives — it produces raw Math.floor output
-      expect(usePlayer().formatTime(-5)).toBe('-1:-5')
+    it('returns 0:00 for negative values', () => {
+      expect(usePlayer().formatTime(-5)).toBe('0:00')
+      expect(usePlayer().formatTime(-100)).toBe('0:00')
     })
   })
 
@@ -234,6 +243,12 @@ describe('usePlayer', () => {
       const p = usePlayer()
       p.setVolume(0.5)
       expect(p.volume.value).toBe(0.5)
+    })
+
+    it('persists volume to localStorage', () => {
+      const p = usePlayer()
+      p.setVolume(0.3)
+      expect(localStorage.getItem('leerio_volume')).toBe('0.3')
     })
   })
 
@@ -294,6 +309,7 @@ describe('usePlayer', () => {
       const p = usePlayer()
       mockAudio._setDuration(100)
       p.currentTime.value = 10
+      p.isLoading.value = false
       p.skipForward()
       expect(p.currentTime.value).toBe(25)
     })
@@ -319,6 +335,7 @@ describe('usePlayer', () => {
       }
       mockAudio._setDuration(20)
       p.currentTime.value = 10
+      p.isLoading.value = false
       p.skipForward()
       // nextTrack → playTrack is async (resolveAudioSrc), flush microtasks
       await vi.advanceTimersByTimeAsync(0)
@@ -331,6 +348,7 @@ describe('usePlayer', () => {
       const p = usePlayer()
       mockAudio._setDuration(100)
       p.currentTime.value = 30
+      p.isLoading.value = false
       p.skipBackward()
       expect(p.currentTime.value).toBe(15)
     })
@@ -341,6 +359,7 @@ describe('usePlayer', () => {
       p.currentTrackIndex.value = 0
       mockAudio._setDuration(60)
       p.currentTime.value = 5
+      p.isLoading.value = false
       p.skipBackward()
       expect(p.currentTime.value).toBe(0)
     })
@@ -575,6 +594,7 @@ describe('usePlayer', () => {
 
       mockAudio._setDuration(120)
       p.currentTime.value = 50
+      p.isLoading.value = false
       seekbackwardCall![1]({})
       expect(p.currentTime.value).toBe(40)
     })
@@ -591,6 +611,7 @@ describe('usePlayer', () => {
 
       mockAudio._setDuration(120)
       p.currentTime.value = 20
+      p.isLoading.value = false
       seekforwardCall![1]({})
       expect(p.currentTime.value).toBe(50)
     })
@@ -672,8 +693,428 @@ describe('usePlayer', () => {
 
       mockAudio._emit('pause')
 
+      // API save is debounced by 1s
+      vi.advanceTimersByTime(1_100)
+
       // Position 120 with isLoading=false should be saved
       expect(mockSetPos).toHaveBeenCalledWith('save-test', 0, 120, 'a.mp3')
+    })
+  })
+
+  // ── startSeek / endSeek ─────────────────────────────────────────────────
+  describe('startSeek / endSeek', () => {
+    it('startSeek suppresses timeupdate, endSeek seeks and resumes updates', () => {
+      const p = usePlayer()
+      mockAudio._setDuration(100)
+      p.currentTime.value = 10
+
+      // Start seeking — timeupdate should be suppressed
+      p.startSeek()
+      mockAudio.currentTime = 50
+      mockAudio._emit('timeupdate')
+      // currentTime should NOT have updated to 50 because isSeeking is true
+      expect(p.currentTime.value).toBe(10)
+
+      // End seeking — should seek to given position and resume updates
+      p.endSeek(30)
+      expect(p.currentTime.value).toBe(30)
+
+      // After endSeek, timeupdate should work again
+      mockAudio.currentTime = 40
+      mockAudio._emit('timeupdate')
+      expect(p.currentTime.value).toBe(40)
+    })
+  })
+
+  // ── openFullscreen / closeFullscreen ──────────────────────────────────
+  describe('openFullscreen / closeFullscreen', () => {
+    it('openFullscreen sets isFullscreen to true', () => {
+      const p = usePlayer()
+      p.closeFullscreen() // ensure clean state
+      expect(p.isFullscreen.value).toBe(false)
+      p.openFullscreen()
+      expect(p.isFullscreen.value).toBe(true)
+    })
+
+    it('closeFullscreen sets isFullscreen to false', () => {
+      const p = usePlayer()
+      p.openFullscreen()
+      expect(p.isFullscreen.value).toBe(true)
+      p.closeFullscreen()
+      expect(p.isFullscreen.value).toBe(false)
+    })
+  })
+
+  // ── setSleepTimer with -1 (end-of-track mode) ────────────────────────
+  describe('setSleepTimer end-of-track', () => {
+    it('setSleepTimer(-1) sets sleepTimer to 0 and pauses at track end', () => {
+      const p = usePlayer()
+      p.tracks.value = [
+        { index: 0, filename: 'a.mp3', path: '', duration: 60 },
+        { index: 1, filename: 'b.mp3', path: '', duration: 60 },
+      ]
+      p.currentTrackIndex.value = 0
+      p.currentBook.value = {
+        id: 'sleep-test',
+        folder: '',
+        category: '',
+        author: '',
+        title: 'Sleep Test',
+        reader: '',
+        path: '',
+        progress: 0,
+        tags: [],
+        note: '',
+      }
+
+      p.setSleepTimer(-1)
+      expect(p.sleepTimer.value).toBe(0)
+
+      // Simulate track ending — should pause instead of going to next track
+      mockAudio.pause.mockClear()
+      mockAudio._emit('ended')
+      expect(p.isPlaying.value).toBe(false)
+      // Should NOT have advanced to next track
+      expect(p.currentTrackIndex.value).toBe(0)
+    })
+
+    it('sleepAtTrackEnd is cleared by setSleepTimer(null)', () => {
+      const p = usePlayer()
+      p.tracks.value = [
+        { index: 0, filename: 'a.mp3', path: '', duration: 60 },
+        { index: 1, filename: 'b.mp3', path: '', duration: 60 },
+      ]
+      p.currentTrackIndex.value = 0
+      p.currentBook.value = {
+        id: 'sleep-cancel',
+        folder: '',
+        category: '',
+        author: '',
+        title: 'Sleep Cancel',
+        reader: '',
+        path: '',
+        progress: 0,
+        tags: [],
+        note: '',
+      }
+
+      p.setSleepTimer(-1)
+      expect(p.sleepTimer.value).toBe(0)
+
+      // Cancel the sleep timer
+      p.setSleepTimer(null)
+      expect(p.sleepTimer.value).toBe(null)
+
+      // Now ended should call nextTrack, not pause
+      mockAudio._emit('ended')
+      // nextTrack would try to playTrack(1) which is async
+    })
+  })
+
+  // ── retryAudio ────────────────────────────────────────────────────────
+  describe('retryAudio', () => {
+    it('clears audioError and calls load + play', () => {
+      const p = usePlayer()
+      p.currentBook.value = {
+        id: 'retry-test',
+        folder: '',
+        category: '',
+        author: '',
+        title: 'Retry Test',
+        reader: '',
+        path: '',
+        progress: 0,
+        tags: [],
+        note: '',
+      }
+      p.audioError.value = true
+
+      mockAudio.load.mockClear()
+      mockAudio.play.mockClear()
+
+      p.retryAudio()
+
+      expect(p.audioError.value).toBe(false)
+      expect(p.isLoading.value).toBe(true)
+      expect(mockAudio.load).toHaveBeenCalled()
+      expect(mockAudio.play).toHaveBeenCalled()
+    })
+
+    it('returns early when no book is loaded', () => {
+      const p = usePlayer()
+      p.currentBook.value = null
+      p.audioError.value = true
+
+      mockAudio.load.mockClear()
+      mockAudio.play.mockClear()
+
+      p.retryAudio()
+
+      // audioError should remain true (early return, no action)
+      expect(p.audioError.value).toBe(true)
+      expect(mockAudio.load).not.toHaveBeenCalled()
+      expect(mockAudio.play).not.toHaveBeenCalled()
+    })
+  })
+
+  // ── skipErrorTrack ────────────────────────────────────────────────────
+  describe('skipErrorTrack', () => {
+    it('clears audioError and advances to next track', async () => {
+      const p = usePlayer()
+      p.tracks.value = [
+        { index: 0, filename: 'a.mp3', path: '', duration: 60 },
+        { index: 1, filename: 'b.mp3', path: '', duration: 60 },
+      ]
+      p.currentTrackIndex.value = 0
+      p.currentBook.value = {
+        id: 'skip-err',
+        folder: '',
+        category: '',
+        author: '',
+        title: 'Skip Error',
+        reader: '',
+        path: '',
+        progress: 0,
+        tags: [],
+        note: '',
+      }
+      p.audioError.value = true
+
+      p.skipErrorTrack()
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(p.audioError.value).toBe(false)
+      expect(p.currentTrackIndex.value).toBe(1)
+    })
+  })
+
+  // ── prevTrack goes to previous when ≤3s ──────────────────────────────
+  describe('prevTrack (go to previous track)', () => {
+    it('goes to previous track when currentTime <= 3 and not on first track', async () => {
+      const p = usePlayer()
+      p.tracks.value = [
+        { index: 0, filename: 'a.mp3', path: '', duration: 60 },
+        { index: 1, filename: 'b.mp3', path: '', duration: 60 },
+      ]
+      p.currentTrackIndex.value = 1
+      p.currentBook.value = {
+        id: 'prev-test',
+        folder: '',
+        category: '',
+        author: '',
+        title: 'Prev Test',
+        reader: '',
+        path: '',
+        progress: 0,
+        tags: [],
+        note: '',
+      }
+      p.currentTime.value = 2 // <= 3 seconds
+      mockAudio._setDuration(60)
+
+      p.prevTrack()
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(p.currentTrackIndex.value).toBe(0)
+    })
+
+    it('does nothing when <=3s on first track', () => {
+      const p = usePlayer()
+      p.tracks.value = [
+        { index: 0, filename: 'a.mp3', path: '', duration: 60 },
+      ]
+      p.currentTrackIndex.value = 0
+      p.currentTime.value = 2
+      mockAudio._setDuration(60)
+
+      p.prevTrack()
+
+      // Should stay on track 0 with same time (no seek, no prev)
+      expect(p.currentTrackIndex.value).toBe(0)
+    })
+  })
+
+  // ── skipBackward goes to prev track ───────────────────────────────────
+  describe('skipBackward (prev track on underflow)', () => {
+    it('goes to previous track when skip goes negative on non-first track', async () => {
+      const p = usePlayer()
+      p.tracks.value = [
+        { index: 0, filename: 'a.mp3', path: '', duration: 60 },
+        { index: 1, filename: 'b.mp3', path: '', duration: 60 },
+      ]
+      p.currentTrackIndex.value = 1
+      p.currentBook.value = {
+        id: 'skipback-test',
+        folder: '',
+        category: '',
+        author: '',
+        title: 'Skipback Test',
+        reader: '',
+        path: '',
+        progress: 0,
+        tags: [],
+        note: '',
+      }
+      p.currentTime.value = 5
+      mockAudio._setDuration(60)
+      p.isLoading.value = false
+
+      // Skip back 30 seconds from 5s => newTime = -25 => should go to prev track
+      p.skipBackward(30)
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(p.currentTrackIndex.value).toBe(0)
+    })
+  })
+
+  // ── togglePlay ────────────────────────────────────────────────────────
+  describe('togglePlay', () => {
+    it('plays when paused', () => {
+      const p = usePlayer()
+      // Set a src so togglePlay doesn't early-return
+      mockAudio.src = 'http://test/audio.mp3'
+      mockAudio.pause() // ensure paused
+      mockAudio.play.mockClear()
+
+      p.togglePlay()
+
+      expect(mockAudio.play).toHaveBeenCalled()
+    })
+
+    it('pauses when playing', () => {
+      const p = usePlayer()
+      mockAudio.src = 'http://test/audio.mp3'
+      // Simulate playing state
+      mockAudio.play()
+      mockAudio.pause.mockClear()
+
+      p.togglePlay()
+
+      expect(mockAudio.pause).toHaveBeenCalled()
+    })
+
+    it('does nothing when no src', () => {
+      const p = usePlayer()
+      mockAudio.src = ''
+      mockAudio.play.mockClear()
+      mockAudio.pause.mockClear()
+
+      p.togglePlay()
+
+      expect(mockAudio.play).not.toHaveBeenCalled()
+      expect(mockAudio.pause).not.toHaveBeenCalled()
+    })
+  })
+
+  // ── Edge cases: NaN/Infinity guards ─────────────────────────────────────
+  describe('NaN/Infinity guards', () => {
+    it('seek ignores NaN', () => {
+      const p = usePlayer()
+      mockAudio._setDuration(100)
+      p.currentTime.value = 50
+      p.seek(NaN)
+      expect(p.currentTime.value).toBe(50)
+    })
+
+    it('seek ignores Infinity', () => {
+      const p = usePlayer()
+      mockAudio._setDuration(100)
+      p.currentTime.value = 50
+      p.seek(Infinity)
+      expect(p.currentTime.value).toBe(50)
+    })
+
+    it('setVolume ignores NaN', () => {
+      const p = usePlayer()
+      p.setVolume(0.5)
+      p.setVolume(NaN)
+      expect(p.volume.value).toBe(0.5)
+    })
+
+    it('setPlaybackRate ignores NaN', () => {
+      const p = usePlayer()
+      p.setPlaybackRate(1.5)
+      p.setPlaybackRate(NaN)
+      expect(p.playbackRate.value).toBe(1.5)
+    })
+
+    it('setPlaybackRate ignores 0', () => {
+      const p = usePlayer()
+      p.setPlaybackRate(1.5)
+      p.setPlaybackRate(0)
+      expect(p.playbackRate.value).toBe(1.5)
+    })
+
+    it('setPlaybackRate ignores negative', () => {
+      const p = usePlayer()
+      p.setPlaybackRate(1.5)
+      p.setPlaybackRate(-1)
+      expect(p.playbackRate.value).toBe(1.5)
+    })
+
+    it('setSleepTimer ignores NaN', () => {
+      const p = usePlayer()
+      p.setSleepTimer(NaN)
+      expect(p.sleepTimer.value).toBe(null)
+    })
+
+    it('setSleepTimer ignores negative (except -1)', () => {
+      const p = usePlayer()
+      p.setSleepTimer(-5)
+      expect(p.sleepTimer.value).toBe(null)
+    })
+
+    it('setSleepTimer rounds up fractional minutes', () => {
+      const p = usePlayer()
+      p.setSleepTimer(2.3)
+      expect(p.sleepTimer.value).toBe(3)
+    })
+
+    it('formatTime returns 0:00 for negative', () => {
+      const p = usePlayer()
+      expect(p.formatTime(-1)).toBe('0:00')
+      expect(p.formatTime(-100)).toBe('0:00')
+    })
+
+    it('nextTrack is safe with empty tracks', () => {
+      const p = usePlayer()
+      p.tracks.value = []
+      p.currentTrackIndex.value = 0
+      p.currentBook.value = {
+        id: 'test', folder: '', category: '', author: '', title: 'T',
+        reader: '', path: '', progress: 0, tags: [], note: '',
+      }
+      mockAudio.pause.mockClear()
+      p.nextTrack()
+      // 0 < -1 is false → pauses
+      expect(mockAudio.pause).toHaveBeenCalled()
+    })
+
+    it('prevTrack is no-op on first track with <3s', () => {
+      const p = usePlayer()
+      p.tracks.value = [{ index: 0, filename: 'a.mp3', path: '', duration: 60 }]
+      p.currentTrackIndex.value = 0
+      p.currentTime.value = 1
+      const prevIndex = p.currentTrackIndex.value
+      p.prevTrack()
+      expect(p.currentTrackIndex.value).toBe(prevIndex)
+    })
+
+    it('closePlayer is safe to call twice', () => {
+      const p = usePlayer()
+      p.closePlayer()
+      p.closePlayer()
+      expect(p.currentBook.value).toBe(null)
+      expect(p.tracks.value).toEqual([])
+    })
+
+    it('endSeek with NaN is safe (seek ignores it)', () => {
+      const p = usePlayer()
+      mockAudio._setDuration(100)
+      p.currentTime.value = 50
+      p.endSeek(NaN)
+      // seek(NaN) is ignored, isSeeking cleared
+      expect(p.currentTime.value).toBe(50)
     })
   })
 })
