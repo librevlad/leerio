@@ -40,6 +40,8 @@ vi.mock('./useLocalData', () => ({
     getPosition: vi.fn().mockResolvedValue(undefined),
     setProgress: vi.fn().mockResolvedValue(undefined),
     getProgress: vi.fn().mockResolvedValue(undefined),
+    getTrackMeta: vi.fn().mockResolvedValue(undefined),
+    setTrackMeta: vi.fn().mockResolvedValue(undefined),
   }),
 }))
 

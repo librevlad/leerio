@@ -10,7 +10,7 @@
  *   const pct = await local.getProgress('book-123')  // 42
  */
 import { createStore, get, set, setMany, del, keys, entries } from 'idb-keyval'
-import type { Bookmark, Quote, Collection, PlaybackPosition } from '../types'
+import type { Bookmark, Quote, Collection, PlaybackPosition, Track } from '../types'
 
 // Separate IndexedDB stores for different data domains
 const statusStore = createStore('leerio-status', 'book-status')
@@ -23,6 +23,7 @@ const ratingStore = createStore('leerio-ratings', 'ratings')
 const quoteStore = createStore('leerio-quotes', 'quotes')
 const collectionStore = createStore('leerio-collections', 'collections')
 const settingsStore = createStore('leerio-settings', 'settings')
+const trackMetaStore = createStore('leerio-track-meta', 'track-meta')
 
 export interface LocalBookStatus {
   status: string
@@ -167,6 +168,15 @@ export function useLocalData() {
     await del(String(colId), collectionStore)
   }
 
+  // ── Track Metadata (for offline playback) ─────────────────────────
+  async function getTrackMeta(bookId: string): Promise<Track[] | undefined> {
+    return get<Track[]>(bookId, trackMetaStore)
+  }
+
+  async function setTrackMeta(bookId: string, tracks: Track[]): Promise<void> {
+    await set(bookId, tracks, trackMetaStore)
+  }
+
   // ── Settings ─────────────────────────────────────────────────
   async function getSettings(): Promise<{ yearly_goal: number; playback_speed: number } | undefined> {
     return get('user_settings', settingsStore)
@@ -242,6 +252,9 @@ export function useLocalData() {
     getCollections,
     saveCollection,
     deleteCollection,
+    // Track metadata
+    getTrackMeta,
+    setTrackMeta,
     // Settings
     getSettings,
     setSettings,

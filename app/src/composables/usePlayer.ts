@@ -455,10 +455,23 @@ async function loadBook(book: Book, startTrackIndex?: number) {
         playingOffline.value = true
       }
     } else {
-      const ubSlug = isUserBook ? (book.id.split(':')[2] ?? '') : ''
-      const res = isUserBook ? await api.getUserBookTracks(ubSlug) : await api.getBookTracks(book.id)
-      if (loadOpId !== opId) return
-      tracks.value = res.tracks
+      try {
+        const ubSlug = isUserBook ? (book.id.split(':')[2] ?? '') : ''
+        const res = isUserBook ? await api.getUserBookTracks(ubSlug) : await api.getBookTracks(book.id)
+        if (loadOpId !== opId) return
+        tracks.value = res.tracks
+        // Cache for offline
+        localData.setTrackMeta(book.id, res.tracks).catch(() => {})
+      } catch {
+        // Offline fallback — try cached track metadata
+        const cached = await localData.getTrackMeta(book.id)
+        if (loadOpId !== opId) return
+        if (cached && cached.length) {
+          tracks.value = cached
+        } else {
+          throw new Error('No tracks available offline')
+        }
+      }
     }
 
     // Restore saved position (skip if explicit startTrackIndex given)
