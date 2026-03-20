@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { useAuth } from '../../composables/useAuth'
 import { usePlayer } from '../../composables/usePlayer'
 import { STORAGE } from '../../constants/storage'
-import { IconHome, IconLibrary, IconHistory, IconSettings, IconMenu, IconX } from '../shared/icons'
+import { IconLibrary, IconSettings, IconMenu, IconX } from '../shared/icons'
 
 defineProps<{ collapsed: boolean }>()
 const emit = defineEmits<{ 'update:collapsed': [val: boolean] }>()
