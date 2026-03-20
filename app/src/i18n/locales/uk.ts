@@ -526,6 +526,11 @@ export default {
     langUk: 'Укр',
     langEn: 'Eng',
   },
+  notFound: {
+    title: 'Сторінку не знайдено',
+    subtitle: 'Можливо, її було видалено або ви ввели неправильну адресу',
+    goBack: 'Повернутися назад',
+  },
   global: {
     search: 'Знайти книгу або автора',
     authors: 'Автори',

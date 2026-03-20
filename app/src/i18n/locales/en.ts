@@ -526,6 +526,11 @@ export default {
     langUk: 'Ukr',
     langEn: 'Eng',
   },
+  notFound: {
+    title: 'Page not found',
+    subtitle: 'It may have been removed or you entered the wrong address',
+    goBack: 'Go back',
+  },
   global: {
     search: 'Find book or author',
     authors: 'Authors',
