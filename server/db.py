@@ -1327,6 +1327,7 @@ def create_user_collection(user_id: str, name: str, book_ids: list[int] | None =
         (user_id, name, description),
     )
     coll_id = cur.lastrowid
+    # INSERT OR IGNORE silently skips invalid book_ids (FK constraint + PRAGMA foreign_keys=ON)
     for bid in book_ids or []:
         conn.execute(
             "INSERT OR IGNORE INTO collection_books (collection_id, book_id) VALUES (?, ?)",

@@ -104,7 +104,10 @@ watch(
             player.loadBook(book)
             player.closeFullscreen() // show MiniPlayer, not fullscreen
           })
-          .catch(() => {}) // book deleted or offline — silent
+          .catch(() => {
+            // Book deleted or offline — clear last played so we don't retry on next load
+            try { localStorage.removeItem(STORAGE.LAST_PLAYED) } catch { /* ignore */ }
+          })
       })
     } catch {
       // corrupted localStorage

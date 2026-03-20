@@ -31,9 +31,10 @@ export function useOfflineQueue() {
   }
 
   async function replay() {
+    if (!navigator.onLine) return
     const queue = loadQueue()
     if (!queue.length) return
-    saveQueue([]) // clear before replay to avoid duplicates
+    saveQueue([]) // clear to avoid duplicates on re-entry
 
     const failed: QueuedRequest[] = []
     for (const req of queue) {
@@ -49,7 +50,11 @@ export function useOfflineQueue() {
         failed.push(req)
       }
     }
-    if (failed.length) saveQueue(failed)
+    // Merge failed items with any new items enqueued during replay
+    if (failed.length) {
+      const newItems = loadQueue()
+      saveQueue([...failed, ...newItems])
+    }
   }
 
   if (!replayRegistered) {
