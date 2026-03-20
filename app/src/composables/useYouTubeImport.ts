@@ -15,6 +15,7 @@ export function useYouTubeImport() {
   const chapters = ref<YouTubeChapter[]>([])
   const videoId = ref('')
   const errorMessage = ref('')
+  const { addLocalBook } = useLocalBooks()
 
   let abortController: AbortController | null = null
 
@@ -38,7 +39,11 @@ export function useYouTubeImport() {
   }
 
   async function download(): Promise<Blob | null> {
-    if (!videoId.value) return null
+    if (!videoId.value) {
+      step.value = 'error'
+      errorMessage.value = 'No video selected'
+      return null
+    }
     step.value = 'downloading'
     progress.value = 0
     abortController = new AbortController()
@@ -83,40 +88,48 @@ export function useYouTubeImport() {
     step.value = 'splitting'
     progress.value = 0
 
-    const { FFmpeg } = await import('@ffmpeg/ffmpeg')
-    const { fetchFile } = await import('@ffmpeg/util')
+    let ffmpeg: InstanceType<typeof import('@ffmpeg/ffmpeg').FFmpeg> | null = null
+    try {
+      const { FFmpeg } = await import('@ffmpeg/ffmpeg')
+      const { fetchFile } = await import('@ffmpeg/util')
 
-    const ffmpeg = new FFmpeg()
-    await ffmpeg.load()
+      ffmpeg = new FFmpeg()
+      await ffmpeg.load()
 
-    const inputName = 'input.webm'
-    const inputData = await fetchFile(blob)
-    await ffmpeg.writeFile(inputName, inputData)
+      const inputName = 'input.webm'
+      const inputData = await fetchFile(blob)
+      await ffmpeg.writeFile(inputName, inputData)
 
-    const files: File[] = []
+      const files: File[] = []
 
-    for (let i = 0; i < chapterList.length; i++) {
-      const ch = chapterList[i]!
-      const outputName = `chapter-${String(i + 1).padStart(3, '0')}.mp3`
-      await ffmpeg.exec([
-        '-i', inputName,
-        '-ss', String(ch.start),
-        '-to', String(ch.end),
-        '-c', 'copy',
-        '-y', outputName,
-      ])
-      const data = await ffmpeg.readFile(outputName)
-      const fileBlob = new Blob([data], { type: 'audio/mpeg' })
-      files.push(new File([fileBlob], outputName, { type: 'audio/mpeg' }))
-      progress.value = Math.round(((i + 1) / chapterList.length) * 100)
+      for (let i = 0; i < chapterList.length; i++) {
+        const ch = chapterList[i]!
+        const outputName = `chapter-${String(i + 1).padStart(3, '0')}.mp3`
+        await ffmpeg.exec([
+          '-i', inputName,
+          '-ss', String(ch.start),
+          '-to', String(ch.end),
+          '-c', 'copy',
+          '-y', outputName,
+        ])
+        const data = await ffmpeg.readFile(outputName)
+        const fileBlob = new Blob([data], { type: 'audio/mpeg' })
+        files.push(new File([fileBlob], outputName, { type: 'audio/mpeg' }))
+        progress.value = Math.round(((i + 1) / chapterList.length) * 100)
+      }
+
+      return files
+    } catch (e) {
+      step.value = 'error'
+      errorMessage.value = e instanceof Error ? e.message : 'Audio splitting failed'
+      return []
+    } finally {
+      ffmpeg?.terminate()
     }
-
-    ffmpeg.terminate()
-    return files
   }
 
   function generateChapters(totalDuration: number, chunkSeconds: number): YouTubeChapter[] {
-    if (totalDuration <= 0 || chunkSeconds <= 0) return []
+    if (!Number.isFinite(totalDuration) || !Number.isFinite(chunkSeconds) || totalDuration <= 0 || chunkSeconds <= 0) return []
     const result: YouTubeChapter[] = []
     let start = 0
     let i = 1
@@ -130,26 +143,34 @@ export function useYouTubeImport() {
   }
 
   async function importFromYouTube(chunkMinutes?: number) {
+    // Capture state at start — don't read from refs mid-operation
+    const chapterList = chapters.value.length
+      ? [...chapters.value]
+      : generateChapters(duration.value, (chunkMinutes ?? 10) * 60)
+
+    if (!chapterList.length) {
+      step.value = 'error'
+      errorMessage.value = 'No chapters to split'
+      return
+    }
+
     try {
       const blob = await download()
       if (!blob) return
 
-      let chapterList = chapters.value
-      if (!chapterList.length) {
-        chapterList = generateChapters(duration.value, (chunkMinutes ?? 10) * 60)
-      }
-
       const files = await splitAudio(blob, chapterList)
       if (!files.length) {
-        step.value = 'error'
-        errorMessage.value = 'No chapters produced'
+        // splitAudio already sets error state on failure
+        if (step.value !== 'error') {
+          step.value = 'error'
+          errorMessage.value = 'No chapters produced'
+        }
         return
       }
 
       step.value = 'saving'
       progress.value = 0
 
-      const { addLocalBook } = useLocalBooks()
       await addLocalBook(files, {
         title: title.value,
         author: author.value,
@@ -164,8 +185,10 @@ export function useYouTubeImport() {
   }
 
   function cancel() {
-    abortController?.abort()
-    abortController = null
+    if (abortController) {
+      abortController.abort()
+      abortController = null
+    }
     step.value = 'idle'
     progress.value = 0
   }

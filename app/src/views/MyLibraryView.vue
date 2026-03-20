@@ -202,6 +202,11 @@ async function uploadToCloud(item: UnifiedItem) {
       return
     }
 
+    if (files.length !== book.tracks.length) {
+      toast.error(`Загружено только ${files.length}/${book.tracks.length} треков`)
+      return
+    }
+
     const formData = new FormData()
     formData.append('title', book.title)
     formData.append('author', book.author)
