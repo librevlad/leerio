@@ -23,6 +23,7 @@ import { usePlayer } from '../composables/usePlayer'
 import { useDownloads } from '../composables/useDownloads'
 import { useAuth } from '../composables/useAuth'
 import { useCategories } from '../composables/useCategories'
+import { useToast } from '../composables/useToast'
 
 const route = useRoute()
 const router = useRouter()
@@ -35,6 +36,7 @@ const player = usePlayer()
 const dl = useDownloads()
 const { isLoggedIn } = useAuth()
 const { gradient: catGradient } = useCategories()
+const toast = useToast()
 
 const isCurrentBook = computed(() => player.currentBook.value?.id === book.value?.id)
 const isPlaying = computed(() => player.isPlaying.value)
@@ -94,7 +96,7 @@ async function addToLibrary() {
     await api.setBookStatus(book.value.id, 'want_to_read')
     book.value.book_status = 'want_to_read'
   } catch {
-    /* ignored */
+    toast.error(t('common.error'))
   }
 }
 
@@ -107,7 +109,7 @@ async function startListening() {
       await api.setBookStatus(book.value.id, 'reading')
       book.value.book_status = 'reading'
     } catch {
-      /* ignored */
+      toast.error(t('common.error'))
     }
   }
 }
