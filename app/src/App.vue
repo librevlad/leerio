@@ -4,7 +4,6 @@ import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AppSidebar from './components/layout/AppSidebar.vue'
 import BottomNav from './components/layout/BottomNav.vue'
-import GlobalSearch from './components/layout/GlobalSearch.vue'
 import AppToast from './components/layout/AppToast.vue'
 import MiniPlayer from './components/player/MiniPlayer.vue'
 import ScrollToTop from './components/shared/ScrollToTop.vue'
@@ -15,7 +14,7 @@ import { useAuth } from './composables/useAuth'
 import { useNetwork } from './composables/useNetwork'
 import { useCategories } from './composables/useCategories'
 import { useSync } from './composables/useSync'
-import { IconWifiOff, IconX } from './components/shared/icons'
+import { IconX } from './components/shared/icons'
 import { STORAGE } from './constants/storage'
 
 const { t } = useI18n()
@@ -166,27 +165,23 @@ onUnmounted(() => {
       class="flex-1 overflow-y-auto scroll-smooth transition-all duration-300"
       :class="[sidebarCollapsed ? 'md:ml-16' : 'md:ml-60']"
     >
-      <!-- Global search header (desktop) -->
-      <div
-        class="sticky top-0 z-30 hidden items-center justify-end px-8 py-3 md:flex"
-        style="background: rgba(11, 11, 15, 0.8); backdrop-filter: blur(12px)"
-      >
-        <GlobalSearch />
-      </div>
-
-      <!-- Mobile search -->
-      <div class="px-4 pt-3 md:hidden">
-        <GlobalSearch />
-      </div>
-
       <!-- Offline banner -->
-      <transition name="toast">
+      <transition name="offline-bar">
         <div
           v-if="!isOnline"
-          class="flex items-center justify-center gap-2 px-4 py-1.5 text-[12px] font-medium text-amber-200"
-          style="background: rgba(217, 119, 6, 0.15); border-bottom: 1px solid rgba(217, 119, 6, 0.2)"
+          class="fixed top-0 right-0 left-0 z-50 flex items-center justify-center gap-2 py-1.5 text-[11px] font-medium"
+          :class="[sidebarCollapsed ? 'md:left-16' : 'md:left-60']"
+          style="background: rgba(220, 38, 38, 0.9); color: white; backdrop-filter: blur(8px)"
         >
-          <IconWifiOff :size="14" />
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="1" y1="1" x2="23" y2="23" />
+            <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" />
+            <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39" />
+            <path d="M10.71 5.05A16 16 0 0 1 22.56 9" />
+            <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88" />
+            <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+            <line x1="12" y1="20" x2="12.01" y2="20" />
+          </svg>
           {{ t('common.offlineMsg') }}
         </div>
       </transition>

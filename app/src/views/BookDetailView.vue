@@ -93,7 +93,10 @@ async function loadBook() {
 
 async function addToLibrary() {
   if (!book.value) return
-  if (!isLoggedIn.value) return router.push('/login')
+  if (!isLoggedIn.value) {
+    toast.info(t('book.loginToListen'))
+    return router.push('/login')
+  }
   try {
     local.setBookStatus(book.value.id, 'want_to_read').catch(() => {})
     await api.setBookStatus(book.value.id, 'want_to_read')
@@ -105,7 +108,10 @@ async function addToLibrary() {
 
 async function startListening() {
   if (!book.value) return
-  if (!isLoggedIn.value) return router.push('/login')
+  if (!isLoggedIn.value) {
+    toast.info(t('book.loginToListen'))
+    return router.push('/login')
+  }
   player.loadBook(book.value)
   if (!book.value.book_status || book.value.book_status === 'want_to_read') {
     try {

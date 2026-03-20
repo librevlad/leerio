@@ -2,17 +2,25 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { IconLibrary, IconSettings } from '../shared/icons'
+import { IconLibrary, IconMusic, IconSettings } from '../shared/icons'
 import { useAuth } from '../../composables/useAuth'
 
 const route = useRoute()
 const { t } = useI18n()
 const { isLoggedIn } = useAuth()
 
-const tabs = computed(() => [
-  { path: '/library', label: t('nav.catalog'), icon: IconLibrary },
-  { path: '/settings', label: t('nav.settings'), icon: IconSettings },
-])
+const tabs = computed(() => {
+  const base: { path: string; label: string; icon: typeof IconLibrary }[] = [
+    { path: '/library', label: t('nav.catalog'), icon: IconLibrary },
+  ]
+  if (isLoggedIn.value) {
+    base.push(
+      { path: '/my-library', label: t('nav.myLibrary'), icon: IconMusic },
+      { path: '/settings', label: t('nav.settings'), icon: IconSettings },
+    )
+  }
+  return base
+})
 
 const isActive = (path: string) => route.path.startsWith(path)
 </script>

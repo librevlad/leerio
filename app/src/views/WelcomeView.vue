@@ -5,6 +5,8 @@ import { useI18n } from 'vue-i18n'
 import { api } from '../api'
 import { useToast } from '../composables/useToast'
 import { useTracking } from '../composables/useTelemetry'
+import { useLocalBooks } from '../composables/useLocalBooks'
+import { useAuth } from '../composables/useAuth'
 import { formatSize } from '../utils/format'
 import { STORAGE } from '../constants/storage'
 
@@ -12,6 +14,8 @@ const router = useRouter()
 const { t } = useI18n()
 const toast = useToast()
 const { track } = useTracking()
+const { addLocalBook } = useLocalBooks()
+const { isLoggedIn } = useAuth()
 
 onMounted(() => track('onboarding_started'))
 
@@ -61,27 +65,35 @@ async function finish() {
   track('onboarding_completed', { files: files.value.length })
   localStorage.setItem(STORAGE.ONBOARDED, '1')
 
-  // If files were added, upload them via API module
+  // If files were added, upload or save locally
   if (files.value.length > 0) {
     uploading.value = true
-    let uploaded = 0
     try {
-      for (const file of files.value) {
-        try {
-          const formData = new FormData()
-          formData.append('files', file)
-          formData.append('title', file.name.replace(/\.[^.]+$/, ''))
-          formData.append('author', '')
-          await api.uploadBook(formData)
-          uploaded++
-        } catch {
-          break
+      if (isLoggedIn.value) {
+        // Upload to server for logged-in users
+        let uploaded = 0
+        for (const file of files.value) {
+          try {
+            const formData = new FormData()
+            formData.append('files', file)
+            formData.append('title', file.name.replace(/\.[^.]+$/, ''))
+            formData.append('author', '')
+            await api.uploadBook(formData)
+            uploaded++
+          } catch {
+            break
+          }
         }
-      }
-      if (uploaded > 0) {
-        toast.success(t('welcome.uploadSuccess', { n: uploaded }))
+        if (uploaded > 0) {
+          toast.success(t('welcome.uploadSuccess', { n: uploaded }))
+        } else {
+          toast.error(t('welcome.uploadFailed'))
+        }
       } else {
-        toast.error(t('welcome.uploadFailed'))
+        // Save locally for guests
+        const title = files.value[0]?.name.replace(/\.[^.]+$/, '') ?? 'Audiobook'
+        await addLocalBook(files.value, { title, author: '' })
+        toast.success(t('upload.successLocal'))
       }
     } finally {
       uploading.value = false
