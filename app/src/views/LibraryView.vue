@@ -131,8 +131,9 @@ onMounted(() => {
 onUnmounted(() => observer?.disconnect())
 
 watch(loadMoreRef, (el) => {
-  observer?.disconnect()
-  if (el) observer?.observe(el)
+  if (!observer) return
+  observer.disconnect()
+  if (el) observer.observe(el)
 })
 </script>
 

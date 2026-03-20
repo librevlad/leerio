@@ -100,6 +100,7 @@ watch(
           .getBook(id)
           .then((book) => {
             if (player.currentBook.value) return // user already started something
+            if (route.name === 'login') return // don't auto-resume on login page
             player.loadBook(book)
             player.closeFullscreen() // show MiniPlayer, not fullscreen
           })

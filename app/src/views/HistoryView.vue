@@ -90,12 +90,16 @@ const { refreshing, pullProgress } = usePullToRefresh(loadHistory)
 
 onMounted(loadHistory)
 let searchTimeout: ReturnType<typeof setTimeout> | null = null
+let mounted = true
 watch(search, () => {
   if (searchTimeout) clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(loadHistory, 300)
+  searchTimeout = setTimeout(() => {
+    if (mounted) loadHistory()
+  }, 300)
 })
 watch(actionFilter, loadHistory)
 onUnmounted(() => {
+  mounted = false
   if (searchTimeout) clearTimeout(searchTimeout)
 })
 
