@@ -53,16 +53,25 @@ def _extract_video_id(url: str) -> str | None:
 
 
 async def _yt_dlp_json(video_id: str) -> dict:
-    proc = await asyncio.create_subprocess_exec(
-        "yt-dlp",
-        "--dump-json",
-        "--no-download",
-        "--no-warnings",
-        f"https://www.youtube.com/watch?v={video_id}",
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
-    stdout, stderr = await proc.communicate()
+    if not _YT_ID_RE.match(video_id):
+        raise HTTPException(400, "Invalid video ID")
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            "yt-dlp",
+            "--dump-json",
+            "--no-download",
+            "--no-warnings",
+            f"https://www.youtube.com/watch?v={video_id}",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+    except FileNotFoundError:
+        raise HTTPException(503, "yt-dlp is not installed on the server")
+    try:
+        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=30)
+    except asyncio.TimeoutError:
+        proc.kill()
+        raise HTTPException(504, "YouTube metadata fetch timed out")
     if proc.returncode != 0:
         err = stderr.decode(errors="replace").strip()
         if "Private video" in err or "Video unavailable" in err:
@@ -80,6 +89,8 @@ async def resolve(body: ResolveRequest, _user=Depends(get_current_user)):
     info = await _yt_dlp_json(video_id)
 
     duration = info.get("duration") or 0
+    if duration <= 0:
+        raise HTTPException(400, "Video has no duration (possibly a live stream)")
     if duration > _MAX_DURATION:
         raise HTTPException(413, f"Video too long ({duration}s > {_MAX_DURATION}s)")
 
@@ -87,11 +98,12 @@ async def resolve(body: ResolveRequest, _user=Depends(get_current_user)):
     author, title = _parse_author(raw_title)
 
     chapters: list[Chapter] = []
-    for ch in info.get("chapters") or []:
+    for i, ch in enumerate(info.get("chapters") or []):
         start = ch.get("start_time", 0)
         end = ch.get("end_time", 0)
         if end > start:
-            chapters.append(Chapter(title=ch.get("title", ""), start=start, end=end))
+            title = ch.get("title", "").strip() or f"Chapter {i + 1}"
+            chapters.append(Chapter(title=title, start=start, end=end))
 
     thumbnail = info.get("thumbnail", "")
 
@@ -110,16 +122,19 @@ async def stream_audio(video_id: str, _user=Depends(get_current_user)):
     if not _YT_ID_RE.match(video_id):
         raise HTTPException(400, "Invalid video ID")
 
-    proc = await asyncio.create_subprocess_exec(
-        "yt-dlp",
-        "-f",
-        "bestaudio",
-        "-o",
-        "-",
-        f"https://www.youtube.com/watch?v={video_id}",
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            "yt-dlp",
+            "-f",
+            "bestaudio",
+            "-o",
+            "-",
+            f"https://www.youtube.com/watch?v={video_id}",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+    except FileNotFoundError:
+        raise HTTPException(503, "yt-dlp is not installed on the server")
 
     async def generate():
         try:
@@ -131,6 +146,7 @@ async def stream_audio(video_id: str, _user=Depends(get_current_user)):
         finally:
             if proc.returncode is None:
                 proc.kill()
+                await proc.wait()
 
     return StreamingResponse(
         generate(),
