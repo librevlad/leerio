@@ -8,7 +8,7 @@ const DB_STORE = 'tracks'
 
 const localBooks = ref<LocalBook[]>([])
 let dbPromise: Promise<IDBDatabase> | null = null
-let previousAudioUrl: string | null = null
+const activeBlobUrls = new Map<string, string>()
 
 function loadMeta(): LocalBook[] {
   try {
@@ -80,10 +80,16 @@ function getAudioDuration(file: File): Promise<number> {
   return new Promise((resolve) => {
     const audio = new Audio()
     const url = URL.createObjectURL(file)
+    // Timeout — never hang indefinitely on corrupt/unsupported files
+    const timeout = setTimeout(() => {
+      resolve(0)
+      URL.revokeObjectURL(url)
+    }, 10_000)
     audio.src = url
     audio.addEventListener(
       'loadedmetadata',
       () => {
+        clearTimeout(timeout)
         resolve(isFinite(audio.duration) ? audio.duration : 0)
         URL.revokeObjectURL(url)
       },
@@ -92,6 +98,7 @@ function getAudioDuration(file: File): Promise<number> {
     audio.addEventListener(
       'error',
       () => {
+        clearTimeout(timeout)
         resolve(0)
         URL.revokeObjectURL(url)
       },
@@ -152,14 +159,25 @@ export function useLocalBooks() {
   }
 
   async function getLocalAudioUrl(bookId: string, trackIndex: number): Promise<string | null> {
-    const blob = await getBlob(`${bookId}/${trackIndex}`)
+    const key = `${bookId}/${trackIndex}`
+    const existing = activeBlobUrls.get(key)
+    if (existing) return existing
+
+    const blob = await getBlob(key)
     if (!blob) return null
-    if (previousAudioUrl) {
-      URL.revokeObjectURL(previousAudioUrl)
-    }
+
     const url = URL.createObjectURL(blob)
-    previousAudioUrl = url
+    activeBlobUrls.set(key, url)
     return url
+  }
+
+  function revokeAudioUrls(keepKeys?: Set<string>) {
+    for (const [key, url] of activeBlobUrls) {
+      if (!keepKeys || !keepKeys.has(key)) {
+        URL.revokeObjectURL(url)
+        activeBlobUrls.delete(key)
+      }
+    }
   }
 
   function totalSize(): number {
@@ -176,6 +194,7 @@ export function useLocalBooks() {
     removeLocalBook,
     getLocalBook,
     getLocalAudioUrl,
+    revokeAudioUrls,
     totalSize,
   }
 }
