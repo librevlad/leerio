@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, onErrorCaptured } from 'vue'
+import { ref, watch, onMounted, onUnmounted, computed, onErrorCaptured } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AppSidebar from './components/layout/AppSidebar.vue'
@@ -82,6 +82,35 @@ onErrorCaptured((err) => {
   appError.value = true
   return false
 })
+
+// Auto-resume last played book (instant resume — 0 clicks)
+let autoResumed = false
+watch(
+  () => authLoading.value,
+  (loading) => {
+    if (loading || autoResumed || player.currentBook.value) return
+    autoResumed = true
+    try {
+      const raw = localStorage.getItem(STORAGE.LAST_PLAYED)
+      if (!raw) return
+      const { id } = JSON.parse(raw) as { id: string }
+      if (!id) return
+      import('./api').then(({ api }) => {
+        api
+          .getBook(id)
+          .then((book) => {
+            if (player.currentBook.value) return // user already started something
+            player.loadBook(book)
+            player.closeFullscreen() // show MiniPlayer, not fullscreen
+          })
+          .catch(() => {}) // book deleted or offline — silent
+      })
+    } catch {
+      // corrupted localStorage
+    }
+  },
+  { immediate: true },
+)
 
 onMounted(() => {
   downloads.init()

@@ -733,13 +733,7 @@ function closeOverlays() {
               {{ t('nav.nowPlaying') }}
             </p>
           </div>
-          <button
-            class="flex h-10 w-10 items-center justify-center rounded-full border-0 bg-transparent text-[--t2] transition-colors hover:text-[--t1]"
-            :aria-label="t('player.bookPage')"
-            @click="goToBook"
-          >
-            <IconList :size="20" />
-          </button>
+          <div class="h-10 w-10" />
         </div>
 
         <!-- ═══════════════════════════════════════ -->
@@ -988,32 +982,6 @@ function closeOverlays() {
               <IconBookmark :size="18" :class="{ 'icon-pop': bookmarkPop }" />
               <span class="text-[10px] font-semibold">{{ t('player.bookmarkLabel') }}</span>
             </button>
-
-            <!-- Volume -->
-            <div class="relative">
-              <button
-                class="flex flex-col items-center gap-0.5 border-0 bg-transparent px-3 py-1 text-[--t3] transition-colors hover:text-[--t2]"
-                @click="showVolumeSlider = !showVolumeSlider"
-              >
-                <component :is="volume === 0 ? IconVolumeMute : IconVolume" :size="18" />
-                <span class="text-[10px] font-semibold">{{ t('player.volumeLabel') }}</span>
-              </button>
-              <div
-                v-if="showVolumeSlider"
-                class="absolute bottom-12 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-xl border border-[--border] px-3 py-2"
-                style="background: var(--card-solid)"
-              >
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  :value="volume"
-                  class="w-24"
-                  @input="(e) => setVolume(parseFloat((e.target as HTMLInputElement).value))"
-                />
-              </div>
-            </div>
           </div>
 
           <!-- Track list (collapsible) — mobile only -->
