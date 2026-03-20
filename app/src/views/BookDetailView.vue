@@ -23,6 +23,7 @@ import { usePlayer } from '../composables/usePlayer'
 import { useDownloads } from '../composables/useDownloads'
 import { useAuth } from '../composables/useAuth'
 import { useCategories } from '../composables/useCategories'
+import { useLocalData } from '../composables/useLocalData'
 import { useToast } from '../composables/useToast'
 
 const route = useRoute()
@@ -36,6 +37,7 @@ const player = usePlayer()
 const dl = useDownloads()
 const { isLoggedIn } = useAuth()
 const { gradient: catGradient } = useCategories()
+const local = useLocalData()
 const toast = useToast()
 
 const isCurrentBook = computed(() => player.currentBook.value?.id === book.value?.id)
@@ -93,6 +95,7 @@ async function addToLibrary() {
   if (!book.value) return
   if (!isLoggedIn.value) return router.push('/login')
   try {
+    local.setBookStatus(book.value.id, 'want_to_read').catch(() => {})
     await api.setBookStatus(book.value.id, 'want_to_read')
     book.value.book_status = 'want_to_read'
   } catch {
@@ -106,6 +109,7 @@ async function startListening() {
   player.loadBook(book.value)
   if (!book.value.book_status || book.value.book_status === 'want_to_read') {
     try {
+      local.setBookStatus(book.value.id, 'reading').catch(() => {})
       await api.setBookStatus(book.value.id, 'reading')
       book.value.book_status = 'reading'
     } catch {
