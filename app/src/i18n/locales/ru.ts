@@ -471,6 +471,7 @@ export default {
     loadError: 'Ошибка загрузки аудио',
     tracksLoadError: 'Не удалось загрузить треки',
     playbackError: 'Ошибка воспроизведения',
+    unavailableOffline: 'Недоступно офлайн',
     retry: 'Повторить',
     skipChapter: 'Пропустить',
     listened: 'прослушано',

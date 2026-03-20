@@ -351,6 +351,13 @@ async function resolveAudioSrc(bookId: string, trackIndex: number): Promise<stri
       return localUrl
     }
   }
+  // If offline — server URL won't work, tell user
+  const { isOnline } = useNetwork()
+  if (!isOnline.value) {
+    toast.error(t('player.unavailableOffline'))
+    playingOffline.value = false
+    return ''
+  }
   playingOffline.value = false
   return audioUrl(bookId, trackIndex)
 }
@@ -547,7 +554,7 @@ async function playTrack(index: number, seekTo?: number) {
   a.pause()
 
   currentTrackIndex.value = index
-  currentTime.value = 0
+  // Don't reset currentTime visually — keep old position until new track loads (AIMP-style)
   audioError.value = false
   isLoading.value = true
 
@@ -587,11 +594,15 @@ async function playTrack(index: number, seekTo?: number) {
 }
 
 function togglePlay() {
+  // If in error state, retry instead of play
+  if (audioError.value) {
+    retryAudio()
+    return
+  }
   const a = ensureAudio()
   if (!a.src) return
   if (a.paused) {
     a.play().catch((e) => {
-      // AbortError = play() interrupted by pause() — not a real error
       if (e instanceof DOMException && e.name === 'AbortError') return
       toast.error(t('player.playbackError'))
     })

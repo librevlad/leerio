@@ -471,6 +471,7 @@ export default {
     loadError: 'Audio loading error',
     tracksLoadError: 'Failed to load tracks',
     playbackError: 'Playback error',
+    unavailableOffline: 'Not available offline',
     retry: 'Retry',
     skipChapter: 'Skip',
     listened: 'listened',

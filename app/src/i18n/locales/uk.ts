@@ -471,6 +471,7 @@ export default {
     loadError: 'Помилка завантаження аудіо',
     tracksLoadError: 'Не вдалося завантажити треки',
     playbackError: 'Помилка відтворення',
+    unavailableOffline: 'Недоступно офлайн',
     retry: 'Повторити',
     skipChapter: 'Пропустити',
     listened: 'прослухано',
