@@ -23,7 +23,11 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
     const text = await res.text().catch(() => res.statusText)
     throw new Error(`${res.status}: ${text}`)
   }
-  return res.json()
+  try {
+    return await res.json()
+  } catch {
+    throw new Error(`${res.status}: Invalid JSON response`)
+  }
 }
 
 async function requestFormData<T>(path: string, formData: FormData): Promise<T> {
@@ -133,6 +137,7 @@ import type {
   TTSEngine,
   TTSJob,
   ShelfBook,
+  YouTubeResolveResult,
 } from './types'
 
 export const api = {
@@ -244,4 +249,8 @@ export const api = {
   startTTSConversion: (formData: FormData) => requestFormData<TTSJob>('/tts/convert', formData),
   getTTSJobs: () => get<TTSJob[]>('/tts/jobs'),
   getTTSJob: (jobId: string) => get<TTSJob>(`/tts/jobs/${jobId}`),
+
+  // YouTube
+  youtubeResolve: (url: string) => post<YouTubeResolveResult>('/youtube/resolve', { url }),
+  youtubeStreamUrl: (videoId: string): string => apiUrl(`/youtube/stream/${videoId}`),
 }

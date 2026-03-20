@@ -293,3 +293,19 @@ export interface TTSJob {
   error: string | null
   created_at: string
 }
+
+// ── YouTube types ────────────────────────────────────────────────────
+export interface YouTubeChapter {
+  title: string
+  start: number
+  end: number
+}
+
+export interface YouTubeResolveResult {
+  video_id: string
+  title: string
+  author: string
+  duration: number
+  thumbnail: string
+  chapters: YouTubeChapter[]
+}
