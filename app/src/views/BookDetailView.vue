@@ -4,14 +4,8 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { api, coverUrl } from '../api'
 import { formatSizeMB, formatRemaining as _formatRemaining } from '../utils/format'
-import { STORAGE } from '../constants/storage'
 import type { Book } from '../types'
-import BookNotes from '../components/book/BookNotes.vue'
-import BookTags from '../components/book/BookTags.vue'
-import BookTimeline from '../components/book/BookTimeline.vue'
-import BookSimilar from '../components/book/BookSimilar.vue'
 import BookActions from '../components/book/BookActions.vue'
-import BookQuotes from '../components/book/BookQuotes.vue'
 import BookChapters from '../components/book/BookChapters.vue'
 import {
   IconArrowLeft,
@@ -19,21 +13,14 @@ import {
   IconTrash,
   IconCheck,
   IconX,
-  IconShare,
   IconBookmark,
   IconPlay,
   IconPause,
   IconMusic,
-  IconList,
-  IconEdit,
-  IconQuote,
-  IconTag,
-  IconInfo,
 } from '../components/shared/icons'
 import ProgressBar from '../components/shared/ProgressBar.vue'
 import { usePlayer } from '../composables/usePlayer'
 import { useDownloads } from '../composables/useDownloads'
-import { useToast } from '../composables/useToast'
 import { useAuth } from '../composables/useAuth'
 import { useCategories } from '../composables/useCategories'
 
@@ -43,11 +30,9 @@ const { t } = useI18n()
 const book = ref<Book | null>(null)
 const loading = ref(true)
 const coverError = ref(false)
-const activeTab = ref<'chapters' | 'notes' | 'quotes' | 'tags' | 'about'>('chapters')
 
 const player = usePlayer()
 const dl = useDownloads()
-const toast = useToast()
 const { isLoggedIn } = useAuth()
 const { gradient: catGradient } = useCategories()
 
@@ -71,30 +56,6 @@ const coverSrc = computed(() => {
 })
 
 const isInLibrary = computed(() => !!book.value?.book_status)
-
-const tabs = computed(() => {
-  const t: { key: string; label: string }[] = []
-  if (book.value?.mp3_count) t.push({ key: 'chapters', label: 'book.contents' })
-  t.push({ key: 'notes', label: 'book.notes' })
-  t.push({ key: 'quotes', label: 'book.quotes' })
-  t.push({ key: 'tags', label: 'book.tagsLabel' })
-  t.push({ key: 'about', label: 'book.aboutBook' })
-  return t
-})
-
-const tabIcons: Record<string, typeof IconList> = {
-  chapters: IconList,
-  notes: IconEdit,
-  quotes: IconQuote,
-  tags: IconTag,
-  about: IconInfo,
-}
-
-const apkDismissed = ref(localStorage.getItem(STORAGE.APK_DISMISSED) === '1')
-function dismissApk() {
-  apkDismissed.value = true
-  localStorage.setItem(STORAGE.APK_DISMISSED, '1')
-}
 
 async function startDownload() {
   if (!book.value) return
@@ -126,42 +87,14 @@ async function loadBook() {
   }
 }
 
-async function shareBook() {
-  if (!book.value) return
-  const url = window.location.href
-  if (navigator.share) {
-    navigator.share({ title: book.value.title, url }).catch(() => {})
-  } else {
-    try {
-      await navigator.clipboard.writeText(url)
-      toast.success(t('book.linkCopied'))
-    } catch {
-      /* ignored */
-    }
-  }
-}
-
-async function onRatingChanged(rating: number) {
-  if (!book.value) return
-  if (!isLoggedIn.value) return router.push('/login')
-  try {
-    await api.setRating(book.value.id, rating)
-    book.value.rating = rating
-    toast.success(rating ? t('book.ratingSet', { rating }) : t('book.ratingRemoved'))
-  } catch {
-    toast.error(t('book.ratingError'))
-  }
-}
-
 async function addToLibrary() {
   if (!book.value) return
   if (!isLoggedIn.value) return router.push('/login')
   try {
     await api.setBookStatus(book.value.id, 'want_to_read')
     book.value.book_status = 'want_to_read'
-    toast.success(t('book.addedToLibrary'))
   } catch {
-    toast.error(t('book.addError'))
+    /* ignored */
   }
 }
 
@@ -196,21 +129,14 @@ watch(() => route.params.id, loadBook)
 
 <template>
   <div>
-    <!-- Back + Share -->
-    <div class="mb-4 flex items-center justify-between lg:mb-6">
+    <!-- Back -->
+    <div class="mb-4 flex items-center lg:mb-6">
       <button
         class="-ml-3 flex min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border-0 bg-transparent px-3 py-2.5 text-[13px] text-[--t3] transition-all hover:bg-white/5 hover:text-[--t1]"
         @click="router.back()"
       >
         <IconArrowLeft :size="15" />
         <span class="font-medium">{{ book?.category || t('book.back') }}</span>
-      </button>
-      <button
-        v-if="book"
-        class="flex min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3.5 py-2 text-[13px] text-[--t2] transition-all hover:bg-white/[0.08]"
-        @click="shareBook"
-      >
-        <IconShare :size="15" />
       </button>
     </div>
 
@@ -261,18 +187,6 @@ watch(() => route.params.id, loadBook)
                 {{ book.title }}
               </h1>
               <p class="mt-1 text-[13px] text-[--t3]">{{ book.author }}</p>
-              <!-- Rating -->
-              <div class="mt-2 flex gap-0.5 lg:justify-center">
-                <button
-                  v-for="i in 5"
-                  :key="i"
-                  class="cursor-pointer border-0 bg-transparent p-0 text-[16px] transition-colors"
-                  :class="i <= (book.rating || 0) ? 'text-amber-400' : 'text-[--t3]/30'"
-                  @click="onRatingChanged(i === book.rating ? 0 : i)"
-                >
-                  ★
-                </button>
-              </div>
             </div>
           </div>
 
@@ -319,16 +233,6 @@ watch(() => route.params.id, loadBook)
               {{ t('book.addToLibrary') }}
             </button>
 
-            <!-- Share -->
-            <button
-              class="flex w-full cursor-pointer items-center gap-2 rounded-lg border-0 px-3 py-2 text-[12px] text-[--t2] transition-colors hover:bg-white/5"
-              style="background: rgba(255, 255, 255, 0.03)"
-              @click="shareBook"
-            >
-              <IconShare :size="14" />
-              {{ t('book.share') }}
-            </button>
-
             <!-- Download (native) -->
             <template v-if="dl.isNative.value && book.mp3_count && book.mp3_count > 0">
               <button
@@ -364,42 +268,13 @@ watch(() => route.params.id, loadBook)
                 </button>
               </div>
             </template>
-
-            <!-- Install APK prompt (web only, for offline downloads) -->
-            <a
-              v-if="!dl.isNative.value && !apkDismissed && book.mp3_count && book.mp3_count > 0"
-              href="https://github.com/librevlad/leerio/releases/download/latest-apk/leerio.apk"
-              class="group relative flex items-center gap-3 rounded-xl px-3.5 py-3 no-underline transition-all hover:brightness-110"
-              style="background: var(--card)"
-              target="_blank"
-            >
-              <div
-                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[16px]"
-                style="background: var(--accent-soft)"
-              >
-                📱
-              </div>
-              <div class="min-w-0 flex-1">
-                <p class="text-[12px] font-semibold text-[--t1]">{{ t('book.installApp') }}</p>
-                <p class="text-[10px] text-[--t3]">{{ t('book.installAppHint') }}</p>
-              </div>
-              <span class="text-[11px] font-semibold text-[--accent] transition-colors group-hover:text-[--accent-2]"
-                >APK</span
-              >
-              <button
-                class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-0 bg-[--card] text-[10px] text-[--t3] opacity-0 transition-opacity group-hover:opacity-100 hover:text-[--t1]"
-                @click.prevent.stop="dismissApk"
-              >
-                ✕
-              </button>
-            </a>
           </div>
 
           <!-- Meta (desktop) -->
           <div class="mt-4 hidden space-y-2 border-t border-white/[0.04] pt-4 text-[12px] text-[--t3] lg:block">
-            <p v-if="book.duration_hours">🕐 {{ formatDuration(book.duration_hours) }}</p>
-            <p v-if="book.mp3_count">🎵 {{ book.mp3_count }} {{ t('book.tracks') }}</p>
-            <p v-if="book.size_mb">💾 {{ formatSizeMB(book.size_mb, t) }}</p>
+            <p v-if="book.duration_hours">{{ formatDuration(book.duration_hours) }}</p>
+            <p v-if="book.mp3_count">{{ book.mp3_count }} {{ t('book.tracks') }}</p>
+            <p v-if="book.size_mb">{{ formatSizeMB(book.size_mb, t) }}</p>
           </div>
         </div>
 
@@ -412,116 +287,21 @@ watch(() => route.params.id, loadBook)
             </div>
           </div>
 
-          <!-- Tabs: pill segments -->
-          <div
-            class="scrollbar-hide flex gap-1 overflow-x-auto rounded-2xl p-1"
-            style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.04)"
-          >
-            <button
-              v-for="tab in tabs"
-              :key="tab.key"
-              class="flex cursor-pointer items-center gap-1.5 rounded-xl border-0 px-3.5 py-2.5 text-[12px] font-semibold whitespace-nowrap transition-all duration-200"
-              :class="
-                activeTab === tab.key
-                  ? 'bg-[--accent-soft] text-[--accent] shadow-sm'
-                  : 'bg-transparent text-[--t3] hover:bg-white/[0.04] hover:text-[--t2]'
-              "
-              :style="activeTab === tab.key ? 'box-shadow: 0 2px 8px rgba(255, 138, 0, 0.12)' : ''"
-              @click="activeTab = tab.key as typeof activeTab"
-            >
-              <component
-                :is="tabIcons[tab.key]"
-                :size="14"
-                class="transition-transform duration-200"
-                :class="activeTab === tab.key ? 'scale-110' : 'group-hover:scale-105'"
-              />
-              {{ t(tab.label) }}
-            </button>
-          </div>
+          <!-- Chapters -->
+          <BookChapters v-if="book.mp3_count && book.mp3_count > 0" :book="book" />
 
-          <!-- Tab content + desktop context panel -->
-          <div class="mt-4 flex gap-5">
-            <!-- Main tab content -->
-            <transition name="tab-fade" mode="out-in">
-              <div :key="activeTab" class="min-w-0 flex-1">
-                <!-- Chapters -->
-                <BookChapters v-if="activeTab === 'chapters' && book.mp3_count && book.mp3_count > 0" :book="book" />
+          <!-- Description -->
+          <div class="mt-6">
+            <div v-if="book.description" class="text-[13px] leading-relaxed text-[--t2]">
+              {{ book.description }}
+            </div>
+            <p v-else class="text-[13px] text-[--t3]">{{ t('book.noDescription') }}</p>
 
-                <!-- Notes -->
-                <BookNotes v-if="activeTab === 'notes'" :book-id="book.id" :title="book.title" :note="book.note" />
-
-                <!-- Quotes -->
-                <BookQuotes v-if="activeTab === 'quotes'" :book-title="book.title" :book-author="book.author" />
-
-                <!-- Tags -->
-                <div v-if="activeTab === 'tags'" class="space-y-5">
-                  <BookTags
-                    :book-id="book.id"
-                    :title="book.title"
-                    :tags="book.tags"
-                    @updated="(t) => (book!.tags = t)"
-                  />
-                  <BookTimeline :entries="book.timeline || []" />
-                </div>
-
-                <!-- About -->
-                <div v-if="activeTab === 'about'">
-                  <div v-if="book.description" class="text-[13px] leading-relaxed text-[--t2]">
-                    {{ book.description }}
-                  </div>
-                  <p v-else class="text-[13px] text-[--t3]">{{ t('book.noDescription') }}</p>
-
-                  <!-- Meta (mobile only, shown in About tab) -->
-                  <div class="mt-4 flex gap-3 text-[12px] text-[--t3] lg:hidden">
-                    <span v-if="book.duration_hours">🕐 {{ formatDuration(book.duration_hours) }}</span>
-                    <span v-if="book.mp3_count">🎵 {{ book.mp3_count }} {{ t('book.tracks') }}</span>
-                    <span v-if="book.size_mb">💾 {{ formatSizeMB(book.size_mb, t) }}</span>
-                  </div>
-
-                  <!-- Similar books -->
-                  <div class="mt-6">
-                    <BookSimilar :book-id="book.id" />
-                  </div>
-                </div>
-              </div>
-            </transition>
-
-            <!-- Desktop context panel -->
-            <div v-if="activeTab !== 'about'" class="hidden w-[260px] shrink-0 space-y-4 lg:block">
-              <!-- Notes preview (when not on notes tab) -->
-              <div v-if="activeTab !== 'notes' && book.note" class="card p-4">
-                <p class="section-label mb-2">{{ t('book.notes') }}</p>
-                <p class="line-clamp-4 text-[12px] leading-relaxed text-[--t2]">{{ book.note }}</p>
-              </div>
-
-              <!-- Tags (when not on tags tab) -->
-              <div v-if="activeTab !== 'tags' && book.tags?.length" class="card p-4">
-                <p class="section-label mb-2">{{ t('book.tagsLabel') }}</p>
-                <div class="flex flex-wrap gap-1.5">
-                  <span
-                    v-for="tag in book.tags"
-                    :key="tag"
-                    class="rounded-full px-2.5 py-0.5 text-[11px] font-medium"
-                    style="background: var(--accent-soft); color: var(--accent)"
-                  >
-                    {{ tag }}
-                  </span>
-                </div>
-              </div>
-
-              <!-- Timeline snippet (when not on tags tab) -->
-              <div v-if="activeTab !== 'tags' && book.timeline?.length" class="card p-4">
-                <p class="section-label mb-2">{{ t('book.timeline') }}</p>
-                <div class="space-y-2">
-                  <div v-for="(e, i) in book.timeline.slice(0, 3)" :key="i" class="flex items-center gap-2 text-[11px]">
-                    <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-[--accent]" />
-                    <span class="text-[--t2]">{{ e.action_label }}</span>
-                    <span class="ml-auto text-[--t3]">{{
-                      new Date(e.ts).toLocaleDateString('ru', { day: 'numeric', month: 'short' })
-                    }}</span>
-                  </div>
-                </div>
-              </div>
+            <!-- Meta (mobile only) -->
+            <div class="mt-4 flex gap-3 text-[12px] text-[--t3] lg:hidden">
+              <span v-if="book.duration_hours">{{ formatDuration(book.duration_hours) }}</span>
+              <span v-if="book.mp3_count">{{ book.mp3_count }} {{ t('book.tracks') }}</span>
+              <span v-if="book.size_mb">{{ formatSizeMB(book.size_mb, t) }}</span>
             </div>
           </div>
         </div>
@@ -534,10 +314,3 @@ watch(() => route.params.id, loadBook)
     </div>
   </div>
 </template>
-
-<style scoped>
-.apk-prompt {
-  background: linear-gradient(135deg, rgba(255, 138, 0, 0.08), rgba(255, 138, 0, 0.02));
-  border: 1px solid rgba(255, 138, 0, 0.15);
-}
-</style>

@@ -1,57 +1,30 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import {
-  IconHome,
-  IconLibrary,
-  IconFolder,
-  IconMenu,
-  IconUpload,
-  IconHistory,
-  IconSettings,
-  IconChart,
-  IconQueue,
-} from '../shared/icons'
-import BottomSheet from './BottomSheet.vue'
+import { IconHome, IconLibrary, IconHistory, IconSettings } from '../shared/icons'
 import { usePlayer } from '../../composables/usePlayer'
 import { useAuth } from '../../composables/useAuth'
 
 const route = useRoute()
-const router = useRouter()
 const { t } = useI18n()
-const showMore = ref(false)
 const { isPlayerVisible } = usePlayer()
 const { isLoggedIn } = useAuth()
 
 const authTabs = computed(() => [
   { path: '/', label: t('nav.home'), icon: IconHome },
   { path: '/library', label: t('nav.catalog'), icon: IconLibrary },
-  { path: '/my-library', label: t('nav.myLibrary'), icon: IconFolder },
+  { path: '/history', label: t('nav.history'), icon: IconHistory },
+  { path: '/settings', label: t('nav.settings'), icon: IconSettings },
 ])
 
 const guestTabs = computed(() => [{ path: '/library', label: t('nav.catalog'), icon: IconLibrary }])
 
 const tabs = computed(() => (isLoggedIn.value ? authTabs.value : guestTabs.value))
 
-const moreLinks = computed(() => [
-  { path: '/collections', label: t('nav.collections'), icon: IconQueue },
-  { path: '/history', label: t('nav.history'), icon: IconHistory },
-  { path: '/analytics', label: t('nav.analytics'), icon: IconChart },
-  { path: '/upload', label: t('nav.upload'), icon: IconUpload },
-  { path: '/settings', label: t('nav.settings'), icon: IconSettings },
-])
-
 const isActive = (path: string) => {
   if (path === '/') return route.path === '/'
   return route.path.startsWith(path)
-}
-
-const isMoreActive = computed(() => moreLinks.value.some((l) => isActive(l.path)))
-
-function goTo(path: string) {
-  showMore.value = false
-  router.push(path)
 }
 </script>
 
@@ -83,19 +56,9 @@ function goTo(path: string) {
         <span class="text-[10px] leading-none font-medium">{{ tab.label }}</span>
       </router-link>
 
-      <!-- More button (auth) -->
-      <button
-        v-if="isLoggedIn"
-        class="relative flex flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 border-0 bg-transparent transition-colors duration-200"
-        :class="showMore || isMoreActive ? 'text-[--accent]' : 'text-[--t3]'"
-        @click="showMore = !showMore"
-      >
-        <IconMenu :size="20" />
-        <span class="text-[10px] leading-none font-medium">{{ t('nav.more') }}</span>
-      </button>
       <!-- Login button (guest) -->
       <router-link
-        v-else
+        v-if="!isLoggedIn"
         to="/login"
         class="relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[--accent] no-underline"
       >
@@ -117,17 +80,4 @@ function goTo(path: string) {
       </router-link>
     </div>
   </nav>
-
-  <BottomSheet :open="showMore" @close="showMore = false">
-    <button
-      v-for="link in moreLinks"
-      :key="link.path"
-      class="flex w-full cursor-pointer items-center gap-3.5 rounded-xl border-0 bg-transparent px-4 py-3 text-left transition-colors hover:bg-white/[0.04]"
-      :class="isActive(link.path) ? 'text-[--accent]' : 'text-[--t2]'"
-      @click="goTo(link.path)"
-    >
-      <component :is="link.icon" :size="20" />
-      <span class="text-[14px] font-medium">{{ link.label }}</span>
-    </button>
-  </BottomSheet>
 </template>

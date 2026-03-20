@@ -42,12 +42,6 @@ const router = createRouter({
       meta: { title: 'History' },
     },
     {
-      path: '/analytics',
-      name: 'analytics',
-      component: () => import('./views/AnalyticsView.vue'),
-      meta: { title: 'Analytics' },
-    },
-    {
       path: '/my-library',
       name: 'my-library',
       component: () => import('./views/MyLibraryView.vue'),
@@ -56,18 +50,6 @@ const router = createRouter({
     {
       path: '/my-books',
       redirect: '/my-library',
-    },
-    {
-      path: '/upload',
-      name: 'upload',
-      component: () => import('./views/UploadView.vue'),
-      meta: { title: 'Upload' },
-    },
-    {
-      path: '/collections',
-      name: 'collections',
-      component: () => import('./views/CollectionsView.vue'),
-      meta: { title: 'Collections' },
     },
     {
       path: '/settings',
@@ -102,10 +84,7 @@ const routeNavKeyMap: Record<string, string> = {
   dashboard: 'nav.home',
   library: 'nav.catalog',
   history: 'nav.history',
-  analytics: 'nav.analytics',
   'my-library': 'nav.myLibrary',
-  upload: 'nav.upload',
-  collections: 'nav.collections',
   settings: 'nav.settings',
 }
 

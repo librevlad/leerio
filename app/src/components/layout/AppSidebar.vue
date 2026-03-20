@@ -5,19 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { useAuth } from '../../composables/useAuth'
 import { usePlayer } from '../../composables/usePlayer'
 import { STORAGE } from '../../constants/storage'
-import {
-  IconHome,
-  IconLibrary,
-  IconHistory,
-  IconSettings,
-  IconMenu,
-  IconX,
-  IconFolder,
-  IconUpload,
-  IconChart,
-  IconQueue,
-  IconBookmark,
-} from '../shared/icons'
+import { IconHome, IconLibrary, IconHistory, IconSettings, IconMenu, IconX } from '../shared/icons'
 
 defineProps<{ collapsed: boolean }>()
 const emit = defineEmits<{ 'update:collapsed': [val: boolean] }>()
@@ -48,22 +36,14 @@ const publicLinks = computed(() => [{ path: '/library', label: t('nav.catalog'),
 const mainLinks = computed(() => [
   { path: '/', label: t('nav.home'), icon: IconHome },
   { path: '/library', label: t('nav.catalog'), icon: IconLibrary },
-  { path: '/my-library', label: t('nav.library'), icon: IconFolder },
-  { path: '/collections', label: t('nav.collections'), icon: IconQueue },
-  { path: '/library?status=want_to_read', label: t('nav.wantToRead'), icon: IconBookmark },
   { path: '/history', label: t('nav.history'), icon: IconHistory },
-  { path: '/analytics', label: t('nav.analytics'), icon: IconChart },
-  { path: '/upload', label: t('nav.upload'), icon: IconUpload },
+  { path: '/settings', label: t('nav.settings'), icon: IconSettings },
 ])
 
 const navLinks = computed(() => (isLoggedIn.value ? mainLinks.value : publicLinks.value))
 
 const isActive = (path: string) => {
   if (path === '/') return route.path === '/'
-  if (path.includes('?')) {
-    const [base, query] = path.split('?')
-    return route.path === base && route.fullPath.includes(query!)
-  }
   return route.path.startsWith(path)
 }
 
@@ -136,27 +116,9 @@ async function handleLogout() {
 
     <!-- Secondary section -->
     <div class="border-t px-2.5 pt-2 pb-3" style="border-color: var(--border)">
-      <!-- Authenticated: settings + user info + logout -->
+      <!-- Authenticated: user info + logout -->
       <template v-if="isLoggedIn">
-        <router-link
-          to="/settings"
-          :title="collapsed ? t('nav.settings') : undefined"
-          class="flex items-center gap-3 rounded-xl px-3 py-2.5 no-underline transition-all duration-150"
-          :class="
-            isActive('/settings')
-              ? 'bg-[--card] text-[--accent]'
-              : 'text-[--t3] hover:bg-[--card-hover] hover:text-[--t2]'
-          "
-        >
-          <span class="flex w-5 flex-shrink-0 items-center justify-center">
-            <IconSettings :size="18" />
-          </span>
-          <span v-if="!collapsed" class="text-[13px]" :class="isActive('/settings') ? 'font-semibold' : ''">
-            {{ t('nav.settings') }}
-          </span>
-        </router-link>
-
-        <div v-if="user && !collapsed" class="mt-2 flex items-center gap-2.5 px-3">
+        <div v-if="user && !collapsed" class="flex items-center gap-2.5 px-3">
           <img
             v-if="user.picture"
             :src="user.picture"

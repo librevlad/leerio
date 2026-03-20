@@ -737,61 +737,34 @@ function closeOverlays() {
         </div>
 
         <!-- ═══════════════════════════════════════ -->
-        <!-- VINYL DISC + INFO (mobile only)         -->
+        <!-- COVER + INFO (mobile only)              -->
         <!-- ═══════════════════════════════════════ -->
         <div class="flex flex-1 flex-col items-center justify-center px-6">
-          <!-- Ambient glow -->
-          <div
-            class="pointer-events-none absolute"
-            style="
-              width: 400px;
-              height: 400px;
-              background: radial-gradient(circle, rgba(255, 138, 0, 0.05) 0%, transparent 70%);
-            "
-          />
-
-          <!-- Vinyl disc -->
+          <!-- Square cover -->
           <div class="relative z-[1]">
             <div
-              class="flex h-[240px] w-[240px] items-center justify-center rounded-full"
-              style="
-                background: radial-gradient(
-                  circle at 50% 50%,
-                  #1a1a24 0%,
-                  #111118 38%,
-                  #1a1a24 39%,
-                  #0d0d14 68%,
-                  #1a1a24 69%,
-                  #111118 100%
-                );
-                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-              "
+              class="h-[240px] w-[240px] overflow-hidden rounded-2xl"
+              style="box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6)"
             >
-              <!-- Cover in center -->
+              <img
+                v-if="coverSrc && !coverError"
+                :src="coverSrc"
+                alt=""
+                class="h-full w-full object-cover"
+                @error="coverError = true"
+              />
               <div
-                class="h-[140px] w-[140px] overflow-hidden rounded-full border-[3px] border-white/10"
-                style="box-shadow: 0 0 30px rgba(255, 138, 0, 0.08)"
+                v-else
+                class="flex h-full w-full items-center justify-center"
+                style="background: linear-gradient(135deg, rgba(232, 146, 58, 0.15), rgba(232, 146, 58, 0.05))"
               >
-                <img
-                  v-if="coverSrc && !coverError"
-                  :src="coverSrc"
-                  alt=""
-                  class="h-full w-full object-cover"
-                  @error="coverError = true"
-                />
-                <div
-                  v-else
-                  class="flex h-full w-full items-center justify-center"
-                  style="background: linear-gradient(135deg, rgba(232, 146, 58, 0.15), rgba(232, 146, 58, 0.05))"
-                >
-                  <IconMusic :size="48" class="text-[--t3]" />
-                </div>
+                <IconMusic :size="48" class="text-[--t3]" />
               </div>
             </div>
             <!-- Playing indicator dot -->
             <div
               v-if="isPlaying"
-              class="absolute -top-1 -right-1 h-6 w-6 rounded-full border-2 border-[#0d0d16]"
+              class="absolute -top-1.5 -right-1.5 h-6 w-6 rounded-full border-2 border-[#0d0d16]"
               style="background: var(--accent); box-shadow: 0 0 12px rgba(255, 138, 0, 0.4)"
             >
               <div class="flex h-full w-full items-center justify-center">
@@ -801,7 +774,7 @@ function closeOverlays() {
           </div>
 
           <!-- Title + author -->
-          <div class="z-[1] mt-5 w-full max-w-[400px] text-center">
+          <div class="z-[1] mt-7 w-full max-w-[400px] text-center">
             <p class="truncate text-[18px] font-bold text-[--t1]">
               {{ currentBook.title }}
             </p>
@@ -845,7 +818,7 @@ function closeOverlays() {
         <!-- ═══════════════════════════════════════ -->
         <div>
           <!-- Seek bar -->
-          <div class="px-6 pt-2">
+          <div class="px-6 pt-4">
             <div class="seek-bar-container" style="height: 24px">
               <div class="seek-bar-fill" :style="{ width: seekPercent + '%' }" style="height: 6px" />
               <input
@@ -910,8 +883,8 @@ function closeOverlays() {
             </button>
           </div>
 
-          <!-- Secondary controls -->
-          <div class="flex items-center justify-around px-8 pb-2">
+          <!-- Secondary controls: speed + sleep only -->
+          <div class="flex items-center justify-center gap-8 px-8 pb-2">
             <!-- Speed -->
             <div class="relative">
               <button
@@ -973,15 +946,6 @@ function closeOverlays() {
                 </button>
               </div>
             </div>
-
-            <!-- Bookmark -->
-            <button
-              class="flex flex-col items-center gap-0.5 border-0 bg-transparent px-3 py-1 text-[--t3] transition-colors hover:text-[--t2]"
-              @click="addBookmark"
-            >
-              <IconBookmark :size="18" :class="{ 'icon-pop': bookmarkPop }" />
-              <span class="text-[10px] font-semibold">{{ t('player.bookmarkLabel') }}</span>
-            </button>
           </div>
 
           <!-- Track list (collapsible) — mobile only -->

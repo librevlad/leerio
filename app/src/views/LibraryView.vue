@@ -7,7 +7,6 @@ import BookCard from '../components/shared/BookCard.vue'
 import EmptyState from '../components/shared/EmptyState.vue'
 import PullIndicator from '../components/shared/PullIndicator.vue'
 import { usePullToRefresh } from '../composables/usePullToRefresh'
-import { IconShuffle } from '../components/shared/icons'
 import type { BookStatusValue } from '../types'
 
 const route = useRoute()
@@ -17,9 +16,7 @@ const { books, loading, load, categories } = useBooks()
 
 const search = ref((route.query.q as string) || '')
 const category = ref((route.query.category as string) || '')
-const sort = ref((route.query.sort as string) || 'title')
 const statusFilter = ref<BookStatusValue | ''>((route.query.status as BookStatusValue) || '')
-const langFilter = ref((route.query.lang as string) || '')
 const visibleCount = ref(40)
 const showStatusMenu = ref(false)
 
@@ -33,23 +30,19 @@ const categoryCounts = computed(() => {
   return counts
 })
 
-const hasActiveFilters = computed(
-  () => search.value !== '' || category.value !== '' || statusFilter.value !== '' || langFilter.value !== '',
-)
+const hasActiveFilters = computed(() => search.value !== '' || category.value !== '' || statusFilter.value !== '')
 
 onMounted(() => loadBooks())
 
 function syncQuery() {
   const query: Record<string, string> = {}
   if (category.value) query.category = category.value
-  if (sort.value && sort.value !== 'title') query.sort = sort.value
   if (statusFilter.value) query.status = statusFilter.value
-  if (langFilter.value) query.lang = langFilter.value
   if (search.value) query.q = search.value
   router.replace({ query })
 }
 
-watch([category, sort, langFilter], () => {
+watch(category, () => {
   visibleCount.value = PAGE_SIZE
   loadBooks()
   syncQuery()
@@ -62,10 +55,8 @@ watch([statusFilter, search], () => {
 })
 
 function loadBooks() {
-  const params: Record<string, string> = {}
+  const params: Record<string, string> = { sort: 'title' }
   if (category.value) params.category = category.value
-  if (sort.value) params.sort = sort.value
-  if (langFilter.value) params.language = langFilter.value
   load(params)
 }
 
@@ -86,28 +77,6 @@ const filtered = computed(() => {
 
 const visibleBooks = computed(() => filtered.value.slice(0, visibleCount.value))
 const hasMore = computed(() => visibleCount.value < filtered.value.length)
-const viewMode = ref<'grid' | 'authors'>('grid')
-
-const groupedByAuthor = computed(() => {
-  if (viewMode.value !== 'authors') return []
-  const groups: Record<string, typeof filtered.value> = {}
-  for (const b of filtered.value) {
-    const author = b.author || t('library.unknownAuthor')
-    if (!groups[author]) groups[author] = []
-    groups[author].push(b)
-  }
-  return Object.entries(groups)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([author, books]) => ({ author, books }))
-})
-
-const sortOptions = computed(() => [
-  { value: 'title', label: t('library.sortTitle') },
-  { value: 'author', label: t('library.sortAuthor') },
-  { value: 'category', label: t('library.sortCategory') },
-  { value: 'progress', label: t('library.sortProgress') },
-  { value: 'rating', label: t('library.sortRating') },
-])
 
 // Status counts from actual book_status field (consistent with filter)
 const statusCounts = computed(() => {
@@ -128,13 +97,6 @@ const statusPills = computed(() => [
   { value: 'rejected' as BookStatusValue | '', label: t('library.filterRejected') },
 ])
 
-function randomBook() {
-  const pool = filtered.value
-  if (!pool.length) return
-  const pick = pool[Math.floor(Math.random() * pool.length)]!
-  router.push(`/book/${pick.id}`)
-}
-
 function selectStatus(value: BookStatusValue | '') {
   statusFilter.value = value
   showStatusMenu.value = false
@@ -143,21 +105,13 @@ function selectStatus(value: BookStatusValue | '') {
 function resetFilters() {
   search.value = ''
   category.value = ''
-  sort.value = 'title'
   statusFilter.value = ''
-  langFilter.value = ''
   visibleCount.value = PAGE_SIZE
 }
 
 function showMore() {
   visibleCount.value += PAGE_SIZE
 }
-
-const BOOK_LANGS = [
-  { code: 'ru', key: 'common.langRu', flag: '🇷🇺', ariaLabel: 'Russian' },
-  { code: 'uk', key: 'common.langUk', flag: '🇺🇦', ariaLabel: 'Ukrainian' },
-  { code: 'en', key: 'common.langEn', flag: '🇬🇧', ariaLabel: 'English' },
-]
 
 const { refreshing, pullProgress } = usePullToRefresh(async () => loadBooks())
 
@@ -187,22 +141,18 @@ watch(loadMoreRef, (el) => {
     <PullIndicator :progress="pullProgress" :refreshing="refreshing" />
 
     <!-- Header -->
-    <div class="mb-4 flex items-end justify-between">
-      <div>
-        <h1 class="page-title">{{ t('library.title') }}</h1>
-        <p class="mt-1 text-[13px] text-[--t3]">
-          <span class="font-bold text-[--accent]">{{ filtered.length }}</span>
-          {{ t('plural.book', filtered.length) }}
-        </p>
-      </div>
-      <button
-        class="flex h-9 w-9 flex-shrink-0 cursor-pointer items-center justify-center rounded-xl border border-white/[0.06] bg-white/[0.03] text-[--t3] transition-colors hover:bg-white/[0.08] hover:text-[--accent]"
-        :title="t('library.randomBook')"
-        :aria-label="t('library.randomBook')"
-        @click="randomBook"
-      >
-        <IconShuffle :size="16" />
-      </button>
+    <div class="mb-4">
+      <h1 class="page-title">{{ t('library.title') }}</h1>
+    </div>
+
+    <!-- Search -->
+    <div class="mb-3">
+      <input
+        v-model="search"
+        type="search"
+        :placeholder="t('library.search')"
+        class="w-full rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-2.5 text-[13px] text-[--t1] transition-colors outline-none placeholder:text-[--t3] focus:border-[--accent]/30 focus:bg-white/[0.05]"
+      />
     </div>
 
     <!-- Category pills -->
@@ -234,87 +184,36 @@ watch(loadMoreRef, (el) => {
       </button>
     </div>
 
-    <!-- Secondary: lang flags | status dropdown | sort | view toggle -->
-    <div class="mb-5 flex items-center gap-1.5 overflow-x-auto">
-      <!-- Language flags (compact) -->
+    <!-- Status dropdown -->
+    <div class="relative mb-5 inline-block">
       <button
-        v-for="lang in BOOK_LANGS"
-        :key="lang.code"
-        :aria-label="lang.ariaLabel"
-        class="flex-shrink-0 cursor-pointer rounded-full border px-2 py-1 text-[12px] transition-colors"
+        class="flex cursor-pointer items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors"
         :class="
-          langFilter === lang.code
-            ? 'border-white/10 bg-white/[0.08]'
-            : langFilter === ''
-              ? 'border-transparent opacity-60 hover:opacity-100'
-              : 'border-transparent opacity-30 hover:opacity-60'
+          statusFilter
+            ? 'border-white/10 bg-white/[0.08] text-[--t1]'
+            : 'border-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
         "
-        @click="langFilter = langFilter === lang.code ? '' : lang.code"
+        @click="showStatusMenu = !showStatusMenu"
       >
-        {{ lang.flag }}
+        {{ statusFilter ? statusPills.find((p) => p.value === statusFilter)?.label : t('library.filterStatus') }}
+        <span class="text-[9px] opacity-50">▾</span>
       </button>
-
-      <div class="mx-1 hidden h-4 w-px bg-white/[0.06] sm:block" />
-
-      <!-- Status dropdown -->
-      <div class="relative flex-shrink-0">
+      <div
+        v-if="showStatusMenu"
+        class="absolute top-full left-0 z-20 mt-1 rounded-xl border border-[--border] p-1"
+        style="background: var(--card-solid)"
+      >
         <button
-          class="flex cursor-pointer items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors"
-          :class="
-            statusFilter
-              ? 'border-white/10 bg-white/[0.08] text-[--t1]'
-              : 'border-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
-          "
-          @click="showStatusMenu = !showStatusMenu"
+          v-for="sp in statusPills"
+          :key="sp.value"
+          class="block w-full cursor-pointer rounded-lg border-0 bg-transparent px-3 py-2 text-left text-[12px] whitespace-nowrap transition-colors"
+          :class="statusFilter === sp.value ? 'text-[--accent]' : 'text-[--t2] hover:bg-white/5'"
+          @click="selectStatus(sp.value)"
         >
-          {{ statusFilter ? statusPills.find((p) => p.value === statusFilter)?.label : t('library.filterStatus') }}
-          <span class="text-[9px] opacity-50">▾</span>
+          {{ sp.label }}
+          <span v-if="sp.count" class="ml-1 text-[10px] opacity-50">{{ sp.count }}</span>
         </button>
-        <div
-          v-if="showStatusMenu"
-          class="absolute top-full left-0 z-20 mt-1 rounded-xl border border-[--border] p-1"
-          style="background: var(--card-solid)"
-        >
-          <button
-            v-for="sp in statusPills"
-            :key="sp.value"
-            class="block w-full cursor-pointer rounded-lg border-0 bg-transparent px-3 py-2 text-left text-[12px] whitespace-nowrap transition-colors"
-            :class="statusFilter === sp.value ? 'text-[--accent]' : 'text-[--t2] hover:bg-white/5'"
-            @click="selectStatus(sp.value)"
-          >
-            {{ sp.label }}
-            <span v-if="sp.count" class="ml-1 text-[10px] opacity-50">{{ sp.count }}</span>
-          </button>
-        </div>
       </div>
-
-      <div class="mx-1 hidden h-4 w-px bg-white/[0.06] sm:block" />
-
-      <!-- Sort buttons -->
-      <button
-        v-for="s in sortOptions"
-        :key="s.value"
-        class="flex-shrink-0 cursor-pointer rounded-full border-0 px-2 py-1 text-[11px] font-medium transition-colors"
-        :class="
-          sort === s.value
-            ? 'bg-[--accent-soft] text-[--accent]'
-            : 'bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
-        "
-        @click="sort = s.value"
-      >
-        {{ s.label }}
-      </button>
-
-      <!-- View toggle -->
-      <button
-        class="flex-shrink-0 cursor-pointer rounded-full border-0 px-2 py-1 text-[11px] font-medium transition-colors"
-        :class="
-          viewMode === 'authors' ? 'bg-[--accent-soft] text-[--accent]' : 'bg-transparent text-[--t3] hover:bg-white/5'
-        "
-        @click="viewMode = viewMode === 'grid' ? 'authors' : 'grid'"
-      >
-        {{ t('library.byAuthor') }}
-      </button>
     </div>
 
     <!-- Status menu overlay -->
@@ -345,21 +244,8 @@ watch(loadMoreRef, (el) => {
     </div>
 
     <div v-else-if="filtered.length" class="fade-in">
-      <!-- Grouped by author -->
-      <div v-if="viewMode === 'authors'" class="space-y-6">
-        <div v-for="group in groupedByAuthor" :key="group.author">
-          <h3 class="mb-3 text-[13px] font-bold text-[--t2]">
-            {{ group.author }}
-            <span class="ml-1 text-[--t3]">· {{ group.books.length }}</span>
-          </h3>
-          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            <BookCard v-for="book in group.books" :key="book.id" :book="book" />
-          </div>
-        </div>
-      </div>
-
       <!-- Grid view -->
-      <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <BookCard
           v-for="(book, i) in visibleBooks"
           :key="book.id"

@@ -6,13 +6,9 @@ import { useAuth } from '../composables/useAuth'
 import { usePlayer } from '../composables/usePlayer'
 import { useCategories } from '../composables/useCategories'
 import { formatRemaining } from '../utils/format'
-import { STORAGE } from '../constants/storage'
 import { useTracking } from '../composables/useTelemetry'
 import { useToast } from '../composables/useToast'
-import type { DashboardData, ShelfBook } from '../types'
-import ActivityHeatmap from '../components/dashboard/ActivityHeatmap.vue'
-import YearlyGoal from '../components/dashboard/YearlyGoal.vue'
-import RecentActivity from '../components/dashboard/RecentActivity.vue'
+import type { DashboardData } from '../types'
 import PullIndicator from '../components/shared/PullIndicator.vue'
 import EmptyState from '../components/shared/EmptyState.vue'
 import ProgressBar from '../components/shared/ProgressBar.vue'
@@ -26,12 +22,8 @@ const { user, isGuest } = useAuth()
 const player = usePlayer()
 const { gradient: catGradient } = useCategories()
 const data = ref<DashboardData | null>(null)
-const streak = ref({ current: 0, best: 0 })
-const recommendations = ref<ShelfBook[]>([])
-const recentBooks = ref<ShelfBook[]>([])
 const loading = ref(true)
 const coverErrors = reactive(new Set<string>())
-const upgradeBannerDismissed = ref(localStorage.getItem(STORAGE.UPGRADE_DISMISSED) === '1')
 
 const greeting = computed(() => {
   const h = new Date().getHours()
@@ -56,11 +48,6 @@ const heroBook = computed(() => {
 const otherBooks = computed(() => {
   if (!data.value?.active_books.length || !heroBook.value) return []
   return data.value.active_books.filter((b) => b.id !== heroBook.value!.id && b.progress > 0)
-})
-
-const smartRecommendation = computed(() => {
-  if (!recommendations.value.length || !heroBook.value) return null
-  return recommendations.value[0] ?? null
 })
 
 const nowPlayingId = computed(() => player.currentBook.value?.id ?? null)
@@ -91,25 +78,11 @@ async function loadData() {
     return
   }
   try {
-    const [d, st, rec, books] = await Promise.allSettled([
-      api.getDashboard(),
-      api.getStreak(),
-      api.getRecommendations(),
-      api.getBooks({ sort: 'recent', limit: '10' }),
-    ])
-    if (d.status === 'fulfilled') data.value = d.value
-    if (st.status === 'fulfilled') streak.value = st.value
-    if (rec.status === 'fulfilled') recommendations.value = rec.value
-    if (books.status === 'fulfilled') recentBooks.value = books.value.slice(0, 10) as ShelfBook[]
+    data.value = await api.getDashboard()
   } finally {
     loading.value = false
   }
 }
-
-const hasActivity = computed(() => {
-  if (!data.value?.heatmap) return false
-  return Object.values(data.value.heatmap).some((count) => count > 0)
-})
 
 const { refreshing, pullProgress } = usePullToRefresh(loadData)
 
@@ -124,10 +97,6 @@ onMounted(loadData)
     <div v-if="loading" class="space-y-6">
       <div class="skeleton h-10 w-48" />
       <div class="skeleton h-[200px] rounded-2xl" />
-      <div class="grid grid-cols-2 gap-3">
-        <div class="skeleton h-24 rounded-2xl" />
-        <div class="skeleton h-24 rounded-2xl" />
-      </div>
     </div>
 
     <!-- Guest welcome -->
@@ -165,10 +134,8 @@ onMounted(loadData)
         <h1 class="mt-1 text-[22px] font-extrabold text-[--t1] md:text-[26px]">{{ userName }}</h1>
       </div>
 
-      <!-- Desktop: Widget Grid 2:1 -->
-      <!-- Mobile: stacked -->
-      <div class="grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr]">
-        <!-- Hero Card -->
+      <!-- Hero Card -->
+      <div class="py-3">
         <div
           v-if="heroBook"
           class="overflow-hidden rounded-2xl"
@@ -255,248 +222,56 @@ onMounted(loadData)
           :action-label="t('dashboard.welcomeAction')"
           @action="$router.push('/library')"
         />
-
-        <!-- Right column (desktop) / Below hero (mobile): Streak + Goal -->
-        <div class="grid grid-cols-2 gap-3 lg:grid-cols-1 lg:gap-4">
-          <!-- Streak -->
-          <div
-            v-if="streak.current > 0"
-            class="rounded-2xl px-4 py-4"
-            style="background: rgba(255, 138, 0, 0.06); border: 1px solid rgba(255, 138, 0, 0.1)"
-          >
-            <div class="flex items-center gap-2">
-              <span class="text-[22px] lg:text-[24px]">&#x1F525;</span>
-              <div>
-                <p class="text-[20px] leading-none font-extrabold text-[--accent] lg:text-[22px]">
-                  {{ streak.current }}
-                </p>
-                <p class="text-[10px] text-[--t3]">{{ t('plural.day', streak.current) }} {{ t('book.inARow') }}</p>
-              </div>
-            </div>
-            <div class="mt-2.5 flex gap-[5px]">
-              <div
-                v-for="i in 7"
-                :key="i"
-                class="h-3 w-3 rounded-full lg:h-3.5 lg:w-3.5"
-                :style="{
-                  background:
-                    i <= streak.current % 7 || (streak.current >= 7 && i <= 7) ? '#ff8a00' : 'rgba(255, 138, 0, 0.12)',
-                }"
-              />
-            </div>
-          </div>
-
-          <!-- Yearly Goal -->
-          <div
-            v-if="data.yearly_goal > 0"
-            class="rounded-2xl px-4 py-4"
-            style="background: rgba(52, 211, 153, 0.06); border: 1px solid rgba(52, 211, 153, 0.1)"
-          >
-            <div class="flex items-center gap-2">
-              <span class="text-[22px] lg:text-[24px]">&#x1F3AF;</span>
-              <div>
-                <p class="text-[20px] leading-none font-extrabold text-emerald-400 lg:text-[22px]">
-                  {{ data.this_year_done }}<span class="text-[13px] text-[--t3]">/{{ data.yearly_goal }}</span>
-                </p>
-                <p class="text-[10px] text-[--t3]">{{ t('dashboard.yearlyGoal') }}</p>
-              </div>
-            </div>
-            <div class="mt-2.5 h-1.5 overflow-hidden rounded-full" style="background: rgba(52, 211, 153, 0.1)">
-              <div
-                class="h-full rounded-full bg-emerald-400 transition-all duration-500"
-                :style="{ width: Math.min((data.this_year_done / data.yearly_goal) * 100, 100) + '%' }"
-              />
-            </div>
-          </div>
-
-          <!-- Stats fallback when no streak/goal -->
-          <div
-            v-if="streak.current === 0 && data.yearly_goal === 0"
-            class="col-span-2 flex justify-around rounded-2xl px-4 py-4 lg:col-span-1 lg:flex-col lg:gap-3"
-            style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.04)"
-          >
-            <div class="text-center lg:text-left">
-              <p class="text-[18px] font-extrabold text-[--t1]">{{ data.total_books }}</p>
-              <p class="text-[10px] text-[--t3]">{{ t('dashboard.statBooks') }}</p>
-            </div>
-            <div class="text-center lg:text-left">
-              <p class="text-[18px] font-extrabold text-emerald-400">{{ data.total_hours }}{{ t('common.unitH') }}</p>
-              <p class="text-[10px] text-[--t3]">{{ t('dashboard.statHours') }}</p>
-            </div>
-          </div>
-        </div>
       </div>
 
-      <!-- Second row: Other books + Recommendation -->
-      <div v-if="otherBooks.length || smartRecommendation" class="grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr]">
-        <!-- Other active books -->
-        <div v-if="otherBooks.length" class="flex flex-col gap-2">
-          <p class="text-[11px] font-semibold tracking-widest text-[--t3] uppercase">
-            {{ t('dashboard.alsoListening') }}
-          </p>
-          <div
-            v-for="book in otherBooks.slice(0, 4)"
-            :key="book.id"
-            class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 transition-colors hover:bg-white/[0.03]"
-            style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.03)"
-          >
-            <router-link :to="`/book/${book.id}`" class="h-11 w-11 flex-shrink-0 overflow-hidden rounded-lg">
-              <img
-                v-if="book.has_cover !== false && !coverErrors.has(book.id)"
-                :src="coverUrl(book.id)"
-                :alt="book.title"
-                class="h-full w-full object-cover"
-                @error="coverErrors.add(book.id)"
-              />
-              <div
-                v-else
-                class="flex h-full w-full items-center justify-center"
-                :style="{ background: catGradient(book.category ?? '') }"
-              >
-                <IconMusic :size="14" class="text-white/40" />
-              </div>
-            </router-link>
-            <router-link :to="`/book/${book.id}`" class="min-w-0 flex-1 no-underline">
-              <p class="truncate text-[13px] font-semibold text-[--t2]">{{ book.title }}</p>
-              <p class="text-[11px] text-[--t3]">
-                {{ book.progress }}%
-                <template v-if="book.duration_hours">
-                  · {{ fmtRemaining(book.duration_hours, book.progress) }}
-                </template>
-              </p>
-            </router-link>
-            <button
-              class="flex h-7 w-7 flex-shrink-0 cursor-pointer items-center justify-center rounded-full border-0 transition-colors hover:bg-white/10"
-              style="background: rgba(255, 255, 255, 0.06)"
-              :aria-label="t('player.play') + ': ' + book.title"
-              @click="playBook(book.id)"
-            >
-              <component
-                :is="nowPlayingId === book.id && isPlaying ? IconPause : IconPlay"
-                :size="10"
-                class="text-[--t2]"
-              />
-            </button>
-          </div>
-        </div>
-
-        <!-- Smart recommendation -->
+      <!-- Also listening -->
+      <div v-if="otherBooks.length" class="flex flex-col gap-2">
+        <p class="text-[11px] font-semibold tracking-widest text-[--t3] uppercase">
+          {{ t('dashboard.alsoListening') }}
+        </p>
         <div
-          v-if="smartRecommendation"
-          class="flex flex-col rounded-2xl px-4 py-4"
-          style="
-            background: linear-gradient(135deg, rgba(192, 132, 252, 0.06), rgba(96, 165, 250, 0.04));
-            border: 1px solid rgba(192, 132, 252, 0.08);
-          "
+          v-for="book in otherBooks.slice(0, 4)"
+          :key="book.id"
+          class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 transition-colors hover:bg-white/[0.03]"
+          style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.03)"
         >
-          <p class="text-[10px] font-semibold tracking-widest text-purple-400 uppercase">
-            &#x1F4A1; {{ t('dashboard.recommendation') }}
-          </p>
-          <div class="mt-3 flex flex-1 items-center gap-3">
-            <router-link
-              :to="`/book/${smartRecommendation.id}`"
-              class="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl"
+          <router-link :to="`/book/${book.id}`" class="h-11 w-11 flex-shrink-0 overflow-hidden rounded-lg">
+            <img
+              v-if="book.has_cover !== false && !coverErrors.has(book.id)"
+              :src="coverUrl(book.id)"
+              :alt="book.title"
+              class="h-full w-full object-cover"
+              @error="coverErrors.add(book.id)"
+            />
+            <div
+              v-else
+              class="flex h-full w-full items-center justify-center"
+              :style="{ background: catGradient(book.category ?? '') }"
             >
-              <img
-                v-if="smartRecommendation.has_cover && !coverErrors.has(String(smartRecommendation.id))"
-                :src="coverUrl(smartRecommendation.id)"
-                :alt="smartRecommendation.title"
-                class="h-full w-full object-cover"
-                @error="coverErrors.add(String(smartRecommendation.id))"
-              />
-              <div v-else class="flex h-full w-full items-center justify-center bg-[--card-hover]">
-                <IconMusic :size="18" class="text-[--t3]" />
-              </div>
-            </router-link>
-            <div class="min-w-0 flex-1">
-              <router-link
-                :to="`/book/${smartRecommendation.id}`"
-                class="line-clamp-2 text-[13px] font-bold text-[--t1] no-underline hover:text-purple-300"
-              >
-                {{ smartRecommendation.title }}
-              </router-link>
-              <p class="mt-0.5 text-[11px] text-[--t3]">{{ smartRecommendation.author }}</p>
-              <p v-if="heroBook" class="mt-1 text-[10px] text-purple-400">
-                {{ t('dashboard.similarTo', { title: heroBook.title }) }}
-              </p>
+              <IconMusic :size="14" class="text-white/40" />
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Time investment banner (free users who listened >1h) -->
-      <div
-        v-if="data.total_hours >= 1 && user?.plan !== 'premium' && !upgradeBannerDismissed"
-        class="flex items-center gap-3 rounded-xl px-4 py-3"
-        style="
-          background: linear-gradient(135deg, rgba(255, 138, 0, 0.08), rgba(255, 138, 0, 0.02));
-          border: 1px solid rgba(255, 138, 0, 0.15);
-        "
-      >
-        <span class="text-[20px]">⏱</span>
-        <div class="min-w-0 flex-1">
-          <p class="text-[12px] font-semibold text-[--t1]">{{ t('dashboard.valueMessage') }}</p>
-        </div>
-        <router-link to="/settings" class="shrink-0 text-[11px] font-semibold text-[--accent] no-underline">
-          {{ t('paywall.upgrade') }}
-        </router-link>
-      </div>
-
-      <!-- Recently Added -->
-      <div v-if="recentBooks.length" class="space-y-3">
-        <div class="flex items-center justify-between">
-          <h2 class="text-[15px] font-bold text-[--t1]">{{ t('dashboard.recentlyAdded') }}</h2>
-          <router-link
-            to="/library"
-            class="text-[12px] font-medium text-[--accent] no-underline hover:text-[--accent-2]"
-          >
-            {{ t('dashboard.seeAll') }}
           </router-link>
-        </div>
-        <div class="scrollbar-hide flex gap-3 overflow-x-auto pb-1">
-          <router-link
-            v-for="(book, i) in recentBooks"
-            :key="book.id"
-            :to="`/book/${book.id}`"
-            class="stagger-item group w-28 flex-shrink-0 no-underline"
-            :style="{ animationDelay: `${i * 50}ms` }"
-          >
-            <div class="mb-2 aspect-square overflow-hidden rounded-xl">
-              <img
-                v-if="book.has_cover"
-                :src="coverUrl(book.id)"
-                :alt="book.title"
-                class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
-                @error="coverErrors.add(book.id)"
-              />
-              <div
-                v-else
-                class="flex h-full w-full items-center justify-center"
-                :style="{ background: catGradient(book.category ?? '') }"
-              >
-                <IconMusic :size="24" class="text-white/40" />
-              </div>
-            </div>
-            <p class="line-clamp-2 text-[11px] leading-tight font-medium text-[--t2] group-hover:text-[--t1]">
-              {{ book.title }}
+          <router-link :to="`/book/${book.id}`" class="min-w-0 flex-1 no-underline">
+            <p class="truncate text-[13px] font-semibold text-[--t2]">{{ book.title }}</p>
+            <p class="text-[11px] text-[--t3]">
+              {{ book.progress }}%
+              <template v-if="book.duration_hours"> · {{ fmtRemaining(book.duration_hours, book.progress) }} </template>
             </p>
-            <p v-if="book.author" class="mt-0.5 truncate text-[10px] text-[--t3]">{{ book.author }}</p>
           </router-link>
+          <button
+            class="flex h-7 w-7 flex-shrink-0 cursor-pointer items-center justify-center rounded-full border-0 transition-colors hover:bg-white/10"
+            style="background: rgba(255, 255, 255, 0.06)"
+            :aria-label="t('player.play') + ': ' + book.title"
+            @click="playBook(book.id)"
+          >
+            <component
+              :is="nowPlayingId === book.id && isPlaying ? IconPause : IconPlay"
+              :size="10"
+              class="text-[--t2]"
+            />
+          </button>
         </div>
       </div>
-
-      <!-- Activity & Goal widgets (existing, for users who scroll) -->
-      <div v-if="hasActivity" class="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <div class="lg:col-span-2">
-          <ActivityHeatmap :data="data.heatmap" />
-        </div>
-        <div>
-          <YearlyGoal :done="data.this_year_done" :goal="data.yearly_goal" />
-        </div>
-      </div>
-
-      <!-- Recent activity -->
-      <RecentActivity :entries="data.recent" />
     </div>
   </div>
 </template>

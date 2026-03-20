@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { usePlayer } from '../../composables/usePlayer'
-import { trackDisplayName as _trackDisplayName } from '../../utils/format'
-import { IconPlay, IconPause, IconXCircle, IconForward30, IconRewind15 } from '../shared/icons'
+import { IconPlay, IconPause, IconForward30, IconRewind15 } from '../shared/icons'
 
 const { t } = useI18n()
 const {
@@ -10,26 +9,18 @@ const {
   isPlaying,
   isPlayerVisible,
   isFullscreen,
-  currentTrack,
-  currentTrackIndex,
   isLoading,
   overallProgress,
   totalElapsed,
   totalDuration,
-  playingOffline,
   togglePlay,
   skipForward,
   skipBackward,
-  closePlayer,
   openFullscreen,
   formatTime,
   audioError,
   retryAudio,
 } = usePlayer()
-
-function trackDisplayName(filename: string, index: number): string {
-  return _trackDisplayName(filename, index, t)
-}
 </script>
 
 <template>
@@ -62,25 +53,11 @@ function trackDisplayName(filename: string, index: number): string {
       >
         <!-- Info (clickable) -->
         <button class="min-w-0 flex-1 cursor-pointer border-0 bg-transparent p-0 text-left" @click="openFullscreen">
-          <p class="flex items-center gap-1.5 truncate text-[13px] leading-tight font-semibold text-[--t1]">
-            <span
-              v-if="playingOffline"
-              class="h-2 w-2 shrink-0 rounded-full bg-emerald-400"
-              style="box-shadow: 0 0 6px rgba(52, 211, 153, 0.5)"
-              :title="t('player.offline')"
-            />
+          <p class="truncate text-[13px] leading-tight font-semibold text-[--t1]">
             {{ currentBook.title }}
           </p>
-          <p v-if="currentBook?.author" class="line-clamp-1 text-[11px] text-[--t3]">
-            {{ currentBook.author }}
-          </p>
-          <p class="mt-0.5 flex items-center gap-1.5 truncate text-[11px] leading-tight text-[--t3]">
-            <span class="truncate">{{
-              currentTrack ? trackDisplayName(currentTrack.filename, currentTrackIndex) : ''
-            }}</span>
-            <span v-if="totalDuration > 0" class="shrink-0 tabular-nums">
-              {{ formatTime(totalElapsed) }} / {{ formatTime(totalDuration) }}
-            </span>
+          <p class="mt-0.5 text-[11px] text-[--t3] tabular-nums">
+            {{ formatTime(totalElapsed) }} / {{ formatTime(totalDuration) }}
           </p>
         </button>
 
@@ -122,15 +99,6 @@ function trackDisplayName(filename: string, index: number): string {
           @click="skipForward(30)"
         >
           <IconForward30 :size="18" />
-        </button>
-
-        <!-- Close -->
-        <button
-          class="shrink-0 cursor-pointer border-0 bg-transparent p-1.5 text-[--t3] transition-colors hover:text-[--t1]"
-          :aria-label="t('player.closePlayer')"
-          @click="closePlayer"
-        >
-          <IconXCircle :size="18" />
         </button>
       </div>
     </div>
