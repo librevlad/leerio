@@ -8,6 +8,7 @@ import { useDownloads } from '../composables/useDownloads'
 import { useLocalBooks } from '../composables/useLocalBooks'
 import { useOfflineCache } from '../composables/useOfflineCache'
 import { useAuth } from '../composables/useAuth'
+import { useUserBooks } from '../composables/useUserBooks'
 import type { SessionStats } from '../types'
 import { IconTrash, IconDownload } from '../components/shared/icons'
 import { useLocale } from '../composables/useLocale'
@@ -22,6 +23,7 @@ const { t } = useI18n()
 const { currentLocale, setLocale, LOCALES } = useLocale()
 const dl = useDownloads()
 const { localBooks } = useLocalBooks()
+const { userBooks, loadUserBooks } = useUserBooks()
 const cache = useOfflineCache()
 const { user, isAdmin, logout } = useAuth()
 const cacheBytes = ref(cache.cacheSize())
@@ -65,6 +67,7 @@ onMounted(async () => {
     totalDone.value = dash.value.total_done ?? 0
   }
   statsLoading.value = false
+  loadUserBooks().catch(() => {})
 })
 
 async function saveGoal() {
@@ -359,8 +362,8 @@ async function handleLogout() {
             </div>
             <div v-if="user.plan !== 'premium'" class="settings-row">
               <span class="settings-row-label">{{ t('settings.booksCount') }}</span>
-              <span class="text-[12px]" :class="(totalBooks ?? 0) >= 10 ? 'font-bold text-[--accent]' : 'text-[--t3]'"
-                >{{ totalBooks ?? 0 }} / 10</span
+              <span class="text-[12px]" :class="userBooks.length >= 10 ? 'font-bold text-[--accent]' : 'text-[--t3]'"
+                >{{ userBooks.length }} / 10</span
               >
             </div>
             <div v-if="user.plan !== 'premium'" class="settings-row">
