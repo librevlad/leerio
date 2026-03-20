@@ -64,18 +64,58 @@ async function syncAll(local: ReturnType<typeof useLocalData>) {
 }
 
 async function syncStatuses(local: ReturnType<typeof useLocalData>) {
+  // Push local changes to server first
+  const localStatuses = await local.getAllBookStatuses()
   const serverData = await api.getAllBookStatuses()
+
+  for (const [bookId, localEntry] of Object.entries(localStatuses)) {
+    const serverEntry = serverData[bookId]
+    // Push if: server has no status, OR local is newer
+    if (
+      !serverEntry ||
+      !serverEntry.status ||
+      (localEntry.updated && serverEntry.updated && localEntry.updated > serverEntry.updated)
+    ) {
+      try {
+        await api.setBookStatus(bookId, localEntry.status)
+      } catch {
+        /* network error — will retry next sync */
+      }
+    }
+  }
+
+  // Then pull fresh server data
+  const freshData = await api.getAllBookStatuses()
   const mapped: Record<string, { status: string; updated: string }> = {}
-  for (const [k, v] of Object.entries(serverData)) {
-    if (v.status) mapped[k] = { status: v.status, updated: v.updated ?? new Date().toISOString() }
+  for (const [k, v] of Object.entries(freshData)) {
+    if (v && v.status) mapped[k] = { status: v.status, updated: v.updated ?? new Date().toISOString() }
   }
   await local.importStatuses(mapped)
 }
 
 async function syncProgress(local: ReturnType<typeof useLocalData>) {
+  // Push local progress to server first
+  const localProgress = await local.getAllProgress()
   const serverData = await api.getAllProgress()
+
+  for (const [bookId, localPct] of Object.entries(localProgress)) {
+    const serverEntry = serverData[bookId]
+    // Push if local progress is higher (progress only goes up)
+    if (!serverEntry || localPct > serverEntry.pct) {
+      try {
+        await api.setProgress(bookId, localPct)
+      } catch {
+        /* will retry next sync */
+      }
+    }
+  }
+
+  // Then pull fresh server data
+  const freshData = await api.getAllProgress()
   const mapped: Record<string, number> = {}
-  for (const [k, v] of Object.entries(serverData)) mapped[k] = v.pct
+  for (const [k, v] of Object.entries(freshData)) {
+    if (v && typeof v.pct === 'number' && isFinite(v.pct)) mapped[k] = v.pct
+  }
   await local.importProgress(mapped)
 }
 
