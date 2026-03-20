@@ -757,6 +757,9 @@ def _sync_books_from_filesystem():
 
     conn = _get_conn()
     existing_slugs = {r[0] for r in conn.execute("SELECT slug FROM books").fetchall()}
+    existing_prefixes = {
+        r[0] for r in conn.execute("SELECT s3_prefix FROM books WHERE s3_prefix IS NOT NULL AND s3_prefix != ''").fetchall()
+    }
     inserted = 0
 
     for cat in CATEGORIES:
@@ -767,9 +770,14 @@ def _sync_books_from_filesystem():
             if not book_dir.is_dir():
                 continue
             folder = book_dir.name
+            s3_prefix = f"{cat}/{folder}"
+
+            # Deduplicate by s3_prefix (folder path) — prevents double insert on re-sync
+            if s3_prefix in existing_prefixes:
+                continue
+
             author, title, reader = parse_folder_name(folder)
             slug = make_slug(title, author)
-            # Deduplicate: append reader to slug if same title+author already exists
             if slug in existing_slugs and reader:
                 slug = f"{slug}-{make_slug(reader)}"
 

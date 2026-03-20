@@ -3,6 +3,7 @@ export const STORAGE = {
   USER: 'leerio_user',
   ONBOARDED: 'leerio_onboarded',
   PLAYBACK_RATE: 'leerio_playback_rate',
+  VOLUME: 'leerio_volume',
   LOCALE: 'leerio_locale',
   OFFLINE_QUEUE: 'leerio_offline_queue',
   LOCAL_BOOKS: 'leerio_local_books',

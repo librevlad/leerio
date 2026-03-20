@@ -50,6 +50,12 @@ const router = createRouter({
       redirect: '/my-library',
     },
     {
+      path: '/upload',
+      name: 'upload',
+      component: () => import('./views/UploadView.vue'),
+      meta: { title: 'Upload' },
+    },
+    {
       path: '/settings',
       name: 'settings',
       component: () => import('./views/SettingsView.vue'),

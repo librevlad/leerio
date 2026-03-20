@@ -20,7 +20,7 @@ export function useCountUp(target: Ref<number | null>, options: { duration?: num
     target,
     (val) => {
       cancel()
-      if (val === null || val === undefined) return
+      if (val === null || val === undefined || !isFinite(val)) return
       const start = performance.now()
 
       function tick(now: number) {

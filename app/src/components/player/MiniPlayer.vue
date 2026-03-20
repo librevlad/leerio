@@ -13,6 +13,8 @@ const {
   overallProgress,
   totalElapsed,
   totalDuration,
+  currentTime,
+  duration,
   togglePlay,
   skipForward,
   skipBackward,
@@ -57,7 +59,7 @@ const {
             {{ currentBook.title }}
           </p>
           <p class="mt-0.5 text-[11px] text-[--t3] tabular-nums">
-            {{ formatTime(totalElapsed) }} / {{ formatTime(totalDuration) }}
+            {{ formatTime(totalDuration > 0 ? totalElapsed : currentTime) }} / {{ formatTime(totalDuration > 0 ? totalDuration : duration) }}
           </p>
         </button>
 

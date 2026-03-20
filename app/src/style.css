@@ -400,6 +400,18 @@ button:not(.btn):not(:disabled):active {
   transform: translateX(80px);
 }
 
+/* ── Offline bar ─────────────────────────────────────────────────────── */
+
+.offline-bar-enter-active,
+.offline-bar-leave-active {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+.offline-bar-enter-from,
+.offline-bar-leave-to {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+
 /* ── Skeleton ─────────────────────────────────────────────────────────── */
 
 .skeleton {

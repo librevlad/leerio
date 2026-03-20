@@ -90,10 +90,10 @@ describe('useBooks', () => {
     expect(b.loading.value).toBe(false)
   })
 
-  it('load() sets books to empty on error', async () => {
+  it('load() preserves existing books on error', async () => {
     vi.mocked(api.getBooks).mockRejectedValue(new Error('fail'))
     const b = useBooks()
-    b.books.value = [
+    const existing = [
       {
         id: '1',
         folder: '',
@@ -107,6 +107,16 @@ describe('useBooks', () => {
         note: '',
       },
     ]
+    b.books.value = existing
+    await b.load()
+    // Books should be preserved on error, not wiped
+    expect(b.books.value).toEqual(existing)
+  })
+
+  it('load() keeps empty array if no prior data on error', async () => {
+    vi.mocked(api.getBooks).mockRejectedValue(new Error('fail'))
+    const b = useBooks()
+    b.books.value = []
     await b.load()
     expect(b.books.value).toEqual([])
   })

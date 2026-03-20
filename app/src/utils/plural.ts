@@ -8,6 +8,7 @@
  * inline pluralization with explicit forms is simpler than defining i18n message keys.
  */
 export function plural(n: number, one: string, few: string, many: string): string {
+  if (!isFinite(n)) return many
   const abs = Math.abs(n)
   const mod10 = abs % 10
   const mod100 = abs % 100

@@ -153,7 +153,7 @@ const trackLabel = computed(() => {
 
 const seekPercent = computed(() => {
   if (!duration.value) return 0
-  return (currentTime.value / duration.value) * 100
+  return Math.min(100, Math.max(0, (currentTime.value / duration.value) * 100))
 })
 
 const remainingTime = computed(() => {
@@ -171,6 +171,7 @@ function goToBook() {
 
 function onSeekInput(e: Event) {
   const val = parseFloat((e.target as HTMLInputElement).value)
+  if (!isFinite(val)) return
   seekPreview.value = val
   if (!isSeeking.value) {
     isSeeking.value = true
@@ -182,6 +183,7 @@ function onSeekChange(e: Event) {
   const val = parseFloat((e.target as HTMLInputElement).value)
   isSeeking.value = false
   seekPreview.value = null
+  if (!isFinite(val)) return
   endSeek(val)
 }
 
