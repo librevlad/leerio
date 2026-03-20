@@ -304,8 +304,23 @@ def init_db():
             """
         )
 
+        # --- Verification codes ---
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS verification_codes (
+                email TEXT NOT NULL,
+                code TEXT NOT NULL,
+                type TEXT NOT NULL,
+                attempts INTEGER DEFAULT 0,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                expires_at TEXT NOT NULL
+            )
+            """
+        )
+
         conn.commit()
         _migrate_password_column(conn)
+        _migrate_active_column(conn)
         _migrate_categories(conn)
         _migrate_history_titles(conn)
         _ensure_seed_user(conn)
@@ -362,6 +377,16 @@ def _migrate_password_column(conn: sqlite3.Connection):
         conn.execute("ALTER TABLE users ADD COLUMN password_hash TEXT")
         conn.commit()
         logger.info("Added password_hash column to users table")
+
+
+def _migrate_active_column(conn: sqlite3.Connection):
+    """Add active column if missing (existing DBs)."""
+    try:
+        conn.execute("ALTER TABLE users ADD COLUMN active INTEGER DEFAULT 1")
+        conn.commit()
+        logger.info("Added active column to users table")
+    except Exception:
+        pass  # Column already exists
 
 
 def _hash_password(password: str) -> str:
@@ -474,6 +499,8 @@ def verify_user_password(email: str, password: str) -> dict | None:
     if not row:
         return None
     user = dict(row)
+    if not user.get("active", 1):
+        return None  # Inactive users can't login
     if not user.get("password_hash"):
         return None
     if not _verify_password(password, user["password_hash"]):
@@ -494,6 +521,72 @@ def get_user_by_id(user_id: str) -> dict | None:
     conn = _get_conn()
     row = conn.execute("SELECT * FROM users WHERE user_id = ?", (user_id,)).fetchone()
     return dict(row) if row else None
+
+
+def register_user(email: str, name: str, password: str) -> str:
+    """Create inactive user with hashed password. Returns user_id."""
+    user_id = secrets.token_hex(8)
+    pw_hash = _hash_password(password)
+    conn = _get_conn()
+    conn.execute(
+        "INSERT INTO users (user_id, email, name, password_hash, role, plan, active) VALUES (?, ?, ?, ?, 'user', 'free', 0)",
+        (user_id, email, name, pw_hash),
+    )
+    conn.commit()
+    return user_id
+
+
+def activate_user(email: str):
+    """Mark user as active (email verified)."""
+    conn = _get_conn()
+    conn.execute("UPDATE users SET active = 1 WHERE email = ?", (email,))
+    conn.commit()
+
+
+def create_verification_code(email: str, code_type: str) -> str:
+    """Generate 6-digit code, store in DB, return code string."""
+    code = str(secrets.randbelow(900000) + 100000)
+    expires = (datetime.utcnow() + timedelta(minutes=15)).isoformat()
+    conn = _get_conn()
+    conn.execute("DELETE FROM verification_codes WHERE expires_at < datetime('now')")
+    conn.execute("DELETE FROM verification_codes WHERE email = ? AND type = ?", (email, code_type))
+    conn.execute(
+        "INSERT INTO verification_codes (email, code, type, expires_at) VALUES (?, ?, ?, ?)",
+        (email, code, code_type, expires),
+    )
+    conn.commit()
+    return code
+
+
+def verify_code(email: str, code: str, code_type: str) -> bool:
+    """Check code validity. Increments attempts on failure. Returns True if valid."""
+    conn = _get_conn()
+    row = conn.execute(
+        "SELECT code, attempts FROM verification_codes WHERE email = ? AND type = ? AND expires_at > datetime('now')",
+        (email, code_type),
+    ).fetchone()
+    if not row:
+        return False
+    if row[1] >= 5:
+        return False
+    if row[0] != code:
+        conn.execute(
+            "UPDATE verification_codes SET attempts = attempts + 1 WHERE email = ? AND type = ?",
+            (email, code_type),
+        )
+        conn.commit()
+        return False
+    conn.execute("DELETE FROM verification_codes WHERE email = ? AND type = ?", (email, code_type))
+    conn.commit()
+    return True
+
+
+def update_user_password(email: str, password: str):
+    """Update password hash for existing user."""
+    pw_hash = _hash_password(password)
+    conn = _get_conn()
+    conn.execute("UPDATE users SET password_hash = ? WHERE email = ?", (pw_hash, email))
+    conn.commit()
 
 
 def create_or_update_user(email: str, name: str, picture: str) -> dict:
