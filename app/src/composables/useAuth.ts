@@ -149,6 +149,81 @@ export function useAuth() {
     localStorage.removeItem(STORAGE.USER)
   }
 
+  async function register(name: string, email: string, password: string): Promise<void> {
+    const res = await fetch(apiUrl('/auth/register'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ name, email, password }),
+    })
+    if (!res.ok) {
+      const text = await res.text().catch(() => res.statusText)
+      let detail = text
+      try {
+        const json = JSON.parse(text)
+        if (json.detail) detail = json.detail
+      } catch { /* not JSON */ }
+      throw new Error(`${res.status}: ${detail}`)
+    }
+  }
+
+  async function verifyEmail(email: string, code: string): Promise<User> {
+    const res = await fetch(apiUrl('/auth/verify-email'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email, code }),
+    })
+    if (!res.ok) {
+      const text = await res.text().catch(() => res.statusText)
+      let detail = text
+      try {
+        const json = JSON.parse(text)
+        if (json.detail) detail = json.detail
+      } catch { /* not JSON */ }
+      throw new Error(`${res.status}: ${detail}`)
+    }
+    const data = await res.json()
+    user.value = data
+    checked.value = true
+    loading.value = false
+    try {
+      localStorage.setItem(STORAGE.USER, JSON.stringify(data))
+    } catch { /* full */ }
+    return data
+  }
+
+  async function forgotPassword(email: string): Promise<void> {
+    const res = await fetch(apiUrl('/auth/forgot-password'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email }),
+    })
+    if (!res.ok) {
+      const text = await res.text().catch(() => res.statusText)
+      throw new Error(text)
+    }
+  }
+
+  async function resetPassword(email: string, code: string, password: string): Promise<void> {
+    const res = await fetch(apiUrl('/auth/reset-password'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email, code, password }),
+    })
+    if (!res.ok) {
+      const text = await res.text().catch(() => res.statusText)
+      let detail = text
+      try {
+        const json = JSON.parse(text)
+        if (json.detail) detail = json.detail
+      } catch { /* not JSON */ }
+      throw new Error(`${res.status}: ${detail}`)
+    }
+  }
+
   return {
     user,
     loading,
@@ -159,5 +234,9 @@ export function useAuth() {
     loginWithGoogle,
     loginWithPassword,
     logout,
+    register,
+    verifyEmail,
+    forgotPassword,
+    resetPassword,
   }
 }

@@ -132,6 +132,7 @@ import type {
   PlaybackPosition,
   BookStatusMap,
   BookStatusEntry,
+  User,
   UserBook,
   TTSVoice,
   TTSEngine,
@@ -233,6 +234,14 @@ export const api = {
 
   // Auth
   logout: () => post<{ ok: boolean }>('/auth/logout'),
+
+  // Auth registration
+  register: (name: string, email: string, password: string) =>
+    post<{ ok: boolean }>('/auth/register', { name, email, password }),
+  verifyEmail: (email: string, code: string) => post<User>('/auth/verify-email', { email, code }),
+  forgotPassword: (email: string) => post<{ ok: boolean }>('/auth/forgot-password', { email }),
+  resetPassword: (email: string, code: string, password: string) =>
+    post<{ ok: boolean }>('/auth/reset-password', { email, code, password }),
 
   // User Books (personal library)
   getUserBooks: () => get<UserBook[]>('/user/books'),
