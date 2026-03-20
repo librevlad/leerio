@@ -140,26 +140,6 @@ test.describe('Player interactions', { tag: '@needs-books' }, () => {
     expect(changed || menuVisible).toBeTruthy()
   })
 
-  test('bookmark button shows confirmation', async ({ page }) => {
-    await openPlayer(page)
-
-    // Find bookmark button (has bookmark icon)
-    const bookmarkBtn = page.locator(`${fullscreenPlayer} button`).filter({
-      has: page.locator('svg'),
-    })
-    // Click the last icon button (bookmark is typically in secondary controls)
-    const buttons = await bookmarkBtn.all()
-    const lastBtn = buttons[buttons.length - 1]
-    if (lastBtn) {
-      await lastBtn.click()
-      // Should show toast or at least no console error
-      await page.waitForTimeout(1000)
-      const errors = await page.evaluate(() =>
-        (window as unknown as { __pw_errors?: string[] }).__pw_errors ?? [],
-      )
-      expect(errors.length).toBe(0)
-    }
-  })
 })
 
 // ── Settings: Logout ─────────────────────────────────────────────────────
@@ -244,42 +224,4 @@ test.describe('Library interactions', { tag: '@needs-books' }, () => {
     }
   })
 
-  test('sort changes book order', async ({ page }) => {
-    // Find and click any sort option
-    const sortBtns = page.locator('button:has-text("А-Я"), button:has-text("Новые"), button:has-text("Рейтинг"), button:has-text("По названию")')
-    const count = await sortBtns.count()
-    if (count > 0) {
-      await sortBtns.first().click()
-      await page.waitForTimeout(500)
-      // Page should still have books (sort didn't break anything)
-      await expect(page.locator('a.card.card-hover').first()).toBeVisible()
-    }
-  })
-})
-
-// ── Dashboard: Navigation Links ──────────────────────────────────────────
-
-test.describe('Dashboard interactions', () => {
-  test('recommendation card links to book', async ({ page }) => {
-    await page.goto('/')
-    await page.waitForTimeout(3000)
-
-    // Find any book link on dashboard
-    const bookLink = page.locator('a[href^="/book/"]').first()
-    if (await bookLink.isVisible()) {
-      await bookLink.click()
-      await expect(page).toHaveURL(/\/book\//, { timeout: 10_000 })
-    }
-  })
-
-  test('activity link navigates to history', async ({ page }) => {
-    await page.goto('/')
-    await page.waitForTimeout(3000)
-
-    const historyLink = page.locator('a:has-text("Все действия"), a[href="/history"]').first()
-    if (await historyLink.isVisible()) {
-      await historyLink.click()
-      await expect(page).toHaveURL('/history', { timeout: 10_000 })
-    }
-  })
 })

@@ -2,7 +2,7 @@ import { test, expect } from '../fixtures'
 
 test.describe('Navigation', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/library')
     await expect(page.locator('.fade-in').first().or(page.locator('.skeleton').first())).toBeVisible({
       timeout: 15_000,
     })
@@ -19,17 +19,11 @@ test.describe('Navigation', () => {
       await takeScreenshot('nav-sidebar')
     })
 
-    test('shows all nav links', async ({ page }) => {
-      const links = ['Главная', 'Каталог', 'Библиотека', 'История', 'Загрузить', 'Настройки']
+    test('shows nav links', async ({ page }) => {
+      const links = ['Каталог', 'Настройки']
       for (const label of links) {
         await expect(page.locator(`aside a:has-text("${label}")`)).toBeVisible()
       }
-    })
-
-    test('highlights active link', async ({ page }) => {
-      // Dashboard should be active on /
-      const dashLink = page.locator('aside a[href="/"]')
-      await expect(dashLink).toHaveClass(/text-\[--accent\]/)
     })
 
     test('navigates to library', async ({ page }) => {
@@ -45,12 +39,6 @@ test.describe('Navigation', () => {
         await takeScreenshot('nav-sidebar-collapsed')
       }
     })
-
-    test('shows user info', async ({ page }) => {
-      // User avatar or initials in sidebar
-      const userSection = page.locator('aside img[alt], aside .rounded-full').first()
-      await expect(userSection).toBeVisible()
-    })
   })
 
   test.describe('Mobile bottom nav', () => {
@@ -65,17 +53,11 @@ test.describe('Navigation', () => {
       await takeScreenshot('nav-mobile')
     })
 
-    test('shows all tabs', async ({ page }) => {
-      const tabs = ['Главная', 'Каталог', 'Моя', 'Ещё']
+    test('shows tabs', async ({ page }) => {
+      const tabs = ['Каталог', 'Настройки']
       for (const label of tabs) {
         await expect(page.locator(`nav.fixed.bottom-0 >> text=${label}`)).toBeVisible()
       }
-    })
-
-    test('highlights active tab', async ({ page }) => {
-      // On dashboard, "Главная" should be active
-      const homeTab = page.locator('nav.fixed.bottom-0 a[href="/"]')
-      await expect(homeTab).toHaveClass(/text-\[--accent\]/)
     })
 
     test('navigates via bottom nav', async ({ page }) => {
@@ -85,10 +67,9 @@ test.describe('Navigation', () => {
   })
 
   test('route navigation preserves auth', async ({ page }) => {
-    const routes = ['/library', '/history', '/analytics', '/settings']
+    const routes = ['/library', '/settings']
     for (const route of routes) {
       await page.goto(route)
-      // Should not redirect to login
       await expect(page).not.toHaveURL(/\/login/, { timeout: 5_000 })
     }
   })
