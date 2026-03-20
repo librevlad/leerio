@@ -6,7 +6,7 @@ import { useLocalBooks } from '@/composables/useLocalBooks'
 import { useDownloads } from '@/composables/useDownloads'
 import { useFileScanner } from '@/composables/useFileScanner'
 import { useToast } from '@/composables/useToast'
-import { userBookCoverUrl, coverUrl } from '@/api'
+import { api, userBookCoverUrl, coverUrl } from '@/api'
 import {
   IconTrash,
   IconMusic,
@@ -15,6 +15,7 @@ import {
   IconPlus,
   IconCheck,
   IconSmartphone,
+  IconUpload,
 } from '@/components/shared/icons'
 import SourceBadge from '@/components/shared/SourceBadge.vue'
 import ProgressBar from '@/components/shared/ProgressBar.vue'
@@ -23,7 +24,7 @@ import type { TTSJob } from '@/types'
 const { t } = useI18n()
 const toast = useToast()
 const { userBooks, ttsJobs, loading: ubLoading, loadUserBooks, loadTTSJobs, deleteBook, pollJob } = useUserBooks()
-const { localBooks, removeLocalBook } = useLocalBooks()
+const { localBooks, removeLocalBook, getLocalBook, getLocalAudioUrl } = useLocalBooks()
 const downloads = useDownloads()
 const { scannedBooks, scanning, scan: scanDevice } = useFileScanner()
 
@@ -171,6 +172,54 @@ const coverPatterns: Record<string, string> = {
   downloaded: 'radial-gradient(circle at 80% 20%, rgba(255,255,255,0.12) 0%, transparent 50%)',
   local: 'radial-gradient(circle at 20% 80%, rgba(255,255,255,0.12) 0%, transparent 50%)',
   uploaded: 'radial-gradient(circle at 70% 70%, rgba(255,255,255,0.12) 0%, transparent 50%)',
+}
+
+const uploadingToCloud = ref<string | null>(null)
+
+async function uploadToCloud(item: UnifiedItem) {
+  if (!item.id.startsWith('lb:') || uploadingToCloud.value) return
+
+  const book = getLocalBook(item.id)
+  if (!book || !book.tracks.length) {
+    toast.error('Книга не найдена')
+    return
+  }
+
+  uploadingToCloud.value = item.id
+
+  try {
+    const files: File[] = []
+    for (const track of book.tracks) {
+      const url = await getLocalAudioUrl(item.id, track.index)
+      if (!url) continue
+      const res = await fetch(url)
+      const blob = await res.blob()
+      files.push(new File([blob], track.filename || `chapter-${track.index + 1}.mp3`, { type: 'audio/mpeg' }))
+    }
+
+    if (!files.length) {
+      toast.error('Нет треков для загрузки')
+      return
+    }
+
+    const formData = new FormData()
+    formData.append('title', book.title)
+    formData.append('author', book.author)
+    for (const file of files) {
+      formData.append('files', file)
+    }
+
+    await api.uploadBook(formData)
+
+    await removeLocalBook(item.id)
+
+    toast.success('Книга загружена в облако')
+    await loadUserBooks()
+  } catch (e) {
+    toast.error(e instanceof Error ? e.message : 'Ошибка загрузки')
+  } finally {
+    uploadingToCloud.value = null
+  }
 }
 </script>
 
@@ -331,13 +380,29 @@ const coverPatterns: Record<string, string> = {
                 <IconMusic :size="12" />
                 {{ item.trackCount }} {{ t('plural.track', item.trackCount) }}
               </span>
-              <button
-                class="rounded-full p-1.5 text-[--t3] opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/15 hover:text-red-400"
-                :aria-label="t('myLibrary.deleteAriaLabel')"
-                @click.stop="handleDelete(item)"
-              >
-                <IconTrash :size="14" />
-              </button>
+              <div class="flex items-center gap-1">
+                <div
+                  v-if="uploadingToCloud === item.id"
+                  class="flex h-7 items-center text-[11px] text-[--accent]"
+                >
+                  Загрузка...
+                </div>
+                <button
+                  v-else-if="item.id.startsWith('lb:')"
+                  class="rounded-full p-1.5 text-[--t3] opacity-0 transition-all group-hover:opacity-100 hover:bg-white/10 hover:text-[--accent]"
+                  title="В облако"
+                  @click.prevent="uploadToCloud(item)"
+                >
+                  <IconUpload :size="14" />
+                </button>
+                <button
+                  class="rounded-full p-1.5 text-[--t3] opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/15 hover:text-red-400"
+                  :aria-label="t('myLibrary.deleteAriaLabel')"
+                  @click.stop="handleDelete(item)"
+                >
+                  <IconTrash :size="14" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
