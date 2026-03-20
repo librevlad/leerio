@@ -55,7 +55,7 @@ test.describe('Login page', () => {
     await page.locator('input[type="password"]').fill(password)
     await page.locator('button[type="submit"]:has-text("Войти")').click()
 
-    await expect(page).toHaveURL('/', { timeout: 10_000 })
+    await expect(page).toHaveURL('/library', { timeout: 10_000 })
   })
 
   test('unauthenticated user can access settings (guest mode)', async ({ page }) => {
