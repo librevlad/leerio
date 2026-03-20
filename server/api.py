@@ -56,6 +56,7 @@ from .core import (
     normalize,
     reading_velocity,
 )
+from .email import send_reset_code, send_verification_code
 from .ingest_api import router as ingest_router
 from .payments import router as payments_router
 from .storage import get_presigned_url, get_s3_object, s3_object_exists
@@ -301,6 +302,27 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class RegisterRequest(BaseModel):
+    name: str
+    email: str
+    password: str
+
+
+class VerifyEmailRequest(BaseModel):
+    email: str
+    code: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    email: str
+    code: str
+    password: str
+
+
 class BookStatusRequest(BaseModel):
     status: str
 
@@ -473,6 +495,78 @@ def auth_logout():
     response = JSONResponse(content={"ok": True})
     clear_auth_cookie(response)
     return response
+
+
+@app.post("/api/auth/register")
+@limiter.limit("5/minute")
+async def auth_register(request: Request, body: RegisterRequest):
+    name = body.name.strip()
+    email = body.email.strip().lower()
+    password = body.password
+
+    if not name or len(name) > 100:
+        raise HTTPException(400, "Name is required (max 100 chars)")
+    if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", email) or len(email) > 255:
+        raise HTTPException(400, "Invalid email format")
+    if len(password) < 8 or len(password) > 128:
+        raise HTTPException(400, "Password must be 8-128 characters")
+
+    existing = db.get_user_by_email(email)
+    if existing and existing.get("active", 1):
+        raise HTTPException(409, "Email already registered")
+
+    if existing:
+        db.update_user_password(email, password)
+    else:
+        db.register_user(email, name, password)
+
+    code = db.create_verification_code(email, "email_verify")
+    await send_verification_code(email, code)
+    return {"ok": True}
+
+
+@app.post("/api/auth/verify-email")
+@limiter.limit("10/minute")
+async def auth_verify_email(request: Request, body: VerifyEmailRequest, response: Response):
+    email = body.email.strip().lower()
+    if not db.verify_code(email, body.code, "email_verify"):
+        raise HTTPException(400, "Invalid or expired code")
+
+    db.activate_user(email)
+    user = db.get_user_by_email(email)
+    if not user:
+        raise HTTPException(400, "User not found")
+
+    set_auth_cookie(response, user["user_id"])
+    return {k: user[k] for k in ("user_id", "email", "name", "picture", "role", "plan") if k in user}
+
+
+@app.post("/api/auth/forgot-password")
+@limiter.limit("5/minute")
+async def auth_forgot_password(request: Request, body: ForgotPasswordRequest):
+    email = body.email.strip().lower()
+    user = db.get_user_by_email(email)
+    if user and user.get("active", 1):
+        code = db.create_verification_code(email, "password_reset")
+        await send_reset_code(email, code)
+    return {"ok": True}
+
+
+@app.post("/api/auth/reset-password")
+@limiter.limit("5/minute")
+async def auth_reset_password(request: Request, body: ResetPasswordRequest, response: Response):
+    email = body.email.strip().lower()
+    if len(body.password) < 8 or len(body.password) > 128:
+        raise HTTPException(400, "Password must be 8-128 characters")
+
+    if not db.verify_code(email, body.code, "password_reset"):
+        raise HTTPException(400, "Invalid or expired code")
+
+    db.update_user_password(email, body.password)
+    user = db.get_user_by_email(email)
+    if user:
+        set_auth_cookie(response, user["user_id"])
+    return {"ok": True}
 
 
 # ── Admin: Allowed Emails ──────────────────────────────────────────────────
