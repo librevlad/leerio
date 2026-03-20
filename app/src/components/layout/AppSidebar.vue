@@ -34,9 +34,7 @@ const sidebarBook = computed(() => {
 const publicLinks = computed(() => [{ path: '/library', label: t('nav.catalog'), icon: IconLibrary }])
 
 const mainLinks = computed(() => [
-  { path: '/', label: t('nav.home'), icon: IconHome },
   { path: '/library', label: t('nav.catalog'), icon: IconLibrary },
-  { path: '/history', label: t('nav.history'), icon: IconHistory },
   { path: '/settings', label: t('nav.settings'), icon: IconSettings },
 ])
 

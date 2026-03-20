@@ -2,30 +2,19 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { IconHome, IconLibrary, IconHistory, IconSettings } from '../shared/icons'
-import { usePlayer } from '../../composables/usePlayer'
+import { IconLibrary, IconSettings } from '../shared/icons'
 import { useAuth } from '../../composables/useAuth'
 
 const route = useRoute()
 const { t } = useI18n()
-const { isPlayerVisible } = usePlayer()
 const { isLoggedIn } = useAuth()
 
-const authTabs = computed(() => [
-  { path: '/', label: t('nav.home'), icon: IconHome },
+const tabs = computed(() => [
   { path: '/library', label: t('nav.catalog'), icon: IconLibrary },
-  { path: '/history', label: t('nav.history'), icon: IconHistory },
   { path: '/settings', label: t('nav.settings'), icon: IconSettings },
 ])
 
-const guestTabs = computed(() => [{ path: '/library', label: t('nav.catalog'), icon: IconLibrary }])
-
-const tabs = computed(() => (isLoggedIn.value ? authTabs.value : guestTabs.value))
-
-const isActive = (path: string) => {
-  if (path === '/') return route.path === '/'
-  return route.path.startsWith(path)
-}
+const isActive = (path: string) => route.path.startsWith(path)
 </script>
 
 <template>
@@ -45,14 +34,7 @@ const isActive = (path: string) => {
         class="relative flex flex-1 flex-col items-center justify-center gap-0.5 no-underline transition-colors duration-200"
         :class="isActive(tab.path) ? 'text-[--accent]' : 'text-[--t3]'"
       >
-        <span class="relative">
-          <component :is="tab.icon" :size="20" />
-          <span
-            v-if="tab.path === '/' && isPlayerVisible"
-            class="absolute -top-0.5 -right-1 h-2 w-2 rounded-full bg-[--accent]"
-            style="box-shadow: 0 0 6px rgba(232, 146, 58, 0.5)"
-          />
-        </span>
+        <component :is="tab.icon" :size="20" />
         <span class="text-[10px] leading-none font-medium">{{ tab.label }}</span>
       </router-link>
 

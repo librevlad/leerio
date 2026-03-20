@@ -206,7 +206,7 @@ function savePosition() {
 
 function startSaveTimer() {
   stopSaveTimer()
-  saveTimer = setInterval(savePosition, 10_000)
+  saveTimer = setInterval(savePosition, 5_000)
 }
 
 function stopSaveTimer() {

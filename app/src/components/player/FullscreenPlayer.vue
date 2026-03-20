@@ -912,40 +912,6 @@ function closeOverlays() {
                 </button>
               </div>
             </div>
-
-            <!-- Sleep timer -->
-            <div class="relative">
-              <button
-                class="flex flex-col items-center gap-0.5 border-0 bg-transparent px-3 py-1 transition-colors"
-                :class="sleepTimer !== null ? 'text-[--accent]' : 'text-[--t3] hover:text-[--t2]'"
-                :aria-expanded="showSleepMenu"
-                @click="showSleepMenu = !showSleepMenu"
-              >
-                <IconMoon :size="18" />
-                <span class="text-[10px] font-semibold">{{
-                  sleepTimer !== null ? `${sleepTimer}м` : t('player.sleepLabel')
-                }}</span>
-              </button>
-              <div
-                v-if="showSleepMenu"
-                class="absolute bottom-12 left-1/2 z-10 -translate-x-1/2 rounded-xl border border-[--border] p-1"
-                style="background: var(--card-solid)"
-              >
-                <button
-                  v-for="opt in sleepOptions"
-                  :key="String(opt.value)"
-                  class="block w-full cursor-pointer rounded-lg border-0 bg-transparent px-4 py-2 text-left text-[12px] whitespace-nowrap transition-colors"
-                  :class="
-                    (opt.value === null && sleepTimer === null) || sleepTimer === opt.value
-                      ? 'text-[--accent]'
-                      : 'text-[--t2] hover:bg-white/5'
-                  "
-                  @click="selectSleep(opt.value)"
-                >
-                  {{ opt.label }}
-                </button>
-              </div>
-            </div>
           </div>
 
           <!-- Track list (collapsible) — mobile only -->
