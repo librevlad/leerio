@@ -123,8 +123,7 @@ async function loadBook() {
       tags: [],
       note: '',
       mp3_count: fsMeta.tracks.length,
-      description: '',
-    } as any // FsBookMeta doesn't match Book exactly, but has enough for display
+    }
     document.title = `${fsMeta.title} — Leerio`
     loading.value = false
     return

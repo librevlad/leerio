@@ -758,7 +758,8 @@ def _sync_books_from_filesystem():
     conn = _get_conn()
     existing_slugs = {r[0] for r in conn.execute("SELECT slug FROM books").fetchall()}
     existing_prefixes = {
-        r[0] for r in conn.execute("SELECT s3_prefix FROM books WHERE s3_prefix IS NOT NULL AND s3_prefix != ''").fetchall()
+        r[0]
+        for r in conn.execute("SELECT s3_prefix FROM books WHERE s3_prefix IS NOT NULL AND s3_prefix != ''").fetchall()
     }
     inserted = 0
 
