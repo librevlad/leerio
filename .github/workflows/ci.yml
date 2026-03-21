@@ -6,14 +6,12 @@ on:
     paths-ignore:
       - "**.md"
       - "docs/**"
-      - "landing/**"
       - ".gitignore"
   pull_request:
     branches: [main]
     paths-ignore:
       - "**.md"
       - "docs/**"
-      - "landing/**"
       - ".gitignore"
 
 concurrency:

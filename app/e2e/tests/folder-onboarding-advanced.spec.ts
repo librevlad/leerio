@@ -45,13 +45,13 @@ function makeFsBook(name: string, trackCount: number) {
 // ══════════════════════════════════════════════════════════════════════
 
 test.describe('Real audio upload and playback', () => {
-  test('upload MP3 via API and verify it appears in my library', { tag: '@flaky' }, async ({ request, page }) => {
+  test('upload MP3 via API and verify it appears in my library', async ({ request, page }) => {
     const audioPath = join(__dirname, '..', 'test-audio.mp3')
     const audioBuffer = readFileSync(audioPath)
 
     const response = await request.post('/api/user/books', {
       multipart: {
-        title: 'E2E Test Book',
+        title: `E2E Test ${Date.now()}`,
         author: 'E2E Author',
         files: {
           name: 'test-track.mp3',
@@ -67,12 +67,12 @@ test.describe('Real audio upload and playback', () => {
     if (response.status() === 200) {
       const body = await response.json()
       expect(body.slug).toBeTruthy()
-      expect(body.title).toBe('E2E Test Book')
+      expect(body.title).toContain('E2E Test')
 
       // Verify in my library
       await page.goto('/my-library')
       await expect(page.locator('text=Моя библиотека')).toBeVisible({ timeout: 10_000 })
-      await expect(page.locator('text=E2E Test Book')).toBeVisible({ timeout: 5_000 })
+      await expect(page.locator(`text=${body.title}`)).toBeVisible({ timeout: 5_000 })
     }
   })
 
