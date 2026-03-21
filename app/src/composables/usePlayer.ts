@@ -492,6 +492,7 @@ async function loadBook(book: Book, startTrackIndex?: number, autoplay = true) {
       }
 
       updateMediaSession()
+      preloadNextTrack()
       isLoading.value = false
       return
     }
