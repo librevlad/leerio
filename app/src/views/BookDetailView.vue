@@ -101,8 +101,37 @@ async function loadBook() {
   const gen = ++loadGeneration
   loading.value = true
   coverError.value = false
+
+  const id = route.params.id as string
+
+  // Filesystem book — load from local scanner storage, no API call
+  if (id.startsWith('fs:')) {
+    const fsMeta = getFsBook(id)
+    if (!fsMeta) {
+      router.push('/library')
+      return
+    }
+    book.value = {
+      id: fsMeta.id,
+      title: fsMeta.title,
+      author: fsMeta.author,
+      folder: fsMeta.folderPath,
+      category: '',
+      reader: '',
+      path: '',
+      progress: 0,
+      tags: [],
+      note: '',
+      mp3_count: fsMeta.tracks.length,
+      description: '',
+    } as any // FsBookMeta doesn't match Book exactly, but has enough for display
+    document.title = `${fsMeta.title} — Leerio`
+    loading.value = false
+    return
+  }
+
   try {
-    const result = await api.getBook(route.params.id as string)
+    const result = await api.getBook(id)
     if (gen !== loadGeneration) return
     book.value = result
     if (book.value) document.title = `${book.value.title} — Leerio`
@@ -131,7 +160,8 @@ async function addToLibrary() {
 
 async function startListening() {
   if (!book.value) return
-  if (!isLoggedIn.value) {
+  // Allow local books (fs: / lb:) without login
+  if (!isLoggedIn.value && !book.value.id.startsWith('fs:') && !book.value.id.startsWith('lb:')) {
     toast.info(t('book.loginToListen'))
     return router.push('/login')
   }

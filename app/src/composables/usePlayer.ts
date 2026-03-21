@@ -461,6 +461,7 @@ async function loadBook(book: Book, startTrackIndex?: number) {
       }
 
       updateMediaSession()
+      isLoading.value = false
       return
     }
 
