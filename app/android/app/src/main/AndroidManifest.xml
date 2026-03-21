@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!--
+      Permission justification (for Google Play):
+      READ_MEDIA_AUDIO / READ_EXTERNAL_STORAGE: User-initiated audiobook folder scanning (MP3, M4A, M4B, OGG, FLAC, WAV).
+        Only runs when user explicitly taps "Scan device". No background scanning.
+      WRITE_EXTERNAL_STORAGE: YouTube import saves downloaded audiobook chapters to Audiobooks/ folder.
+        Only triggered when user imports from YouTube.
+    -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
                      android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />

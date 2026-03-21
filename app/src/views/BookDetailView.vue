@@ -108,6 +108,7 @@ async function loadBook() {
   if (id.startsWith('fs:')) {
     const fsMeta = getFsBook(id)
     if (!fsMeta) {
+      toast.error(t('book.fsNotFound'))
       router.push('/library')
       return
     }

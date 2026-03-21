@@ -435,6 +435,7 @@ export default {
     cloudUploadDone: 'Book uploaded to cloud',
     cloudUploadFailed: 'Cloud upload failed',
     cloudUploadLarge: 'Book is larger than 200 MB. Upload may take a while. Continue?',
+    fsNotFound: 'This book is only available on the device where it was added',
   },
   player: {
     title: 'Player',
@@ -602,6 +603,7 @@ export default {
     addN: 'Add {n} books',
     stayOnDevice: 'Books stay on your device',
     added: '{n} books added',
+    cancel: 'Cancel',
   },
   fab: {
     scan: 'Scan',
@@ -612,5 +614,7 @@ export default {
     youtube: 'Download audiobook',
     tts: 'Text to Speech',
     ttsHint: 'Convert text to audiobook',
+    addBook: 'Add book',
+    menuLabel: 'Ways to add',
   },
 }

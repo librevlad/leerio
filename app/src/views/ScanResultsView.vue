@@ -100,6 +100,15 @@ function fmtSize(bytes: number): string {
     <div v-if="scanner.scanning.value" class="mb-6 flex flex-col items-center gap-3 py-8">
       <div class="h-8 w-8 animate-spin rounded-full border-2 border-[--accent] border-t-transparent" />
       <p class="text-[13px] text-[--t3]">{{ t('scan.scanningDir', { dir: scanner.scanProgress.value }) }}</p>
+      <button
+        class="text-[12px] text-[--t3] hover:text-[--t1]"
+        @click="
+          scanner.abortScan()
+          hasScanned = true
+        "
+      >
+        {{ t('scan.cancel') }}
+      </button>
     </div>
 
     <!-- No results -->

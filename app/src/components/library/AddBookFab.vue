@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { Capacitor } from '@capacitor/core'
@@ -47,6 +47,12 @@ function openTTS() {
   close()
   router.push('/upload?tab=tts')
 }
+
+function onKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && isOpen.value) close()
+}
+onMounted(() => document.addEventListener('keydown', onKeydown))
+onUnmounted(() => document.removeEventListener('keydown', onKeydown))
 </script>
 
 <template>
@@ -60,6 +66,8 @@ function openTTS() {
     <transition name="scale-up">
       <div
         v-if="isOpen"
+        role="menu"
+        :aria-label="t('fab.menuLabel')"
         class="fixed right-4 z-50 w-[220px] rounded-2xl p-1.5 shadow-2xl"
         :style="{ bottom: `calc(${bottomOffset()} + 60px)` }"
         style="background: var(--card-solid)"
@@ -67,6 +75,7 @@ function openTTS() {
         <!-- Scan (APK only) -->
         <button
           v-if="isNative"
+          role="menuitem"
           class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-white/[0.06]"
           @click="scanDevice"
         >
@@ -84,6 +93,7 @@ function openTTS() {
 
         <!-- Files -->
         <button
+          role="menuitem"
           class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-white/[0.06]"
           @click="pickFiles"
         >
@@ -96,6 +106,7 @@ function openTTS() {
 
         <!-- Folder -->
         <button
+          role="menuitem"
           class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-white/[0.06]"
           @click="pickFolder"
         >
@@ -112,6 +123,7 @@ function openTTS() {
         <!-- YouTube (APK only) -->
         <button
           v-if="isNative"
+          role="menuitem"
           class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-white/[0.06]"
           @click="openYouTube"
         >
@@ -129,6 +141,7 @@ function openTTS() {
 
         <!-- TTS -->
         <button
+          role="menuitem"
           class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-white/[0.06]"
           @click="openTTS"
         >
@@ -143,6 +156,8 @@ function openTTS() {
 
     <!-- FAB button -->
     <button
+      :aria-label="t('fab.addBook')"
+      :aria-expanded="isOpen"
       class="fixed right-4 z-50 flex h-[52px] w-[52px] items-center justify-center rounded-full text-white shadow-lg transition-transform duration-200"
       :class="isOpen ? 'rotate-45' : ''"
       :style="{

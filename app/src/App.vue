@@ -14,6 +14,7 @@ import { useAuth } from './composables/useAuth'
 import { useNetwork } from './composables/useNetwork'
 import { useCategories } from './composables/useCategories'
 import { useSync } from './composables/useSync'
+import { useFileScanner } from './composables/useFileScanner'
 import { IconX } from './components/shared/icons'
 import { STORAGE } from './constants/storage'
 
@@ -119,10 +120,13 @@ watch(
   { immediate: true },
 )
 
+const { validateFsBooks } = useFileScanner()
+
 onMounted(() => {
   downloads.init()
   loadCategories()
   window.addEventListener('keydown', onKeydown)
+  validateFsBooks() // Non-blocking — fire and forget
 })
 
 onUnmounted(() => {

@@ -24,6 +24,7 @@ const NOT_BOOK_KEYWORDS = /podcast|music|ringtone|notification|alarm|recording/i
 const fsBooks = ref<Record<string, FsBookMeta>>(loadFromStorage())
 const scanning = ref(false)
 const scanProgress = ref('')
+let scanAborted = false
 
 function loadFromStorage(): Record<string, FsBookMeta> {
   try {
@@ -65,6 +66,7 @@ export function useFileScanner() {
     const granted = await requestPermissions()
     if (!granted) return []
 
+    scanAborted = false
     scanning.value = true
     scanProgress.value = ''
 
@@ -72,6 +74,7 @@ export function useFileScanner() {
 
     try {
       for (const dir of SCAN_DIRS) {
+        if (scanAborted) break
         scanProgress.value = dir
         try {
           const result = await Filesystem.readdir({
@@ -81,6 +84,7 @@ export function useFileScanner() {
 
           let processed = 0
           for (const entry of result.files) {
+            if (scanAborted) break
             if (entry.type !== 'directory') continue
 
             const bookPath = `${dir}/${entry.name}`
@@ -134,6 +138,30 @@ export function useFileScanner() {
     }
   }
 
+  function abortScan() {
+    scanAborted = true
+  }
+
+  async function validateFsBooks(): Promise<void> {
+    if (!isNative) return
+    const toRemove: string[] = []
+    for (const [id, book] of Object.entries(fsBooks.value)) {
+      try {
+        await Filesystem.stat({
+          path: book.folderPath,
+          directory: Directory.ExternalStorage,
+        })
+      } catch {
+        // Folder no longer exists
+        toRemove.push(id)
+      }
+    }
+    for (const id of toRemove) {
+      delete fsBooks.value[id]
+    }
+    if (toRemove.length > 0) persist()
+  }
+
   async function scanFolder(path: string): Promise<FsTrack[]> {
     try {
       const result = await Filesystem.readdir({
@@ -184,6 +212,8 @@ export function useFileScanner() {
     scanning,
     scanProgress,
     scan,
+    abortScan,
+    validateFsBooks,
     addFsBooks,
     removeFsBook,
     markSynced,
