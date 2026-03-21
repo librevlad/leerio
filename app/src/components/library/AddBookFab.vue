@@ -8,12 +8,12 @@ import { IconPlus } from '../shared/icons'
 
 const router = useRouter()
 const { t } = useI18n()
-const { currentBook } = usePlayer()
+const { isPlayerVisible } = usePlayer()
 
 const isOpen = ref(false)
 const isNative = Capacitor.isNativePlatform()
 
-const bottomOffset = () => (currentBook.value ? '130px' : '80px')
+const bottomOffset = () => (isPlayerVisible.value ? '130px' : '80px')
 
 function toggle() {
   isOpen.value = !isOpen.value

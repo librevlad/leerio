@@ -6,6 +6,7 @@ import { useLocalData } from './useLocalData'
 import { useNetwork } from './useNetwork'
 import { useToast } from './useToast'
 import { useFileScanner } from './useFileScanner'
+import { useTracking } from './useTelemetry'
 import type { Book, Track } from '../types'
 import { STORAGE } from '../constants/storage'
 import { Filesystem, Directory } from '@capacitor/filesystem'
@@ -55,6 +56,7 @@ let sleepAtTrackEnd = false
 const downloads = useDownloads()
 const localData = useLocalData()
 const toast = useToast()
+const { track: trackEvent } = useTracking()
 
 let audio: HTMLAudioElement | null = null
 let saveTimer: ReturnType<typeof setTimeout> | null = null
@@ -68,6 +70,7 @@ let nextTrackUrl: string | null = null
 let nextTrackIndex: number | null = null
 let loadOpId = 0
 let playOpId = 0
+let preloadInProgress = false
 
 // ── Computed ────────────────────────────────────────────────────────────────
 
@@ -84,6 +87,14 @@ const totalElapsed = computed(() => {
 })
 
 const overallProgress = computed(() => (totalDuration.value > 0 ? (totalElapsed.value / totalDuration.value) * 100 : 0))
+
+const playerState = computed<'idle' | 'loading' | 'playing' | 'paused' | 'error'>(() => {
+  if (audioError.value) return 'error'
+  if (isLoading.value) return 'loading'
+  if (isPlaying.value) return 'playing'
+  if (currentBook.value) return 'paused'
+  return 'idle'
+})
 
 // ── Audio engine ────────────────────────────────────────────────────────────
 
@@ -159,6 +170,7 @@ function ensureAudio(): HTMLAudioElement {
       if (!audio?.src || !currentBook.value) return
       isLoading.value = false
       audioError.value = true
+      trackEvent('player_error')
       toast.error(t('player.loadError'))
     })
 
@@ -387,7 +399,25 @@ async function resolveAudioSrc(bookId: string, trackIndex: number): Promise<stri
 
 // ── Actions ─────────────────────────────────────────────────────────────────
 
-async function loadBook(book: Book, startTrackIndex?: number) {
+function restorePosition(bookId: string, startTrackIndex?: number): { trackIndex: number; seekPos: number } {
+  if (startTrackIndex !== undefined) {
+    return { trackIndex: startTrackIndex, seekPos: 0 }
+  }
+  try {
+    const saved = localStorage.getItem(`${STORAGE.POSITION_PREFIX}${bookId}`)
+    if (saved) {
+      const pos = JSON.parse(saved)
+      return {
+        trackIndex: pos.track_index >= 0 ? pos.track_index : 0,
+        seekPos: isFinite(pos.position) && pos.position >= 0 ? pos.position : 0,
+      }
+    }
+  } catch { /* corrupted */ }
+  return { trackIndex: 0, seekPos: 0 }
+}
+
+async function loadBook(book: Book, startTrackIndex?: number, autoplay = true) {
+  trackEvent('player_load_book', { bookId: book.id })
   const opId = ++loadOpId
   playOpId++ // Cancel any in-flight playTrack
   nextTrackUrl = null
@@ -434,37 +464,29 @@ async function loadBook(book: Book, startTrackIndex?: number) {
       playingOffline.value = true
       currentTrackIndex.value = 0
 
-      // Restore position (same pattern as lb:)
-      let pos = { track_index: startTrackIndex ?? 0, position: 0 }
-      if (startTrackIndex === undefined) {
-        try {
-          const savedPos = localStorage.getItem(`${STORAGE.POSITION_PREFIX}${book.id}`)
-          if (savedPos) pos = JSON.parse(savedPos)
-        } catch {
-          /* corrupted localStorage */
-        }
-      }
-      const idx = pos.track_index >= 0 && pos.track_index < tracks.value.length ? pos.track_index : 0
-      const seekPos = isFinite(pos.position) && pos.position >= 0 ? pos.position : 0
-      currentTrackIndex.value = idx
+      const { trackIndex: rawIdx, seekPos } = restorePosition(book.id, startTrackIndex)
+      const boundedIdx = rawIdx >= 0 && rawIdx < tracks.value.length ? rawIdx : 0
+      currentTrackIndex.value = boundedIdx
 
       const a = ensureAudio()
-      const fsUrl = await resolveAudioSrc(book.id, idx)
+      const fsUrl = await resolveAudioSrc(book.id, boundedIdx)
       if (loadOpId !== opId) return
       a.src = fsUrl || ''
       a.load()
 
-      if (seekPos > 0) {
-        const onLoaded = () => {
-          a.removeEventListener('loadedmetadata', onLoaded)
-          if (loadOpId !== opId) return
-          a.currentTime = seekPos
-          currentTime.value = seekPos
+      if (autoplay) {
+        if (seekPos > 0) {
+          const onLoaded = () => {
+            a.removeEventListener('loadedmetadata', onLoaded)
+            if (loadOpId !== opId) return
+            a.currentTime = seekPos
+            currentTime.value = seekPos
+            a.play().catch((e) => console.warn('Auto-play blocked:', e))
+          }
+          a.addEventListener('loadedmetadata', onLoaded)
+        } else {
           a.play().catch((e) => console.warn('Auto-play blocked:', e))
         }
-        a.addEventListener('loadedmetadata', onLoaded)
-      } else {
-        a.play().catch((e) => console.warn('Auto-play blocked:', e))
       }
 
       updateMediaSession()
@@ -486,37 +508,29 @@ async function loadBook(book: Book, startTrackIndex?: number) {
       playingOffline.value = true
       currentTrackIndex.value = 0
 
-      // Restore position (skip if explicit startTrackIndex given)
-      let pos = { track_index: startTrackIndex ?? 0, position: 0 }
-      if (startTrackIndex === undefined) {
-        try {
-          const savedPos = localStorage.getItem(`${STORAGE.POSITION_PREFIX}${book.id}`)
-          if (savedPos) pos = JSON.parse(savedPos)
-        } catch {
-          /* corrupted localStorage */
-        }
-      }
-      const idx = pos.track_index >= 0 && pos.track_index < tracks.value.length ? pos.track_index : 0
-      const seekPos = isFinite(pos.position) && pos.position >= 0 ? pos.position : 0
-      currentTrackIndex.value = idx
+      const { trackIndex: rawIdx, seekPos } = restorePosition(book.id, startTrackIndex)
+      const boundedIdx = rawIdx >= 0 && rawIdx < tracks.value.length ? rawIdx : 0
+      currentTrackIndex.value = boundedIdx
 
       const a = ensureAudio()
-      const localUrl = await getLocalUrl(book.id, idx)
+      const localUrl = await getLocalUrl(book.id, boundedIdx)
       if (loadOpId !== opId) return
       a.src = localUrl || ''
       a.load()
 
-      if (seekPos > 0) {
-        const onLoaded = () => {
-          a.removeEventListener('loadedmetadata', onLoaded)
-          if (loadOpId !== opId) return // stale — don't seek or play
-          a.currentTime = seekPos
-          currentTime.value = seekPos
+      if (autoplay) {
+        if (seekPos > 0) {
+          const onLoaded = () => {
+            a.removeEventListener('loadedmetadata', onLoaded)
+            if (loadOpId !== opId) return // stale — don't seek or play
+            a.currentTime = seekPos
+            currentTime.value = seekPos
+            a.play().catch((e) => console.warn('Auto-play blocked:', e))
+          }
+          a.addEventListener('loadedmetadata', onLoaded)
+        } else {
           a.play().catch((e) => console.warn('Auto-play blocked:', e))
         }
-        a.addEventListener('loadedmetadata', onLoaded)
-      } else {
-        a.play().catch((e) => console.warn('Auto-play blocked:', e))
       }
 
       await loadCoverBlobUrl(book)
@@ -583,27 +597,32 @@ async function loadBook(book: Book, startTrackIndex?: number) {
       }
       if (loadOpId !== opId) return
     }
-    const idx = pos.track_index >= 0 && pos.track_index < tracks.value.length ? pos.track_index : 0
-    const seekPos = isFinite(pos.position) && pos.position >= 0 ? pos.position : 0
-    currentTrackIndex.value = idx
+    const { trackIndex: rawIdx, seekPos } = {
+      trackIndex: pos.track_index >= 0 && pos.track_index < tracks.value.length ? pos.track_index : 0,
+      seekPos: isFinite(pos.position) && pos.position >= 0 ? pos.position : 0,
+    }
+    const boundedIdx = rawIdx >= 0 && rawIdx < tracks.value.length ? rawIdx : 0
+    currentTrackIndex.value = boundedIdx
 
     const a = ensureAudio()
-    a.src = await resolveAudioSrc(book.id, idx)
+    a.src = await resolveAudioSrc(book.id, boundedIdx)
     if (loadOpId !== opId) return
     a.load()
 
     // Seek to saved position after metadata loads, THEN play
-    if (seekPos > 0) {
-      const onLoaded = () => {
-        a.removeEventListener('loadedmetadata', onLoaded)
-        if (loadOpId !== opId) return // stale — don't seek or play
-        a.currentTime = seekPos
-        currentTime.value = seekPos
+    if (autoplay) {
+      if (seekPos > 0) {
+        const onLoaded = () => {
+          a.removeEventListener('loadedmetadata', onLoaded)
+          if (loadOpId !== opId) return // stale — don't seek or play
+          a.currentTime = seekPos
+          currentTime.value = seekPos
+          a.play().catch((e) => console.warn('Auto-play blocked:', e))
+        }
+        a.addEventListener('loadedmetadata', onLoaded)
+      } else {
         a.play().catch((e) => console.warn('Auto-play blocked:', e))
       }
-      a.addEventListener('loadedmetadata', onLoaded)
-    } else {
-      a.play().catch((e) => console.warn('Auto-play blocked:', e))
     }
 
     await loadCoverBlobUrl(book)
@@ -678,11 +697,13 @@ function togglePlay() {
   const a = ensureAudio()
   if (!a.src) return
   if (a.paused) {
+    trackEvent('player_play')
     a.play().catch((e) => {
       if (e instanceof DOMException && e.name === 'AbortError') return
       toast.error(t('player.playbackError'))
     })
   } else {
+    trackEvent('player_pause')
     a.pause()
   }
 }
@@ -842,13 +863,15 @@ function closePlayer() {
 }
 
 async function preloadNextTrack() {
-  if (!currentBook.value) return
+  if (preloadInProgress || !currentBook.value) return
+  preloadInProgress = true
   const bookId = currentBook.value.id
   const currentLoadOp = loadOpId
   const nextIdx = currentTrackIndex.value + 1
   if (nextIdx >= tracks.value.length) {
     nextTrackUrl = null
     nextTrackIndex = null
+    preloadInProgress = false
     return
   }
   try {
@@ -861,16 +884,22 @@ async function preloadNextTrack() {
   } catch {
     nextTrackUrl = null
     nextTrackIndex = null
+  } finally {
+    preloadInProgress = false
   }
 }
 
 function retryAudio() {
   if (!audio || !currentBook.value) return
+  const opId = playOpId  // Capture current opId
   audioError.value = false
   isLoading.value = true
   audio.load()
   audio.play().catch((e) => {
+    if (playOpId !== opId) return  // Stale — ignore
     if (e instanceof DOMException && e.name === 'AbortError') return
+    audioError.value = true
+    isLoading.value = false
     toast.error(t('player.playbackError'))
   })
 }
@@ -914,6 +943,7 @@ export function usePlayer() {
     totalDuration,
     totalElapsed,
     overallProgress,
+    playerState,
 
     // Actions
     loadBook,

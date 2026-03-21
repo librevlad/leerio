@@ -62,6 +62,12 @@ vi.mock('./useToast', () => ({
   }),
 }))
 
+vi.mock('./useTelemetry', () => ({
+  useTracking: () => ({
+    track: vi.fn(),
+  }),
+}))
+
 // Stub MediaMetadata (not available in JSDOM)
 vi.stubGlobal(
   'MediaMetadata',

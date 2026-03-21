@@ -18,6 +18,10 @@ type TelemetryEvent =
   | 'book_played'
   | 'scan_completed'
   | 'scan_books_added'
+  | 'player_play'
+  | 'player_pause'
+  | 'player_error'
+  | 'player_load_book'
 
 export function useTracking() {
   function track(event: TelemetryEvent, data?: Record<string, unknown>) {
