@@ -8,6 +8,7 @@ import EmptyState from '../components/shared/EmptyState.vue'
 import PullIndicator from '../components/shared/PullIndicator.vue'
 import { usePullToRefresh } from '../composables/usePullToRefresh'
 import type { BookStatusValue } from '../types'
+import AddBookFab from '../components/library/AddBookFab.vue'
 
 const route = useRoute()
 const { t } = useI18n()
@@ -276,5 +277,7 @@ watch(loadMoreRef, (el) => {
       :action-label="t('library.resetFilters')"
       @action="resetFilters"
     />
+
+    <AddBookFab />
   </div>
 </template>

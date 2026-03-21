@@ -594,4 +594,14 @@ export default {
     stayOnDevice: 'Books stay on your device',
     added: '{n} books added',
   },
+  fab: {
+    scan: 'Scan',
+    scanHint: 'Find books on device',
+    files: 'Files',
+    folder: 'Folder',
+    folderHint: 'Select a folder manually',
+    youtube: 'Download audiobook',
+    tts: 'Text to Speech',
+    ttsHint: 'Convert text to audiobook',
+  },
 }
