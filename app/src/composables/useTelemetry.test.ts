@@ -50,7 +50,7 @@ describe('useTelemetry', () => {
     const { track } = useTracking()
     track('onboarding_started')
 
-    const blob: Blob = sendBeaconMock.mock.calls[0][1]
+    const blob: Blob = sendBeaconMock.mock.calls[0]![1]
     expect(blob).toBeInstanceOf(Blob)
     expect(blob.type).toBe('application/json')
 
@@ -59,7 +59,7 @@ describe('useTelemetry', () => {
     const { track: track2 } = useTracking()
     track2('onboarding_started')
 
-    const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+    const body = JSON.parse(fetchMock.mock.calls[0]![1].body)
     expect(body.event).toBe('onboarding_started')
     expect(body.ts).toBe('2026-03-20T12:00:00.000Z')
   })
@@ -70,7 +70,7 @@ describe('useTelemetry', () => {
     const { track } = useTracking()
     track('book_played', { bookId: 'abc-123', duration: 42 })
 
-    const body = JSON.parse(fetchMock.mock.calls[0][1].body)
+    const body = JSON.parse(fetchMock.mock.calls[0]![1].body)
     expect(body.event).toBe('book_played')
     expect(body.bookId).toBe('abc-123')
     expect(body.duration).toBe(42)

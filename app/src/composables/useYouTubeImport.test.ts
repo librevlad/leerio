@@ -91,7 +91,8 @@ describe('useYouTubeImport', () => {
   })
 
   it('resolve sets step to resolving during fetch', async () => {
-    let resolvePromise: ((v: unknown) => void) | null = null
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let resolvePromise: ((v: any) => void) | null = null
     vi.mocked(api.youtubeResolve).mockImplementation(
       () =>
         new Promise((r) => {

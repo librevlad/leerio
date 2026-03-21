@@ -184,7 +184,7 @@ describe('useSync', () => {
     await callUseSync()
 
     expect(mockOnReconnectPermanent).toHaveBeenCalledTimes(1)
-    expect(typeof mockOnReconnectPermanent.mock.calls[0][0]).toBe('function')
+    expect(typeof mockOnReconnectPermanent.mock.calls[0]![0]).toBe('function')
   })
 
   it('registers reconnect callback only once', async () => {
@@ -204,7 +204,7 @@ describe('useSync', () => {
     expect(mockApi.getAllBookStatuses).toHaveBeenCalledTimes(2) // push compare + pull fresh
 
     // Simulate reconnect — call the registered callback
-    const reconnectCb = mockOnReconnectPermanent.mock.calls[0][0]
+    const reconnectCb = mockOnReconnectPermanent.mock.calls[0]![0]
     await reconnectCb()
     await flushPromises()
 
@@ -218,7 +218,7 @@ describe('useSync', () => {
     await nextTick()
     await flushPromises()
 
-    const reconnectCb = mockOnReconnectPermanent.mock.calls[0][0]
+    const reconnectCb = mockOnReconnectPermanent.mock.calls[0]![0]
     await reconnectCb()
     await flushPromises()
 
@@ -264,7 +264,7 @@ describe('useSync', () => {
     await nextTick()
     await flushPromises()
 
-    const call = mockLocal.importStatuses.mock.calls[0][0]
+    const call = mockLocal.importStatuses.mock.calls[0]![0]
     expect(call['book-1']).toEqual({ status: 'reading', updated: '2025-01-01T00:00:00Z' })
     // book-2 should have a generated timestamp (since updated was undefined)
     expect(call['book-2'].status).toBe('finished')

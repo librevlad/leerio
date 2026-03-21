@@ -75,7 +75,7 @@ export function useYouTubeImport() {
         }
       }
 
-      return new Blob(chunks)
+      return new Blob(chunks as BlobPart[])
     } catch (e) {
       if (e instanceof DOMException && e.name === 'AbortError') {
         step.value = 'idle'
@@ -121,7 +121,7 @@ export function useYouTubeImport() {
           outputName,
         ])
         const data = await ffmpeg.readFile(outputName)
-        const fileBlob = new Blob([data], { type: 'audio/mpeg' })
+        const fileBlob = new Blob([data as BlobPart], { type: 'audio/mpeg' })
         files.push(new File([fileBlob], outputName, { type: 'audio/mpeg' }))
         progress.value = Math.round(((i + 1) / chapterList.length) * 100)
       }

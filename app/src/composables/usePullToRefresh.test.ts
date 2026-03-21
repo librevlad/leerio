@@ -20,7 +20,7 @@ import { usePullToRefresh } from './usePullToRefresh'
 
 function createTouchEvent(type: string, clientY: number): Event {
   const event = new Event(type, { bubbles: true })
-  ;(event as Record<string, unknown>).touches = [{ clientY }]
+  ;(event as unknown as Record<string, unknown>).touches = [{ clientY }]
   return event
 }
 
@@ -41,7 +41,7 @@ describe('usePullToRefresh', () => {
   })
 
   function mount(refreshFn?: () => Promise<void>) {
-    const result = usePullToRefresh(refreshFn ?? onRefresh)
+    const result = usePullToRefresh((refreshFn ?? onRefresh) as () => Promise<void>)
     expect(mountedCb).toBeTypeOf('function')
     mountedCb!()
     return result
