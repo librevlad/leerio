@@ -404,7 +404,9 @@ button:not(.btn):not(:disabled):active {
 
 .offline-bar-enter-active,
 .offline-bar-leave-active {
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
 }
 .offline-bar-enter-from,
 .offline-bar-leave-to {
