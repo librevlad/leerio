@@ -58,6 +58,11 @@ function deselectAll() {
   selected.value = new Set()
 }
 
+function cancelScan() {
+  scanner.abortScan()
+  hasScanned = true
+}
+
 function addSelected() {
   const books = scannedBooks.value.filter((b) => selected.value.has(b.id))
   if (!books.length) return
@@ -102,10 +107,7 @@ function fmtSize(bytes: number): string {
       <p class="text-[13px] text-[--t3]">{{ t('scan.scanningDir', { dir: scanner.scanProgress.value }) }}</p>
       <button
         class="text-[12px] text-[--t3] hover:text-[--t1]"
-        @click="
-          scanner.abortScan()
-          hasScanned = true
-        "
+        @click="cancelScan"
       >
         {{ t('scan.cancel') }}
       </button>
