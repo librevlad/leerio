@@ -280,6 +280,26 @@ export interface LocalBook {
   addedAt: string
 }
 
+// ── Filesystem Book types (scanned from device) ─────────────────────────
+
+export interface FsTrack {
+  index: number
+  filename: string
+  path: string // relative to ExternalStorage, e.g. "Audiobooks/Author - Title/01.mp3"
+  duration: number
+}
+
+export interface FsBookMeta {
+  id: string // "fs:{folderName}"
+  title: string
+  author: string
+  folderPath: string // relative to ExternalStorage, e.g. "Audiobooks/Author - Title"
+  tracks: FsTrack[]
+  sizeBytes: number
+  synced: boolean
+  addedAt: string
+}
+
 export interface TTSJob {
   id: string
   title: string

@@ -7,6 +7,7 @@ export const STORAGE = {
   LOCALE: 'leerio_locale',
   OFFLINE_QUEUE: 'leerio_offline_queue',
   LOCAL_BOOKS: 'leerio_local_books',
+  FS_BOOKS: 'leerio_fs_books',
   PWA_DISMISSED: 'pwa-install-dismissed',
   APK_DISMISSED: 'apk-prompt-dismissed',
   UPGRADE_DISMISSED: 'upgrade-banner-dismissed',
