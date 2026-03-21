@@ -170,6 +170,98 @@ async def upload_book(
     }
 
 
+@router.post("/cloud-sync")
+async def cloud_sync_book(
+    title: str = Form(...),
+    author: str = Form(""),
+    files: list[UploadFile] = File(...),
+    cover: UploadFile | None = File(None),
+    user: dict = Depends(get_current_user),
+):
+    """Upload a local book to cloud for sync. Premium only, no free-tier limit."""
+    if user.get("plan", "free") != "premium":
+        raise HTTPException(403, {"error": "premium_required"})
+
+    ud = _user_data(user)
+
+    # Same validation as upload_book but without plan limit check
+    audio_files: list[tuple[str, bytes]] = []
+    for f in files:
+        if not f.filename:
+            raise HTTPException(400, "Missing filename")
+        ext = "." + f.filename.rsplit(".", 1)[-1].lower() if "." in f.filename else ""
+
+        if ext == ".zip":
+            zip_data = await f.read(MAX_UPLOAD_SIZE + 1)
+            if len(zip_data) > MAX_UPLOAD_SIZE:
+                raise HTTPException(413, "ZIP too large (max 500 MB)")
+            try:
+                with zipfile.ZipFile(io.BytesIO(zip_data)) as zf:
+                    for info in sorted(zf.infolist(), key=lambda i: i.filename):
+                        if info.is_dir():
+                            continue
+                        name = Path(info.filename).name
+                        zext = "." + name.rsplit(".", 1)[-1].lower() if "." in name else ""
+                        if zext in VALID_AUDIO_EXTENSIONS:
+                            audio_files.append((name, zf.read(info)))
+            except zipfile.BadZipFile:
+                raise HTTPException(400, f"Invalid ZIP file: {f.filename}")
+        elif ext in VALID_AUDIO_EXTENSIONS:
+            header = await f.read(12)
+            await f.seek(0)
+            if not any(header[offset:].startswith(h) for h in VALID_AUDIO_HEADERS for offset in (0, 4)):
+                raise HTTPException(400, f"Invalid audio file: {f.filename}")
+            content = await f.read(MAX_UPLOAD_SIZE + 1)
+            if len(content) > MAX_UPLOAD_SIZE:
+                raise HTTPException(413, "File too large (max 500 MB)")
+            audio_files.append((_sanitize_filename(f.filename or "track.mp3"), content))
+        else:
+            raise HTTPException(400, f"Unsupported format: {f.filename}")
+
+    if not audio_files:
+        raise HTTPException(400, "No audio files found")
+
+    slug = make_slug(title, author)
+
+    for attempt in range(100):
+        candidate = slug if attempt == 0 else f"{slug}-{attempt + 1}"
+        try:
+            (ud.books_dir / candidate).mkdir(parents=True, exist_ok=False)
+            slug = candidate
+            break
+        except FileExistsError:
+            continue
+    else:
+        raise HTTPException(409, "Could not create unique book directory")
+
+    book_dir = ud.user_book_create(slug, title, author, "", source="cloud-sync")
+
+    for i, (name, content) in enumerate(audio_files, 1):
+        safe_name = _sanitize_filename(name)
+        filename = f"{i:02d}. {safe_name}"
+        file_path = book_dir / filename
+        file_path.write_bytes(content)
+
+    if cover and cover.filename:
+        cover_data = await cover.read(MAX_COVER_SIZE + 1)
+        if len(cover_data) > MAX_COVER_SIZE:
+            logger.warning("Cover too large (%d bytes), skipping", len(cover_data))
+        elif cover_data and any(cover_data.startswith(h) for h in VALID_IMAGE_HEADERS):
+            (book_dir / "cover.jpg").write_bytes(cover_data)
+
+    book_id = f"ub:{user['user_id']}:{slug}"
+    logger.info("Cloud-sync book uploaded: %s by user %s", book_id, user["user_id"])
+
+    return {
+        "id": book_id,
+        "slug": slug,
+        "title": title,
+        "author": author,
+        "source": "cloud-sync",
+        "is_personal": True,
+    }
+
+
 @router.get("/{slug}")
 def get_user_book(slug: str, user: dict = Depends(get_current_user)):
     ud = _user_data(user)
