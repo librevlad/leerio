@@ -1,6 +1,9 @@
 import { ref } from 'vue'
+import { Capacitor } from '@capacitor/core'
+import { Filesystem, Directory } from '@capacitor/filesystem'
 import { api } from '../api'
 import { useLocalBooks } from './useLocalBooks'
+import { useFileScanner } from './useFileScanner'
 import type { YouTubeChapter, YouTubeResolveResult } from '../types'
 
 type Step = 'idle' | 'resolving' | 'resolved' | 'downloading' | 'splitting' | 'saving' | 'done' | 'error'
@@ -171,10 +174,64 @@ export function useYouTubeImport() {
       step.value = 'saving'
       progress.value = 0
 
-      await addLocalBook(files, {
-        title: title.value,
-        author: author.value,
-      })
+      if (Capacitor.isNativePlatform()) {
+        // APK: save to filesystem as fs: book
+        const { addFsBooks } = useFileScanner()
+        const folderPath = `Audiobooks/${title.value}`
+
+        // Create folder
+        try {
+          await Filesystem.mkdir({
+            path: folderPath,
+            directory: Directory.ExternalStorage,
+            recursive: true,
+          })
+        } catch { /* already exists */ }
+
+        // Write chapter files (chunked base64 to avoid stack overflow)
+        const fsTracks = []
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i]!
+          const arrayBuf = await file.arrayBuffer()
+          const bytes = new Uint8Array(arrayBuf)
+          let binary = ''
+          const chunkSize = 8192
+          for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+            const chunk = bytes.subarray(offset, offset + chunkSize)
+            binary += String.fromCharCode.apply(null, chunk as unknown as number[])
+          }
+          const base64 = btoa(binary)
+          await Filesystem.writeFile({
+            path: `${folderPath}/${file.name}`,
+            data: base64,
+            directory: Directory.ExternalStorage,
+          })
+          fsTracks.push({
+            index: i,
+            filename: file.name,
+            path: `${folderPath}/${file.name}`,
+            duration: 0,
+          })
+          progress.value = Math.round(((i + 1) / files.length) * 100)
+        }
+
+        addFsBooks([{
+          id: `fs:${title.value}`,
+          title: title.value,
+          author: author.value,
+          folderPath,
+          tracks: fsTracks,
+          sizeBytes: files.reduce((sum, f) => sum + f.size, 0),
+          synced: false,
+          addedAt: new Date().toISOString(),
+        }])
+      } else {
+        // Web fallback: save to IndexedDB as before
+        await addLocalBook(files, {
+          title: title.value,
+          author: author.value,
+        })
+      }
 
       step.value = 'done'
       progress.value = 100
