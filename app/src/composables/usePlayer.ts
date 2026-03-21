@@ -5,8 +5,11 @@ import { useLocalBooks } from './useLocalBooks'
 import { useLocalData } from './useLocalData'
 import { useNetwork } from './useNetwork'
 import { useToast } from './useToast'
+import { useFileScanner } from './useFileScanner'
 import type { Book, Track } from '../types'
 import { STORAGE } from '../constants/storage'
+import { Filesystem, Directory } from '@capacitor/filesystem'
+import { Capacitor } from '@capacitor/core'
 
 // Cached i18n instance (lazy-loaded to avoid circular dependency in tests)
 let _i18n: { global: { t: (key: string) => string } } | null = null
@@ -212,8 +215,8 @@ function savePosition() {
     // localStorage full
   }
 
-  // For local-only books, don't call API
-  if (currentBook.value.id.startsWith('lb:')) return
+  // For local-only books (lb: or fs:), don't call API
+  if (currentBook.value.id.startsWith('lb:') || currentBook.value.id.startsWith('fs:')) return
 
   // Debounce API saves — prevent storm during rapid navigation
   if (saveApiDebounce) clearTimeout(saveApiDebounce)
@@ -258,7 +261,7 @@ async function loadCoverBlobUrl(book: Book): Promise<void> {
 
   try {
     let url: string
-    if (book.id.startsWith('lb:')) {
+    if (book.id.startsWith('lb:') || book.id.startsWith('fs:')) {
       return
     } else if (book.id.startsWith('ub:')) {
       const slug = book.id.split(':')[2] ?? ''
@@ -330,6 +333,21 @@ function updatePositionState() {
 // ── Resolve audio source (local or server) ──────────────────────────────────
 
 async function resolveAudioSrc(bookId: string, trackIndex: number): Promise<string> {
+  // Filesystem book (scanned from device, ExternalStorage)
+  if (bookId.startsWith('fs:')) {
+    const track = tracks.value[trackIndex]
+    if (!track?.path) return ''
+    try {
+      const uri = await Filesystem.getUri({
+        path: track.path,
+        directory: Directory.ExternalStorage,
+      })
+      playingOffline.value = true
+      return Capacitor.convertFileSrc(uri.uri)
+    } catch {
+      return ''
+    }
+  }
   // Local book (device-only, stored in IndexedDB)
   if (bookId.startsWith('lb:')) {
     const { getLocalAudioUrl: getLocalUrl } = useLocalBooks()
@@ -392,9 +410,59 @@ async function loadBook(book: Book, startTrackIndex?: number) {
   isFullscreen.value = true
 
   try {
+    const isFsBook = book.id.startsWith('fs:')
     const isLocalBook = book.id.startsWith('lb:')
     const isUserBook = book.id.startsWith('ub:')
     const { isOnline } = useNetwork()
+
+    if (isFsBook) {
+      // Filesystem book: load from persistent scanner storage
+      const { getFsBook } = useFileScanner()
+      const fsMeta = getFsBook(book.id)
+      if (!fsMeta) throw new Error('Filesystem book not found')
+      tracks.value = fsMeta.tracks.map((t) => ({
+        index: t.index,
+        filename: t.filename,
+        path: t.path,
+        duration: t.duration,
+      }))
+      playingOffline.value = true
+      currentTrackIndex.value = 0
+
+      // Restore position (same pattern as lb:)
+      let pos = { track_index: startTrackIndex ?? 0, position: 0 }
+      if (startTrackIndex === undefined) {
+        try {
+          const savedPos = localStorage.getItem(`${STORAGE.POSITION_PREFIX}${book.id}`)
+          if (savedPos) pos = JSON.parse(savedPos)
+        } catch { /* corrupted localStorage */ }
+      }
+      const idx = pos.track_index >= 0 && pos.track_index < tracks.value.length ? pos.track_index : 0
+      const seekPos = isFinite(pos.position) && pos.position >= 0 ? pos.position : 0
+      currentTrackIndex.value = idx
+
+      const a = ensureAudio()
+      const fsUrl = await resolveAudioSrc(book.id, idx)
+      if (loadOpId !== opId) return
+      a.src = fsUrl || ''
+      a.load()
+
+      if (seekPos > 0) {
+        const onLoaded = () => {
+          a.removeEventListener('loadedmetadata', onLoaded)
+          if (loadOpId !== opId) return
+          a.currentTime = seekPos
+          currentTime.value = seekPos
+          a.play().catch((e) => console.warn('Auto-play blocked:', e))
+        }
+        a.addEventListener('loadedmetadata', onLoaded)
+      } else {
+        a.play().catch((e) => console.warn('Auto-play blocked:', e))
+      }
+
+      updateMediaSession()
+      return
+    }
 
     if (isLocalBook) {
       // Local-only book: load from IndexedDB
