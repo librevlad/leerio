@@ -28,19 +28,24 @@ let resendTimer: ReturnType<typeof setInterval> | null = null
 // Password strength
 function getStrength(pw: string): 'weak' | 'medium' | 'strong' {
   if (pw.length < 8) return 'weak'
-  const checks = [/[a-z]/, /[A-Z]/, /\d/, /[^a-zA-Z0-9]/].filter(r => r.test(pw)).length
+  const checks = [/[a-z]/, /[A-Z]/, /\d/, /[^a-zA-Z0-9]/].filter((r) => r.test(pw)).length
   if (pw.length >= 12 && checks >= 3) return 'strong'
   if (pw.length >= 8 && checks >= 2) return 'medium'
   return 'weak'
 }
 
 const strength = computed(() => getStrength(password.value))
-const strengthLabel = computed(() => t(`login.strength${strength.value.charAt(0).toUpperCase() + strength.value.slice(1)}`))
-const strengthTextClass = computed(() => ({
-  weak: 'text-red-400',
-  medium: 'text-yellow-400',
-  strong: 'text-green-400',
-}[strength.value]))
+const strengthLabel = computed(() =>
+  t(`login.strength${strength.value.charAt(0).toUpperCase() + strength.value.slice(1)}`),
+)
+const strengthTextClass = computed(
+  () =>
+    ({
+      weak: 'text-red-400',
+      medium: 'text-yellow-400',
+      strong: 'text-green-400',
+    })[strength.value],
+)
 
 function strengthColor(index: number) {
   const s = strength.value
@@ -214,9 +219,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex min-h-screen items-center justify-center px-4" style="background: radial-gradient(ellipse at center top, rgba(232,146,58,0.08), transparent 60%)">
+  <div
+    class="flex min-h-screen items-center justify-center px-4"
+    style="background: radial-gradient(ellipse at center top, rgba(232, 146, 58, 0.08), transparent 60%)"
+  >
     <div class="w-full max-w-sm">
-
       <!-- Logo -->
       <div class="mb-8 text-center">
         <img src="/logo.png" alt="Leerio" class="mx-auto h-12 w-12 rounded-xl" />
@@ -224,38 +231,63 @@ onMounted(() => {
       </div>
 
       <!-- Card -->
-      <div class="rounded-2xl border border-white/[0.06] px-6 py-6" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(20px)">
-
+      <div
+        class="rounded-2xl border border-white/[0.06] px-6 py-6"
+        style="background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px)"
+      >
         <!-- Tabs (only for login/register views) -->
-        <div v-if="view === 'login' || view === 'register'" class="mb-5 flex rounded-lg p-0.5" style="background: rgba(255,255,255,0.04)">
+        <div
+          v-if="view === 'login' || view === 'register'"
+          class="mb-5 flex rounded-lg p-0.5"
+          style="background: rgba(255, 255, 255, 0.04)"
+        >
           <button
             class="flex-1 rounded-md py-2 text-[13px] font-medium transition-all"
             :class="view === 'login' ? 'bg-white/[0.08] text-[--t1]' : 'text-[--t3]'"
             @click="switchTo('login')"
-          >{{ t('login.tabLogin') }}</button>
+          >
+            {{ t('login.tabLogin') }}
+          </button>
           <button
             class="flex-1 rounded-md py-2 text-[13px] font-medium transition-all"
             :class="view === 'register' ? 'bg-white/[0.08] text-[--t1]' : 'text-[--t3]'"
             @click="switchTo('register')"
-          >{{ t('login.tabRegister') }}</button>
+          >
+            {{ t('login.tabRegister') }}
+          </button>
         </div>
 
         <!-- Error -->
-        <div v-if="error" class="mb-4 rounded-lg bg-red-500/10 px-3 py-2 text-[12px] text-red-400 shake">
+        <div v-if="error" class="shake mb-4 rounded-lg bg-red-500/10 px-3 py-2 text-[12px] text-red-400">
           {{ error }}
         </div>
 
         <!-- LOGIN VIEW -->
         <form v-if="view === 'login'" class="space-y-4" @submit.prevent="handleLogin">
           <div>
-            <input v-model="email" type="email" :placeholder="t('login.email')" autocomplete="email"
-              class="input-field w-full px-3.5 py-2.5" />
+            <input
+              v-model="email"
+              type="email"
+              :placeholder="t('login.email')"
+              autocomplete="email"
+              class="input-field w-full px-3.5 py-2.5"
+            />
           </div>
           <div>
-            <input v-model="password" type="password" :placeholder="t('login.password')" autocomplete="current-password"
-              class="input-field w-full px-3.5 py-2.5" />
-            <button type="button" class="mt-1.5 cursor-pointer border-0 bg-transparent p-0 text-[11px] text-[--accent]"
-              @click="switchTo('forgot-step1')">{{ t('login.forgotPassword') }}</button>
+            <input
+              v-model="password"
+              type="password"
+              :placeholder="t('login.password')"
+              autocomplete="current-password"
+              class="input-field w-full px-3.5 py-2.5"
+            />
+            <button
+              type="button"
+              class="mt-1.5 cursor-pointer border-0 bg-transparent p-0 text-[11px] text-[--accent]"
+              @click="switchTo('forgot-step1')"
+            >
+              {{ t('login.forgotPassword') }}
+            </button>
           </div>
           <button type="submit" class="btn-primary w-full py-2.5" :disabled="!email || !password || loading">
             {{ loading ? t('login.loading') : t('login.signIn') }}
@@ -265,17 +297,34 @@ onMounted(() => {
         <!-- REGISTER VIEW -->
         <form v-if="view === 'register'" class="space-y-4" @submit.prevent="handleRegister">
           <div>
-            <input v-model="name" type="text" :placeholder="t('login.namePlaceholder')" autocomplete="name"
-              class="input-field w-full px-3.5 py-2.5" />
-            <p v-if="name.length > 0 && !name.trim()" class="mt-1 text-[11px] text-red-400">{{ t('login.nameRequired') }}</p>
+            <input
+              v-model="name"
+              type="text"
+              :placeholder="t('login.namePlaceholder')"
+              autocomplete="name"
+              class="input-field w-full px-3.5 py-2.5"
+            />
+            <p v-if="name.length > 0 && !name.trim()" class="mt-1 text-[11px] text-red-400">
+              {{ t('login.nameRequired') }}
+            </p>
           </div>
           <div>
-            <input v-model="email" type="email" :placeholder="t('login.email')" autocomplete="email"
-              class="input-field w-full px-3.5 py-2.5" />
+            <input
+              v-model="email"
+              type="email"
+              :placeholder="t('login.email')"
+              autocomplete="email"
+              class="input-field w-full px-3.5 py-2.5"
+            />
           </div>
           <div>
-            <input v-model="password" type="password" :placeholder="t('login.password')" autocomplete="new-password"
-              class="input-field w-full px-3.5 py-2.5" />
+            <input
+              v-model="password"
+              type="password"
+              :placeholder="t('login.password')"
+              autocomplete="new-password"
+              class="input-field w-full px-3.5 py-2.5"
+            />
             <!-- Strength bar -->
             <div v-if="password.length > 0" class="mt-1.5 flex items-center gap-2">
               <div class="flex flex-1 gap-1">
@@ -287,14 +336,22 @@ onMounted(() => {
             </div>
           </div>
           <div>
-            <input v-model="confirmPassword" type="password" :placeholder="t('login.confirmPassword')" autocomplete="new-password"
-              class="input-field w-full px-3.5 py-2.5" />
+            <input
+              v-model="confirmPassword"
+              type="password"
+              :placeholder="t('login.confirmPassword')"
+              autocomplete="new-password"
+              class="input-field w-full px-3.5 py-2.5"
+            />
             <p v-if="confirmPassword && password !== confirmPassword" class="mt-1 text-[11px] text-red-400">
               {{ t('login.passwordsDoNotMatch') }}
             </p>
           </div>
-          <button type="submit" class="btn-primary w-full py-2.5"
-            :disabled="!name.trim() || !email || password.length < 8 || password !== confirmPassword || loading">
+          <button
+            type="submit"
+            class="btn-primary w-full py-2.5"
+            :disabled="!name.trim() || !email || password.length < 8 || password !== confirmPassword || loading"
+          >
             {{ loading ? t('login.registering') : t('login.register') }}
           </button>
         </form>
@@ -306,18 +363,38 @@ onMounted(() => {
             <h2 class="text-[16px] font-bold text-[--t1]">{{ t('login.verifyTitle') }}</h2>
             <p class="mt-1 text-[12px] text-[--t3]">{{ t('login.verifySubtitle', { email }) }}</p>
           </div>
-          <input v-model="verifyCode" type="text" inputmode="numeric" maxlength="6" :placeholder="t('login.verifyCodePlaceholder')"
-            class="input-field w-full px-3.5 py-2.5 text-center text-[18px] tracking-[0.3em]" @keydown.enter="handleVerify" />
-          <button class="btn-primary w-full py-2.5" :disabled="verifyCode.length !== 6 || loading" @click="handleVerify">
+          <input
+            v-model="verifyCode"
+            type="text"
+            inputmode="numeric"
+            maxlength="6"
+            :placeholder="t('login.verifyCodePlaceholder')"
+            class="input-field w-full px-3.5 py-2.5 text-center text-[18px] tracking-[0.3em]"
+            @keydown.enter="handleVerify"
+          />
+          <button
+            class="btn-primary w-full py-2.5"
+            :disabled="verifyCode.length !== 6 || loading"
+            @click="handleVerify"
+          >
             {{ loading ? '...' : t('login.verify') }}
           </button>
           <div class="text-center">
-            <button v-if="resendCooldown <= 0" class="cursor-pointer border-0 bg-transparent text-[12px] text-[--accent]"
-              @click="handleResend">{{ t('login.resendCode') }}</button>
+            <button
+              v-if="resendCooldown <= 0"
+              class="cursor-pointer border-0 bg-transparent text-[12px] text-[--accent]"
+              @click="handleResend"
+            >
+              {{ t('login.resendCode') }}
+            </button>
             <span v-else class="text-[12px] text-[--t3]">{{ t('login.resendCooldown', { n: resendCooldown }) }}</span>
           </div>
-          <button class="w-full cursor-pointer border-0 bg-transparent text-center text-[12px] text-[--t3] hover:text-[--t2]"
-            @click="switchTo('login')">{{ t('login.backToLogin') }}</button>
+          <button
+            class="w-full cursor-pointer border-0 bg-transparent text-center text-[12px] text-[--t3] hover:text-[--t2]"
+            @click="switchTo('login')"
+          >
+            {{ t('login.backToLogin') }}
+          </button>
         </div>
 
         <!-- FORGOT PASSWORD STEP 1: Enter email -->
@@ -326,12 +403,22 @@ onMounted(() => {
             <h2 class="text-[16px] font-bold text-[--t1]">{{ t('login.forgotTitle') }}</h2>
             <p class="mt-1 text-[12px] text-[--t3]">{{ t('login.forgotSubtitle') }}</p>
           </div>
-          <input v-model="email" type="email" :placeholder="t('login.email')" class="input-field w-full px-3.5 py-2.5" />
+          <input
+            v-model="email"
+            type="email"
+            :placeholder="t('login.email')"
+            class="input-field w-full px-3.5 py-2.5"
+          />
           <button type="submit" class="btn-primary w-full py-2.5" :disabled="!email || loading">
             {{ loading ? '...' : t('login.sendCode') }}
           </button>
-          <button type="button" class="w-full cursor-pointer border-0 bg-transparent text-center text-[12px] text-[--t3] hover:text-[--t2]"
-            @click="switchTo('login')">{{ t('login.backToLogin') }}</button>
+          <button
+            type="button"
+            class="w-full cursor-pointer border-0 bg-transparent text-center text-[12px] text-[--t3] hover:text-[--t2]"
+            @click="switchTo('login')"
+          >
+            {{ t('login.backToLogin') }}
+          </button>
         </form>
 
         <!-- FORGOT PASSWORD STEP 2: Enter code -->
@@ -340,13 +427,24 @@ onMounted(() => {
             <h2 class="text-[16px] font-bold text-[--t1]">{{ t('login.enterCode') }}</h2>
             <p class="mt-1 text-[12px] text-[--t3]">{{ t('login.verifySubtitle', { email }) }}</p>
           </div>
-          <input v-model="forgotCode" type="text" inputmode="numeric" maxlength="6" :placeholder="t('login.verifyCodePlaceholder')"
-            class="input-field w-full px-3.5 py-2.5 text-center text-[18px] tracking-[0.3em]" />
+          <input
+            v-model="forgotCode"
+            type="text"
+            inputmode="numeric"
+            maxlength="6"
+            :placeholder="t('login.verifyCodePlaceholder')"
+            class="input-field w-full px-3.5 py-2.5 text-center text-[18px] tracking-[0.3em]"
+          />
           <button type="submit" class="btn-primary w-full py-2.5" :disabled="forgotCode.length !== 6 || loading">
             {{ loading ? '...' : t('login.verify') }}
           </button>
-          <button type="button" class="w-full cursor-pointer border-0 bg-transparent text-center text-[12px] text-[--t3] hover:text-[--t2]"
-            @click="switchTo('forgot-step1')">{{ t('login.backToLogin') }}</button>
+          <button
+            type="button"
+            class="w-full cursor-pointer border-0 bg-transparent text-center text-[12px] text-[--t3] hover:text-[--t2]"
+            @click="switchTo('forgot-step1')"
+          >
+            {{ t('login.backToLogin') }}
+          </button>
         </form>
 
         <!-- FORGOT PASSWORD STEP 3: New password -->
@@ -354,13 +452,26 @@ onMounted(() => {
           <div class="mb-2 text-center">
             <h2 class="text-[16px] font-bold text-[--t1]">{{ t('login.newPassword') }}</h2>
           </div>
-          <input v-model="newPassword" type="password" :placeholder="t('login.newPassword')" class="input-field w-full px-3.5 py-2.5" />
-          <input v-model="confirmNewPassword" type="password" :placeholder="t('login.confirmNewPassword')" class="input-field w-full px-3.5 py-2.5" />
+          <input
+            v-model="newPassword"
+            type="password"
+            :placeholder="t('login.newPassword')"
+            class="input-field w-full px-3.5 py-2.5"
+          />
+          <input
+            v-model="confirmNewPassword"
+            type="password"
+            :placeholder="t('login.confirmNewPassword')"
+            class="input-field w-full px-3.5 py-2.5"
+          />
           <p v-if="confirmNewPassword && newPassword !== confirmNewPassword" class="text-[11px] text-red-400">
             {{ t('login.passwordsDoNotMatch') }}
           </p>
-          <button type="submit" class="btn-primary w-full py-2.5"
-            :disabled="newPassword.length < 8 || newPassword !== confirmNewPassword || loading">
+          <button
+            type="submit"
+            class="btn-primary w-full py-2.5"
+            :disabled="newPassword.length < 8 || newPassword !== confirmNewPassword || loading"
+          >
             {{ loading ? '...' : t('login.resetPassword') }}
           </button>
         </form>
@@ -377,13 +488,19 @@ onMounted(() => {
           <p class="mt-4 text-center text-[12px] text-[--t3]">
             <template v-if="view === 'login'">
               {{ t('login.noAccount') }}
-              <button class="cursor-pointer border-0 bg-transparent p-0 font-semibold text-[--accent]" @click="switchTo('register')">
+              <button
+                class="cursor-pointer border-0 bg-transparent p-0 font-semibold text-[--accent]"
+                @click="switchTo('register')"
+              >
                 {{ t('login.tabRegister') }}
               </button>
             </template>
             <template v-else>
               {{ t('login.hasAccount') }}
-              <button class="cursor-pointer border-0 bg-transparent p-0 font-semibold text-[--accent]" @click="switchTo('login')">
+              <button
+                class="cursor-pointer border-0 bg-transparent p-0 font-semibold text-[--accent]"
+                @click="switchTo('login')"
+              >
                 {{ t('login.tabLogin') }}
               </button>
             </template>
@@ -403,8 +520,15 @@ onMounted(() => {
 }
 
 @keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-6px); }
-  75% { transform: translateX(6px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-6px);
+  }
+  75% {
+    transform: translateX(6px);
+  }
 }
 </style>

@@ -59,7 +59,8 @@ const {
             {{ currentBook.title }}
           </p>
           <p class="mt-0.5 text-[11px] text-[--t3] tabular-nums">
-            {{ formatTime(totalDuration > 0 ? totalElapsed : currentTime) }} / {{ formatTime(totalDuration > 0 ? totalDuration : duration) }}
+            {{ formatTime(totalDuration > 0 ? totalElapsed : currentTime) }} /
+            {{ formatTime(totalDuration > 0 ? totalDuration : duration) }}
           </p>
         </button>
 
