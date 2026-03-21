@@ -10,6 +10,11 @@ const router = useRouter()
 const yt = useYouTubeImport()
 const youtubeUrl = ref('')
 const chunkMinutes = ref(10)
+
+function handleRetry() {
+  yt.reset()
+  youtubeUrl.value = ''
+}
 </script>
 
 <template>
@@ -158,10 +163,7 @@ const chunkMinutes = ref(10)
         <span class="text-[13px] text-red-400">{{ yt.errorMessage.value }}</span>
         <button
           class="ml-auto cursor-pointer border-0 bg-transparent text-[12px] font-semibold text-[--accent]"
-          @click="
-            yt.reset()
-            youtubeUrl = ''
-          "
+          @click="handleRetry"
         >
           {{ t('upload.youtubeRetry') }}
         </button>
