@@ -573,4 +573,18 @@ export default {
     upgrade: 'Перейти на Premium — $4/міс',
     notNow: 'Не зараз',
   },
+  scan: {
+    found: 'Знайдено {n} книг',
+    scanning: 'Скануємо...',
+    scanningDir: 'Скануємо {dir}...',
+    nothingFound: 'Аудіокниги не знайдено',
+    tryFolder: 'Спробуйте вказати папку вручну',
+    uncheckHint: 'Приберіть галочку з книг, які не потрібні',
+    selectAll: 'Вибрати все',
+    deselectAll: 'Зняти все',
+    tracks: '{n} треків',
+    addN: 'Додати {n} книг',
+    stayOnDevice: 'Книги залишаться на пристрої',
+    added: 'Додано {n} книг',
+  },
 }

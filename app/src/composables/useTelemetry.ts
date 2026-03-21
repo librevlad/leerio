@@ -16,6 +16,8 @@ type TelemetryEvent =
   | 'paywall_shown'
   | 'upgrade_clicked'
   | 'book_played'
+  | 'scan_completed'
+  | 'scan_books_added'
 
 export function useTracking() {
   function track(event: TelemetryEvent, data?: Record<string, unknown>) {

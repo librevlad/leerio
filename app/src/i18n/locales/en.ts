@@ -573,4 +573,18 @@ export default {
     upgrade: 'Upgrade for $4/month',
     notNow: 'Not now',
   },
+  scan: {
+    found: 'Found {n} books',
+    scanning: 'Scanning...',
+    scanningDir: 'Scanning {dir}...',
+    nothingFound: 'No audiobooks found',
+    tryFolder: 'Try selecting a folder manually',
+    uncheckHint: "Uncheck books you don't need",
+    selectAll: 'Select all',
+    deselectAll: 'Deselect all',
+    tracks: '{n} tracks',
+    addN: 'Add {n} books',
+    stayOnDevice: 'Books stay on your device',
+    added: '{n} books added',
+  },
 }
