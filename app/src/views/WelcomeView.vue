@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { Capacitor } from '@capacitor/core'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { api } from '../api'
@@ -18,6 +19,8 @@ const { addLocalBook } = useLocalBooks()
 const { isLoggedIn } = useAuth()
 
 onMounted(() => track('onboarding_started'))
+
+const isNative = Capacitor.isNativePlatform()
 
 const step = ref(1)
 const files = ref<File[]>([])
@@ -55,6 +58,19 @@ function addFiles(fileList: FileList) {
 
 function removeFile(idx: number) {
   files.value.splice(idx, 1)
+}
+
+function pickFolder() {
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.setAttribute('webkitdirectory', '')
+  input.setAttribute('directory', '')
+  input.multiple = true
+  input.accept = '.mp3,.m4a,.m4b,.ogg,.opus,.flac,.wav'
+  input.onchange = () => {
+    if (input.files) addFiles(input.files)
+  }
+  input.click()
 }
 
 function fmtSize(bytes: number): string {
@@ -139,20 +155,34 @@ async function finish() {
           </button>
         </div>
 
-        <!-- Step 2: Upload -->
+        <!-- Step 2: Add books -->
         <div v-else-if="step === 2" key="step2">
-          <h1 class="mb-2 text-center text-[20px] font-extrabold tracking-tight text-[--t1]">
-            {{ t('welcome.uploadTitle') }}
+          <h1 class="mb-1 text-center text-[20px] font-extrabold tracking-tight text-[--t1]">
+            {{ t('welcome.addBooksTitle') }}
           </h1>
-          <p class="mb-6 text-center text-[13px] text-[--t3]">MP3, M4B, ZIP</p>
+          <p class="mb-6 text-center text-[13px] text-[--t3]">{{ t('welcome.addBooksSubtitle') }}</p>
 
-          <!-- Drop zone -->
-          <div
-            class="relative flex min-h-[160px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 transition-all duration-200"
-            :class="dragOver ? 'border-[--accent] bg-[--accent-soft]' : 'border-[--border] bg-white/[0.02]'"
-            @dragover.prevent="dragOver = true"
-            @dragleave="dragOver = false"
-            @drop.prevent="handleDrop"
+          <!-- Scan device (APK only) -->
+          <button
+            v-if="isNative"
+            v-ripple
+            class="mb-2.5 flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-left text-white"
+            style="background: var(--gradient-accent)"
+            @click="$router.push('/scan-results')"
+          >
+            <span class="text-[22px]">📱</span>
+            <div>
+              <div class="text-[14px] font-semibold">{{ t('welcome.scanDevice') }}</div>
+              <div class="mt-0.5 text-[11px] opacity-80">{{ t('welcome.scanDeviceHint') }}</div>
+            </div>
+          </button>
+
+          <!-- Choose files -->
+          <button
+            v-ripple
+            class="mb-2.5 flex w-full items-center gap-3 rounded-xl border px-4 py-3.5 text-left"
+            :class="isNative ? 'border-white/[0.08] bg-white/[0.05]' : ''"
+            :style="!isNative ? 'background: var(--gradient-accent); color: white' : ''"
             @click="($refs.fileInput as HTMLInputElement)?.click()"
           >
             <input
@@ -163,13 +193,28 @@ async function finish() {
               hidden
               @change="handleFileInput"
             />
-            <div class="text-[32px]">{{ dragOver ? '📂' : '📁' }}</div>
-            <p class="mt-3 text-[13px] font-medium text-[--t2]">{{ t('welcome.dropHere') }}</p>
-            <p class="mt-1 text-[11px] text-[--t3]">{{ t('welcome.orClick') }}</p>
-          </div>
+            <span class="text-[22px]">📄</span>
+            <div>
+              <div class="text-[14px] font-semibold" :class="isNative ? 'text-[--t1]' : ''">{{ t('welcome.chooseFiles') }}</div>
+              <div class="mt-0.5 text-[11px]" :class="isNative ? 'text-[--t3]' : 'opacity-80'">MP3, M4A, M4B, OGG, FLAC, ZIP</div>
+            </div>
+          </button>
 
-          <!-- File list -->
-          <div v-if="files.length" class="mt-4 max-h-[200px] space-y-1.5 overflow-y-auto">
+          <!-- Choose folder -->
+          <button
+            v-ripple
+            class="mb-4 flex w-full items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.05] px-4 py-3.5 text-left"
+            @click="pickFolder"
+          >
+            <span class="text-[22px]">📂</span>
+            <div>
+              <div class="text-[14px] font-semibold text-[--t1]">{{ t('welcome.chooseFolder') }}</div>
+              <div class="mt-0.5 text-[11px] text-[--t3]">{{ t('welcome.chooseFolderHint') }}</div>
+            </div>
+          </button>
+
+          <!-- File list (if files selected) -->
+          <div v-if="files.length" class="mb-4 max-h-[160px] space-y-1.5 overflow-y-auto">
             <div
               v-for="(f, i) in files"
               :key="f.name"
@@ -184,19 +229,21 @@ async function finish() {
             </div>
           </div>
 
-          <p v-if="files.length" class="mt-2 text-center text-[11px] text-[--t3]">
-            {{ files.length }} {{ t('welcome.filesSelected') }}
-          </p>
-
-          <button v-ripple class="btn btn-primary mt-6 w-full justify-center py-3 text-[15px]" @click="next">
+          <button
+            v-if="files.length"
+            v-ripple
+            class="btn btn-primary mt-2 w-full justify-center py-3 text-[15px]"
+            @click="next"
+          >
             {{ t('welcome.continue') }}
           </button>
-          <div class="mt-2 flex justify-center gap-4">
+
+          <div class="mt-3 flex justify-center gap-4">
             <button class="py-2 text-[12px] text-[--t3] hover:text-[--t2]" @click="prev">
               {{ t('common.back') }}
             </button>
             <button class="py-2 text-[12px] text-[--t3] hover:text-[--t2]" @click="next">
-              {{ t('welcome.skip') }}
+              {{ t('welcome.skip') }} →
             </button>
           </div>
         </div>
