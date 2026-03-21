@@ -174,13 +174,18 @@ function ensureAudio(): HTMLAudioElement {
         previousDevices = devices.filter((d) => d.kind === 'audiooutput').map((d) => d.deviceId)
       })
       navigator.mediaDevices.addEventListener('devicechange', () => {
-        navigator.mediaDevices.enumerateDevices().then((devices) => {
-          const currentOutputs = devices.filter((d) => d.kind === 'audiooutput').map((d) => d.deviceId)
-          if (previousDevices.length > currentOutputs.length && audio && !audio.paused && currentBook.value) {
-            audio.pause()
-          }
-          previousDevices = currentOutputs
-        }).catch(() => { /* permission denied or unavailable */ })
+        navigator.mediaDevices
+          .enumerateDevices()
+          .then((devices) => {
+            const currentOutputs = devices.filter((d) => d.kind === 'audiooutput').map((d) => d.deviceId)
+            if (previousDevices.length > currentOutputs.length && audio && !audio.paused && currentBook.value) {
+              audio.pause()
+            }
+            previousDevices = currentOutputs
+          })
+          .catch(() => {
+            /* permission denied or unavailable */
+          })
       })
     }
   }
@@ -435,7 +440,9 @@ async function loadBook(book: Book, startTrackIndex?: number) {
         try {
           const savedPos = localStorage.getItem(`${STORAGE.POSITION_PREFIX}${book.id}`)
           if (savedPos) pos = JSON.parse(savedPos)
-        } catch { /* corrupted localStorage */ }
+        } catch {
+          /* corrupted localStorage */
+        }
       }
       const idx = pos.track_index >= 0 && pos.track_index < tracks.value.length ? pos.track_index : 0
       const seekPos = isFinite(pos.position) && pos.position >= 0 ? pos.position : 0
@@ -811,7 +818,10 @@ function closePlayer() {
   }
   savePosition()
   stopSaveTimer()
-  if (saveApiDebounce) { clearTimeout(saveApiDebounce); saveApiDebounce = null }
+  if (saveApiDebounce) {
+    clearTimeout(saveApiDebounce)
+    saveApiDebounce = null
+  }
   setSleepTimer(null)
   nextTrackUrl = null
   nextTrackIndex = null

@@ -34,7 +34,6 @@ function prev() {
   if (step.value > 1) step.value--
 }
 
-
 function handleFileInput(e: Event) {
   const input = e.target as HTMLInputElement
   if (input.files) addFiles(input.files)
@@ -189,8 +188,12 @@ async function finish() {
             />
             <span class="text-[22px]">📄</span>
             <div>
-              <div class="text-[14px] font-semibold" :class="isNative ? 'text-[--t1]' : ''">{{ t('welcome.chooseFiles') }}</div>
-              <div class="mt-0.5 text-[11px]" :class="isNative ? 'text-[--t3]' : 'opacity-80'">MP3, M4A, M4B, OGG, FLAC, ZIP</div>
+              <div class="text-[14px] font-semibold" :class="isNative ? 'text-[--t1]' : ''">
+                {{ t('welcome.chooseFiles') }}
+              </div>
+              <div class="mt-0.5 text-[11px]" :class="isNative ? 'text-[--t3]' : 'opacity-80'">
+                MP3, M4A, M4B, OGG, FLAC, ZIP
+              </div>
             </div>
           </button>
 

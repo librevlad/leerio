@@ -162,7 +162,9 @@ export function useAuth() {
       try {
         const json = JSON.parse(text)
         if (json.detail) detail = json.detail
-      } catch { /* not JSON */ }
+      } catch {
+        /* not JSON */
+      }
       throw new Error(`${res.status}: ${detail}`)
     }
   }
@@ -180,7 +182,9 @@ export function useAuth() {
       try {
         const json = JSON.parse(text)
         if (json.detail) detail = json.detail
-      } catch { /* not JSON */ }
+      } catch {
+        /* not JSON */
+      }
       throw new Error(`${res.status}: ${detail}`)
     }
     const data = await res.json()
@@ -189,7 +193,9 @@ export function useAuth() {
     loading.value = false
     try {
       localStorage.setItem(STORAGE.USER, JSON.stringify(data))
-    } catch { /* full */ }
+    } catch {
+      /* full */
+    }
     return data
   }
 
@@ -219,7 +225,9 @@ export function useAuth() {
       try {
         const json = JSON.parse(text)
         if (json.detail) detail = json.detail
-      } catch { /* not JSON */ }
+      } catch {
+        /* not JSON */
+      }
       throw new Error(`${res.status}: ${detail}`)
     }
   }

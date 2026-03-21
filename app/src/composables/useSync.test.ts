@@ -295,9 +295,7 @@ describe('useSync', () => {
     ])
 
     // Local already has one of them
-    mockLocal.getQuotes.mockResolvedValue([
-      { text: 'hello', book: 'b1', author: 'a1', ts: '2025-01-01' },
-    ])
+    mockLocal.getQuotes.mockResolvedValue([{ text: 'hello', book: 'b1', author: 'a1', ts: '2025-01-01' }])
 
     mockUser.value = { id: '1' }
     await callUseSync()
@@ -322,9 +320,7 @@ describe('useSync', () => {
     ])
 
     // Local already has collection 1
-    mockLocal.getCollections.mockResolvedValue([
-      { id: 1, name: 'Col A', books: [], description: '' },
-    ])
+    mockLocal.getCollections.mockResolvedValue([{ id: 1, name: 'Col A', books: [], description: '' }])
 
     mockUser.value = { id: '1' }
     await callUseSync()
@@ -334,8 +330,6 @@ describe('useSync', () => {
 
     // Only new collection (id=2) should be saved
     expect(mockLocal.saveCollection).toHaveBeenCalledTimes(1)
-    expect(mockLocal.saveCollection).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 2, name: 'Col B' }),
-    )
+    expect(mockLocal.saveCollection).toHaveBeenCalledWith(expect.objectContaining({ id: 2, name: 'Col B' }))
   })
 })

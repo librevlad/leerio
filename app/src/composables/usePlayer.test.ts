@@ -922,9 +922,7 @@ describe('usePlayer', () => {
 
     it('does nothing when <=3s on first track', () => {
       const p = usePlayer()
-      p.tracks.value = [
-        { index: 0, filename: 'a.mp3', path: '', duration: 60 },
-      ]
+      p.tracks.value = [{ index: 0, filename: 'a.mp3', path: '', duration: 60 }]
       p.currentTrackIndex.value = 0
       p.currentTime.value = 2
       mockAudio._setDuration(60)
@@ -1083,8 +1081,16 @@ describe('usePlayer', () => {
       p.tracks.value = []
       p.currentTrackIndex.value = 0
       p.currentBook.value = {
-        id: 'test', folder: '', category: '', author: '', title: 'T',
-        reader: '', path: '', progress: 0, tags: [], note: '',
+        id: 'test',
+        folder: '',
+        category: '',
+        author: '',
+        title: 'T',
+        reader: '',
+        path: '',
+        progress: 0,
+        tags: [],
+        note: '',
       }
       mockAudio.pause.mockClear()
       p.nextTrack()

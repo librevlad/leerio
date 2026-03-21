@@ -13,7 +13,7 @@ const { currentBook } = usePlayer()
 const isOpen = ref(false)
 const isNative = Capacitor.isNativePlatform()
 
-const bottomOffset = () => currentBook.value ? '130px' : '80px'
+const bottomOffset = () => (currentBook.value ? '130px' : '80px')
 
 function toggle() {
   isOpen.value = !isOpen.value
@@ -53,11 +53,7 @@ function openTTS() {
   <!-- Overlay -->
   <Teleport to="body">
     <transition name="fade">
-      <div
-        v-if="isOpen"
-        class="fixed inset-0 z-40 bg-black/50"
-        @click="close"
-      />
+      <div v-if="isOpen" class="fixed inset-0 z-40 bg-black/50" @click="close" />
     </transition>
 
     <!-- Popup menu -->
@@ -74,7 +70,12 @@ function openTTS() {
           class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-white/[0.06]"
           @click="scanDevice"
         >
-          <div class="flex h-8 w-8 items-center justify-center rounded-lg text-[16px]" style="background: rgba(249,115,22,0.15)">📱</div>
+          <div
+            class="flex h-8 w-8 items-center justify-center rounded-lg text-[16px]"
+            style="background: rgba(249, 115, 22, 0.15)"
+          >
+            📱
+          </div>
           <div>
             <div class="text-[13px] font-semibold text-[--t1]">{{ t('fab.scan') }}</div>
             <div class="text-[10px] text-[--t3]">{{ t('fab.scanHint') }}</div>
@@ -114,7 +115,12 @@ function openTTS() {
           class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-white/[0.06]"
           @click="openYouTube"
         >
-          <div class="flex h-8 w-8 items-center justify-center rounded-lg text-[16px]" style="background: rgba(255,0,0,0.1)">🎥</div>
+          <div
+            class="flex h-8 w-8 items-center justify-center rounded-lg text-[16px]"
+            style="background: rgba(255, 0, 0, 0.1)"
+          >
+            🎥
+          </div>
           <div>
             <div class="text-[13px] font-semibold text-[--t1]">YouTube</div>
             <div class="text-[10px] text-[--t3]">{{ t('fab.youtube') }}</div>
@@ -139,7 +145,11 @@ function openTTS() {
     <button
       class="fixed right-4 z-50 flex h-[52px] w-[52px] items-center justify-center rounded-full text-white shadow-lg transition-transform duration-200"
       :class="isOpen ? 'rotate-45' : ''"
-      :style="{ bottom: bottomOffset(), background: 'var(--gradient-accent)', boxShadow: '0 4px 12px rgba(249,115,22,0.4)' }"
+      :style="{
+        bottom: bottomOffset(),
+        background: 'var(--gradient-accent)',
+        boxShadow: '0 4px 12px rgba(249,115,22,0.4)',
+      }"
       @click="toggle"
     >
       <IconPlus :size="24" />
@@ -148,11 +158,27 @@ function openTTS() {
 </template>
 
 <style scoped>
-.fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
 
-.scale-up-enter-active { transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
-.scale-up-leave-active { transition: all 0.15s ease-in; }
-.scale-up-enter-from { opacity: 0; transform: scale(0.8) translateY(10px); }
-.scale-up-leave-to { opacity: 0; transform: scale(0.9); }
+.scale-up-enter-active {
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.scale-up-leave-active {
+  transition: all 0.15s ease-in;
+}
+.scale-up-enter-from {
+  opacity: 0;
+  transform: scale(0.8) translateY(10px);
+}
+.scale-up-leave-to {
+  opacity: 0;
+  transform: scale(0.9);
+}
 </style>

@@ -394,9 +394,7 @@ watch(() => route.params.id, loadBook)
               @click="cloudUpload"
             >
               <template v-if="cloudUploading">
-                <div
-                  class="h-4 w-4 animate-spin rounded-full border-2 border-[--accent] border-t-transparent"
-                />
+                <div class="h-4 w-4 animate-spin rounded-full border-2 border-[--accent] border-t-transparent" />
                 {{ cloudProgress }}%
               </template>
               <template v-else>

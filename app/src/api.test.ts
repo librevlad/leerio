@@ -164,10 +164,7 @@ describe('get() — online', () => {
 
     expect(result).toEqual(books)
     // /books is in CACHEABLE list — cache.set should be called
-    expect(mockCache.set).toHaveBeenCalledWith(
-      expect.any(String),
-      books,
-    )
+    expect(mockCache.set).toHaveBeenCalledWith(expect.any(String), books)
   })
 
   it('does not cache non-cacheable paths', async () => {
@@ -248,11 +245,11 @@ describe('post() — offline', () => {
     const result = await api.addQuote('Hello', 'book1', 'Author')
 
     expect(result).toEqual({ ok: true })
-    expect(mockQueue.enqueue).toHaveBeenCalledWith(
-      'POST',
-      '/api/quotes',
-      { text: 'Hello', book: 'book1', author: 'Author' },
-    )
+    expect(mockQueue.enqueue).toHaveBeenCalledWith('POST', '/api/quotes', {
+      text: 'Hello',
+      book: 'book1',
+      author: 'Author',
+    })
     // fetch should NOT be called
     expect(globalThis.fetch).not.toHaveBeenCalled()
   })
@@ -290,11 +287,7 @@ describe('put() — offline', () => {
     const result = await api.setProgress('book-1', 75)
 
     expect(result).toEqual({ ok: true })
-    expect(mockQueue.enqueue).toHaveBeenCalledWith(
-      'PUT',
-      '/api/books/book-1/progress',
-      { pct: 75 },
-    )
+    expect(mockQueue.enqueue).toHaveBeenCalledWith('PUT', '/api/books/book-1/progress', { pct: 75 })
     expect(globalThis.fetch).not.toHaveBeenCalled()
   })
 })
@@ -330,10 +323,7 @@ describe('del() — offline', () => {
     const result = await api.deleteQuote(42)
 
     expect(result).toEqual({ ok: true })
-    expect(mockQueue.enqueue).toHaveBeenCalledWith(
-      'DELETE',
-      '/api/quotes/42',
-    )
+    expect(mockQueue.enqueue).toHaveBeenCalledWith('DELETE', '/api/quotes/42')
     expect(globalThis.fetch).not.toHaveBeenCalled()
   })
 })

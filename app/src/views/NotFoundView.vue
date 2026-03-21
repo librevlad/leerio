@@ -18,7 +18,7 @@ function goBack() {
   <div class="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
     <!-- Illustration -->
     <div class="relative mb-6">
-      <div class="text-[80px] leading-none opacity-10 font-black text-[--t1]">404</div>
+      <div class="text-[80px] leading-none font-black text-[--t1] opacity-10">404</div>
       <div class="absolute inset-0 flex items-center justify-center text-[40px]">🎧</div>
     </div>
 
@@ -27,10 +27,7 @@ function goBack() {
 
     <!-- Actions -->
     <div class="mt-6 flex flex-col items-center gap-3">
-      <button
-        class="btn-primary px-8 py-2.5"
-        @click="goBack"
-      >
+      <button class="btn-primary px-8 py-2.5" @click="goBack">
         {{ t('notFound.goBack') }}
       </button>
     </div>

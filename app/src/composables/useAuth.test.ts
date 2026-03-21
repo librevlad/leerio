@@ -141,11 +141,7 @@ describe('useAuth', () => {
       const fetchFn = mockFetch({ ok: true, json: () => Promise.resolve(mockUser) })
 
       const auth = useAuth()
-      const [r1, r2, r3] = await Promise.all([
-        auth.checkAuth(),
-        auth.checkAuth(),
-        auth.checkAuth(),
-      ])
+      const [r1, r2, r3] = await Promise.all([auth.checkAuth(), auth.checkAuth(), auth.checkAuth()])
 
       expect(r1).toBe(true)
       expect(r2).toBe(true)
@@ -173,10 +169,13 @@ describe('useAuth', () => {
       expect(result).toEqual(mockUser)
       expect(user.value).toEqual(mockUser)
       expect(localStorage.getItem('leerio_user')).toBe(JSON.stringify(mockUser))
-      expect(fetchFn).toHaveBeenCalledWith('/api/auth/google', expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({ id_token: 'google-id-token-123' }),
-      }))
+      expect(fetchFn).toHaveBeenCalledWith(
+        '/api/auth/google',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ id_token: 'google-id-token-123' }),
+        }),
+      )
     })
 
     it('throws with detail message on error', async () => {
@@ -212,10 +211,13 @@ describe('useAuth', () => {
       expect(result).toEqual(mockUser)
       expect(user.value).toEqual(mockUser)
       expect(localStorage.getItem('leerio_user')).toBe(JSON.stringify(mockUser))
-      expect(fetchFn).toHaveBeenCalledWith('/api/auth/login', expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({ email: 'test@example.com', password: 'password123' }),
-      }))
+      expect(fetchFn).toHaveBeenCalledWith(
+        '/api/auth/login',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ email: 'test@example.com', password: 'password123' }),
+        }),
+      )
     })
 
     it('throws with JSON detail on error', async () => {

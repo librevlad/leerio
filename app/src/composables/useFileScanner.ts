@@ -99,7 +99,9 @@ export function useFileScanner() {
                     directory: Directory.ExternalStorage,
                   })
                   sizeBytes += stat.size || 0
-                } catch { /* stat can fail on some devices */ }
+                } catch {
+                  /* stat can fail on some devices */
+                }
               }
 
               found.push({
@@ -178,9 +180,17 @@ export function useFileScanner() {
   }
 
   return {
-    fsBooks, scanning, scanProgress,
-    scan, addFsBooks, removeFsBook, markSynced, getFsBook,
-    cleanTitle, extractAuthor, isLikelyNotBook,
+    fsBooks,
+    scanning,
+    scanProgress,
+    scan,
+    addFsBooks,
+    removeFsBook,
+    markSynced,
+    getFsBook,
+    cleanTitle,
+    extractAuthor,
+    isLikelyNotBook,
   }
 }
 

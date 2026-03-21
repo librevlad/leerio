@@ -60,7 +60,12 @@ describe('useAnalytics', () => {
 
   it('loading is true during fetch, false after', async () => {
     let resolveAnalytics!: (v: unknown) => void
-    mockedGetAnalytics.mockImplementation(() => new Promise(r => { resolveAnalytics = r }))
+    mockedGetAnalytics.mockImplementation(
+      () =>
+        new Promise((r) => {
+          resolveAnalytics = r
+        }),
+    )
     mockedGetAchievements.mockResolvedValue([])
 
     const { load, loading } = useAnalytics()

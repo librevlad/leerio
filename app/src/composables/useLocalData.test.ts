@@ -231,7 +231,12 @@ describe('useLocalData', () => {
       vi.setSystemTime(new Date('2026-02-01T12:00:00Z'))
       try {
         const local = useLocalData()
-        const q = await local.addQuote({ text: 'To be or not', book: 'Hamlet', author: 'Shakespeare', ts: '2026-02-01' })
+        const q = await local.addQuote({
+          text: 'To be or not',
+          book: 'Hamlet',
+          author: 'Shakespeare',
+          ts: '2026-02-01',
+        })
         expect(q.id).toBe(Date.now())
         expect(q.text).toBe('To be or not')
 
@@ -272,7 +277,13 @@ describe('useLocalData', () => {
 
     it('saveCollection and getCollections', async () => {
       const local = useLocalData()
-      const col: Collection = { id: 1, name: 'Favorites', books: [10, 20], description: 'My favs', created: '2026-01-01' }
+      const col: Collection = {
+        id: 1,
+        name: 'Favorites',
+        books: [10, 20],
+        description: 'My favs',
+        created: '2026-01-01',
+      }
       await local.saveCollection(col)
       const all = await local.getCollections()
       expect(all).toHaveLength(1)

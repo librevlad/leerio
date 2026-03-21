@@ -109,11 +109,16 @@ export function useYouTubeImport() {
         const ch = chapterList[i]!
         const outputName = `chapter-${String(i + 1).padStart(3, '0')}.mp3`
         await ffmpeg.exec([
-          '-i', inputName,
-          '-ss', String(ch.start),
-          '-to', String(ch.end),
-          '-c', 'copy',
-          '-y', outputName,
+          '-i',
+          inputName,
+          '-ss',
+          String(ch.start),
+          '-to',
+          String(ch.end),
+          '-c',
+          'copy',
+          '-y',
+          outputName,
         ])
         const data = await ffmpeg.readFile(outputName)
         const fileBlob = new Blob([data], { type: 'audio/mpeg' })
@@ -132,7 +137,8 @@ export function useYouTubeImport() {
   }
 
   function generateChapters(totalDuration: number, chunkSeconds: number): YouTubeChapter[] {
-    if (!Number.isFinite(totalDuration) || !Number.isFinite(chunkSeconds) || totalDuration <= 0 || chunkSeconds <= 0) return []
+    if (!Number.isFinite(totalDuration) || !Number.isFinite(chunkSeconds) || totalDuration <= 0 || chunkSeconds <= 0)
+      return []
     const result: YouTubeChapter[] = []
     let start = 0
     let i = 1
@@ -186,7 +192,9 @@ export function useYouTubeImport() {
             directory: Directory.ExternalStorage,
             recursive: true,
           })
-        } catch { /* already exists */ }
+        } catch {
+          /* already exists */
+        }
 
         // Write chapter files (chunked base64 to avoid stack overflow)
         const fsTracks = []
@@ -215,16 +223,18 @@ export function useYouTubeImport() {
           progress.value = Math.round(((i + 1) / files.length) * 100)
         }
 
-        addFsBooks([{
-          id: `fs:${title.value}`,
-          title: title.value,
-          author: author.value,
-          folderPath,
-          tracks: fsTracks,
-          sizeBytes: files.reduce((sum, f) => sum + f.size, 0),
-          synced: false,
-          addedAt: new Date().toISOString(),
-        }])
+        addFsBooks([
+          {
+            id: `fs:${title.value}`,
+            title: title.value,
+            author: author.value,
+            folderPath,
+            tracks: fsTracks,
+            sizeBytes: files.reduce((sum, f) => sum + f.size, 0),
+            synced: false,
+            addedAt: new Date().toISOString(),
+          },
+        ])
       } else {
         // Web fallback: save to IndexedDB as before
         await addLocalBook(files, {
@@ -262,9 +272,21 @@ export function useYouTubeImport() {
   }
 
   return {
-    step, progress, title, author, duration, thumbnail,
-    chapters, videoId, errorMessage,
-    resolve, download, importFromYouTube, splitAudio,
-    cancel, reset, generateChapters,
+    step,
+    progress,
+    title,
+    author,
+    duration,
+    thumbnail,
+    chapters,
+    videoId,
+    errorMessage,
+    resolve,
+    download,
+    importFromYouTube,
+    splitAudio,
+    cancel,
+    reset,
+    generateChapters,
   }
 }

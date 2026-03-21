@@ -105,7 +105,11 @@ watch(
           })
           .catch(() => {
             // Book deleted or offline — clear last played so we don't retry on next load
-            try { localStorage.removeItem(STORAGE.LAST_PLAYED) } catch { /* ignore */ }
+            try {
+              localStorage.removeItem(STORAGE.LAST_PLAYED)
+            } catch {
+              /* ignore */
+            }
           })
       })
     } catch {
@@ -173,7 +177,16 @@ onUnmounted(() => {
           :class="[sidebarCollapsed ? 'md:left-16' : 'md:left-60']"
           style="background: rgba(220, 38, 38, 0.9); color: white; backdrop-filter: blur(8px)"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
             <line x1="1" y1="1" x2="23" y2="23" />
             <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" />
             <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39" />

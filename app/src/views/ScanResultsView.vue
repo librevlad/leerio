@@ -113,9 +113,11 @@ function fmtSize(bytes: number): string {
         v-for="book in scannedBooks"
         :key="book.id"
         class="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 transition-all"
-        :class="selected.has(book.id)
-          ? 'border border-[--accent]/30 bg-white/[0.05]'
-          : 'border border-white/[0.06] bg-white/[0.03] opacity-60'"
+        :class="
+          selected.has(book.id)
+            ? 'border border-[--accent]/30 bg-white/[0.05]'
+            : 'border border-white/[0.06] bg-white/[0.03] opacity-60'
+        "
         @click="toggle(book.id)"
       >
         <!-- Checkbox -->
@@ -141,7 +143,7 @@ function fmtSize(bytes: number): string {
     <!-- Add button (sticky bottom) -->
     <div
       v-if="scannedBooks.length"
-      class="fixed bottom-0 left-0 right-0 px-4 pb-6 pt-3"
+      class="fixed right-0 bottom-0 left-0 px-4 pt-3 pb-6"
       style="background: linear-gradient(transparent, var(--bg) 20%)"
     >
       <button

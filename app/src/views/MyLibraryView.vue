@@ -387,10 +387,7 @@ async function uploadToCloud(item: UnifiedItem) {
                 {{ item.trackCount }} {{ t('plural.track', item.trackCount) }}
               </span>
               <div class="flex items-center gap-1">
-                <div
-                  v-if="uploadingToCloud === item.id"
-                  class="flex h-7 items-center text-[11px] text-[--accent]"
-                >
+                <div v-if="uploadingToCloud === item.id" class="flex h-7 items-center text-[11px] text-[--accent]">
                   Загрузка...
                 </div>
                 <button

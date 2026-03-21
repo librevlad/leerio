@@ -26,10 +26,7 @@ describe('useTelemetry', () => {
     track('book_played')
 
     expect(sendBeaconMock).toHaveBeenCalledOnce()
-    expect(sendBeaconMock).toHaveBeenCalledWith(
-      '/api/telemetry',
-      expect.any(Blob),
-    )
+    expect(sendBeaconMock).toHaveBeenCalledWith('/api/telemetry', expect.any(Blob))
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
@@ -80,13 +77,17 @@ describe('useTelemetry', () => {
   })
 
   it('track() never throws even if sendBeacon/fetch fails', () => {
-    sendBeaconMock.mockImplementation(() => { throw new Error('beacon broken') })
+    sendBeaconMock.mockImplementation(() => {
+      throw new Error('beacon broken')
+    })
 
     const { track } = useTracking()
     expect(() => track('paywall_shown')).not.toThrow()
 
     vi.stubGlobal('navigator', { sendBeacon: undefined })
-    fetchMock.mockImplementation(() => { throw new Error('fetch broken') })
+    fetchMock.mockImplementation(() => {
+      throw new Error('fetch broken')
+    })
 
     const { track: track2 } = useTracking()
     expect(() => track2('upgrade_clicked')).not.toThrow()

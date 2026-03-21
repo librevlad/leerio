@@ -147,12 +147,9 @@ describe('plural', () => {
   })
 
   describe('range n=5-20 → many', () => {
-    it.each([5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20])(
-      'n=%i → many',
-      (n) => {
-        expect(plural(n, one, few, many)).toBe(many)
-      },
-    )
+    it.each([5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20])('n=%i → many', (n) => {
+      expect(plural(n, one, few, many)).toBe(many)
+    })
   })
 
   describe('negative numbers (uses Math.abs)', () => {

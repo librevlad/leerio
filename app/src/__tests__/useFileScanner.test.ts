@@ -29,7 +29,18 @@ describe('useFileScanner', () => {
   })
 
   it('loads persisted books from localStorage', () => {
-    const books = { 'fs:test': { id: 'fs:test', title: 'Test', author: '', folderPath: 'Audiobooks/test', tracks: [], sizeBytes: 0, synced: false, addedAt: '2026-01-01' } }
+    const books = {
+      'fs:test': {
+        id: 'fs:test',
+        title: 'Test',
+        author: '',
+        folderPath: 'Audiobooks/test',
+        tracks: [],
+        sizeBytes: 0,
+        synced: false,
+        addedAt: '2026-01-01',
+      },
+    }
     localStorage.setItem('leerio_fs_books', JSON.stringify(books))
     const { fsBooks } = useFileScanner()
     expect(fsBooks.value['fs:test']?.title).toBe('Test')
@@ -57,16 +68,18 @@ describe('useFileScanner', () => {
 
   it('addFsBooks persists to localStorage', () => {
     const { addFsBooks, fsBooks } = useFileScanner()
-    addFsBooks([{
-      id: 'fs:mybook',
-      title: 'My Book',
-      author: 'Author',
-      folderPath: 'Audiobooks/mybook',
-      tracks: [{ index: 0, filename: '01.mp3', path: 'Audiobooks/mybook/01.mp3', duration: 0 }],
-      sizeBytes: 1000,
-      synced: false,
-      addedAt: '2026-01-01',
-    }])
+    addFsBooks([
+      {
+        id: 'fs:mybook',
+        title: 'My Book',
+        author: 'Author',
+        folderPath: 'Audiobooks/mybook',
+        tracks: [{ index: 0, filename: '01.mp3', path: 'Audiobooks/mybook/01.mp3', duration: 0 }],
+        sizeBytes: 1000,
+        synced: false,
+        addedAt: '2026-01-01',
+      },
+    ])
     expect(fsBooks.value['fs:mybook']).toBeDefined()
     const stored = JSON.parse(localStorage.getItem('leerio_fs_books') || '{}')
     expect(stored['fs:mybook']).toBeDefined()
@@ -74,7 +87,18 @@ describe('useFileScanner', () => {
 
   it('removeFsBook removes from localStorage', () => {
     const { addFsBooks, removeFsBook, fsBooks } = useFileScanner()
-    addFsBooks([{ id: 'fs:x', title: 'X', author: '', folderPath: 'Audiobooks/x', tracks: [], sizeBytes: 0, synced: false, addedAt: '' }])
+    addFsBooks([
+      {
+        id: 'fs:x',
+        title: 'X',
+        author: '',
+        folderPath: 'Audiobooks/x',
+        tracks: [],
+        sizeBytes: 0,
+        synced: false,
+        addedAt: '',
+      },
+    ])
     removeFsBook('fs:x')
     expect(fsBooks.value['fs:x']).toBeUndefined()
   })

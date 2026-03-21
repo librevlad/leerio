@@ -93,7 +93,10 @@ describe('useYouTubeImport', () => {
   it('resolve sets step to resolving during fetch', async () => {
     let resolvePromise: ((v: unknown) => void) | null = null
     vi.mocked(api.youtubeResolve).mockImplementation(
-      () => new Promise((r) => { resolvePromise = r }),
+      () =>
+        new Promise((r) => {
+          resolvePromise = r
+        }),
     )
 
     const yt = useYouTubeImport()
@@ -193,12 +196,20 @@ describe('useYouTubeImport', () => {
     it('multiple resolve calls use latest result', async () => {
       vi.mocked(api.youtubeResolve)
         .mockResolvedValueOnce({
-          video_id: 'aaa11111111', title: 'First', author: 'A1',
-          duration: 100, thumbnail: '', chapters: [],
+          video_id: 'aaa11111111',
+          title: 'First',
+          author: 'A1',
+          duration: 100,
+          thumbnail: '',
+          chapters: [],
         })
         .mockResolvedValueOnce({
-          video_id: 'bbb22222222', title: 'Second', author: 'A2',
-          duration: 200, thumbnail: '', chapters: [],
+          video_id: 'bbb22222222',
+          title: 'Second',
+          author: 'A2',
+          duration: 200,
+          thumbnail: '',
+          chapters: [],
         })
 
       const yt = useYouTubeImport()
@@ -219,12 +230,15 @@ describe('useYouTubeImport', () => {
           return { done: false, value: chunks[readIndex++] }
         }),
       }
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok,
-        status: ok ? 200 : 500,
-        body: { getReader: () => mockReader },
-        headers: new Headers(contentLength ? { 'content-length': String(contentLength) } : {}),
-      }))
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok,
+          status: ok ? 200 : 500,
+          body: { getReader: () => mockReader },
+          headers: new Headers(contentLength ? { 'content-length': String(contentLength) } : {}),
+        }),
+      )
     }
 
     it('downloads and returns blob', async () => {
@@ -337,20 +351,23 @@ describe('useYouTubeImport', () => {
       // Mock fetch for download
       let readIndex = 0
       const data = new Uint8Array([1, 2, 3])
-      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        body: {
-          getReader: () => ({
-            read: vi.fn(async () => {
-              if (readIndex > 0) return { done: true, value: undefined }
-              readIndex++
-              return { done: false, value: data }
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          status: 200,
+          body: {
+            getReader: () => ({
+              read: vi.fn(async () => {
+                if (readIndex > 0) return { done: true, value: undefined }
+                readIndex++
+                return { done: false, value: data }
+              }),
             }),
-          }),
-        },
-        headers: new Headers({ 'content-length': '3' }),
-      }))
+          },
+          headers: new Headers({ 'content-length': '3' }),
+        }),
+      )
     }
 
     beforeEach(() => {
@@ -368,10 +385,10 @@ describe('useYouTubeImport', () => {
       await yt.importFromYouTube()
 
       expect(yt.step.value).toBe('done')
-      expect(mockAddLocalBook).toHaveBeenCalledWith(
-        expect.arrayContaining([expect.any(File)]),
-        { title: 'Test Book', author: 'Author' },
-      )
+      expect(mockAddLocalBook).toHaveBeenCalledWith(expect.arrayContaining([expect.any(File)]), {
+        title: 'Test Book',
+        author: 'Author',
+      })
     })
 
     it('generates chapters when none provided', async () => {

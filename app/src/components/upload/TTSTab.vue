@@ -183,9 +183,7 @@ async function handleTTSConvert() {
         <select v-model="ttsVoice" class="input-field w-full px-3.5 py-2.5">
           <option v-for="v in voices" :key="v.id" :value="v.id">
             {{ v.name }} ({{ v.lang }},
-            {{
-              v.gender === 'male' ? t('upload.genderMale') : v.gender === 'female' ? t('upload.genderFemale') : ''
-            }})
+            {{ v.gender === 'male' ? t('upload.genderMale') : v.gender === 'female' ? t('upload.genderFemale') : '' }})
           </option>
         </select>
       </div>
@@ -237,9 +235,7 @@ async function handleTTSConvert() {
     >
       <div
         class="px-5 py-4"
-        :class="
-          jobStatus === 'done' ? 'bg-emerald-500/5' : jobStatus === 'error' ? 'bg-red-500/5' : 'bg-violet-500/5'
-        "
+        :class="jobStatus === 'done' ? 'bg-emerald-500/5' : jobStatus === 'error' ? 'bg-red-500/5' : 'bg-violet-500/5'"
       >
         <div class="mb-3 flex items-center justify-between">
           <div class="flex items-center gap-2">

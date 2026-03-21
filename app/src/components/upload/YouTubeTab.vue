@@ -38,7 +38,15 @@ const chunkMinutes = ref(10)
     </div>
 
     <!-- Resolve Result -->
-    <div v-if="yt.step.value === 'resolved' || yt.step.value === 'downloading' || yt.step.value === 'splitting' || yt.step.value === 'saving'" class="card space-y-4 px-5 py-5">
+    <div
+      v-if="
+        yt.step.value === 'resolved' ||
+        yt.step.value === 'downloading' ||
+        yt.step.value === 'splitting' ||
+        yt.step.value === 'saving'
+      "
+      class="card space-y-4 px-5 py-5"
+    >
       <!-- Thumbnail + Info -->
       <div class="flex gap-4">
         <img
@@ -78,7 +86,10 @@ const chunkMinutes = ref(10)
           {{ t('upload.youtubeNoChapters', { n: chunkMinutes }) }}
         </span>
         <span class="ml-2">&middot;</span>
-        <span class="ml-2">{{ Math.round(yt.duration.value / 60) }} {{ t('upload.youtubeDuration', { m: Math.round(yt.duration.value / 60) }) }}</span>
+        <span class="ml-2"
+          >{{ Math.round(yt.duration.value / 60) }}
+          {{ t('upload.youtubeDuration', { m: Math.round(yt.duration.value / 60) }) }}</span
+        >
       </div>
 
       <!-- Chunk slider (only when no chapters) -->
@@ -101,8 +112,12 @@ const chunkMinutes = ref(10)
       <div v-if="yt.step.value === 'downloading' || yt.step.value === 'splitting' || yt.step.value === 'saving'">
         <div class="mb-2 flex items-center justify-between text-[12px]">
           <span class="text-[--t2]">
-            <template v-if="yt.step.value === 'downloading'">{{ t('upload.youtubeDownloading', { progress: yt.progress.value }) }}</template>
-            <template v-else-if="yt.step.value === 'splitting'">{{ t('upload.youtubeSplitting') }} {{ yt.progress.value }}%</template>
+            <template v-if="yt.step.value === 'downloading'">{{
+              t('upload.youtubeDownloading', { progress: yt.progress.value })
+            }}</template>
+            <template v-else-if="yt.step.value === 'splitting'"
+              >{{ t('upload.youtubeSplitting') }} {{ yt.progress.value }}%</template
+            >
             <template v-else>{{ t('upload.youtubeSaving') }}</template>
           </span>
           <button class="cursor-pointer border-0 bg-transparent text-[--t3] hover:text-[--t1]" @click="yt.cancel()">
@@ -129,9 +144,15 @@ const chunkMinutes = ref(10)
     </div>
 
     <!-- Error -->
-    <div v-if="yt.step.value === 'error'" class="card flex items-center gap-3 px-5 py-4 border-red-500/20">
+    <div v-if="yt.step.value === 'error'" class="card flex items-center gap-3 border-red-500/20 px-5 py-4">
       <span class="text-[13px] text-red-400">{{ yt.errorMessage.value }}</span>
-      <button class="ml-auto cursor-pointer border-0 bg-transparent text-[12px] font-semibold text-[--accent]" @click="yt.reset(); youtubeUrl = ''">
+      <button
+        class="ml-auto cursor-pointer border-0 bg-transparent text-[12px] font-semibold text-[--accent]"
+        @click="
+          yt.reset()
+          youtubeUrl = ''
+        "
+      >
         {{ t('upload.youtubeRetry') }}
       </button>
     </div>

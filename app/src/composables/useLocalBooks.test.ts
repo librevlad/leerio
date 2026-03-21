@@ -19,7 +19,11 @@ function createMockObjectStore() {
       mockStore.delete(key)
     }),
     getAllKeys: vi.fn(() => {
-      const req = { result: [...mockStore.keys()] as IDBValidKey[], onsuccess: null as (() => void) | null, onerror: null }
+      const req = {
+        result: [...mockStore.keys()] as IDBValidKey[],
+        onsuccess: null as (() => void) | null,
+        onerror: null,
+      }
       Promise.resolve().then(() => req.onsuccess?.())
       return req
     }),
