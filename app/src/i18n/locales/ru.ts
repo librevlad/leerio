@@ -426,6 +426,12 @@ export default {
     streakDays: 'день | дня | дней',
     inARow: 'подряд!',
     bestStreak: 'Лучшая серия',
+    onDevice: 'На устройстве',
+    inCloud: 'В облаке',
+    uploadToCloud: 'Загрузить в облако',
+    cloudHint: 'Sync между устройствами · Premium',
+    cloudUploadDone: 'Книга загружена в облако',
+    cloudUploadFailed: 'Ошибка загрузки в облако',
   },
   player: {
     title: 'Плеер',

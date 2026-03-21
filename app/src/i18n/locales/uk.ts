@@ -426,6 +426,12 @@ export default {
     streakDays: 'день | дні | днів',
     inARow: 'поспіль!',
     bestStreak: 'Найкраща серія',
+    onDevice: 'На пристрої',
+    inCloud: 'В хмарі',
+    uploadToCloud: 'Завантажити в хмару',
+    cloudHint: 'Синхронізація між пристроями · Premium',
+    cloudUploadDone: 'Книга завантажена в хмару',
+    cloudUploadFailed: 'Помилка завантаження в хмару',
   },
   player: {
     title: 'Плеєр',

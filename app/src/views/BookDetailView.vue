@@ -17,14 +17,19 @@ import {
   IconPlay,
   IconPause,
   IconMusic,
+  IconCloud,
+  IconSmartphone,
 } from '../components/shared/icons'
 import ProgressBar from '../components/shared/ProgressBar.vue'
+import PaywallModal from '../components/shared/PaywallModal.vue'
 import { usePlayer } from '../composables/usePlayer'
 import { useDownloads } from '../composables/useDownloads'
 import { useAuth } from '../composables/useAuth'
 import { useCategories } from '../composables/useCategories'
 import { useLocalData } from '../composables/useLocalData'
 import { useToast } from '../composables/useToast'
+import { useFileScanner } from '../composables/useFileScanner'
+import { Filesystem, Directory } from '@capacitor/filesystem'
 
 const route = useRoute()
 const router = useRouter()
@@ -35,10 +40,28 @@ const coverError = ref(false)
 
 const player = usePlayer()
 const dl = useDownloads()
-const { isLoggedIn } = useAuth()
+const { isLoggedIn, user } = useAuth()
 const { gradient: catGradient } = useCategories()
 const local = useLocalData()
 const toast = useToast()
+const { getFsBook, markSynced } = useFileScanner()
+
+const isLocalBook = computed(() => {
+  const id = book.value?.id
+  return id?.startsWith('fs:') || id?.startsWith('lb:')
+})
+
+const isSynced = computed(() => {
+  const id = book.value?.id
+  if (!id?.startsWith('fs:')) return false
+  return getFsBook(id)?.synced ?? false
+})
+
+const isPremium = computed(() => user.value?.plan === 'premium')
+
+const showPaywall = ref(false)
+const cloudUploading = ref(false)
+const cloudProgress = ref(0)
 
 const isCurrentBook = computed(() => player.currentBook.value?.id === book.value?.id)
 const isPlaying = computed(() => player.isPlaying.value)
@@ -133,6 +156,49 @@ function formatDuration(hours: number | undefined): string {
 
 function formatRemaining(totalHours: number, progress: number): string {
   return _formatRemaining(totalHours, progress, t)
+}
+
+async function cloudUpload() {
+  if (!isPremium.value) {
+    showPaywall.value = true
+    return
+  }
+  if (!book.value || cloudUploading.value) return
+
+  const fsBook = getFsBook(book.value.id)
+  if (!fsBook) return
+
+  cloudUploading.value = true
+  cloudProgress.value = 0
+
+  try {
+    const formData = new FormData()
+    formData.append('title', fsBook.title)
+    formData.append('author', fsBook.author)
+
+    for (let i = 0; i < fsBook.tracks.length; i++) {
+      const track = fsBook.tracks[i]!
+      const result = await Filesystem.readFile({
+        path: track.path,
+        directory: Directory.ExternalStorage,
+      })
+      const blob =
+        typeof result.data === 'string'
+          ? new Blob([Uint8Array.from(atob(result.data), (c) => c.charCodeAt(0))])
+          : new Blob([result.data])
+      formData.append('files', new File([blob], track.filename, { type: 'audio/mpeg' }))
+      cloudProgress.value = Math.round(((i + 1) / fsBook.tracks.length) * 50)
+    }
+
+    await api.cloudSyncBook(formData)
+    markSynced(book.value.id)
+    cloudProgress.value = 100
+    toast.success(t('book.cloudUploadDone'))
+  } catch {
+    toast.error(t('book.cloudUploadFailed'))
+  } finally {
+    cloudUploading.value = false
+  }
 }
 
 onMounted(loadBook)
@@ -281,6 +347,40 @@ watch(() => route.params.id, loadBook)
               </div>
             </template>
           </div>
+
+          <!-- Device badge + Cloud upload -->
+          <div v-if="isLocalBook" class="mt-3 space-y-2">
+            <div
+              class="inline-flex items-center gap-1.5 rounded-md bg-white/[0.06] px-2.5 py-1 text-[11px] text-[--t3]"
+            >
+              <IconSmartphone :size="12" />
+              {{ isSynced ? t('book.inCloud') : t('book.onDevice') }}
+            </div>
+
+            <button
+              v-if="!isSynced"
+              v-ripple
+              class="flex w-full items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.05] px-4 py-3 text-[13px] font-semibold text-[--t1]"
+              :disabled="cloudUploading"
+              @click="cloudUpload"
+            >
+              <template v-if="cloudUploading">
+                <div
+                  class="h-4 w-4 animate-spin rounded-full border-2 border-[--accent] border-t-transparent"
+                />
+                {{ cloudProgress }}%
+              </template>
+              <template v-else>
+                <IconCloud :size="16" />
+                {{ t('book.uploadToCloud') }}
+              </template>
+            </button>
+            <p v-if="!isSynced" class="text-center text-[10px] text-[--t3]">
+              {{ t('book.cloudHint') }}
+            </p>
+          </div>
+
+          <PaywallModal :open="showPaywall" @close="showPaywall = false" />
 
           <!-- Meta (desktop) -->
           <div class="mt-4 hidden space-y-2 border-t border-white/[0.04] pt-4 text-[12px] text-[--t3] lg:block">

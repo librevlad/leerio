@@ -262,4 +262,16 @@ export const api = {
   // YouTube
   youtubeResolve: (url: string) => post<YouTubeResolveResult>('/youtube/resolve', { url }),
   youtubeStreamUrl: (videoId: string): string => apiUrl(`/youtube/stream/${videoId}`),
+
+  // Cloud sync (local → server)
+  cloudSyncBook: (formData: FormData) => {
+    return fetch(apiUrl('/user/books/cloud-sync'), {
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+    }).then((r) => {
+      if (!r.ok) throw new Error(`Upload failed: ${r.status}`)
+      return r.json()
+    })
+  },
 }

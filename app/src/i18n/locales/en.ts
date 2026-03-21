@@ -426,6 +426,12 @@ export default {
     streakDays: 'day in a row | days in a row',
     inARow: 'in a row!',
     bestStreak: 'Best streak',
+    onDevice: 'On device',
+    inCloud: 'In cloud',
+    uploadToCloud: 'Upload to cloud',
+    cloudHint: 'Sync across devices · Premium',
+    cloudUploadDone: 'Book uploaded to cloud',
+    cloudUploadFailed: 'Cloud upload failed',
   },
   player: {
     title: 'Player',
