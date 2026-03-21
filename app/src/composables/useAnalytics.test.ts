@@ -9,9 +9,29 @@ vi.mock('../api', () => ({
 
 import { useAnalytics } from './useAnalytics'
 import { api } from '../api'
+import type { AnalyticsData, Achievement } from '../types'
 
 const mockedGetAnalytics = vi.mocked(api.getAnalytics)
 const mockedGetAchievements = vi.mocked(api.getAchievements)
+
+const makeAnalytics = (overrides: Partial<AnalyticsData> = {}): AnalyticsData => ({
+  total_books: 0,
+  total_done: 0,
+  category_counts: {},
+  done_by_category: {},
+  monthly_trend: [],
+  rating_distribution: {},
+  velocity: { total: 0 },
+  heatmap: {},
+  top_authors: [],
+  ...overrides,
+})
+
+const makeAchievement = (name: string): Achievement => ({
+  icon: '',
+  name,
+  desc: '',
+})
 
 beforeEach(() => {
   const { data, achievements, error } = useAnalytics()
@@ -23,7 +43,7 @@ beforeEach(() => {
 
 describe('useAnalytics', () => {
   it('load() fetches analytics + achievements in parallel', async () => {
-    mockedGetAnalytics.mockResolvedValue({ totalMinutes: 100 })
+    mockedGetAnalytics.mockResolvedValue(makeAnalytics())
     mockedGetAchievements.mockResolvedValue([])
 
     const { load } = useAnalytics()
@@ -34,8 +54,8 @@ describe('useAnalytics', () => {
   })
 
   it('load() sets data and achievements on success', async () => {
-    const analyticsData = { totalMinutes: 250, streak: 5 }
-    const badgesData = [{ id: '1', name: 'First Listen' }]
+    const analyticsData = makeAnalytics({ total_done: 250 })
+    const badgesData = [makeAchievement('First Listen')]
     mockedGetAnalytics.mockResolvedValue(analyticsData)
     mockedGetAchievements.mockResolvedValue(badgesData)
 
@@ -48,7 +68,7 @@ describe('useAnalytics', () => {
 
   it('load() sets error=true on failure, clears data', async () => {
     mockedGetAnalytics.mockRejectedValue(new Error('network'))
-    mockedGetAchievements.mockResolvedValue([{ id: '1', name: 'badge' }])
+    mockedGetAchievements.mockResolvedValue([makeAchievement('badge')])
 
     const { load, data, achievements, error } = useAnalytics()
     await load()
@@ -59,7 +79,7 @@ describe('useAnalytics', () => {
   })
 
   it('loading is true during fetch, false after', async () => {
-    let resolveAnalytics!: (v: unknown) => void
+    let resolveAnalytics!: (v: AnalyticsData) => void
     mockedGetAnalytics.mockImplementation(
       () =>
         new Promise((r) => {
@@ -74,15 +94,15 @@ describe('useAnalytics', () => {
     const promise = load()
     expect(loading.value).toBe(true)
 
-    resolveAnalytics({ totalMinutes: 0 })
+    resolveAnalytics(makeAnalytics())
     await promise
 
     expect(loading.value).toBe(false)
   })
 
   it('singleton state is shared across calls', async () => {
-    const analyticsData = { totalMinutes: 999 }
-    const badgesData = [{ id: '2', name: 'Shared' }]
+    const analyticsData = makeAnalytics({ total_done: 999 })
+    const badgesData = [makeAchievement('Shared')]
     mockedGetAnalytics.mockResolvedValue(analyticsData)
     mockedGetAchievements.mockResolvedValue(badgesData)
 

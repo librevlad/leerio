@@ -68,8 +68,8 @@ describe('useLocalData', () => {
       await local.setBookStatus('b2', 'done')
       const all = await local.getAllBookStatuses()
       expect(Object.keys(all)).toHaveLength(2)
-      expect(all['b1'].status).toBe('reading')
-      expect(all['b2'].status).toBe('done')
+      expect(all['b1']!.status).toBe('reading')
+      expect(all['b2']!.status).toBe('done')
     })
   })
 
@@ -133,7 +133,7 @@ describe('useLocalData', () => {
 
         const list = await local.getBookmarks('b1')
         expect(list).toHaveLength(1)
-        expect(list[0].id).toBe(bm.id)
+        expect(list[0]!.id).toBe(bm.id)
       } finally {
         vi.useRealTimers()
       }
@@ -151,7 +151,7 @@ describe('useLocalData', () => {
         await local.removeBookmark('b1', bm1.id)
         const list = await local.getBookmarks('b1')
         expect(list).toHaveLength(1)
-        expect(list[0].note).toBe('b')
+        expect(list[0]!.note).toBe('b')
       } finally {
         vi.useRealTimers()
       }
@@ -242,7 +242,7 @@ describe('useLocalData', () => {
 
         const all = await local.getQuotes()
         expect(all).toHaveLength(1)
-        expect(all[0].id).toBe(q.id)
+        expect(all[0]!.id).toBe(q.id)
       } finally {
         vi.useRealTimers()
       }
@@ -260,7 +260,7 @@ describe('useLocalData', () => {
         await local.deleteQuote(q1.id)
         const all = await local.getQuotes()
         expect(all).toHaveLength(1)
-        expect(all[0].text).toBe('b')
+        expect(all[0]!.text).toBe('b')
       } finally {
         vi.useRealTimers()
       }
@@ -300,7 +300,7 @@ describe('useLocalData', () => {
       await local.deleteCollection(1)
       const all = await local.getCollections()
       expect(all).toHaveLength(1)
-      expect(all[0].name).toBe('B')
+      expect(all[0]!.name).toBe('B')
     })
   })
 
@@ -339,8 +339,8 @@ describe('useLocalData', () => {
       })
       const all = await local.getAllBookStatuses()
       expect(Object.keys(all)).toHaveLength(2)
-      expect(all['b1'].status).toBe('reading')
-      expect(all['b2'].status).toBe('done')
+      expect(all['b1']!.status).toBe('reading')
+      expect(all['b2']!.status).toBe('done')
     })
 
     it('importProgress populates store', async () => {
