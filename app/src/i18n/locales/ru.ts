@@ -240,6 +240,8 @@ export default {
     youtubeDuration: '{m} мин',
     youtubeUploadToCloud: 'В облако',
     youtubeUploading: 'Загрузка в облако...',
+    youtubeRedirect: 'Импорт с YouTube перенесён на отдельную страницу',
+    youtubeGoTo: 'Перейти к импорту',
     labelTitle: 'Название *',
     labelAuthor: 'Автор',
     labelReader: 'Чтец',
@@ -432,6 +434,7 @@ export default {
     cloudHint: 'Sync между устройствами · Premium',
     cloudUploadDone: 'Книга загружена в облако',
     cloudUploadFailed: 'Ошибка загрузки в облако',
+    cloudUploadLarge: 'Книга весит больше 200 МБ. Загрузка может занять время. Продолжить?',
   },
   player: {
     title: 'Плеер',

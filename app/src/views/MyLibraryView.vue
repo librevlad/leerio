@@ -19,6 +19,7 @@ import {
 } from '@/components/shared/icons'
 import SourceBadge from '@/components/shared/SourceBadge.vue'
 import ProgressBar from '@/components/shared/ProgressBar.vue'
+import AddBookFab from '@/components/library/AddBookFab.vue'
 import type { TTSJob } from '@/types'
 
 const { t } = useI18n()
@@ -411,5 +412,7 @@ async function uploadToCloud(item: UnifiedItem) {
         </div>
       </router-link>
     </div>
+
+    <AddBookFab />
   </div>
 </template>

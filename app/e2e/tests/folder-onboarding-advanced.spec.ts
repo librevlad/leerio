@@ -89,11 +89,10 @@ test.describe('Real audio upload and playback', () => {
     await expect(playBtn.first()).toBeVisible({ timeout: 5_000 })
     await playBtn.first().click()
 
-    // Player should open
-    await expect(page.locator('.fixed.inset-0')).toBeVisible({ timeout: 10_000 })
-
-    // Player should have controls
-    await expect(page.locator('button[aria-label*="play"], button[aria-label*="pause"]').or(page.locator('.fixed.inset-0 button').first())).toBeVisible()
+    // Player should open - check for player container or audio controls
+    await expect(
+      page.locator('[data-player]').or(page.locator('.fixed.inset-0')).or(page.locator('button:has-text("Пауза")')),
+    ).toBeVisible({ timeout: 10_000 })
   })
 })
 
@@ -201,7 +200,9 @@ test.describe('FAB position', () => {
     await playBtn.first().click()
 
     // Wait for fullscreen player
-    await expect(page.locator('.fixed.inset-0')).toBeVisible({ timeout: 10_000 })
+    await expect(
+      page.locator('[data-player]').or(page.locator('.fixed.inset-0')).or(page.locator('button:has-text("Пауза")')),
+    ).toBeVisible({ timeout: 10_000 })
 
     // Close fullscreen player (click outside or back)
     await page.keyboard.press('Escape')

@@ -4,7 +4,6 @@ import { useI18n } from 'vue-i18n'
 import { useNetwork } from '@/composables/useNetwork'
 import { IconUpload, IconPlay, IconMicrophone, IconSmartphone } from '@/components/shared/icons'
 import UploadTab from '@/components/upload/UploadTab.vue'
-import YouTubeTab from '@/components/upload/YouTubeTab.vue'
 import TTSTab from '@/components/upload/TTSTab.vue'
 import LocalTab from '@/components/upload/LocalTab.vue'
 
@@ -47,7 +46,11 @@ const tabDefs = [
     </div>
 
     <UploadTab v-if="activeTab === 'upload'" />
-    <YouTubeTab v-else-if="activeTab === 'youtube'" />
+    <div v-else-if="activeTab === 'youtube'" class="flex flex-col items-center gap-4 py-12 text-center">
+      <div class="text-[40px]">🎥</div>
+      <p class="text-[14px] text-[--t2]">{{ t('upload.youtubeRedirect') }}</p>
+      <router-link to="/youtube-import" class="btn btn-primary">{{ t('upload.youtubeGoTo') }}</router-link>
+    </div>
     <TTSTab v-else-if="activeTab === 'tts'" />
     <LocalTab v-else-if="activeTab === 'local'" />
 

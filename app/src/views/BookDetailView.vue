@@ -197,6 +197,11 @@ async function cloudUpload() {
   const fsBook = getFsBook(book.value.id)
   if (!fsBook) return
 
+  // Warn if total size is very large
+  if (fsBook.sizeBytes > 200_000_000) {
+    if (!confirm(t('book.cloudUploadLarge'))) return
+  }
+
   cloudUploading.value = true
   cloudProgress.value = 0
 

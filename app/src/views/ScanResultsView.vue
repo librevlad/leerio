@@ -7,6 +7,7 @@ import { useToast } from '../composables/useToast'
 import { useTracking } from '../composables/useTelemetry'
 import { formatSize } from '../utils/format'
 import { IconCheck, IconArrowLeft } from '../components/shared/icons'
+import { STORAGE } from '../constants/storage'
 import type { FsBookMeta } from '../types'
 
 const router = useRouter()
@@ -28,7 +29,9 @@ onMounted(async () => {
 
   // Select all except "not a book" heuristic
   for (const book of found) {
-    if (!isLikelyNotBook(book.title, book.tracks.length)) {
+    // Use folder name (last segment of path) for heuristic, not cleaned title
+    const folderName = book.folderPath.split('/').pop() || book.title
+    if (!isLikelyNotBook(folderName, book.tracks.length)) {
       selected.value.add(book.id)
     }
   }
@@ -62,6 +65,7 @@ function addSelected() {
   scanner.addFsBooks(books)
   toast.success(t('scan.added', { n: books.length }))
   track('scan_books_added', { count: books.length })
+  localStorage.setItem(STORAGE.ONBOARDED, '1')
   router.push('/library')
 }
 

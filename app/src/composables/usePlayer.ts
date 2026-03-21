@@ -867,6 +867,8 @@ function closePlayer() {
 
 async function preloadNextTrack() {
   if (preloadInProgress || !currentBook.value) return
+  // No preload for filesystem books on web (no Capacitor)
+  if (currentBook.value.id.startsWith('fs:') && !Capacitor.isNativePlatform()) return
   preloadInProgress = true
   const bookId = currentBook.value.id
   const currentLoadOp = loadOpId

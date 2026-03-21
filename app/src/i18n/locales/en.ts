@@ -240,6 +240,8 @@ export default {
     youtubeDuration: '{m} min',
     youtubeUploadToCloud: 'Upload to cloud',
     youtubeUploading: 'Uploading to cloud...',
+    youtubeRedirect: 'YouTube import has moved to a dedicated page',
+    youtubeGoTo: 'Go to import',
     labelTitle: 'Title *',
     labelAuthor: 'Author',
     labelReader: 'Reader',
@@ -432,6 +434,7 @@ export default {
     cloudHint: 'Sync across devices · Premium',
     cloudUploadDone: 'Book uploaded to cloud',
     cloudUploadFailed: 'Cloud upload failed',
+    cloudUploadLarge: 'Book is larger than 200 MB. Upload may take a while. Continue?',
   },
   player: {
     title: 'Player',

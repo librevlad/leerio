@@ -240,6 +240,8 @@ export default {
     youtubeDuration: '{m} хв',
     youtubeUploadToCloud: 'В хмару',
     youtubeUploading: 'Завантаження в хмару...',
+    youtubeRedirect: 'Імпорт з YouTube перенесено на окрему сторінку',
+    youtubeGoTo: 'Перейти до імпорту',
     labelTitle: 'Назва *',
     labelAuthor: 'Автор',
     labelReader: 'Читець',
@@ -432,6 +434,7 @@ export default {
     cloudHint: 'Синхронізація між пристроями · Premium',
     cloudUploadDone: 'Книга завантажена в хмару',
     cloudUploadFailed: 'Помилка завантаження в хмару',
+    cloudUploadLarge: 'Книга важить більше 200 МБ. Завантаження може зайняти час. Продовжити?',
   },
   player: {
     title: 'Плеєр',
