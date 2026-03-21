@@ -62,6 +62,18 @@ const router = createRouter({
       meta: { title: 'Settings' },
     },
     {
+      path: '/scan-results',
+      name: 'scan-results',
+      component: () => import('./views/ScanResultsView.vue'),
+      meta: { title: 'Scan Results', public: true },
+    },
+    {
+      path: '/youtube-import',
+      name: 'youtube-import',
+      component: () => import('./views/YouTubeImportView.vue'),
+      meta: { title: 'YouTube Import' },
+    },
+    {
       path: '/:pathMatch(.*)*',
       component: () => import('./views/NotFoundView.vue'),
       meta: { public: true },
