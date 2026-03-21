@@ -412,7 +412,9 @@ function restorePosition(bookId: string, startTrackIndex?: number): { trackIndex
         seekPos: isFinite(pos.position) && pos.position >= 0 ? pos.position : 0,
       }
     }
-  } catch { /* corrupted */ }
+  } catch {
+    /* corrupted */
+  }
   return { trackIndex: 0, seekPos: 0 }
 }
 
@@ -891,12 +893,12 @@ async function preloadNextTrack() {
 
 function retryAudio() {
   if (!audio || !currentBook.value) return
-  const opId = playOpId  // Capture current opId
+  const opId = playOpId // Capture current opId
   audioError.value = false
   isLoading.value = true
   audio.load()
   audio.play().catch((e) => {
-    if (playOpId !== opId) return  // Stale — ignore
+    if (playOpId !== opId) return // Stale — ignore
     if (e instanceof DOMException && e.name === 'AbortError') return
     audioError.value = true
     isLoading.value = false
