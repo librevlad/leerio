@@ -60,7 +60,7 @@ function deselectAll() {
 
 function cancelScan() {
   scanner.abortScan()
-  hasScanned = true
+  hasScanned.value = true
 }
 
 function addSelected() {
