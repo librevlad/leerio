@@ -25,7 +25,6 @@ const isNative = Capacitor.isNativePlatform()
 const step = ref(1)
 const files = ref<File[]>([])
 const uploading = ref(false)
-const dragOver = ref(false)
 
 function next() {
   if (step.value < 3) step.value++
@@ -35,11 +34,6 @@ function prev() {
   if (step.value > 1) step.value--
 }
 
-function handleDrop(e: DragEvent) {
-  dragOver.value = false
-  if (!e.dataTransfer?.files) return
-  addFiles(e.dataTransfer.files)
-}
 
 function handleFileInput(e: Event) {
   const input = e.target as HTMLInputElement
