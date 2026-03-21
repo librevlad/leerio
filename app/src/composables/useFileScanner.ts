@@ -50,8 +50,21 @@ export function useFileScanner() {
 
   const isNative = Capacitor.isNativePlatform()
 
+  async function requestPermissions(): Promise<boolean> {
+    try {
+      const status = await Filesystem.requestPermissions()
+      return status.publicStorage === 'granted'
+    } catch {
+      return false
+    }
+  }
+
   async function scan(): Promise<FsBookMeta[]> {
     if (!isNative) return []
+
+    const granted = await requestPermissions()
+    if (!granted) return []
+
     scanning.value = true
     scanProgress.value = ''
 
