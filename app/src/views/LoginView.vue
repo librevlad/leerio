@@ -483,7 +483,7 @@ onMounted(() => {
             <span class="text-[11px] text-[--t3]">{{ t('login.or') }}</span>
             <div class="h-px flex-1 bg-white/[0.06]" />
           </div>
-          <div ref="googleBtnRef" id="google-signin-btn" />
+          <div id="google-signin-btn" ref="googleBtnRef" />
           <!-- Toggle text -->
           <p class="mt-4 text-center text-[12px] text-[--t3]">
             <template v-if="view === 'login'">

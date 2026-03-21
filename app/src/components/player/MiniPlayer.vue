@@ -92,7 +92,7 @@ const {
           @click="togglePlay"
         >
           <div v-if="isLoading" class="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-          <component v-else :is="isPlaying ? IconPause : IconPlay" :size="16" style="color: #fff" />
+          <component :is="isPlaying ? IconPause : IconPlay" v-else :size="16" style="color: #fff" />
         </button>
 
         <!-- +30s skip -->

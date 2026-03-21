@@ -455,7 +455,7 @@ function closeOverlays() {
               @click="togglePlay"
             >
               <div v-if="isLoading" class="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-              <component v-else :is="isPlaying ? IconPause : IconPlay" :size="22" style="color: #fff" />
+              <component :is="isPlaying ? IconPause : IconPlay" v-else :size="22" style="color: #fff" />
             </button>
             <button
               class="flex h-11 w-11 items-center justify-center rounded-full border-0 text-[--t2] transition-colors hover:text-[--t1]"
@@ -866,7 +866,7 @@ function closeOverlays() {
               @click="togglePlay"
             >
               <div v-if="isLoading" class="h-6 w-6 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-              <component v-else :is="isPlaying ? IconPause : IconPlay" :size="24" style="color: #fff" />
+              <component :is="isPlaying ? IconPause : IconPlay" v-else :size="24" style="color: #fff" />
             </button>
             <button
               class="flex h-10 w-10 items-center justify-center rounded-full border-0 text-[--t2] transition-colors hover:text-[--t1]"
