@@ -128,6 +128,11 @@ function formatDuration(seconds: number): string {
   return `${m}${t('player.unitM')}`
 }
 
+function openCarMode() {
+  closeFullscreen()
+  router.push('/car')
+}
+
 function trackDisplayName(filename: string, index: number): string {
   return _trackDisplayName(filename, index, t)
 }
@@ -587,10 +592,7 @@ function closeOverlays() {
               class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border-0 text-[--t3] transition-colors hover:text-[--t2]"
               style="background: rgba(255, 255, 255, 0.04)"
               :aria-label="t('player.carMode')"
-              @click="
-                closeFullscreen()
-                router.push('/car')
-              "
+              @click="openCarMode"
             >
               <IconCar :size="16" />
             </button>
@@ -933,10 +935,7 @@ function closeOverlays() {
             <button
               class="flex flex-col items-center gap-0.5 border-0 bg-transparent px-3 py-1 text-[--t3] transition-colors hover:text-[--t2]"
               :aria-label="t('player.carMode')"
-              @click="
-                closeFullscreen()
-                router.push('/car')
-              "
+              @click="openCarMode"
             >
               <IconCar :size="18" />
               <span class="text-[10px] font-semibold">{{ t('player.carMode') }}</span>
