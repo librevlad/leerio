@@ -195,11 +195,7 @@ onMounted(loadData)
 
             <!-- Play button -->
             <button
-              class="mt-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-0 py-3 text-[14px] font-bold text-white transition-all hover:brightness-110 sm:py-3.5 sm:text-[15px]"
-              style="
-                background: linear-gradient(135deg, #ff8a00, #e07000);
-                box-shadow: 0 4px 20px rgba(255, 138, 0, 0.25);
-              "
+              class="btn btn-primary mt-4 w-full justify-center gap-2 rounded-xl py-3 text-[14px] font-bold sm:py-3.5 sm:text-[15px]"
               @click="playBook(heroBook.id)"
             >
               <component :is="nowPlayingId === heroBook.id && isPlaying ? IconPause : IconPlay" :size="16" />
