@@ -877,17 +877,30 @@ def _ghost_filter() -> str:
 
 
 def _visibility_filter(viewer_user_id: str | None) -> tuple[str, list]:
-    """SQL clause + params to filter books by ownership visibility."""
+    """SQL clause + params: public books + owner's private books for detail/audio access."""
     if viewer_user_id:
         return "(owner_user_id IS NULL OR owner_user_id = ?)", [viewer_user_id]
     return "owner_user_id IS NULL", []
 
 
+def _catalog_filter() -> str:
+    """SQL clause: only public books (for catalog listings)."""
+    return "owner_user_id IS NULL"
+
+
 def get_all_books(viewer_user_id: str | None = None) -> list[dict]:
-    """Return visible books (public + owned by viewer, excluding ghosts)."""
+    """Return catalog books (public only, excluding ghosts)."""
     conn = _get_conn()
-    vis, params = _visibility_filter(viewer_user_id)
-    rows = conn.execute(f"SELECT * FROM books WHERE {_ghost_filter()} AND {vis} ORDER BY title", params).fetchall()
+    rows = conn.execute(
+        f"SELECT * FROM books WHERE {_ghost_filter()} AND {_catalog_filter()} ORDER BY title"
+    ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def get_owned_books(owner_user_id: str) -> list[dict]:
+    """Return books owned by a specific user (for My Library)."""
+    conn = _get_conn()
+    rows = conn.execute("SELECT * FROM books WHERE owner_user_id = ? ORDER BY title", (owner_user_id,)).fetchall()
     return [dict(r) for r in rows]
 
 
@@ -918,10 +931,8 @@ def search_books(
     params: list[str] = []
     # Exclude ghost books: numeric-only title with no author
     clauses.append(_ghost_filter())
-    # Visibility: public + owned by viewer
-    vis, vis_params = _visibility_filter(viewer_user_id)
-    clauses.append(vis)
-    params.extend(vis_params)
+    # Catalog: public books only
+    clauses.append(_catalog_filter())
     if category:
         clauses.append("category = ?")
         params.append(category)

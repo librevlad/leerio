@@ -747,7 +747,7 @@ def get_dashboard(user: dict = Depends(get_current_user)):
                 day_counts[day] += 1
 
     # All books — used for category counts and book_titles lookup
-    all_books = db.get_all_books(viewer_user_id=uid)
+    all_books = db.get_all_books()
     book_titles = {b["id"]: b["title"] for b in all_books}
     cat_counts = Counter(_normalize_category(b["category"]) for b in all_books)
 
@@ -773,7 +773,7 @@ def get_dashboard(user: dict = Depends(get_current_user)):
 @app.get("/api/books/shelves")
 def get_book_shelves(user: dict = Depends(get_current_user)):
     uid = user["user_id"]
-    all_books = db.get_all_books(viewer_user_id=uid)
+    all_books = db.get_all_books()
     statuses = db.get_all_user_book_statuses(uid)
     progress = db.get_all_user_progress(uid)
 
@@ -847,7 +847,7 @@ def get_book_shelves(user: dict = Depends(get_current_user)):
 def get_recommendations(user: dict = Depends(get_current_user)):
     """Return 6 recommended books based on user's listening history."""
     uid = user["user_id"]
-    all_books = db.get_all_books(viewer_user_id=uid)
+    all_books = db.get_all_books()
     statuses = db.get_all_user_book_statuses(uid)
 
     # Gather user's active/done categories for preference weighting
@@ -905,7 +905,7 @@ def get_books(
     user: dict | None = Depends(get_optional_user),
 ):
     uid = user["user_id"] if user else None
-    books = db.search_books(category=category, search=search, sort=sort, language=language, viewer_user_id=uid)
+    books = db.search_books(category=category, search=search, sort=sort, language=language)
 
     if uid:
         statuses = db.get_all_user_book_statuses(uid)
@@ -938,7 +938,7 @@ def get_books(
     # (SQL search only covers title/author/reader, tags are user-specific)
     if search_lower and uid:
         matched_ids = {b["id"] for b in result}
-        all_books = db.search_books(category=category, sort=sort, language=language, viewer_user_id=uid)
+        all_books = db.search_books(category=category, sort=sort, language=language)
         for b in all_books:
             enriched = _enrich_catalog_book(
                 b,
@@ -1106,7 +1106,7 @@ def get_similar(book_id: str, user: dict | None = Depends(get_optional_user)):
     if not b:
         raise HTTPException(404, "Book not found")
 
-    all_books = db.get_all_books(viewer_user_id=uid)
+    all_books = db.get_all_books()
     hist = db.get_user_history(uid, limit=500) if uid else []
 
     # Include user tags for better similarity matching
@@ -1344,7 +1344,7 @@ def get_history(
 ):
     hist = db.get_user_history(user["user_id"], action=action, search=search, limit=limit)
     # Build book title lookup from DB for accurate display
-    all_books = db.search_books(viewer_user_id=user["user_id"])
+    all_books = db.search_books()
     title_by_id = {b["id"]: b["title"] for b in all_books}
     return [
         {
@@ -1661,7 +1661,7 @@ def remove_bookmark(bookmark_id: int, user: dict = Depends(get_current_user)):
 @app.get("/api/analytics")
 def get_analytics(user: dict = Depends(get_current_user)):
     uid = user["user_id"]
-    all_books = db.get_all_books(viewer_user_id=uid)
+    all_books = db.get_all_books()
     hist = db.get_user_history(uid, limit=10000)
 
     # Count personal user books
@@ -1730,7 +1730,7 @@ def get_analytics(user: dict = Depends(get_current_user)):
 @app.get("/api/analytics/achievements")
 def get_achievements(user: dict = Depends(get_current_user)):
     uid = user["user_id"]
-    all_books = db.get_all_books(viewer_user_id=uid)
+    all_books = db.get_all_books()
 
     # Include personal user books in achievement counts
     from .core import UserData

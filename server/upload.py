@@ -13,6 +13,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 
+from . import db
 from .auth import get_current_user
 from .constants import (
     FREE_BOOK_LIMIT,
@@ -43,12 +44,13 @@ def _user_data(user: dict) -> UserData:
 
 @router.get("")
 def list_user_books(user: dict = Depends(get_current_user)):
+    uid = user["user_id"]
     ud = _user_data(user)
     books = ud.user_books_list()
     result = []
     for b in books:
         book_dir = Path(b["path"])
-        book_id = f"ub:{user['user_id']}:{b['slug']}"
+        book_id = f"ub:{uid}:{b['slug']}"
         result.append(
             {
                 "id": book_id,
@@ -63,6 +65,29 @@ def list_user_books(user: dict = Depends(get_current_user)):
                 "mp3_count": count_mp3(book_dir),
             }
         )
+
+    # Include owned catalog books (migrated from public catalog)
+    owned = db.get_owned_books(uid)
+    for b in owned:
+        result.append(
+            {
+                "id": b["id"],
+                "slug": b["slug"],
+                "title": b["title"],
+                "author": b["author"],
+                "reader": b.get("reader", ""),
+                "source": "catalog",
+                "category": b.get("category", ""),
+                "created_at": b.get("created_at", ""),
+                "is_personal": True,
+                "has_cover": bool(b.get("has_cover")),
+                "mp3_count": b.get("mp3_count", 0),
+                "duration_hours": b.get("duration_hours"),
+                "size_mb": b.get("size_mb"),
+                "description": b.get("description", ""),
+            }
+        )
+
     return result
 
 
