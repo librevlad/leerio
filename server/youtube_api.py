@@ -2,7 +2,9 @@
 
 import asyncio
 import json
+import os
 import re
+from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
@@ -13,6 +15,22 @@ from .auth import get_current_user
 router = APIRouter(prefix="/api/youtube", tags=["youtube"])
 
 _YT_ID_RE = re.compile(r"^[a-zA-Z0-9_-]{11}$")
+
+# ── YouTube auth for bot-detection bypass ─────────────────────────────────────
+_BASE = Path(__file__).resolve().parent.parent
+_DATA_DIR = Path(os.environ.get("LEERIO_DATA", str(_BASE / "data")))
+_COOKIES_PATH = Path(os.environ.get("YT_COOKIES", str(_DATA_DIR / "youtube-cookies.txt")))
+_CACHE_DIR = _DATA_DIR / "yt-dlp-cache"
+
+
+def _yt_dlp_auth_args() -> list[str]:
+    """Return yt-dlp auth args: cookies file or OAuth2 cached token."""
+    args: list[str] = ["--cache-dir", str(_CACHE_DIR)]
+    if _COOKIES_PATH.is_file():
+        args.extend(["--cookies", str(_COOKIES_PATH)])
+    return args
+
+
 _YT_URL_RE = re.compile(
     r"(?:https?://)?(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/|youtube\.com/shorts/)([a-zA-Z0-9_-]{11})"
 )
@@ -58,6 +76,7 @@ async def _yt_dlp_json(video_id: str) -> dict:
     try:
         proc = await asyncio.create_subprocess_exec(
             "yt-dlp",
+            *_yt_dlp_auth_args(),
             "--dump-json",
             "--no-download",
             "--no-warnings",
@@ -76,6 +95,12 @@ async def _yt_dlp_json(video_id: str) -> dict:
         err = stderr.decode(errors="replace").strip()
         if "Private video" in err or "Video unavailable" in err:
             raise HTTPException(404, "Video not found or private")
+        err_lower = err.lower()
+        if "sign in" in err_lower or "cookie" in err_lower or "bot" in err_lower:
+            raise HTTPException(
+                403,
+                "YouTube requires authentication — update cookies file on the server",
+            )
         raise HTTPException(400, f"yt-dlp error: {err[:200]}")
     return json.loads(stdout)
 
@@ -125,6 +150,7 @@ async def stream_audio(video_id: str, _user=Depends(get_current_user)):
     try:
         proc = await asyncio.create_subprocess_exec(
             "yt-dlp",
+            *_yt_dlp_auth_args(),
             "-f",
             "bestaudio",
             "-o",

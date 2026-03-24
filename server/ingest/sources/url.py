@@ -1,6 +1,7 @@
 """URL/RSS/YouTube audiobook source — direct download, RSS feed, or yt-dlp."""
 
 import logging
+import os
 import subprocess
 from pathlib import Path
 from urllib.parse import urlparse
@@ -8,6 +9,20 @@ from urllib.parse import urlparse
 import httpx
 
 logger = logging.getLogger("leerio.ingest")
+
+# ── YouTube auth ─────────────────────────────────────────────────────────────
+_BASE = Path(__file__).resolve().parents[3]
+_DATA_DIR = Path(os.environ.get("LEERIO_DATA", str(_BASE / "data")))
+_COOKIES_PATH = Path(os.environ.get("YT_COOKIES", str(_DATA_DIR / "youtube-cookies.txt")))
+_CACHE_DIR = _DATA_DIR / "yt-dlp-cache"
+
+
+def _yt_dlp_auth_args() -> list[str]:
+    """Return yt-dlp auth args: cookies file or OAuth2 cached token."""
+    args: list[str] = ["--cache-dir", str(_CACHE_DIR)]
+    if _COOKIES_PATH.is_file():
+        args.extend(["--cookies", str(_COOKIES_PATH)])
+    return args
 
 
 def download_file(url: str, dest: Path, timeout: int = 300) -> Path:
@@ -64,6 +79,7 @@ def download_youtube(url: str, work_dir: Path) -> list[Path]:
     result = subprocess.run(
         [
             "yt-dlp",
+            *_yt_dlp_auth_args(),
             "--extract-audio",
             "--audio-format",
             "mp3",
