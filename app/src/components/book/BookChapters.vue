@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { api } from '../../api'
 import { trackDisplayName as _trackDisplayName } from '../../utils/format'
 import { usePlayer } from '../../composables/usePlayer'
+import { useLocalBooks } from '../../composables/useLocalBooks'
 import { IconChevronDown, IconChevronUp, IconPlay } from '../shared/icons'
 import type { Book, Track } from '../../types'
 
@@ -11,6 +12,7 @@ const { t } = useI18n()
 const props = defineProps<{ book: Book }>()
 
 const player = usePlayer()
+const { getLocalBook } = useLocalBooks()
 const tracks = ref<Track[]>([])
 const loading = ref(true)
 const loadError = ref(false)
@@ -58,8 +60,23 @@ async function loadTracks() {
   loading.value = true
   loadError.value = false
   try {
-    const res = await api.getBookTracks(props.book.id)
-    tracks.value = res.tracks
+    // Local books (lb:) — tracks stored in IndexedDB, not on server
+    if (props.book.id.startsWith('lb:')) {
+      const lb = getLocalBook(props.book.id)
+      if (lb) {
+        tracks.value = lb.tracks.map((t, i) => ({
+          id: i,
+          filename: t.title || `track-${i + 1}`,
+          duration: t.duration || 0,
+          size_mb: 0,
+        }))
+      } else {
+        loadError.value = true
+      }
+    } else {
+      const res = await api.getBookTracks(props.book.id)
+      tracks.value = res.tracks
+    }
   } catch {
     loadError.value = true
   } finally {
