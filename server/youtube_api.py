@@ -26,8 +26,10 @@ _CACHE_DIR = _DATA_DIR / "yt-dlp-cache"
 def _yt_dlp_auth_args() -> list[str]:
     """Return yt-dlp auth args: cookies file or OAuth2 cached token."""
     args: list[str] = [
-        "--cache-dir", str(_CACHE_DIR),
-        "--remote-components", "ejs:github",
+        "--cache-dir",
+        str(_CACHE_DIR),
+        "--remote-components",
+        "ejs:github",
     ]
     if _COOKIES_PATH.is_file():
         args.extend(["--cookies", str(_COOKIES_PATH)])

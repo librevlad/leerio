@@ -20,7 +20,7 @@ import {
 import SourceBadge from '@/components/shared/SourceBadge.vue'
 import ProgressBar from '@/components/shared/ProgressBar.vue'
 import AddBookFab from '@/components/library/AddBookFab.vue'
-import type { TTSJob } from '@/types'
+import type { TTSJob, UserBook } from '@/types'
 
 const { t } = useI18n()
 const toast = useToast()
@@ -102,7 +102,7 @@ const items = computed<UnifiedItem[]>(() => {
         title: ub.title,
         author: ub.author,
         source: isCatalog ? 'catalog' : 'uploaded',
-        category: isCatalog ? (ub as any).category : undefined,
+        category: isCatalog ? (ub as UserBook & { category?: string }).category : undefined,
         hasCover: ub.has_cover,
         coverSrc: isCatalog
           ? (ub.has_cover ? coverUrl(ub.id) : undefined)
