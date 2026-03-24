@@ -10,6 +10,7 @@ const router = useRouter()
 const yt = useYouTubeImport()
 const youtubeUrl = ref('')
 const chunkMinutes = ref(10)
+const thumbError = ref(false)
 
 function handleRetry() {
   yt.reset()
@@ -42,11 +43,15 @@ function handleRetry() {
               @keydown.enter="yt.resolve(youtubeUrl)"
             />
             <button
-              class="btn-primary shrink-0 px-5"
+              class="btn btn-primary shrink-0 px-5"
               :disabled="!youtubeUrl.trim() || yt.step.value === 'resolving'"
               @click="yt.resolve(youtubeUrl)"
             >
-              {{ yt.step.value === 'resolving' ? '...' : t('upload.youtubeFind') }}
+              <span
+                v-if="yt.step.value === 'resolving'"
+                class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"
+              />
+              <template v-else>{{ t('upload.youtubeFind') }}</template>
             </button>
           </div>
         </div>
@@ -65,11 +70,23 @@ function handleRetry() {
         <!-- Thumbnail + Info -->
         <div class="flex gap-4">
           <img
-            v-if="yt.thumbnail.value"
+            v-if="yt.thumbnail.value && !thumbError"
             :src="yt.thumbnail.value"
             :alt="yt.title.value"
             class="h-24 w-24 shrink-0 rounded-lg object-cover"
+            @error="thumbError = true"
           />
+          <div
+            v-else
+            class="flex h-24 w-24 shrink-0 items-center justify-center rounded-lg"
+            style="background: linear-gradient(135deg, #dc2626, #991b1b)"
+          >
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="white" opacity="0.5">
+              <path
+                d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z"
+              />
+            </svg>
+          </div>
           <div class="min-w-0 flex-1 space-y-3">
             <div>
               <label class="mb-1 block text-[11px] font-semibold text-[--t3]">{{ t('upload.labelTitle') }}</label>
@@ -95,16 +112,13 @@ function handleRetry() {
         <!-- Chapters info -->
         <div class="text-[12px] text-[--t3]">
           <span v-if="yt.chapters.value.length">
-            {{ yt.chapters.value.length }} {{ t('upload.youtubeChapters', { n: yt.chapters.value.length }) }}
+            {{ t('upload.youtubeChapters', { n: yt.chapters.value.length }) }}
           </span>
           <span v-else>
             {{ t('upload.youtubeNoChapters', { n: chunkMinutes }) }}
           </span>
           <span class="ml-2">&middot;</span>
-          <span class="ml-2"
-            >{{ Math.round(yt.duration.value / 60) }}
-            {{ t('upload.youtubeDuration', { m: Math.round(yt.duration.value / 60) }) }}</span
-          >
+          <span class="ml-2">{{ t('upload.youtubeDuration', { m: Math.round(yt.duration.value / 60) }) }}</span>
         </div>
 
         <!-- Chunk slider (only when no chapters) -->
@@ -117,7 +131,7 @@ function handleRetry() {
         <!-- Download button -->
         <button
           v-if="yt.step.value === 'resolved'"
-          class="btn-primary w-full py-3"
+          class="btn btn-primary w-full py-3"
           @click="yt.importFromYouTube(chunkMinutes)"
         >
           {{ t('upload.youtubeDownload') }}
