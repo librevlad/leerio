@@ -50,7 +50,6 @@ const { getLocalBook } = useLocalBooks()
 
 const isFsBook = computed(() => !!book.value?.id?.startsWith('fs:'))
 const isLbBook = computed(() => !!book.value?.id?.startsWith('lb:'))
-const isLocalBook = computed(() => isFsBook.value || isLbBook.value)
 
 const isSynced = computed(() => {
   const id = book.value?.id
