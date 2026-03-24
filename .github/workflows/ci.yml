@@ -48,7 +48,7 @@ jobs:
           cache-dependency-path: app/package-lock.json
       - name: Install
         working-directory: app
-        run: npm ci
+        run: npm ci --legacy-peer-deps
       - name: Lint
         working-directory: app
         run: npx eslint src/
@@ -92,7 +92,7 @@ jobs:
         run: pip install -r server/requirements.txt
       - name: Install Node deps
         working-directory: app
-        run: npm ci
+        run: npm ci --legacy-peer-deps
       - name: Install Chromium
         working-directory: app
         run: npx playwright install chromium --with-deps
@@ -131,7 +131,7 @@ jobs:
           path: app/dist
       - name: Install Capacitor deps
         working-directory: app
-        run: npm ci
+        run: npm ci --legacy-peer-deps
       - name: Cap sync
         working-directory: app
         run: npx cap sync android
