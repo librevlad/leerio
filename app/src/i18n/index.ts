@@ -33,9 +33,12 @@ function detectLocale(): LocaleCode {
   const saved = localStorage.getItem(STORAGE.LOCALE) as LocaleCode | null
   if (saved && ['en', 'ru', 'uk'].includes(saved)) return saved
   const lang = navigator.language?.toLowerCase() || ''
-  if (lang.startsWith('ru')) return 'ru'
-  if (lang.startsWith('uk')) return 'uk'
-  return 'en'
+  let detected: LocaleCode = 'en'
+  if (lang.startsWith('ru')) detected = 'ru'
+  else if (lang.startsWith('uk')) detected = 'uk'
+  // Persist detected locale so subsequent page reloads are stable
+  localStorage.setItem(STORAGE.LOCALE, detected)
+  return detected
 }
 
 const i18n = createI18n({
