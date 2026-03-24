@@ -153,14 +153,14 @@ watch(loadMoreRef, (el) => {
         v-model="search"
         type="search"
         :placeholder="t('library.search')"
-        class="input-field w-full rounded-xl px-4 py-3 text-[13px] min-h-[44px]"
+        class="input-field min-h-[44px] w-full rounded-xl px-4 py-3 text-[13px]"
       />
     </div>
 
     <!-- Category pills -->
     <div class="scrollbar-hide fade-mask-r mb-2 flex gap-1.5 overflow-x-auto pb-0.5">
       <button
-        class="flex-shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors min-h-[44px] flex items-center"
+        class="flex min-h-[44px] flex-shrink-0 cursor-pointer items-center rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
         :class="
           category === ''
             ? 'border-white/10 bg-white/[0.08] text-[--t1]'
@@ -171,9 +171,9 @@ watch(loadMoreRef, (el) => {
         {{ t('library.filterAll') }}
       </button>
       <button
-        v-for="cat in categories.filter(c => categoryCounts[c])"
+        v-for="cat in categories.filter((c) => categoryCounts[c])"
         :key="cat"
-        class="flex flex-shrink-0 cursor-pointer items-center gap-1 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors min-h-[44px]"
+        class="flex min-h-[44px] flex-shrink-0 cursor-pointer items-center gap-1 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
         :class="
           category === cat
             ? 'border-white/10 bg-white/[0.08] text-[--t1]'
@@ -189,7 +189,7 @@ watch(loadMoreRef, (el) => {
     <!-- Status dropdown -->
     <div class="relative mb-5 inline-block">
       <button
-        class="flex cursor-pointer items-center gap-1 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors min-h-[44px]"
+        class="flex min-h-[44px] cursor-pointer items-center gap-1 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
         :class="
           statusFilter
             ? 'border-white/10 bg-white/[0.08] text-[--t1]'

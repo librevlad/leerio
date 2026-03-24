@@ -105,8 +105,12 @@ const items = computed<UnifiedItem[]>(() => {
         category: isCatalog ? (ub as UserBook & { category?: string }).category : undefined,
         hasCover: ub.has_cover,
         coverSrc: isCatalog
-          ? (ub.has_cover ? coverUrl(ub.id) : undefined)
-          : (ub.has_cover ? userBookCoverUrl(ub.slug) : undefined),
+          ? ub.has_cover
+            ? coverUrl(ub.id)
+            : undefined
+          : ub.has_cover
+            ? userBookCoverUrl(ub.slug)
+            : undefined,
         trackCount: ub.mp3_count,
         slug: ub.slug,
         isPersonal: true,
@@ -360,7 +364,8 @@ async function uploadToCloud(item: UnifiedItem) {
             <span
               v-if="item.source === 'catalog' && item.category"
               class="inline-flex items-center rounded-md bg-white/[0.06] px-2 py-0.5 text-[9px] leading-tight font-medium text-[--accent] backdrop-blur-sm"
-            >{{ item.category }}</span>
+              >{{ item.category }}</span
+            >
             <SourceBadge v-else :source="sourceBadgeMap[item.source]" />
           </div>
 
@@ -378,7 +383,13 @@ async function uploadToCloud(item: UnifiedItem) {
             <div
               class="relative h-[72px] w-[72px] flex-shrink-0 overflow-hidden rounded-lg shadow-lg ring-2 ring-[--card-solid]"
             >
-              <img v-if="item.coverSrc && !coverErrors.has(item.id)" :src="item.coverSrc" class="h-full w-full object-cover" alt="" @error="coverErrors.add(item.id)" />
+              <img
+                v-if="item.coverSrc && !coverErrors.has(item.id)"
+                :src="item.coverSrc"
+                class="h-full w-full object-cover"
+                alt=""
+                @error="coverErrors.add(item.id)"
+              />
               <div
                 v-else
                 class="flex h-full w-full items-center justify-center"
