@@ -29,6 +29,7 @@ import { useCategories } from '../composables/useCategories'
 import { useLocalData } from '../composables/useLocalData'
 import { useToast } from '../composables/useToast'
 import { useFileScanner } from '../composables/useFileScanner'
+import { useLocalBooks } from '../composables/useLocalBooks'
 import { Filesystem, Directory } from '@capacitor/filesystem'
 
 const route = useRoute()
@@ -45,6 +46,7 @@ const { gradient: catGradient } = useCategories()
 const local = useLocalData()
 const toast = useToast()
 const { getFsBook, markSynced } = useFileScanner()
+const { getLocalBook } = useLocalBooks()
 
 const isLocalBook = computed(() => {
   const id = book.value?.id
@@ -106,6 +108,32 @@ async function loadBook() {
   coverError.value = false
 
   const id = route.params.id as string
+
+  // Local book (IndexedDB, e.g. YouTube import) — no API call
+  if (id.startsWith('lb:')) {
+    const lbMeta = getLocalBook(id)
+    if (!lbMeta) {
+      toast.error(t('book.fsNotFound'))
+      router.push('/my-library')
+      return
+    }
+    book.value = {
+      id: lbMeta.id,
+      title: lbMeta.title,
+      author: lbMeta.author,
+      folder: '',
+      category: '',
+      reader: '',
+      path: '',
+      progress: 0,
+      tags: [],
+      note: '',
+      mp3_count: lbMeta.tracks.length,
+    }
+    document.title = `${lbMeta.title} — Leerio`
+    loading.value = false
+    return
+  }
 
   // Filesystem book — load from local scanner storage, no API call
   if (id.startsWith('fs:')) {
