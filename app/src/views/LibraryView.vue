@@ -198,7 +198,7 @@ watch(loadMoreRef, (el) => {
         @click="showStatusMenu = !showStatusMenu"
       >
         {{ statusFilter ? statusPills.find((p) => p.value === statusFilter)?.label : t('library.filterStatus') }}
-        <span class="text-[9px] opacity-50">▾</span>
+        <span class="text-[10px] opacity-50">▾</span>
       </button>
       <div
         v-if="showStatusMenu"
