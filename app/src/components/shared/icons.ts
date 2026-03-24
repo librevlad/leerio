@@ -163,3 +163,6 @@ export const IconQuote = icon(
 export const IconLogout = icon(
   '<path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
 )
+export const IconCar = icon(
+  '<path d="M5 17a2 2 0 104 0 2 2 0 00-4 0zm10 0a2 2 0 104 0 2 2 0 00-4 0zM5 17H3v-6l2-5h14l2 5v6h-2m-8 0H9m-4-6h14M6 6l-1 5m13-5l1 5"/>',
+)

@@ -13,6 +13,7 @@ import { ref } from 'vue'
 import { Capacitor } from '@capacitor/core'
 import { Filesystem, Directory } from '@capacitor/filesystem'
 import { STORAGE } from '../constants/storage'
+import { fetchCoversForBooks } from './useBookCovers'
 import type { FsBookMeta, FsTrack } from '../types'
 
 const SCAN_DIRS = ['Audiobooks', 'Download', 'Music']
@@ -207,6 +208,25 @@ export function useFileScanner() {
     return fsBooks.value[id]
   }
 
+  /** Fetch covers from Open Library for fs books that don't have one yet. Background, non-blocking. */
+  async function fetchMissingCovers(): Promise<void> {
+    const booksWithoutCover = Object.values(fsBooks.value).filter((b) => !b.coverUrl)
+    if (!booksWithoutCover.length) return
+
+    const titles = booksWithoutCover.map((b) => b.title)
+    const coverMap = await fetchCoversForBooks(titles)
+
+    let updated = false
+    for (const book of booksWithoutCover) {
+      const url = coverMap[book.title]
+      if (url) {
+        book.coverUrl = url
+        updated = true
+      }
+    }
+    if (updated) persist()
+  }
+
   return {
     fsBooks,
     scanning,
@@ -218,6 +238,7 @@ export function useFileScanner() {
     removeFsBook,
     markSynced,
     getFsBook,
+    fetchMissingCovers,
     cleanTitle,
     extractAuthor,
     isLikelyNotBook,

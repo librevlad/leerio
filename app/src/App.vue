@@ -39,8 +39,9 @@ function dismissApkBanner() {
 
 const isLoginPage = computed(() => route.name === 'login')
 const isWelcomePage = computed(() => route.name === 'welcome')
+const isCarMode = computed(() => route.name === 'car')
 const isPublicPage = computed(() => !!route.meta.public)
-const showApp = computed(() => !authLoading.value && !isLoginPage.value && !isWelcomePage.value)
+const showApp = computed(() => !authLoading.value && !isLoginPage.value && !isWelcomePage.value && !isCarMode.value)
 
 function onKeydown(e: KeyboardEvent) {
   const tag = (e.target as HTMLElement)?.tagName
@@ -163,8 +164,8 @@ onUnmounted(() => {
     </div>
   </div>
 
-  <!-- Login / Welcome page (no sidebar/nav) -->
-  <router-view v-else-if="isLoginPage || isWelcomePage" />
+  <!-- Login / Welcome / Car Mode page (no sidebar/nav) -->
+  <router-view v-else-if="isLoginPage || isWelcomePage || isCarMode" />
 
   <!-- App layout -->
   <div v-else-if="showApp" :key="appKey" class="flex min-h-dvh min-h-screen">

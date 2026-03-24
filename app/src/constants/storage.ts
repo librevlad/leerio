@@ -15,4 +15,5 @@ export const STORAGE = {
   POSITION_PREFIX: 'leerio_pos_',
   CACHE_PREFIX: 'leerio_cache_',
   LAST_PLAYED: 'leerio_last_played',
+  COVER_CACHE: 'leerio_cover_cache',
 } as const

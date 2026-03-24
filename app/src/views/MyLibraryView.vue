@@ -27,7 +27,7 @@ const toast = useToast()
 const { userBooks, ttsJobs, loading: ubLoading, loadUserBooks, loadTTSJobs, deleteBook, pollJob } = useUserBooks()
 const { localBooks, removeLocalBook, getLocalBook, getLocalAudioUrl } = useLocalBooks()
 const downloads = useDownloads()
-const { fsBooks, scanning, scan: scanDevice } = useFileScanner()
+const { fsBooks, scanning, scan: scanDevice, fetchMissingCovers } = useFileScanner()
 const scannedBooks = computed(() => Object.values(fsBooks.value))
 
 const activeFilter = ref<'all' | 'downloaded' | 'local' | 'uploaded'>('all')
@@ -84,7 +84,8 @@ const items = computed<UnifiedItem[]>(() => {
         title: sb.title,
         author: sb.author,
         source: 'local',
-        hasCover: false,
+        hasCover: !!sb.coverUrl,
+        coverSrc: sb.coverUrl,
         trackCount: sb.tracks.length,
       })
     }
@@ -122,6 +123,9 @@ const totalCount = computed(() => {
 
 onMounted(async () => {
   await Promise.all([loadUserBooks(), loadTTSJobs(), scanDevice()])
+
+  // Fetch covers in background for scanned books without covers
+  fetchMissingCovers()
 
   for (const job of activeJobs.value) {
     pollJob(job.id, (j: TTSJob) => {

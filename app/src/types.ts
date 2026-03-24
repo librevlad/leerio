@@ -298,6 +298,7 @@ export interface FsBookMeta {
   sizeBytes: number
   synced: boolean
   addedAt: string
+  coverUrl?: string // fetched from Open Library
 }
 
 export interface TTSJob {

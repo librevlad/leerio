@@ -490,6 +490,10 @@ export default {
     noBookmarks: 'Немає закладок',
     addBookmarkHint: 'Натисніть закладку під час прослуховування',
     bookmarksTab: 'Закладки',
+    carMode: 'Авторежим',
+    carModeExit: 'Вийти з авторежиму',
+    carModeBack30: 'Назад 30 сек',
+    carModeForward30: 'Вперед 30 сек',
   },
   common: {
     cancel: 'Скасувати',

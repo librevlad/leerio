@@ -490,6 +490,10 @@ export default {
     noBookmarks: 'No bookmarks',
     addBookmarkHint: 'Tap bookmark while listening',
     bookmarksTab: 'Bookmarks',
+    carMode: 'Car Mode',
+    carModeExit: 'Exit car mode',
+    carModeBack30: 'Back 30 sec',
+    carModeForward30: 'Forward 30 sec',
   },
   common: {
     cancel: 'Cancel',

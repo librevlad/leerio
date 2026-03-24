@@ -74,6 +74,12 @@ const router = createRouter({
       meta: { title: 'YouTube Import' },
     },
     {
+      path: '/car',
+      name: 'car',
+      component: () => import('./views/CarModeView.vue'),
+      meta: { public: true, title: 'Car Mode' },
+    },
+    {
       path: '/:pathMatch(.*)*',
       component: () => import('./views/NotFoundView.vue'),
       meta: { public: true },
@@ -88,7 +94,12 @@ router.beforeEach(async (to) => {
   checkAuth()
 
   // Onboarding redirect: first visit → /welcome
-  if (to.name !== 'welcome' && to.name !== 'login' && localStorage.getItem(STORAGE.ONBOARDED) !== '1') {
+  if (
+    to.name !== 'welcome' &&
+    to.name !== 'login' &&
+    to.name !== 'car' &&
+    localStorage.getItem(STORAGE.ONBOARDED) !== '1'
+  ) {
     return { name: 'welcome' }
   }
 

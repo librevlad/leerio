@@ -27,6 +27,7 @@ import {
   IconList,
   IconMusic,
   IconX,
+  IconCar,
 } from '../shared/icons'
 
 const { t } = useI18n()
@@ -580,6 +581,19 @@ function closeOverlays() {
             >
               <IconList :size="16" />
             </button>
+
+            <!-- Car mode -->
+            <button
+              class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border-0 text-[--t3] transition-colors hover:text-[--t2]"
+              style="background: rgba(255, 255, 255, 0.04)"
+              :aria-label="t('player.carMode')"
+              @click="
+                closeFullscreen()
+                router.push('/car')
+              "
+            >
+              <IconCar :size="16" />
+            </button>
           </div>
         </div>
 
@@ -885,7 +899,7 @@ function closeOverlays() {
             </button>
           </div>
 
-          <!-- Secondary controls: speed + sleep only -->
+          <!-- Secondary controls: speed + car mode -->
           <div class="flex items-center justify-center gap-8 px-8 pb-2">
             <!-- Speed -->
             <div class="relative">
@@ -914,6 +928,19 @@ function closeOverlays() {
                 </button>
               </div>
             </div>
+
+            <!-- Car mode -->
+            <button
+              class="flex flex-col items-center gap-0.5 border-0 bg-transparent px-3 py-1 text-[--t3] transition-colors hover:text-[--t2]"
+              :aria-label="t('player.carMode')"
+              @click="
+                closeFullscreen()
+                router.push('/car')
+              "
+            >
+              <IconCar :size="18" />
+              <span class="text-[10px] font-semibold">{{ t('player.carMode') }}</span>
+            </button>
           </div>
 
           <!-- Track list (collapsible) — mobile only -->
