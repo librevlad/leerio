@@ -268,6 +268,7 @@ function closeOverlays() {
   <transition name="fullscreen-player">
     <div
       v-if="isFullscreen && currentBook"
+      data-testid="fullscreen-player"
       class="fixed inset-0 z-[100] flex flex-col overflow-hidden"
       style="background: linear-gradient(180deg, #0d0d16 0%, #07070e 100%)"
       @touchstart="onSwipeStart"
