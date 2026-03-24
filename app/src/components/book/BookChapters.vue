@@ -65,10 +65,10 @@ async function loadTracks() {
       const lb = getLocalBook(props.book.id)
       if (lb) {
         tracks.value = lb.tracks.map((t, i) => ({
-          id: i,
+          index: i,
           filename: t.title || `track-${i + 1}`,
+          path: '',
           duration: t.duration || 0,
-          size_mb: 0,
         }))
       } else {
         loadError.value = true
