@@ -76,11 +76,14 @@ def get_presigned_url(s3_key: str, expires: int = 3600) -> str | None:
     if not client:
         return None
     bucket = os.environ.get("S3_BUCKET", "leerio-books")
-    return client.generate_presigned_url(
-        "get_object",
-        Params={"Bucket": bucket, "Key": s3_key},
-        ExpiresIn=expires,
-    )
+    try:
+        return client.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": bucket, "Key": s3_key},
+            ExpiresIn=expires,
+        )
+    except Exception:
+        return None
 
 
 def upload_file_to_s3(local_path: str, s3_key: str) -> None:
