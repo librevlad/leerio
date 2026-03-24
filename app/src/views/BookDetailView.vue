@@ -85,7 +85,7 @@ const coverSrc = computed(() => {
 const isUserBook = computed(() => !!book.value?.id?.startsWith('ub:'))
 const isOwned = computed(() => !!book.value?.is_owned)
 const isInLibrary = computed(() => !!book.value?.book_status || isOwned.value || isUserBook.value || isLbBook.value)
-const canDelete = computed(() => isOwned.value || isUserBook.value)
+const canDelete = computed(() => isOwned.value || isUserBook.value || isLbBook.value)
 
 async function startDownload() {
   if (!book.value) return
@@ -191,7 +191,10 @@ async function deleteBook() {
   if (!book.value || !confirm(t('book.confirmDelete'))) return
   try {
     const id = book.value.id
-    if (id.startsWith('ub:')) {
+    if (id.startsWith('lb:')) {
+      const { removeLocalBook } = useLocalBooks()
+      await removeLocalBook(id)
+    } else if (id.startsWith('ub:')) {
       const slug = id.split(':').slice(2).join(':')
       await api.deleteUserBook(slug)
     } else {
