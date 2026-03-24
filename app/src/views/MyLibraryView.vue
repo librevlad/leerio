@@ -31,6 +31,7 @@ const { fsBooks, scanning, scan: scanDevice, fetchMissingCovers } = useFileScann
 const scannedBooks = computed(() => Object.values(fsBooks.value))
 
 const activeFilter = ref<'all' | 'downloaded' | 'local' | 'uploaded'>('all')
+const coverErrors = ref(new Set<string>())
 const activeJobs = computed(() => ttsJobs.value.filter((j: TTSJob) => j.status === 'processing'))
 
 interface UnifiedItem {
@@ -342,10 +343,11 @@ async function uploadToCloud(item: UnifiedItem) {
         <!-- Gradient backdrop with blurred cover -->
         <div class="relative h-28 overflow-hidden" :style="{ background: coverGradients[item.source] }">
           <img
-            v-if="item.coverSrc"
+            v-if="item.coverSrc && !coverErrors.has(item.id)"
             :src="item.coverSrc"
             class="absolute inset-0 h-full w-full object-cover blur-[1px] brightness-75"
             alt=""
+            @error="coverErrors.add(item.id)"
           />
           <div v-else class="absolute inset-0" :style="{ background: coverPatterns[item.source] }" />
           <div
@@ -376,7 +378,7 @@ async function uploadToCloud(item: UnifiedItem) {
             <div
               class="relative h-[72px] w-[72px] flex-shrink-0 overflow-hidden rounded-lg shadow-lg ring-2 ring-[--card-solid]"
             >
-              <img v-if="item.coverSrc" :src="item.coverSrc" class="h-full w-full object-cover" alt="" />
+              <img v-if="item.coverSrc && !coverErrors.has(item.id)" :src="item.coverSrc" class="h-full w-full object-cover" alt="" @error="coverErrors.add(item.id)" />
               <div
                 v-else
                 class="flex h-full w-full items-center justify-center"
