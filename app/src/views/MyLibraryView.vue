@@ -37,7 +37,8 @@ interface UnifiedItem {
   id: string
   title: string
   author: string
-  source: 'downloaded' | 'local' | 'uploaded'
+  source: 'downloaded' | 'local' | 'uploaded' | 'catalog'
+  category?: string
   hasCover: boolean
   coverSrc?: string
   trackCount?: number
@@ -91,16 +92,20 @@ const items = computed<UnifiedItem[]>(() => {
     }
   }
 
-  // Uploaded / TTS books
+  // Uploaded / TTS books + owned catalog books
   if (activeFilter.value === 'all' || activeFilter.value === 'uploaded') {
     for (const ub of userBooks.value) {
+      const isCatalog = ub.source === 'catalog'
       result.push({
         id: ub.id,
         title: ub.title,
         author: ub.author,
-        source: 'uploaded',
+        source: isCatalog ? 'catalog' : 'uploaded',
+        category: isCatalog ? (ub as any).category : undefined,
         hasCover: ub.has_cover,
-        coverSrc: ub.has_cover ? userBookCoverUrl(ub.slug) : undefined,
+        coverSrc: isCatalog
+          ? (ub.has_cover ? coverUrl(ub.id) : undefined)
+          : (ub.has_cover ? userBookCoverUrl(ub.slug) : undefined),
         trackCount: ub.mp3_count,
         slug: ub.slug,
         isPersonal: true,
@@ -144,6 +149,8 @@ async function handleDelete(item: UnifiedItem) {
   try {
     if (item.source === 'local') {
       await removeLocalBook(item.id)
+    } else if (item.source === 'catalog') {
+      await api.deleteOwnedBook(item.id)
     } else if (item.source === 'uploaded' && item.slug) {
       await deleteBook(item.slug)
     } else if (item.source === 'downloaded') {
@@ -166,18 +173,21 @@ const sourceBadgeMap: Record<UnifiedItem['source'], 'library' | 'librivox' | 'us
   downloaded: 'library',
   local: 'local',
   uploaded: 'user',
+  catalog: 'library',
 }
 
 const coverGradients: Record<string, string> = {
   downloaded: 'linear-gradient(135deg, #064e3b 0%, #059669 50%, #34d399 100%)',
   local: 'linear-gradient(135deg, #1e1b4b 0%, #4338ca 50%, #818cf8 100%)',
   uploaded: 'linear-gradient(135deg, #134e4a 0%, #0d9488 50%, #5eead4 100%)',
+  catalog: 'linear-gradient(135deg, #92400e 0%, #d97706 50%, #fbbf24 100%)',
 }
 
 const coverPatterns: Record<string, string> = {
   downloaded: 'radial-gradient(circle at 80% 20%, rgba(255,255,255,0.12) 0%, transparent 50%)',
   local: 'radial-gradient(circle at 20% 80%, rgba(255,255,255,0.12) 0%, transparent 50%)',
   uploaded: 'radial-gradient(circle at 70% 70%, rgba(255,255,255,0.12) 0%, transparent 50%)',
+  catalog: 'radial-gradient(circle at 50% 30%, rgba(255,255,255,0.1) 0%, transparent 50%)',
 }
 
 const uploadingToCloud = ref<string | null>(null)
@@ -345,7 +355,11 @@ async function uploadToCloud(item: UnifiedItem) {
 
           <!-- Top badges -->
           <div class="absolute top-2.5 right-3 flex items-center gap-1.5">
-            <SourceBadge :source="sourceBadgeMap[item.source]" />
+            <span
+              v-if="item.source === 'catalog' && item.category"
+              class="inline-flex items-center rounded-md bg-white/[0.06] px-2 py-0.5 text-[9px] leading-tight font-medium text-[--accent] backdrop-blur-sm"
+            >{{ item.category }}</span>
+            <SourceBadge v-else :source="sourceBadgeMap[item.source]" />
           </div>
 
           <span
