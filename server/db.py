@@ -111,10 +111,15 @@ def init_db():
                 source TEXT DEFAULT 'manual',
                 external_id TEXT,
                 fingerprint TEXT,
-                created_at TEXT DEFAULT (datetime('now'))
+                created_at TEXT DEFAULT (datetime('now')),
+                owner_user_id TEXT DEFAULT NULL
             )
             """
         )
+        # Ensure owner_user_id column exists on existing databases
+        cols = [r[1] for r in conn.execute("PRAGMA table_info(books)").fetchall()]
+        if "owner_user_id" not in cols:
+            conn.execute("ALTER TABLE books ADD COLUMN owner_user_id TEXT DEFAULT NULL")
 
         conn.execute(
             """
@@ -871,16 +876,30 @@ def _ghost_filter() -> str:
     return "NOT (author = '' AND title GLOB '[0-9]*' AND length(title) <= 4)"
 
 
-def get_all_books() -> list[dict]:
-    """Return all books (excluding ghost books)."""
+def _visibility_filter(viewer_user_id: str | None) -> tuple[str, list]:
+    """SQL clause + params to filter books by ownership visibility."""
+    if viewer_user_id:
+        return "(owner_user_id IS NULL OR owner_user_id = ?)", [viewer_user_id]
+    return "owner_user_id IS NULL", []
+
+
+def get_all_books(viewer_user_id: str | None = None) -> list[dict]:
+    """Return visible books (public + owned by viewer, excluding ghosts)."""
     conn = _get_conn()
-    rows = conn.execute(f"SELECT * FROM books WHERE {_ghost_filter()} ORDER BY title").fetchall()
+    vis, params = _visibility_filter(viewer_user_id)
+    rows = conn.execute(
+        f"SELECT * FROM books WHERE {_ghost_filter()} AND {vis} ORDER BY title", params
+    ).fetchall()
     return [dict(r) for r in rows]
 
 
-def get_book_by_id(book_id: int) -> dict | None:
+def get_book_by_id(book_id: int, viewer_user_id: str | None = None) -> dict | None:
+    """Return book if public or owned by viewer."""
     conn = _get_conn()
-    row = conn.execute("SELECT * FROM books WHERE id = ?", (book_id,)).fetchone()
+    vis, params = _visibility_filter(viewer_user_id)
+    row = conn.execute(
+        f"SELECT * FROM books WHERE id = ? AND {vis}", [book_id, *params]
+    ).fetchone()
     return dict(row) if row else None
 
 
@@ -891,7 +910,11 @@ def get_book_by_slug(slug: str) -> dict | None:
 
 
 def search_books(
-    category: str | None = None, search: str | None = None, sort: str = "title", language: str | None = None
+    category: str | None = None,
+    search: str | None = None,
+    sort: str = "title",
+    language: str | None = None,
+    viewer_user_id: str | None = None,
 ) -> list[dict]:
     """Search books with optional category filter, text search, and sort."""
     conn = _get_conn()
@@ -899,6 +922,10 @@ def search_books(
     params: list[str] = []
     # Exclude ghost books: numeric-only title with no author
     clauses.append(_ghost_filter())
+    # Visibility: public + owned by viewer
+    vis, vis_params = _visibility_filter(viewer_user_id)
+    clauses.append(vis)
+    params.extend(vis_params)
     if category:
         clauses.append("category = ?")
         params.append(category)
