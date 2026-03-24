@@ -379,7 +379,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Audiobook Library", lifespan=lifespan)
 
-_cors_origins = os.environ.get("CORS_ORIGINS", "http://localhost:5173,http://localhost:80").split(",")
+_cors_origins = os.environ.get("CORS_ORIGINS", "http://localhost:5173,http://localhost:80,https://localhost").split(",")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in _cors_origins],

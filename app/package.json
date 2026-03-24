@@ -28,6 +28,7 @@
     "@capacitor/filesystem": "^8.1.2",
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@ffmpeg/util": "^0.12.2",
+    "@jofr/capacitor-media-session": "^4.0.0",
     "@vueuse/core": "^14.2.1",
     "chart.js": "^4.5.1",
     "idb-keyval": "^6.2.2",

@@ -123,8 +123,8 @@ watch(currentBook, () => loadBookmarks(), { immediate: true })
 function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600)
   const m = Math.floor((seconds % 3600) / 60)
-  if (h > 0) return `${h}ч ${m}м`
-  return `${m}м`
+  if (h > 0) return `${h}${t('player.unitH')} ${m}${t('player.unitM')}`
+  return `${m}${t('player.unitM')}`
 }
 
 function trackDisplayName(filename: string, index: number): string {

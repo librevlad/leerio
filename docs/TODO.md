@@ -3,6 +3,7 @@
 ## Открытые
 
 - [ ] [ОТЛОЖЕНО] Paddle: настроить credentials на VPS + webhook URL
+- [ ] [2026-03-24] Crash reporting: Sentry JS SDK для APK (без него крэши пользователей = тишина). Context: WebView-based APK, Sentry Browser SDK, нужен DSN + `Sentry.init()` в main.ts
 - [x] [2026-03-18] Upload: серверная поддержка M4A/M4B/OGG/FLAC/WAV (сделано 2026-03-19)
 - [x] [2026-03-18] Upload: ZIP распаковка на бэкенде (сделано 2026-03-19)
 - [x] [2026-03-18] Telemetry: resume_clicked, upload_started/completed, book_played (сделано 2026-03-19)

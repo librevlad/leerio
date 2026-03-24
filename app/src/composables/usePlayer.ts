@@ -11,6 +11,7 @@ import type { Book, Track } from '../types'
 import { STORAGE } from '../constants/storage'
 import { Filesystem, Directory } from '@capacitor/filesystem'
 import { Capacitor } from '@capacitor/core'
+import { MediaSession as NativeMediaSession } from '@jofr/capacitor-media-session'
 
 // Cached i18n instance (lazy-loaded to avoid circular dependency in tests)
 let _i18n: { global: { t: (key: string) => string } } | null = null
@@ -130,6 +131,7 @@ function ensureAudio(): HTMLAudioElement {
 
     audio.addEventListener('play', () => {
       isPlaying.value = true
+      if (isNative) NativeMediaSession.setPlaybackState({ playbackState: 'playing' }).catch(() => {})
       startSaveTimer()
       updatePositionState()
       const title = currentBook.value?.title
@@ -144,6 +146,7 @@ function ensureAudio(): HTMLAudioElement {
 
     audio.addEventListener('pause', () => {
       isPlaying.value = false
+      if (isNative) NativeMediaSession.setPlaybackState({ playbackState: 'paused' }).catch(() => {})
       updatePositionState()
       stopSaveTimer()
       // Only save position on user-initiated pause, not during programmatic track/book switch
@@ -302,45 +305,64 @@ async function loadCoverBlobUrl(book: Book): Promise<void> {
   }
 }
 
+const isNative = Capacitor.isNativePlatform()
+
 function updateMediaSession() {
-  if (!('mediaSession' in navigator) || !currentBook.value) return
+  if (!currentBook.value) return
 
   const artwork: MediaImage[] | undefined =
     coverBlobUrl && coverMimeType ? [{ src: coverBlobUrl, sizes: '512x512', type: coverMimeType }] : undefined
 
-  navigator.mediaSession.metadata = new MediaMetadata({
-    title: currentTrack.value?.filename ?? 'Unknown',
-    artist: currentBook.value.author,
-    album: currentBook.value.title,
-    ...(artwork && { artwork }),
-  })
+  const title = currentTrack.value?.filename ?? 'Unknown'
+  const artist = currentBook.value.author
+  const album = currentBook.value.title
 
-  navigator.mediaSession.setActionHandler('play', () => togglePlay())
-  navigator.mediaSession.setActionHandler('pause', () => togglePlay())
-  navigator.mediaSession.setActionHandler('previoustrack', () => prevTrack())
-  navigator.mediaSession.setActionHandler('nexttrack', () => nextTrack())
-  navigator.mediaSession.setActionHandler('seekto', (details) => {
-    if (details.seekTime != null) seek(details.seekTime)
-  })
-  navigator.mediaSession.setActionHandler('seekbackward', (details) => {
-    skipBackward(details.seekOffset ?? 10)
-  })
-  navigator.mediaSession.setActionHandler('seekforward', (details) => {
-    skipForward(details.seekOffset ?? 30)
-  })
+  // Web Media Session API
+  if ('mediaSession' in navigator) {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title,
+      artist,
+      album,
+      ...(artwork && { artwork }),
+    })
+
+    navigator.mediaSession.setActionHandler('play', () => togglePlay())
+    navigator.mediaSession.setActionHandler('pause', () => togglePlay())
+    navigator.mediaSession.setActionHandler('previoustrack', () => prevTrack())
+    navigator.mediaSession.setActionHandler('nexttrack', () => nextTrack())
+    navigator.mediaSession.setActionHandler('seekto', (details) => {
+      if (details.seekTime != null) seek(details.seekTime)
+    })
+    navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+      skipBackward(details.seekOffset ?? 10)
+    })
+    navigator.mediaSession.setActionHandler('seekforward', (details) => {
+      skipForward(details.seekOffset ?? 30)
+    })
+  }
+
+  // Native foreground service (Android notification + background playback)
+  if (isNative) {
+    NativeMediaSession.setMetadata({ title, artist, album, ...(artwork && { artwork }) }).catch(() => {})
+    NativeMediaSession.setPlaybackState({ playbackState: isPlaying.value ? 'playing' : 'paused' }).catch(() => {})
+    NativeMediaSession.setActionHandler({ action: 'play' }, () => togglePlay()).catch(() => {})
+    NativeMediaSession.setActionHandler({ action: 'pause' }, () => togglePlay()).catch(() => {})
+    NativeMediaSession.setActionHandler({ action: 'previoustrack' }, () => prevTrack()).catch(() => {})
+    NativeMediaSession.setActionHandler({ action: 'nexttrack' }, () => nextTrack()).catch(() => {})
+    NativeMediaSession.setActionHandler({ action: 'seekbackward' }, () => skipBackward(10)).catch(() => {})
+    NativeMediaSession.setActionHandler({ action: 'seekforward' }, () => skipForward(30)).catch(() => {})
+  }
 }
 
 function updatePositionState() {
-  if (!('mediaSession' in navigator) || !audio) return
+  if (!audio) return
   try {
     const dur = isFinite(audio.duration) ? audio.duration : 0
     const pos = isFinite(audio.currentTime) ? audio.currentTime : 0
     if (dur > 0) {
-      navigator.mediaSession.setPositionState({
-        duration: dur,
-        position: Math.min(pos, dur),
-        playbackRate: audio.playbackRate || 1,
-      })
+      const state = { duration: dur, position: Math.min(pos, dur), playbackRate: audio.playbackRate || 1 }
+      if ('mediaSession' in navigator) navigator.mediaSession.setPositionState(state)
+      if (isNative) NativeMediaSession.setPositionState(state).catch(() => {})
     }
   } catch {
     // setPositionState can throw in some browsers

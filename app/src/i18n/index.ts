@@ -29,12 +29,19 @@ function slavicPluralRule(choice: number): number {
 
 import { STORAGE } from '../constants/storage'
 
-const savedLocale = (localStorage.getItem(STORAGE.LOCALE) as LocaleCode) || 'ru'
+function detectLocale(): LocaleCode {
+  const saved = localStorage.getItem(STORAGE.LOCALE) as LocaleCode | null
+  if (saved && ['en', 'ru', 'uk'].includes(saved)) return saved
+  const lang = navigator.language?.toLowerCase() || ''
+  if (lang.startsWith('ru')) return 'ru'
+  if (lang.startsWith('uk')) return 'uk'
+  return 'en'
+}
 
 const i18n = createI18n({
   legacy: false,
-  locale: savedLocale,
-  fallbackLocale: 'ru',
+  locale: detectLocale(),
+  fallbackLocale: 'en',
   pluralRules: {
     ru: slavicPluralRule,
     uk: slavicPluralRule,

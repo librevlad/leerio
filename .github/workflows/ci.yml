@@ -141,16 +141,44 @@ jobs:
           java-version: 21
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-      - name: Build debug APK
+      - name: Set versionCode from run number
         working-directory: app/android
-        run: chmod +x gradlew && ./gradlew assembleDebug
+        run: |
+          sed -i "s/versionCode 1/versionCode ${{ github.run_number }}/" app/build.gradle
+          sed -i "s/versionName \"1.0\"/versionName \"1.0.${{ github.run_number }}\"/" app/build.gradle
+      - name: Decode keystore
+        if: env.KEYSTORE_BASE64 != ''
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: echo "$KEYSTORE_BASE64" | base64 -d > app/android/app/release.keystore
+      - name: Build APK
+        working-directory: app/android
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          chmod +x gradlew
+          if [ -f app/release.keystore ]; then
+            ./gradlew assembleRelease
+          else
+            ./gradlew assembleDebug
+          fi
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: leerio-debug-apk
-          path: app/android/app/build/outputs/apk/debug/app-debug.apk
+          name: leerio-apk
+          path: |
+            app/android/app/build/outputs/apk/release/app-release.apk
+            app/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: warn
       - name: Rename APK
-        run: cp app/android/app/build/outputs/apk/debug/app-debug.apk app/android/app/build/outputs/apk/debug/leerio.apk
+        run: |
+          if [ -f app/android/app/build/outputs/apk/release/app-release.apk ]; then
+            cp app/android/app/build/outputs/apk/release/app-release.apk /tmp/leerio.apk
+          else
+            cp app/android/app/build/outputs/apk/debug/app-debug.apk /tmp/leerio.apk
+          fi
       - name: Create/update GitHub release
         uses: softprops/action-gh-release@v2
         with:
@@ -158,7 +186,7 @@ jobs:
           name: Latest APK Build
           body: "APK built from ${{ github.sha }}"
           prerelease: true
-          files: app/android/app/build/outputs/apk/debug/leerio.apk
+          files: /tmp/leerio.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

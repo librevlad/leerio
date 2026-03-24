@@ -183,7 +183,7 @@ async function uploadToCloud(item: UnifiedItem) {
 
   const book = getLocalBook(item.id)
   if (!book || !book.tracks.length) {
-    toast.error('Книга не найдена')
+    toast.error(t('myLibrary.fsNotFound'))
     return
   }
 
@@ -200,12 +200,12 @@ async function uploadToCloud(item: UnifiedItem) {
     }
 
     if (!files.length) {
-      toast.error('Нет треков для загрузки')
+      toast.error(t('myLibrary.noTracks'))
       return
     }
 
     if (files.length !== book.tracks.length) {
-      toast.error(`Загружено только ${files.length}/${book.tracks.length} треков`)
+      toast.error(t('myLibrary.cloudUploadFailed'))
       return
     }
 
@@ -220,10 +220,10 @@ async function uploadToCloud(item: UnifiedItem) {
 
     await removeLocalBook(item.id)
 
-    toast.success('Книга загружена в облако')
+    toast.success(t('myLibrary.cloudUploadDone'))
     await loadUserBooks()
   } catch (e) {
-    toast.error(e instanceof Error ? e.message : 'Ошибка загрузки')
+    toast.error(e instanceof Error ? e.message : t('myLibrary.cloudUploadFailed'))
   } finally {
     uploadingToCloud.value = null
   }
@@ -389,12 +389,12 @@ async function uploadToCloud(item: UnifiedItem) {
               </span>
               <div class="flex items-center gap-1">
                 <div v-if="uploadingToCloud === item.id" class="flex h-7 items-center text-[11px] text-[--accent]">
-                  Загрузка...
+                  {{ t('myLibrary.uploading') }}
                 </div>
                 <button
                   v-else-if="item.id.startsWith('lb:')"
                   class="rounded-full p-1.5 text-[--t3] opacity-0 transition-all group-hover:opacity-100 hover:bg-white/10 hover:text-[--accent]"
-                  title="В облако"
+                  :title="t('myLibrary.cloudHint')"
                   @click.prevent="uploadToCloud(item)"
                 >
                   <IconUpload :size="14" />
