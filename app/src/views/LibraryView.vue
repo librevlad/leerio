@@ -171,7 +171,7 @@ watch(loadMoreRef, (el) => {
         {{ t('library.filterAll') }}
       </button>
       <button
-        v-for="cat in categories"
+        v-for="cat in categories.filter(c => categoryCounts[c])"
         :key="cat"
         class="flex flex-shrink-0 cursor-pointer items-center gap-1 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
         :class="
