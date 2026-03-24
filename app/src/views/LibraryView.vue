@@ -153,14 +153,14 @@ watch(loadMoreRef, (el) => {
         v-model="search"
         type="search"
         :placeholder="t('library.search')"
-        class="w-full rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-2.5 text-[13px] text-[--t1] transition-colors outline-none placeholder:text-[--t3] focus:border-[--accent]/30 focus:bg-white/[0.05]"
+        class="w-full rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3 text-[13px] text-[--t1] transition-colors outline-none placeholder:text-[--t3] focus:border-[--accent]/30 focus:bg-white/[0.05] min-h-[44px]"
       />
     </div>
 
     <!-- Category pills -->
     <div class="scrollbar-hide fade-mask-r mb-2 flex gap-1.5 overflow-x-auto pb-0.5">
       <button
-        class="flex-shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
+        class="flex-shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors min-h-[44px] flex items-center"
         :class="
           category === ''
             ? 'border-white/10 bg-white/[0.08] text-[--t1]'
@@ -173,7 +173,7 @@ watch(loadMoreRef, (el) => {
       <button
         v-for="cat in categories.filter(c => categoryCounts[c])"
         :key="cat"
-        class="flex flex-shrink-0 cursor-pointer items-center gap-1 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
+        class="flex flex-shrink-0 cursor-pointer items-center gap-1 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors min-h-[44px]"
         :class="
           category === cat
             ? 'border-white/10 bg-white/[0.08] text-[--t1]'
@@ -189,7 +189,7 @@ watch(loadMoreRef, (el) => {
     <!-- Status dropdown -->
     <div class="relative mb-5 inline-block">
       <button
-        class="flex cursor-pointer items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors"
+        class="flex cursor-pointer items-center gap-1 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors min-h-[44px]"
         :class="
           statusFilter
             ? 'border-white/10 bg-white/[0.08] text-[--t1]'
