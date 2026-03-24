@@ -1,5 +1,10 @@
 @import 'tailwindcss';
 
+@theme {
+  --font-sans: 'DM Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
 /* ── Tokens ───────────────────────────────────────────────────────────── */
 
 :root {
@@ -29,6 +34,7 @@ body {
   background: var(--bg);
   color: var(--t1);
   font-family:
+    'DM Sans',
     'Inter',
     system-ui,
     -apple-system,
@@ -204,6 +210,7 @@ button:not(.btn):not(:disabled):active {
 /* ── Typography ──────────────────────────────────────────────────────── */
 
 .page-title {
+  font-family: 'Satoshi', 'DM Sans', system-ui, sans-serif;
   font-size: 24px;
   font-weight: 800;
   letter-spacing: -0.03em;
