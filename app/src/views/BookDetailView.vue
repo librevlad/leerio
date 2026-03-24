@@ -48,10 +48,9 @@ const toast = useToast()
 const { getFsBook, markSynced } = useFileScanner()
 const { getLocalBook } = useLocalBooks()
 
-const isLocalBook = computed(() => {
-  const id = book.value?.id
-  return id?.startsWith('fs:') || id?.startsWith('lb:')
-})
+const isFsBook = computed(() => !!book.value?.id?.startsWith('fs:'))
+const isLbBook = computed(() => !!book.value?.id?.startsWith('lb:'))
+const isLocalBook = computed(() => isFsBook.value || isLbBook.value)
 
 const isSynced = computed(() => {
   const id = book.value?.id
@@ -86,7 +85,7 @@ const coverSrc = computed(() => {
 
 const isUserBook = computed(() => !!book.value?.id?.startsWith('ub:'))
 const isOwned = computed(() => !!book.value?.is_owned)
-const isInLibrary = computed(() => !!book.value?.book_status || isOwned.value || isUserBook.value)
+const isInLibrary = computed(() => !!book.value?.book_status || isOwned.value || isUserBook.value || isLbBook.value)
 const canDelete = computed(() => isOwned.value || isUserBook.value)
 
 async function startDownload() {
@@ -439,7 +438,7 @@ watch(() => route.params.id, loadBook)
           </div>
 
           <!-- Device badge + Cloud upload -->
-          <div v-if="isLocalBook" class="mt-3 space-y-2">
+          <div v-if="isFsBook" class="mt-3 space-y-2">
             <div
               class="inline-flex items-center gap-1.5 rounded-md bg-white/[0.06] px-2.5 py-1 text-[11px] text-[--t3]"
             >
