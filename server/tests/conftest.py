@@ -82,6 +82,26 @@ def api_client(tmp_data_dir, monkeypatch):
     api_mod.app.dependency_overrides.clear()
 
 
+@pytest.fixture()
+def anon_client(tmp_data_dir, monkeypatch):
+    """TestClient with isolated data directories and NO auth (anonymous user)."""
+    from starlette.testclient import TestClient
+
+    import server.api as api_mod
+    import server.db as db_mod
+    from server.auth import get_optional_user
+
+    db_mod.init_db()
+
+    # get_optional_user returns None (anonymous)
+    api_mod.app.dependency_overrides[get_optional_user] = lambda: None
+
+    client = TestClient(api_mod.app)
+    yield client
+
+    api_mod.app.dependency_overrides.clear()
+
+
 @pytest.fixture(autouse=True)
 def _reset_overrides():
     """Ensure dependency overrides are always cleared, even if a fixture crashes."""
