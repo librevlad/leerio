@@ -91,7 +91,7 @@ test.describe('Real audio upload and playback', () => {
 
     // Player should open - check for player container or audio controls
     await expect(
-      page.locator('[data-testid="fullscreen-player"]').or(page.locator('button:has-text("Пауза")')),
+      page.getByTestId('fullscreen-player'),
     ).toBeVisible({ timeout: 10_000 })
   })
 })
@@ -201,7 +201,7 @@ test.describe('FAB position', () => {
 
     // Wait for fullscreen player
     await expect(
-      page.locator('[data-testid="fullscreen-player"]').or(page.locator('button:has-text("Пауза")')),
+      page.getByTestId('fullscreen-player'),
     ).toBeVisible({ timeout: 10_000 })
 
     // Close fullscreen player (click outside or back)
