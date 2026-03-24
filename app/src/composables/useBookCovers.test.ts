@@ -156,7 +156,7 @@ describe('useBookCovers', () => {
   it('fetchCoversForBooks skips already-cached titles', async () => {
     localStorage.setItem(
       'leerio_cover_cache',
-      JSON.stringify({ 'Cached': 'https://covers.openlibrary.org/b/id/50-M.jpg' }),
+      JSON.stringify({ Cached: 'https://covers.openlibrary.org/b/id/50-M.jpg' }),
     )
     const { fetchCoversForBooks } = await getModule()
 

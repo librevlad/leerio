@@ -79,9 +79,7 @@ export async function fetchCover(title: string): Promise<string | null> {
  * Returns a map of title -> coverUrl for books that got covers.
  * Rate-limited with 500ms delay between requests.
  */
-export async function fetchCoversForBooks(
-  titles: string[],
-): Promise<Record<string, string>> {
+export async function fetchCoversForBooks(titles: string[]): Promise<Record<string, string>> {
   const results: Record<string, string> = {}
   const c = loadCache()
 
