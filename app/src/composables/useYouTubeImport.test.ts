@@ -312,8 +312,8 @@ describe('useYouTubeImport', () => {
       const files = await yt.splitAudio(blob, chapters)
 
       expect(files).toHaveLength(2)
-      expect(files[0]!.name).toBe('chapter-001.mp3')
-      expect(files[1]!.name).toBe('chapter-002.mp3')
+      expect(files[0]!.name).toBe('Ch 1')
+      expect(files[1]!.name).toBe('Ch 2')
       expect(mockFfmpegExec).toHaveBeenCalledTimes(2)
       expect(mockFfmpegTerminate).toHaveBeenCalled()
       expect(yt.progress.value).toBe(100)

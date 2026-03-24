@@ -107,7 +107,8 @@ export function useYouTubeImport() {
 
       for (let i = 0; i < chapterList.length; i++) {
         const ch = chapterList[i]!
-        const outputName = `chapter-${String(i + 1).padStart(3, '0')}.mp3`
+        const chTitle = ch.title || `Chapter ${i + 1}`
+        const outputName = `chapter-${String(i + 1).padStart(3, '0')}.webm`
         await ffmpeg.exec([
           '-i',
           inputName,
@@ -115,14 +116,15 @@ export function useYouTubeImport() {
           String(ch.start),
           '-to',
           String(ch.end),
-          '-c',
+          '-c:a',
           'copy',
+          '-vn',
           '-y',
           outputName,
         ])
         const data = await ffmpeg.readFile(outputName)
-        const fileBlob = new Blob([data as BlobPart], { type: 'audio/mpeg' })
-        files.push(new File([fileBlob], outputName, { type: 'audio/mpeg' }))
+        const fileBlob = new Blob([data as BlobPart], { type: 'audio/webm' })
+        files.push(new File([fileBlob], chTitle, { type: 'audio/webm' }))
         progress.value = Math.round(((i + 1) / chapterList.length) * 100)
       }
 
