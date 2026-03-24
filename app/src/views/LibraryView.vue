@@ -153,7 +153,7 @@ watch(loadMoreRef, (el) => {
         v-model="search"
         type="search"
         :placeholder="t('library.search')"
-        class="w-full rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3 text-[13px] text-[--t1] transition-colors outline-none placeholder:text-[--t3] focus:border-[--accent]/30 focus:bg-white/[0.05] min-h-[44px]"
+        class="input-field w-full rounded-xl px-4 py-3 text-[13px] min-h-[44px]"
       />
     </div>
 
