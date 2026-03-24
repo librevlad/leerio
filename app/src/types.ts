@@ -36,6 +36,7 @@ export interface Book {
   description?: string
   rating?: number
   book_status?: BookStatusValue
+  is_owned?: boolean
   // Detail fields
   size_mb?: number
   mp3_count?: number
