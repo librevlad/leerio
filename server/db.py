@@ -887,9 +887,7 @@ def get_all_books(viewer_user_id: str | None = None) -> list[dict]:
     """Return visible books (public + owned by viewer, excluding ghosts)."""
     conn = _get_conn()
     vis, params = _visibility_filter(viewer_user_id)
-    rows = conn.execute(
-        f"SELECT * FROM books WHERE {_ghost_filter()} AND {vis} ORDER BY title", params
-    ).fetchall()
+    rows = conn.execute(f"SELECT * FROM books WHERE {_ghost_filter()} AND {vis} ORDER BY title", params).fetchall()
     return [dict(r) for r in rows]
 
 
@@ -897,9 +895,7 @@ def get_book_by_id(book_id: int, viewer_user_id: str | None = None) -> dict | No
     """Return book if public or owned by viewer."""
     conn = _get_conn()
     vis, params = _visibility_filter(viewer_user_id)
-    row = conn.execute(
-        f"SELECT * FROM books WHERE id = ? AND {vis}", [book_id, *params]
-    ).fetchone()
+    row = conn.execute(f"SELECT * FROM books WHERE id = ? AND {vis}", [book_id, *params]).fetchone()
     return dict(row) if row else None
 
 
