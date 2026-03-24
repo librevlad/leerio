@@ -66,7 +66,7 @@ async function loadTracks() {
       if (lb) {
         tracks.value = lb.tracks.map((t, i) => ({
           index: i,
-          filename: t.title || `track-${i + 1}`,
+          filename: t.filename || `track-${i + 1}`,
           path: '',
           duration: t.duration || 0,
         }))
