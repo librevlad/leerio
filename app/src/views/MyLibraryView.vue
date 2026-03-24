@@ -96,7 +96,7 @@ const items = computed<UnifiedItem[]>(() => {
   // Uploaded / TTS books + owned catalog books
   if (activeFilter.value === 'all' || activeFilter.value === 'uploaded') {
     for (const ub of userBooks.value) {
-      const isCatalog = ub.source === 'catalog'
+      const isCatalog = (ub.source as string) === 'catalog'
       result.push({
         id: ub.id,
         title: ub.title,
