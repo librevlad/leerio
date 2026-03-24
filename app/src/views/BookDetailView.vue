@@ -82,9 +82,9 @@ const coverSrc = computed(() => {
   return book.value.has_cover ? coverUrl(id) : ''
 })
 
-const isInLibrary = computed(() => !!book.value?.book_status || !!book.value?.is_owned)
-const isOwned = computed(() => !!book.value?.is_owned)
 const isUserBook = computed(() => !!book.value?.id?.startsWith('ub:'))
+const isOwned = computed(() => !!book.value?.is_owned)
+const isInLibrary = computed(() => !!book.value?.book_status || isOwned.value || isUserBook.value)
 const canDelete = computed(() => isOwned.value || isUserBook.value)
 
 async function startDownload() {
