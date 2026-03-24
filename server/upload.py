@@ -71,7 +71,7 @@ def list_user_books(user: dict = Depends(get_current_user)):
     for b in owned:
         result.append(
             {
-                "id": b["id"],
+                "id": str(b["id"]),
                 "slug": b["slug"],
                 "title": b["title"],
                 "author": b["author"],
