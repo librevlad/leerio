@@ -82,7 +82,8 @@ const coverSrc = computed(() => {
   return book.value.has_cover ? coverUrl(id) : ''
 })
 
-const isInLibrary = computed(() => !!book.value?.book_status)
+const isInLibrary = computed(() => !!book.value?.book_status || !!book.value?.is_owned)
+const isOwned = computed(() => !!book.value?.is_owned)
 
 async function startDownload() {
   if (!book.value) return
@@ -153,6 +154,17 @@ async function addToLibrary() {
     local.setBookStatus(book.value.id, 'want_to_read').catch(() => {})
     await api.setBookStatus(book.value.id, 'want_to_read')
     book.value.book_status = 'want_to_read'
+  } catch {
+    toast.error(t('common.error'))
+  }
+}
+
+async function deleteOwnedBook() {
+  if (!book.value || !confirm(t('book.confirmDelete'))) return
+  try {
+    await api.deleteOwnedBook(book.value.id)
+    toast.success(t('book.deleted'))
+    router.push('/my-library')
   } catch {
     toast.error(t('common.error'))
   }
@@ -344,6 +356,17 @@ watch(() => route.params.id, loadBook)
             >
               <IconBookmark :size="14" />
               {{ t('book.addToLibrary') }}
+            </button>
+
+            <!-- Delete owned book -->
+            <button
+              v-if="isOwned"
+              class="flex w-full cursor-pointer items-center gap-2 rounded-lg border-0 px-3 py-2 text-[12px] text-red-400 transition-colors hover:bg-red-500/10"
+              style="background: rgba(255, 255, 255, 0.03)"
+              @click="deleteOwnedBook"
+            >
+              <IconTrash :size="14" />
+              {{ t('book.delete') }}
             </button>
 
             <!-- Download (native) -->

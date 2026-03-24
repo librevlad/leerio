@@ -1078,6 +1078,8 @@ def get_book(book_id: str, user: dict | None = Depends(get_optional_user)):
         enriched["rating"] = rating
     if status:
         enriched["book_status"] = status["status"]
+    if uid and b.get("owner_user_id") == uid:
+        enriched["is_owned"] = True
 
     # Timeline from history (only if authenticated)
     if uid:
@@ -1096,6 +1098,15 @@ def get_book(book_id: str, user: dict | None = Depends(get_optional_user)):
         enriched["timeline"] = []
 
     return enriched
+
+
+@app.delete("/api/books/{book_id}")
+def delete_owned_book(book_id: str, user: dict = Depends(get_current_user)):
+    """Delete a book owned by the current user."""
+    bid = _parse_book_id(book_id)
+    if not db.delete_owned_book(bid, user["user_id"]):
+        raise HTTPException(404, "Book not found or not owned by you")
+    return {"ok": True}
 
 
 @app.get("/api/books/{book_id}/similar")

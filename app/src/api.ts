@@ -250,6 +250,7 @@ export const api = {
   uploadBook: (formData: FormData) => requestFormData<UserBook>('/user/books', formData),
   getUserBook: (slug: string) => get<UserBook>(`/user/books/${slug}`),
   deleteUserBook: (slug: string) => del<{ ok: boolean }>(`/user/books/${slug}`),
+  deleteOwnedBook: (bookId: string) => del<{ ok: boolean }>(`/books/${bookId}`),
   getUserBookTracks: (slug: string) => get<TrackList>(`/user/books/${slug}/tracks`),
 
   // TTS

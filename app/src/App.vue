@@ -102,7 +102,7 @@ watch(
           .then((book) => {
             if (player.currentBook.value) return // user already started something
             if (route.name === 'login') return // don't auto-resume on login page
-            player.loadBook(book)
+            player.loadBook(book, undefined, false) // resume position but don't autoplay
             player.closeFullscreen() // show MiniPlayer, not fullscreen
           })
           .catch(() => {

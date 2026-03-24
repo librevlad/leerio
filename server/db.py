@@ -904,6 +904,36 @@ def get_owned_books(owner_user_id: str) -> list[dict]:
     return [dict(r) for r in rows]
 
 
+def release_owned_book(book_id: int, owner_user_id: str) -> bool:
+    """Remove ownership — book becomes public again. Returns True if changed."""
+    conn = _get_conn()
+    cur = conn.execute(
+        "UPDATE books SET owner_user_id = NULL WHERE id = ? AND owner_user_id = ?",
+        (book_id, owner_user_id),
+    )
+    conn.commit()
+    return cur.rowcount > 0
+
+
+def delete_owned_book(book_id: int, owner_user_id: str) -> bool:
+    """Delete a book owned by the user (and all related data). Returns True if deleted."""
+    conn = _get_conn()
+    b = conn.execute("SELECT id FROM books WHERE id = ? AND owner_user_id = ?", (book_id, owner_user_id)).fetchone()
+    if not b:
+        return False
+    conn.execute("DELETE FROM user_progress WHERE book_id = ?", (book_id,))
+    conn.execute("DELETE FROM user_playback WHERE book_id = ?", (book_id,))
+    conn.execute("DELETE FROM user_bookmarks WHERE book_id = ?", (book_id,))
+    conn.execute("DELETE FROM user_notes WHERE book_id = ?", (book_id,))
+    conn.execute("DELETE FROM user_tags WHERE book_id = ?", (book_id,))
+    conn.execute("DELETE FROM user_book_status WHERE book_id = ?", (book_id,))
+    conn.execute("DELETE FROM collection_books WHERE book_id = ?", (book_id,))
+    conn.execute("DELETE FROM tracks WHERE book_id = ?", (book_id,))
+    conn.execute("DELETE FROM books WHERE id = ?", (book_id,))
+    conn.commit()
+    return True
+
+
 def get_book_by_id(book_id: int, viewer_user_id: str | None = None) -> dict | None:
     """Return book if public or owned by viewer."""
     conn = _get_conn()
