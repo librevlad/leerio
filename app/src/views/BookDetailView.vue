@@ -342,11 +342,7 @@ watch(() => route.params.id, loadBook)
 
           <!-- Play button -->
           <button
-            class="mt-3 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-0 py-3 text-[14px] font-bold text-white transition-all hover:brightness-110"
-            style="
-              background: linear-gradient(135deg, #ff8a00, #e07000);
-              box-shadow: 0 4px 16px rgba(255, 138, 0, 0.25);
-            "
+            class="btn btn-primary mt-3 w-full justify-center gap-2 rounded-xl py-3 text-[14px] font-bold"
             @click="startListening"
           >
             <component :is="isCurrentBook && isPlaying ? IconPause : IconPlay" :size="16" />
