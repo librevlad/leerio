@@ -19,7 +19,7 @@ function formatDate(ts: string): string {
       <div
         v-for="(e, i) in entries"
         :key="i"
-        class="relative flex items-start gap-3.5"
+        class="relative flex items-start gap-3"
         :class="i < entries.length - 1 ? 'pb-5' : ''"
       >
         <!-- Dot column -->
