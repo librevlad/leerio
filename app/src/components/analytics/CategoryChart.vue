@@ -32,7 +32,7 @@ const options = {
   plugins: {
     legend: {
       position: 'bottom' as const,
-      labels: { color: '#4e4e5e', font: { size: 11 }, padding: 12 },
+      labels: { color: '#505068', font: { size: 11 }, padding: 12 },
     },
   },
 }

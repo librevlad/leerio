@@ -17,12 +17,12 @@ const chartData = computed(() => ({
     {
       label: t('analytics.monthlyLabel'),
       data: props.data.map(([, c]) => c),
-      borderColor: '#7c5bf0',
-      backgroundColor: 'rgba(124, 91, 240, 0.06)',
+      borderColor: '#ff8a00',
+      backgroundColor: 'rgba(255, 138, 0, 0.06)',
       fill: true,
       tension: 0.4,
       pointRadius: 2,
-      pointBackgroundColor: '#7c5bf0',
+      pointBackgroundColor: '#ff8a00',
       borderWidth: 2,
     },
   ],
@@ -34,12 +34,12 @@ const options = {
   plugins: { legend: { display: false } },
   scales: {
     x: {
-      ticks: { color: '#4e4e5e', font: { size: 10 } },
+      ticks: { color: '#505068', font: { size: 10 } },
       grid: { color: 'rgba(255,255,255,0.03)' },
     },
     y: {
       beginAtZero: true,
-      ticks: { color: '#4e4e5e', font: { size: 10 }, stepSize: 1 },
+      ticks: { color: '#505068', font: { size: 10 }, stepSize: 1 },
       grid: { color: 'rgba(255,255,255,0.03)' },
     },
   },

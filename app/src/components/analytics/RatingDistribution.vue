@@ -19,7 +19,7 @@ const chartData = computed(() => {
       {
         label: t('analytics.ratingsLabel'),
         data: labels.map((l) => props.data[l] || 0),
-        backgroundColor: ['#3e3e50', '#3e3e50', '#5a4bb0', '#6d58d6', '#7c5bf0'],
+        backgroundColor: ['#1f1f26', '#2a2a34', 'rgba(255,138,0,0.3)', 'rgba(255,138,0,0.6)', '#ff8a00'],
         borderRadius: 6,
         barThickness: 24,
       },
@@ -33,12 +33,12 @@ const options = {
   plugins: { legend: { display: false } },
   scales: {
     x: {
-      ticks: { color: '#4e4e5e', font: { size: 11 } },
+      ticks: { color: '#505068', font: { size: 11 } },
       grid: { display: false },
     },
     y: {
       beginAtZero: true,
-      ticks: { color: '#4e4e5e', font: { size: 10 }, stepSize: 1 },
+      ticks: { color: '#505068', font: { size: 10 }, stepSize: 1 },
       grid: { color: 'rgba(255,255,255,0.03)' },
     },
   },
