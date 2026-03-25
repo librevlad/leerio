@@ -124,8 +124,8 @@ watch(currentBook, () => loadBookmarks(), { immediate: true })
 function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600)
   const m = Math.floor((seconds % 3600) / 60)
-  if (h > 0) return `${h}${t('player.unitH')} ${m}${t('player.unitM')}`
-  return `${m}${t('player.unitM')}`
+  if (h > 0) return `${h}${t('common.unitH')} ${m}${t('common.unitM')}`
+  return `${m}${t('common.unitM')}`
 }
 
 function openCarMode() {
