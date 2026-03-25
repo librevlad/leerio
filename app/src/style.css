@@ -211,16 +211,11 @@ button:not(.btn):not(:disabled):active {
 
 .page-title {
   font-family: 'Satoshi', 'DM Sans', system-ui, sans-serif;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.03em;
   color: var(--t1);
   line-height: 1.1;
-}
-@media (min-width: 768px) {
-  .page-title {
-    font-size: 30px;
-  }
 }
 
 .section-label {
