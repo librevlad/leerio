@@ -75,10 +75,12 @@ const dlPercent = computed(() => {
   return Math.round((p.bytesDownloaded / p.bytesTotal) * 100)
 })
 
+const lbCoverDataUrl = ref('')
 const coverSrc = computed(() => {
   if (!book.value) return ''
   const id = book.value.id
-  if (id.startsWith('lb:') || id.startsWith('ub:')) return ''
+  if (id.startsWith('lb:')) return lbCoverDataUrl.value
+  if (id.startsWith('ub:')) return ''
   return book.value.has_cover ? coverUrl(id) : ''
 })
 
@@ -128,6 +130,7 @@ async function loadBook() {
       note: '',
       mp3_count: lbMeta.tracks.length,
     }
+    lbCoverDataUrl.value = lbMeta.coverDataUrl || ''
     document.title = `${lbMeta.title} — Leerio`
     loading.value = false
     return

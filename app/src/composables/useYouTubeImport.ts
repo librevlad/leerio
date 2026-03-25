@@ -239,9 +239,24 @@ export function useYouTubeImport() {
         ])
       } else {
         // Web fallback: save to IndexedDB as before
+        let coverDataUrl: string | undefined
+        if (thumbnail.value) {
+          try {
+            const resp = await fetch(thumbnail.value)
+            const blob = await resp.blob()
+            coverDataUrl = await new Promise<string>((resolve) => {
+              const reader = new FileReader()
+              reader.onloadend = () => resolve(reader.result as string)
+              reader.readAsDataURL(blob)
+            })
+          } catch {
+            /* thumbnail fetch failed — skip cover */
+          }
+        }
         await addLocalBook(files, {
           title: title.value,
           author: author.value,
+          coverDataUrl,
         })
       }
 
