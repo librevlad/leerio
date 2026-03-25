@@ -105,7 +105,7 @@ const lastPosition = computed(() => {
           <!-- Title info -->
           <div class="flex min-w-0 flex-col justify-end pt-16 pb-1">
             <CategoryBadge :category="book.category" class="mb-2 self-start" />
-            <h1 class="text-[20px] leading-tight font-extrabold tracking-tight text-[--t1]" :title="book.title">
+            <h1 class="font-display text-[20px] leading-tight font-extrabold tracking-tight text-[--t1]" :title="book.title">
               {{ book.title }}
             </h1>
             <p v-if="book.author" class="mt-1 text-[13px] text-[--t2]" :title="book.author">{{ book.author }}</p>
@@ -192,7 +192,7 @@ const lastPosition = computed(() => {
           <!-- Info -->
           <div class="flex min-w-0 flex-1 flex-col justify-end pt-24 pb-1">
             <CategoryBadge :category="book.category" class="mb-2.5 self-start" />
-            <h1 class="text-[28px] leading-tight font-extrabold tracking-tight text-[--t1]" :title="book.title">
+            <h1 class="font-display text-[28px] leading-tight font-extrabold tracking-tight text-[--t1]" :title="book.title">
               {{ book.title }}
             </h1>
             <p v-if="book.author" class="mt-1.5 text-[14px] text-[--t2]" :title="book.author">{{ book.author }}</p>

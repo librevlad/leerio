@@ -217,6 +217,10 @@ button:not(.btn):not(:disabled):active {
 
 /* ── Typography ──────────────────────────────────────────────────────── */
 
+.font-display {
+  font-family: 'Satoshi', 'DM Sans', system-ui, sans-serif;
+}
+
 .page-title {
   font-family: 'Satoshi', 'DM Sans', system-ui, sans-serif;
   font-size: 20px;

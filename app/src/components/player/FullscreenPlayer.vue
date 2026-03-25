@@ -371,7 +371,7 @@ function closeOverlays() {
 
           <!-- Book info -->
           <div class="z-[1] w-full max-w-[420px] text-center">
-            <p class="truncate text-[20px] font-bold text-[--t1]">{{ currentBook.title }}</p>
+            <p class="font-display truncate text-[20px] font-bold text-[--t1]">{{ currentBook.title }}</p>
             <p class="mt-1 text-[13px] text-[--t3]">
               <span class="truncate">{{ currentBook.author }}</span>
               <span

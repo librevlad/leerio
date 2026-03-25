@@ -150,7 +150,7 @@ async function finish() {
 
         <!-- Step 2: Add books -->
         <div v-else-if="step === 2" key="step2">
-          <h1 class="mb-1 text-center text-[20px] font-extrabold tracking-tight text-[--t1]">
+          <h1 class="font-display mb-1 text-center text-[20px] font-extrabold tracking-tight text-[--t1]">
             {{ t('welcome.addBooksTitle') }}
           </h1>
           <p class="mb-6 text-center text-[13px] text-[--t3]">{{ t('welcome.addBooksSubtitle') }}</p>

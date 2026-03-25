@@ -348,7 +348,7 @@ watch(() => route.params.id, loadBook)
 
             <!-- Mobile: info next to cover -->
             <div class="flex min-w-0 flex-1 flex-col justify-center lg:mt-4 lg:text-center">
-              <h1 class="line-clamp-3 text-[18px] leading-tight font-bold text-[--t1] lg:text-[20px]">
+              <h1 class="font-display line-clamp-3 text-[18px] leading-tight font-bold text-[--t1] lg:text-[20px]">
                 {{ book.title }}
               </h1>
               <p class="mt-1 text-[13px] text-[--t3]">{{ book.author }}</p>
