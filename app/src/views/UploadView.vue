@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import { useNetwork } from '@/composables/useNetwork'
 import { IconUpload, IconPlay, IconMicrophone, IconSmartphone } from '@/components/shared/icons'
 import UploadTab from '@/components/upload/UploadTab.vue'
@@ -9,9 +10,13 @@ import LocalTab from '@/components/upload/LocalTab.vue'
 
 const { t } = useI18n()
 const { isOnline } = useNetwork()
+const route = useRoute()
 
 type Tab = 'upload' | 'youtube' | 'tts' | 'local'
-const activeTab = ref<Tab>('upload')
+const initTab = (['upload', 'youtube', 'tts', 'local'] as Tab[]).includes(route.query.tab as Tab)
+  ? (route.query.tab as Tab)
+  : 'upload'
+const activeTab = ref<Tab>(initTab)
 
 const tabDefs = [
   { key: 'upload' as const, label: t('upload.tabUpload'), icon: IconUpload },

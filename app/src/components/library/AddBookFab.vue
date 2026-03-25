@@ -33,9 +33,9 @@ function pickFiles() {
   router.push('/upload')
 }
 
-function pickFolder() {
+function openLocal() {
   close()
-  router.push('/upload')
+  router.push('/upload?tab=local')
 }
 
 function openYouTube() {
@@ -104,16 +104,17 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
           </div>
         </button>
 
-        <!-- Folder -->
+        <!-- Local (web only — saves to IndexedDB, no server upload) -->
         <button
+          v-if="!isNative"
           role="menuitem"
           class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-white/[0.06]"
-          @click="pickFolder"
+          @click="openLocal"
         >
           <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.06] text-[16px]">📂</div>
           <div>
-            <div class="text-[13px] font-semibold text-[--t1]">{{ t('fab.folder') }}</div>
-            <div class="text-[10px] text-[--t3]">{{ t('fab.folderHint') }}</div>
+            <div class="text-[13px] font-semibold text-[--t1]">{{ t('fab.local') }}</div>
+            <div class="text-[10px] text-[--t3]">{{ t('fab.localHint') }}</div>
           </div>
         </button>
 

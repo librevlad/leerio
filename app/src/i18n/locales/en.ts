@@ -618,6 +618,8 @@ export default {
     files: 'Files',
     folder: 'Folder',
     folderHint: 'Select a folder manually',
+    local: 'From device',
+    localHint: 'Save locally, no upload',
     youtube: 'Download audiobook',
     tts: 'Text to Speech',
     ttsHint: 'Convert text to audiobook',
