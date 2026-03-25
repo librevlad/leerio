@@ -120,9 +120,8 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
         <!-- Divider -->
         <div class="mx-3 my-1 h-px bg-white/[0.06]" />
 
-        <!-- YouTube (APK only) -->
+        <!-- YouTube -->
         <button
-          v-if="isNative"
           role="menuitem"
           class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-white/[0.06]"
           @click="openYouTube"
