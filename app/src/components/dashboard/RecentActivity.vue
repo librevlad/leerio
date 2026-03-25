@@ -37,22 +37,7 @@ const actionIcon: Record<string, unknown> = {
   rated: IconStar,
 }
 
-const actionColor: Record<string, { bg: string; fg: string }> = {
-  inbox: { bg: 'rgba(34, 211, 238, 0.1)', fg: '#22d3ee' },
-  listen: { bg: 'rgba(192, 132, 252, 0.1)', fg: '#c084fc' },
-  phone: { bg: 'rgba(96, 165, 250, 0.1)', fg: '#60a5fa' },
-  done: { bg: 'rgba(52, 211, 153, 0.1)', fg: '#34d399' },
-  pause: { bg: 'rgba(250, 204, 21, 0.1)', fg: '#facc15' },
-  reject: { bg: 'rgba(248, 113, 113, 0.1)', fg: '#f87171' },
-  relisten: { bg: 'rgba(34, 211, 238, 0.1)', fg: '#22d3ee' },
-  move: { bg: 'rgba(148, 163, 184, 0.1)', fg: '#94a3b8' },
-  undo: { bg: 'rgba(148, 163, 184, 0.1)', fg: '#94a3b8' },
-  delete: { bg: 'rgba(248, 113, 113, 0.1)', fg: '#f87171' },
-  download: { bg: 'rgba(148, 163, 184, 0.1)', fg: '#94a3b8' },
-  rated: { bg: 'rgba(251, 191, 36, 0.1)', fg: '#fbbf24' },
-}
-
-const fallbackColor = { bg: 'rgba(148, 163, 184, 0.1)', fg: '#94a3b8' }
+import { actionColor, actionFallback } from '../../composables/useStatusColors'
 
 function timeAgo(ts: string): string {
   const diff = Date.now() - new Date(ts).getTime()
@@ -88,8 +73,8 @@ function timeAgo(ts: string): string {
         <div
           class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg"
           :style="{
-            background: (actionColor[e.action] || fallbackColor).bg,
-            color: (actionColor[e.action] || fallbackColor).fg,
+            background: (actionColor[e.action] || actionFallback).bg,
+            color: (actionColor[e.action] || actionFallback).fg,
           }"
         >
           <component :is="actionIcon[e.action] || IconInbox" :size="16" />
@@ -118,7 +103,7 @@ function timeAgo(ts: string): string {
           <div class="flex items-center gap-2">
             <span
               class="flex-shrink-0 text-[12px] font-semibold"
-              :style="{ color: (actionColor[e.action] || fallbackColor).fg }"
+              :style="{ color: (actionColor[e.action] || actionFallback).fg }"
             >
               {{ e.action_label }}
             </span>
