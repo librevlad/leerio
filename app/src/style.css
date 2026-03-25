@@ -25,6 +25,12 @@
   --sidebar: #0e0e14;
   --gradient-accent: linear-gradient(135deg, #ff8a00 0%, #e07000 100%);
   --gradient-bar: linear-gradient(90deg, #ff8a00, #ffaa40, #ffc878);
+
+  /* Semantic */
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #3b82f6;
 }
 
 /* ── Base ──────────────────────────────────────────────────────────────── */

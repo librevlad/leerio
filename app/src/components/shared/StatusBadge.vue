@@ -16,11 +16,11 @@ const bookStatusLabel: Record<string, () => string> = {
 }
 
 const colorByStatus: Record<string, { bg: string; text: string }> = {
-  want_to_read: { bg: 'bg-sky-500/10', text: 'text-sky-400' },
+  want_to_read: { bg: 'bg-[--info]/10', text: 'text-[--info]' },
   reading: { bg: 'bg-[--accent-soft]', text: 'text-[--accent]' },
-  paused: { bg: 'bg-amber-500/10', text: 'text-amber-400' },
-  done: { bg: 'bg-emerald-500/10', text: 'text-emerald-400' },
-  rejected: { bg: 'bg-red-500/10', text: 'text-red-400' },
+  paused: { bg: 'bg-[--warning]/10', text: 'text-[--warning]' },
+  done: { bg: 'bg-[--success]/10', text: 'text-[--success]' },
+  rejected: { bg: 'bg-[--error]/10', text: 'text-[--error]' },
 }
 
 const fallback = { bg: 'bg-white/[0.06]', text: 'text-[--t2]' }

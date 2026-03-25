@@ -4,10 +4,10 @@ import { useToast } from '../../composables/useToast'
 const { toasts, remove } = useToast()
 
 const colorMap: Record<string, string> = {
-  success: 'border-emerald-500/20',
-  error: 'border-red-500/20',
-  info: 'border-blue-500/20',
-  warning: 'border-amber-500/20',
+  success: 'border-[--success]/20',
+  error: 'border-[--error]/20',
+  info: 'border-[--info]/20',
+  warning: 'border-[--warning]/20',
 }
 </script>
 
