@@ -13,7 +13,7 @@
 - **Differentiation:** Deep black (#0b0b0f) is darker than Spotify (#121212), making covers pop. Orange accent is unique in the category (Spotify=green, Audible=blue, Storytel=red).
 
 ## Typography
-- **Display/Hero:** Satoshi (700, 900) — geometric, modern, excellent Cyrillic. Used for page titles, book titles, hero text
+- **Display/Hero:** Satoshi (700, 900) — geometric, modern, excellent Cyrillic. Used for page titles, book titles, hero text. Apply via `.page-title` or `.font-display` class
 - **Body/UI:** DM Sans (400, 500, 600) — clean, readable, tabular-nums for timers and stats
 - **UI/Labels:** DM Sans 500 — same as body for consistency
 - **Data/Tables:** DM Sans (tabular-nums) — aligned numbers in player, stats, progress
@@ -48,14 +48,16 @@
   - `--accent: #ff8a00` — primary action, active states, focus rings
   - `--accent-2: #ffaa40` — lighter accent for gradients
   - `--accent-soft: rgba(255,138,0,0.12)` — accent backgrounds
+  - `--accent-bg: rgba(255,138,0,0.1)` — icon/element backgrounds
+  - `--accent-glow: rgba(255,138,0,0.25)` — box-shadow glow on buttons
   - `--gradient-accent: linear-gradient(135deg, #ff8a00, #e07000)` — primary buttons
   - `--gradient-bar: linear-gradient(90deg, #ff8a00, #ffaa40, #ffc878)` — progress bars
   - `--bg-glow: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(255,138,0,0.06), transparent 70%)` — ambient glow
-- **Semantic:**
-  - Success: `#22c55e` — completed, downloaded, synced
-  - Warning: `#f59e0b` — paused, attention needed
-  - Error: `#ef4444` — failed, destructive actions
-  - Info: `#3b82f6` — loading, informational
+- **Semantic (CSS vars):**
+  - `--success: #22c55e` — completed, downloaded, synced
+  - `--warning: #f59e0b` — paused, attention needed
+  - `--error: #ef4444` — failed, destructive actions
+  - `--info: #3b82f6` — loading, informational
 - **Dark mode:** This IS the dark mode. No light theme planned.
 
 ## Spacing
@@ -107,3 +109,4 @@ Each book category has its own gradient for card backgrounds:
 | 2026-03-24 | Deep black #0b0b0f | Darker than Spotify #121212 — cinematic, covers pop against the background |
 | 2026-03-24 | Orange accent #ff8a00 | Unique in category (Spotify=green, Audible=blue, Storytel=red). Warm, analog, lamp-like |
 | 2026-03-24 | Semantic colors added | success/warning/error/info for consistent status communication across the app |
+| 2026-03-25 | Design system audit + fixes | CSP font fix, touch targets 44px, page-title 20px, Chart.js orange, semantic CSS vars, accent opacity tokens, action color consolidation, Satoshi on display headings |
