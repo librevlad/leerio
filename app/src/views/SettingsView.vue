@@ -492,12 +492,15 @@ async function handleLogout() {
 
 /* ── Speed pills ─────────────────────────────────────────────── */
 .settings-speed-pill {
-  padding: 6px 11px;
+  padding: 10px 14px;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   transition: all 0.15s;
   cursor: pointer;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .settings-speed-pill:hover {
@@ -530,13 +533,17 @@ async function handleLogout() {
 .settings-segment-btn {
   flex: 1;
   text-align: center;
-  padding: 7px 10px;
-  font-size: 12px;
+  padding: 10px 12px;
+  font-size: 13px;
   border-radius: 8px;
   color: var(--t3);
   cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .settings-segment-btn:hover {
