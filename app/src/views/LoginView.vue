@@ -41,17 +41,17 @@ const strengthLabel = computed(() =>
 const strengthTextClass = computed(
   () =>
     ({
-      weak: 'text-red-400',
-      medium: 'text-yellow-400',
-      strong: 'text-green-400',
+      weak: 'text-[--error]',
+      medium: 'text-[--warning]',
+      strong: 'text-[--success]',
     })[strength.value],
 )
 
 function strengthColor(index: number) {
   const s = strength.value
-  if (s === 'weak') return index === 0 ? 'bg-red-400' : 'bg-white/[0.06]'
-  if (s === 'medium') return index <= 1 ? 'bg-yellow-400' : 'bg-white/[0.06]'
-  return 'bg-green-400'
+  if (s === 'weak') return index === 0 ? 'bg-[--error]' : 'bg-white/[0.06]'
+  if (s === 'medium') return index <= 1 ? 'bg-[--warning]' : 'bg-white/[0.06]'
+  return 'bg-[--success]'
 }
 
 function switchTo(v: AuthView) {

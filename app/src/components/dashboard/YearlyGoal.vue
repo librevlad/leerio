@@ -44,7 +44,7 @@ const pace = computed(() => {
         }}
       </template>
     </p>
-    <p v-if="pace" class="mt-2 text-[11px]" :class="pace.ahead ? 'text-emerald-400' : 'text-amber-400'">
+    <p v-if="pace" class="mt-2 text-[11px]" :class="pace.ahead ? 'text-[--success]' : 'text-[--warning]'">
       <template v-if="done >= goal">
         {{ t('dashboard.paceProjected', { n: `${pace.projected} ${t('plural.book', pace.projected)}` }) }}
       </template>

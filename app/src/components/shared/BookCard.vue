@@ -90,7 +90,7 @@ const coverPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0
           </div>
           <span
             v-if="downloaded"
-            class="absolute right-1 bottom-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-white shadow"
+            class="absolute right-1 bottom-1 flex h-4 w-4 items-center justify-center rounded-full bg-[--success] text-white shadow"
           >
             <IconCheck :size="10" />
           </span>
@@ -142,7 +142,7 @@ const coverPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0
           </span>
         </div>
 
-        <div v-if="book.rating" class="ml-2 flex flex-shrink-0 gap-0.5 text-amber-400/70">
+        <div v-if="book.rating" class="ml-2 flex flex-shrink-0 gap-0.5 text-[--warning]/70">
           <template v-for="s in 5" :key="s">
             <component :is="s <= book.rating ? IconStar : IconStarOutline" :size="11" />
           </template>
