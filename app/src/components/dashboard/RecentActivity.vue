@@ -89,11 +89,7 @@ function timeAgo(ts: string): string {
             class="h-full w-full object-cover"
             @error="coverErrors.add(e.book_id)"
           />
-          <div
-            v-else
-            class="flex h-full w-full items-center justify-center"
-            style="background: var(--accent-bg)"
-          >
+          <div v-else class="flex h-full w-full items-center justify-center" style="background: var(--accent-bg)">
             <IconMusic :size="14" class="text-[--t3]" />
           </div>
         </div>
