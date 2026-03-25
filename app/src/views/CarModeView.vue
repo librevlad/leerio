@@ -66,7 +66,7 @@ function exit() {
       <!-- Play / Pause -->
       <button
         class="flex h-[120px] w-[120px] items-center justify-center rounded-full border-0 transition-all active:scale-95 sm:h-[140px] sm:w-[140px]"
-        style="background: var(--gradient-accent); box-shadow: 0 8px 40px rgba(232, 146, 58, 0.4)"
+        style="background: var(--gradient-accent); box-shadow: 0 8px 40px var(--accent-glow)"
         :aria-label="isPlaying ? t('player.pause') : t('player.play')"
         :disabled="isLoading"
         @click="togglePlay"

@@ -207,7 +207,7 @@ const lastPosition = computed(() => {
             <!-- Metadata + progress + rating row -->
             <div class="mt-4 flex flex-wrap items-center gap-5">
               <div v-if="book.size_mb" class="flex items-center gap-2.5">
-                <span class="stat-icon" style="background: rgba(232, 146, 58, 0.1)">
+                <span class="stat-icon" style="background: var(--accent-bg)">
                   <IconHardDrive :size="14" class="text-[--accent-2]" />
                 </span>
                 <div>
@@ -334,7 +334,7 @@ const lastPosition = computed(() => {
         class="mt-4 flex flex-wrap items-center gap-5 border-t border-white/[0.04] pt-4 md:hidden"
       >
         <div v-if="book.size_mb" class="flex items-center gap-2.5">
-          <span class="stat-icon" style="background: rgba(232, 146, 58, 0.1)">
+          <span class="stat-icon" style="background: var(--accent-bg)">
             <IconHardDrive :size="14" class="text-[--accent-2]" />
           </span>
           <div>

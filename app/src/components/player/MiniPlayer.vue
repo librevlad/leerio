@@ -86,7 +86,7 @@ const {
         <button
           v-else
           class="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 transition-all"
-          style="background: var(--gradient-accent); box-shadow: 0 2px 12px rgba(232, 146, 58, 0.25)"
+          style="background: var(--gradient-accent); box-shadow: 0 2px 12px var(--accent-glow)"
           :aria-label="isPlaying ? t('player.pause') : t('player.play')"
           :disabled="isLoading"
           @click="togglePlay"

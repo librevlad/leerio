@@ -456,7 +456,7 @@ function closeOverlays() {
             </button>
             <button
               class="flex h-14 w-14 items-center justify-center rounded-full border-0 transition-all"
-              style="background: var(--gradient-accent); box-shadow: 0 4px 24px rgba(232, 146, 58, 0.4)"
+              style="background: var(--gradient-accent); box-shadow: 0 4px 24px var(--accent-glow)"
               :aria-label="isPlaying ? t('player.pause') : t('player.play')"
               :disabled="isLoading"
               @click="togglePlay"
@@ -877,7 +877,7 @@ function closeOverlays() {
             </button>
             <button
               class="flex h-16 w-16 items-center justify-center rounded-full border-0 transition-all"
-              style="background: var(--gradient-accent); box-shadow: 0 4px 24px rgba(232, 146, 58, 0.4)"
+              style="background: var(--gradient-accent); box-shadow: 0 4px 24px var(--accent-glow)"
               :aria-label="isPlaying ? t('player.pause') : t('player.play')"
               :disabled="isLoading"
               @click="togglePlay"

@@ -196,7 +196,7 @@ function formatTime(ts: string): string {
               <div
                 v-else
                 class="flex h-full w-full items-center justify-center"
-                style="background: rgba(232, 146, 58, 0.1)"
+                style="background: var(--accent-bg)"
               >
                 <IconMusic :size="14" class="text-[--t3]" />
               </div>

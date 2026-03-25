@@ -202,7 +202,7 @@ const SLEEP_OPTIONS = computed(() => [
 
       <button
         class="flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-0 transition-all"
-        style="background: var(--gradient-accent); box-shadow: 0 4px 20px rgba(232, 146, 58, 0.3)"
+        style="background: var(--gradient-accent); box-shadow: 0 4px 20px var(--accent-glow)"
         :aria-label="isPlaying ? t('player.pause') : t('player.play')"
         @click="togglePlay"
       >

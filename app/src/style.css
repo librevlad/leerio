@@ -22,6 +22,8 @@
   --accent: #ff8a00;
   --accent-2: #ffaa40;
   --accent-soft: rgba(255, 138, 0, 0.12);
+  --accent-bg: rgba(255, 138, 0, 0.1);
+  --accent-glow: rgba(255, 138, 0, 0.25);
   --sidebar: #0e0e14;
   --gradient-accent: linear-gradient(135deg, #ff8a00 0%, #e07000 100%);
   --gradient-bar: linear-gradient(90deg, #ff8a00, #ffaa40, #ffc878);

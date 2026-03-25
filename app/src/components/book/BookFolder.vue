@@ -34,7 +34,7 @@ function copyPath() {
     >
       <div
         class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg"
-        style="background: rgba(232, 146, 58, 0.1)"
+        style="background: var(--accent-bg)"
       >
         <svg
           width="16"

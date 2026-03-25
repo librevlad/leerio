@@ -208,7 +208,7 @@ onUnmounted(() => {
       <div
         v-if="showApkBanner"
         class="flex items-center gap-3 px-4 py-2.5"
-        style="background: rgba(232, 146, 58, 0.1); border-bottom: 1px solid rgba(232, 146, 58, 0.15)"
+        style="background: var(--accent-bg); border-bottom: 1px solid rgba(255, 138, 0, 0.15)"
       >
         <img src="/logo.png" alt="" class="h-8 w-8 rounded-lg" />
         <div class="min-w-0 flex-1">
