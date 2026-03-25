@@ -60,7 +60,7 @@ async function handleLogout() {
   >
     <div class="flex h-16 items-center gap-3 px-4">
       <button
-        class="flex cursor-pointer items-center rounded-xl border-0 bg-transparent p-1.5 text-[--t3] transition-colors hover:text-[--t2]"
+        class="flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-xl border-0 bg-transparent text-[--t3] transition-colors hover:text-[--t2]"
         :aria-label="collapsed ? t('nav.expand') : t('nav.collapse')"
         @click="emit('update:collapsed', !collapsed)"
       >
@@ -78,7 +78,7 @@ async function handleLogout() {
         :key="link.path"
         :to="link.path"
         :title="collapsed ? link.label : undefined"
-        class="group relative flex items-center gap-3 rounded-xl px-3 py-2.5 no-underline transition-all duration-150"
+        class="group relative flex min-h-[44px] items-center gap-3 rounded-xl px-3 py-2.5 no-underline transition-all duration-150"
         :class="
           isActive(link.path) ? 'bg-[--card] text-[--accent]' : 'text-[--t3] hover:bg-[--card-hover] hover:text-[--t2]'
         "
@@ -166,7 +166,7 @@ async function handleLogout() {
       <router-link
         v-else
         to="/login"
-        class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[--accent] no-underline transition-all duration-150 hover:bg-[--card-hover]"
+        class="flex min-h-[44px] items-center gap-3 rounded-xl px-3 py-2.5 text-[--accent] no-underline transition-all duration-150 hover:bg-[--card-hover]"
       >
         <span class="flex w-5 flex-shrink-0 items-center justify-center">
           <svg
