@@ -197,8 +197,9 @@ async function finish() {
             </div>
           </button>
 
-          <!-- Choose folder -->
+          <!-- Choose folder (web only — webkitdirectory not supported in APK WebView) -->
           <button
+            v-if="!isNative"
             v-ripple
             class="mb-4 flex w-full items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.05] px-4 py-3.5 text-left"
             @click="pickFolder"

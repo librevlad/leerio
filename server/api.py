@@ -140,9 +140,10 @@ def _enrich_catalog_book(
 ) -> dict:
     """Convert a DB book row to the API response shape."""
     book_id = b["id"]
-    pct = (progress_map or {}).get(book_id, {}).get("pct", 0) if progress_map else 0
-    tags = (tags_map or {}).get(book_id, []) if tags_map else []
-    note = (notes_map or {}).get(book_id, "") if notes_map else ""
+    bid_key = str(book_id)  # statuses/progress/tags maps use string keys
+    pct = (progress_map or {}).get(bid_key, {}).get("pct", 0) if progress_map else 0
+    tags = (tags_map or {}).get(bid_key, []) if tags_map else []
+    note = (notes_map or {}).get(bid_key, "") if notes_map else ""
 
     cat_name = _normalize_category(b["category"])
     cat_info = (cats_map or {}).get(cat_name) if cats_map else db.get_category_by_name(cat_name)
@@ -167,8 +168,8 @@ def _enrich_catalog_book(
     if rating:
         result["rating"] = rating
 
-    if statuses_map and book_id in statuses_map:
-        result["book_status"] = statuses_map[book_id]["status"]
+    if statuses_map and bid_key in statuses_map:
+        result["book_status"] = statuses_map[bid_key]["status"]
 
     return result
 
@@ -380,9 +381,12 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Audiobook Library", lifespan=lifespan)
 
 _cors_origins = os.environ.get("CORS_ORIGINS", "http://localhost:5173,http://localhost:80,https://localhost").split(",")
+# Always allow Capacitor APK origins (https://localhost, capacitor://localhost)
+_apk_origins = ["https://localhost", "capacitor://localhost", "http://localhost"]
+_all_origins = list({o.strip() for o in _cors_origins} | set(_apk_origins))
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[o.strip() for o in _cors_origins],
+    allow_origins=_all_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
     allow_headers=["Content-Type", "Accept"],
@@ -405,7 +409,7 @@ async def csrf_protect(request: Request, call_next):
     if request.method in ("POST", "PUT", "DELETE", "PATCH"):
         origin = request.headers.get("origin")
         if origin:
-            allowed = {o.strip() for o in _cors_origins}
+            allowed = set(_all_origins)
             if origin not in allowed:
                 return JSONResponse(status_code=403, content={"detail": "Origin not allowed"})
     return await call_next(request)

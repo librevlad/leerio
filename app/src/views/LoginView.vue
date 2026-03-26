@@ -167,6 +167,7 @@ declare global {
 }
 
 const googleBtnRef = ref<HTMLElement | null>(null)
+const googleFailed = ref(false)
 
 function initializeGsi() {
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID
@@ -214,7 +215,14 @@ onMounted(() => {
   script.src = 'https://accounts.google.com/gsi/client'
   script.async = true
   script.onload = initializeGsi
+  script.onerror = () => {
+    googleFailed.value = true
+  }
   document.head.appendChild(script)
+  // Timeout fallback: if script doesn't load in 5s, show fallback
+  setTimeout(() => {
+    if (!window.google?.accounts?.id) googleFailed.value = true
+  }, 5000)
 })
 </script>
 
@@ -491,7 +499,10 @@ onMounted(() => {
             <span class="text-[11px] text-[--t3]">{{ t('login.or') }}</span>
             <div class="h-px flex-1 bg-white/[0.06]" />
           </div>
-          <div id="google-signin-btn" ref="googleBtnRef" />
+          <div v-if="!googleFailed" id="google-signin-btn" ref="googleBtnRef" />
+          <p v-else class="text-center text-[12px] text-[--t3]">
+            {{ t('login.googleUnavailable', 'Google login unavailable in this browser. Use email/password.') }}
+          </p>
           <!-- Toggle text -->
           <p class="mt-4 text-center text-[12px] text-[--t3]">
             <template v-if="view === 'login'">
