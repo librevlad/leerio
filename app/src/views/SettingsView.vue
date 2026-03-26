@@ -394,6 +394,10 @@ async function handleLogout() {
               <span class="settings-row-label">{{ t('settings.aboutBooks') }}</span>
               <span class="text-[12px] text-[--t3]">{{ totalBooks ?? '—' }}</span>
             </div>
+            <router-link to="/legal/dmca" class="settings-row no-underline hover:bg-[--card-hover]">
+              <span class="settings-row-label">DMCA Policy</span>
+              <span class="text-[12px] text-[--t3]">&#x203A;</span>
+            </router-link>
           </div>
         </div>
       </div>

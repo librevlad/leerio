@@ -80,6 +80,12 @@ const router = createRouter({
       meta: { public: true, title: 'Car Mode' },
     },
     {
+      path: '/legal/dmca',
+      name: 'dmca',
+      component: () => import('./views/DmcaView.vue'),
+      meta: { public: true, title: 'DMCA Policy' },
+    },
+    {
       path: '/:pathMatch(.*)*',
       component: () => import('./views/NotFoundView.vue'),
       meta: { public: true },
