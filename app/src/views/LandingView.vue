@@ -41,70 +41,32 @@ function scrollToFeatures() {
       </div>
     </section>
 
-    <!-- Features -->
-    <section id="features" class="features">
-      <div class="features-inner">
-        <div class="feature-card card">
-          <div class="feature-icon">
-            <svg
-              width="28"
-              height="28"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" />
-              <line x1="12" y1="3" x2="12" y2="15" />
-            </svg>
+    <!-- How it works -->
+    <section id="features" class="how-it-works">
+      <div class="how-inner">
+        <h2 class="how-heading font-display">How it works</h2>
+        <div class="steps">
+          <div class="step">
+            <span class="step-num font-display">01</span>
+            <div class="step-content">
+              <h3 class="step-title">Upload your files</h3>
+              <p class="step-desc">Drag & drop MP3, M4A, M4B, or ZIP. No metadata forms, no setup.</p>
+            </div>
           </div>
-          <h3 class="feature-title">Upload</h3>
-          <p class="feature-desc">Drag & drop your audiobook files. MP3, M4A, M4B, ZIP supported.</p>
-        </div>
-
-        <div class="feature-card card">
-          <div class="feature-icon">
-            <svg
-              width="28"
-              height="28"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
-              <path
-                d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"
-              />
-            </svg>
+          <div class="step">
+            <span class="step-num font-display">02</span>
+            <div class="step-content">
+              <h3 class="step-title">Listen anywhere</h3>
+              <p class="step-desc">Phone, tablet, laptop. Open Leerio and your book is right where you left off.</p>
+            </div>
           </div>
-          <h3 class="feature-title">Listen anywhere</h3>
-          <p class="feature-desc">Phone, tablet, laptop. Pick up exactly where you left off.</p>
-        </div>
-
-        <div class="feature-card card">
-          <div class="feature-icon">
-            <svg
-              width="28"
-              height="28"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-              <polyline points="22 4 12 14.01 9 11.01" />
-            </svg>
+          <div class="step">
+            <span class="step-num font-display">03</span>
+            <div class="step-content">
+              <h3 class="step-title">No server needed</h3>
+              <p class="step-desc">No Docker, no NAS, no self-hosting. We handle the infrastructure.</p>
+            </div>
           </div>
-          <h3 class="feature-title">No server needed</h3>
-          <p class="feature-desc">No Docker, no NAS, no setup. Just upload and listen.</p>
         </div>
       </div>
     </section>
@@ -204,48 +166,64 @@ function scrollToFeatures() {
   min-height: 48px;
 }
 
-/* ── Features ──────────────────────────────────────────────────────────── */
+/* ── How it works ─────────────────────────────────────────────────────── */
 
-.features {
+.how-it-works {
   padding: 80px 16px;
+  border-top: 1px solid var(--border);
 }
 
-.features-inner {
-  max-width: 960px;
+.how-inner {
+  max-width: 640px;
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
 }
 
-.feature-card {
-  padding: 32px 24px;
-  text-align: center;
+.how-heading {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--t3);
+  margin: 0 0 48px;
 }
 
-.feature-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
-  background: var(--accent-soft);
-  color: var(--accent);
+.steps {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 20px;
+  flex-direction: column;
+  gap: 40px;
 }
 
-.feature-title {
-  font-family: 'Satoshi', 'DM Sans', system-ui, sans-serif;
-  font-size: 18px;
+.step {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.step-num {
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--accent);
+  line-height: 1;
+  flex-shrink: 0;
+  width: 52px;
+  opacity: 0.8;
+}
+
+.step-content {
+  flex: 1;
+  padding-top: 4px;
+}
+
+.step-title {
+  font-size: 17px;
   font-weight: 700;
   color: var(--t1);
-  margin: 0 0 8px;
+  margin: 0 0 6px;
 }
 
-.feature-desc {
+.step-desc {
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.6;
   color: var(--t2);
   margin: 0;
 }
@@ -307,17 +285,17 @@ function scrollToFeatures() {
     font-size: 17px;
   }
 
-  .features {
+  .how-it-works {
     padding: 96px 24px;
   }
 
-  .features-inner {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+  .step-num {
+    font-size: 40px;
+    width: 64px;
   }
 
-  .feature-card {
-    padding: 36px 28px;
+  .step-title {
+    font-size: 18px;
   }
 
   .landing-footer {
