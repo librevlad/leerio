@@ -1159,9 +1159,11 @@ def get_similar(book_id: str, user: dict | None = Depends(get_optional_user)):
 
 
 @app.get("/api/books/{book_id}/tracks")
-def get_book_tracks(book_id: str, user: dict = Depends(get_current_user)):
-    # User books
-    ub_path = _resolve_user_book_path(book_id, user)
+def get_book_tracks(book_id: str, user: dict | None = Depends(get_optional_user)):
+    # User books (require auth)
+    if book_id.startswith("ub:") and not user:
+        raise HTTPException(401, "Not authenticated")
+    ub_path = _resolve_user_book_path(book_id, user) if user else None
     if ub_path:
         mp3s = sorted(ub_path.rglob("*.mp3"), key=lambda f: str(f))
         tracks = []
@@ -1282,15 +1284,17 @@ def _s3_stream(body, chunk_size=64 * 1024):
 
 
 @app.get("/api/audio/{book_id}/{track_index}")
-def stream_audio(book_id: str, track_index: int, request: Request, user: dict = Depends(get_current_user)):
-    # User books — always filesystem
-    ub_path = _resolve_user_book_path(book_id, user)
+def stream_audio(book_id: str, track_index: int, request: Request, user: dict | None = Depends(get_optional_user)):
+    # User books — require auth
+    if book_id.startswith("ub:") and not user:
+        raise HTTPException(401, "Not authenticated")
+    ub_path = _resolve_user_book_path(book_id, user) if user else None
     if ub_path:
         return _stream_from_filesystem(ub_path, track_index, request)
 
     # Catalog books — try S3, fallback to filesystem
     bid = _parse_book_id(book_id)
-    uid = user["user_id"]
+    uid = user["user_id"] if user else None
     if not db.get_book_by_id(bid, viewer_user_id=uid):
         raise HTTPException(404, "Book not found")
     db_tracks = db.get_book_tracks(bid)
@@ -1321,7 +1325,7 @@ def stream_audio(book_id: str, track_index: int, request: Request, user: dict = 
             )
 
     # Fallback to filesystem
-    b = db.get_book_by_id(bid, viewer_user_id=uid)
+    b = db.get_book_by_id(bid, viewer_user_id=uid if user else None)
     if not b:
         raise HTTPException(404, "Book not found")
     return _stream_from_filesystem(_book_path(b), track_index, request)
