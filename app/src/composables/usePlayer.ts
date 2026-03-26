@@ -239,6 +239,9 @@ function savePosition() {
   if (currentBook.value.id.startsWith('lb:') || currentBook.value.id.startsWith('fs:')) return
 
   // Debounce API saves — prevent storm during rapid navigation
+  // Skip API save for guests (no auth cookie) — localStorage is enough
+  if (!document.cookie.includes('access_token')) return
+
   if (saveApiDebounce) clearTimeout(saveApiDebounce)
   const filename = currentTrack.value.filename
   saveApiDebounce = setTimeout(() => {

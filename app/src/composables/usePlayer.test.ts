@@ -682,6 +682,9 @@ describe('usePlayer', () => {
       const mockSetPos = api.setPlaybackPosition as ReturnType<typeof vi.fn>
       mockSetPos.mockClear()
 
+      // Simulate logged-in state so API save is not skipped
+      Object.defineProperty(document, 'cookie', { value: 'access_token=test', configurable: true })
+
       const p = usePlayer()
       p.currentBook.value = {
         id: 'save-test',
