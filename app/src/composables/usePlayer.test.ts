@@ -65,6 +65,7 @@ vi.mock('./useToast', () => ({
 vi.mock('./useTelemetry', () => ({
   useTracking: () => ({
     track: vi.fn(),
+    trackFirstAudio: vi.fn(),
   }),
 }))
 
