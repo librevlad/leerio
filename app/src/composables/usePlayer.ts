@@ -599,6 +599,13 @@ async function loadBook(book: Book, startTrackIndex?: number, autoplay = true) {
       }
     }
 
+    // Guard: if book has no tracks, show error and stop
+    if (tracks.value.length === 0) {
+      audioError.value = true
+      isLoading.value = false
+      return
+    }
+
     // Restore saved position (skip if explicit startTrackIndex given)
     let pos = { track_index: startTrackIndex ?? 0, position: 0 }
     if (startTrackIndex === undefined) {

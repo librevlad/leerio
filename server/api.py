@@ -71,6 +71,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger("leerio")
 
+# User books category — not translated, treated as a special category
+USER_BOOKS_CATEGORY = "My Books"
+
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -671,7 +674,7 @@ def update_book_language(book_id: int, req: BookLanguageRequest, user: dict = De
 
 @app.get("/api/config/constants")
 def get_constants():
-    all_cats = [c for c in db.get_all_categories() if c["name"] != "Личные"]
+    all_cats = [c for c in db.get_all_categories() if c["name"] != USER_BOOKS_CATEGORY]
     return {
         "categories": all_cats,
         "status_style": STATUS_STYLE,
@@ -789,7 +792,7 @@ def get_book_shelves(user: dict = Depends(get_current_user)):
     by_cat: dict[str, list[dict]] = {}
     for b in all_books:
         cat = b.get("category", "")
-        if cat == "Личные":
+        if cat == USER_BOOKS_CATEGORY:
             continue
         # Exclude low-quality entries (no cover and no author)
         if not b.get("has_cover") and not b.get("author"):
@@ -969,7 +972,7 @@ def get_books(
             book_id = f"ub:{uid}:{ub['slug']}"
             ub_title = ub.get("title", "")
             ub_author = ub.get("author", "")
-            if category and category != "Личные":
+            if category and category != USER_BOOKS_CATEGORY:
                 continue
             if search:
                 q = search.lower()
@@ -979,7 +982,7 @@ def get_books(
             enriched = {
                 "id": book_id,
                 "folder": ub["slug"],
-                "category": "Личные",
+                "category": USER_BOOKS_CATEGORY,
                 "author": ub_author,
                 "title": ub_title,
                 "reader": ub.get("reader", ""),
@@ -1021,7 +1024,7 @@ def get_book(book_id: str, user: dict | None = Depends(get_optional_user)):
                 "id": book_id,
                 "slug": slug,
                 "folder": slug,
-                "category": "Личные",
+                "category": USER_BOOKS_CATEGORY,
                 "author": meta.get("author", ""),
                 "title": meta.get("title", ""),
                 "reader": meta.get("reader", ""),
@@ -1761,7 +1764,7 @@ def get_achievements(user: dict = Depends(get_current_user)):
             {
                 "id": f"ub:{uid}:{ub['slug']}",
                 "folder": ub["slug"],
-                "category": "Личные",
+                "category": USER_BOOKS_CATEGORY,
                 "author": ub.get("author", ""),
                 "title": ub.get("title", ""),
             }

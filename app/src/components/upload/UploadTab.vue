@@ -5,7 +5,7 @@ import { useRouter } from 'vue-router'
 import { useToast } from '@/composables/useToast'
 import { useTracking } from '@/composables/useTelemetry'
 import { usePlayer } from '@/composables/usePlayer'
-import { api } from '@/api'
+import { api, apiUrl } from '@/api'
 import ProgressBar from '@/components/shared/ProgressBar.vue'
 import PaywallModal from '@/components/shared/PaywallModal.vue'
 import { IconUpload, IconMusic, IconX, IconCheck } from '@/components/shared/icons'
@@ -102,7 +102,7 @@ async function handleUpload() {
     // Upload with progress tracking
     const uploadResult = await new Promise<{ id: string; slug: string }>((resolve, reject) => {
       const xhr = new XMLHttpRequest()
-      xhr.open('POST', '/api/user/books')
+      xhr.open('POST', apiUrl('/user/books'))
       xhr.withCredentials = true
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable) uploadProgress.value = Math.round((e.loaded / e.total) * 100)
