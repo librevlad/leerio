@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { useNetwork } from '@/composables/useNetwork'
+import { useAuth } from '@/composables/useAuth'
 import { IconUpload, IconPlay, IconMicrophone, IconSmartphone } from '@/components/shared/icons'
 import UploadTab from '@/components/upload/UploadTab.vue'
 import TTSTab from '@/components/upload/TTSTab.vue'
@@ -10,12 +11,14 @@ import LocalTab from '@/components/upload/LocalTab.vue'
 
 const { t } = useI18n()
 const { isOnline } = useNetwork()
+const { isGuest } = useAuth()
 const route = useRoute()
 
 type Tab = 'upload' | 'youtube' | 'tts' | 'local'
+const defaultTab = isGuest.value ? 'local' : 'upload'
 const initTab = (['upload', 'youtube', 'tts', 'local'] as Tab[]).includes(route.query.tab as Tab)
   ? (route.query.tab as Tab)
-  : 'upload'
+  : defaultTab
 const activeTab = ref<Tab>(initTab)
 
 const tabDefs = [

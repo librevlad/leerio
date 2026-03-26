@@ -4,10 +4,12 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useToast } from '@/composables/useToast'
 import { useLocalBooks } from '@/composables/useLocalBooks'
+import { usePlayer } from '@/composables/usePlayer'
 import { IconUpload, IconMusic, IconX, IconSmartphone, IconCheck } from '@/components/shared/icons'
 
 const router = useRouter()
 const toast = useToast()
+const player = usePlayer()
 const { t } = useI18n()
 const { addLocalBook } = useLocalBooks()
 
@@ -66,13 +68,33 @@ async function handleAddLocal() {
 
   addingLocal.value = true
   try {
-    await addLocalBook(localFiles.value, {
+    const localBook = await addLocalBook(localFiles.value, {
       title: localTitle.value.trim(),
       author: localAuthor.value.trim(),
       coverDataUrl: localCover.value,
     })
     toast.success(t('upload.successLocal'))
-    router.push('/my-library')
+
+    // Autoplay: convert local book to Book shape and start playing
+    try {
+      const book = {
+        id: localBook.id,
+        title: localBook.title,
+        author: localBook.author,
+        folder: '',
+        category: '',
+        reader: '',
+        path: '',
+        progress: 0,
+        tags: [] as string[],
+        note: '',
+        mp3_count: localBook.tracks.length,
+      }
+      await player.loadBook(book, undefined, true)
+      router.push(`/book/${localBook.id}`)
+    } catch {
+      router.push('/my-library')
+    }
   } catch (e: unknown) {
     toast.error(t('common.errorPrefix', { msg: e instanceof Error ? e.message : t('common.unknownError') }))
   } finally {

@@ -13,6 +13,7 @@ type TelemetryEvent =
   | 'resume_clicked'
   | 'upload_started'
   | 'upload_completed'
+  | 'upload_failed'
   | 'paywall_shown'
   | 'upgrade_clicked'
   | 'book_played'
@@ -22,6 +23,12 @@ type TelemetryEvent =
   | 'player_pause'
   | 'player_error'
   | 'player_load_book'
+  | 'time_to_first_audio'
+  | 'session_active'
+
+// Track time to first audio play per session
+const pageLoadTime = Date.now()
+let firstAudioTracked = false
 
 export function useTracking() {
   function track(event: TelemetryEvent, data?: Record<string, unknown>) {
@@ -48,5 +55,12 @@ export function useTracking() {
     }
   }
 
-  return { track }
+  function trackFirstAudio() {
+    if (firstAudioTracked) return
+    firstAudioTracked = true
+    const seconds = Math.round((Date.now() - pageLoadTime) / 1000)
+    track('time_to_first_audio', { seconds })
+  }
+
+  return { track, trackFirstAudio }
 }

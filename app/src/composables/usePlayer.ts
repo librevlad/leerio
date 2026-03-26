@@ -57,7 +57,7 @@ let sleepAtTrackEnd = false
 const downloads = useDownloads()
 const localData = useLocalData()
 const toast = useToast()
-const { track: trackEvent } = useTracking()
+const { track: trackEvent, trackFirstAudio } = useTracking()
 
 let audio: HTMLAudioElement | null = null
 let saveTimer: ReturnType<typeof setTimeout> | null = null
@@ -723,6 +723,7 @@ function togglePlay() {
   if (!a.src) return
   if (a.paused) {
     trackEvent('player_play')
+    trackFirstAudio()
     a.play().catch((e) => {
       if (e instanceof DOMException && e.name === 'AbortError') return
       toast.error(t('player.playbackError'))

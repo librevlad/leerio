@@ -4,12 +4,15 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useToast } from '@/composables/useToast'
 import { useTracking } from '@/composables/useTelemetry'
+import { usePlayer } from '@/composables/usePlayer'
+import { api } from '@/api'
 import ProgressBar from '@/components/shared/ProgressBar.vue'
 import PaywallModal from '@/components/shared/PaywallModal.vue'
 import { IconUpload, IconMusic, IconX, IconCheck } from '@/components/shared/icons'
 
 const router = useRouter()
 const { track } = useTracking()
+const player = usePlayer()
 const toast = useToast()
 const { t } = useI18n()
 
@@ -97,7 +100,7 @@ async function handleUpload() {
     }
 
     // Upload with progress tracking
-    await new Promise<void>((resolve, reject) => {
+    const uploadResult = await new Promise<{ id: string; slug: string }>((resolve, reject) => {
       const xhr = new XMLHttpRequest()
       xhr.open('POST', '/api/user/books')
       xhr.withCredentials = true
@@ -107,7 +110,13 @@ async function handleUpload() {
       xhr.onload = () => {
         if (xhr.status === 403) reject(new Error('limit_reached'))
         else if (xhr.status >= 400) reject(new Error(xhr.responseText))
-        else resolve()
+        else {
+          try {
+            resolve(JSON.parse(xhr.responseText))
+          } catch {
+            resolve({ id: '', slug: '' })
+          }
+        }
       }
       xhr.onerror = () => reject(new Error('Network error'))
       xhr.send(formData)
@@ -115,9 +124,22 @@ async function handleUpload() {
 
     track('upload_completed', { files: uploadFiles.value.length })
     toast.success(t('upload.successUploaded'))
-    router.push('/my-library')
+
+    // Autoplay: load the uploaded book and start playing immediately
+    if (uploadResult.id) {
+      try {
+        const book = await api.getBook(uploadResult.id)
+        await player.loadBook(book, undefined, true)
+        router.push(`/book/${uploadResult.id}`)
+      } catch {
+        router.push('/my-library')
+      }
+    } else {
+      router.push('/my-library')
+    }
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : ''
+    track('upload_failed', { reason: msg || 'unknown' })
     if (msg.includes('limit_reached') || msg.includes('403')) {
       showPaywall.value = true
     } else {

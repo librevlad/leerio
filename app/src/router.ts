@@ -19,7 +19,9 @@ const router = createRouter({
     },
     {
       path: '/',
-      redirect: '/library',
+      name: 'landing',
+      component: () => import('./views/LandingView.vue'),
+      meta: { public: true, title: 'Leerio — Audiobook Cloud Player' },
     },
     {
       path: '/library',
@@ -53,7 +55,7 @@ const router = createRouter({
       path: '/upload',
       name: 'upload',
       component: () => import('./views/UploadView.vue'),
-      meta: { title: 'Upload' },
+      meta: { title: 'Upload', public: true },
     },
     {
       path: '/settings',
@@ -94,15 +96,21 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
-  const { checkAuth } = useAuth()
+  const { checkAuth, isLoggedIn } = useAuth()
 
   // Check auth in background for all routes — never block navigation
   checkAuth()
 
-  // Onboarding redirect: first visit → /welcome
+  // Landing page: authenticated users go straight to /library
+  if (to.name === 'landing' && isLoggedIn.value) {
+    return { name: 'library' }
+  }
+
+  // Onboarding redirect: first visit → /welcome (skip for landing)
   if (
     to.name !== 'welcome' &&
     to.name !== 'login' &&
+    to.name !== 'landing' &&
     to.name !== 'car' &&
     localStorage.getItem(STORAGE.ONBOARDED) !== '1'
   ) {

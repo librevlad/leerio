@@ -15,6 +15,7 @@ import { useNetwork } from './composables/useNetwork'
 import { useCategories } from './composables/useCategories'
 import { useSync } from './composables/useSync'
 import { useFileScanner } from './composables/useFileScanner'
+import { useTracking } from './composables/useTelemetry'
 import { IconX } from './components/shared/icons'
 import { STORAGE } from './constants/storage'
 
@@ -39,9 +40,13 @@ function dismissApkBanner() {
 
 const isLoginPage = computed(() => route.name === 'login')
 const isWelcomePage = computed(() => route.name === 'welcome')
+const isLandingPage = computed(() => route.name === 'landing')
 const isCarMode = computed(() => route.name === 'car')
 const isPublicPage = computed(() => !!route.meta.public)
-const showApp = computed(() => !authLoading.value && !isLoginPage.value && !isWelcomePage.value && !isCarMode.value)
+const isStandalonePage = computed(
+  () => isLoginPage.value || isWelcomePage.value || isLandingPage.value || isCarMode.value,
+)
+const showApp = computed(() => !authLoading.value && !isStandalonePage.value)
 
 function onKeydown(e: KeyboardEvent) {
   const tag = (e.target as HTMLElement)?.tagName
@@ -101,7 +106,7 @@ watch(
           .getBook(id)
           .then((book) => {
             if (player.currentBook.value) return // user already started something
-            if (route.name === 'login') return // don't auto-resume on login page
+            if (route.name === 'login' || route.name === 'landing') return // don't auto-resume on login/landing
             player.loadBook(book, undefined, false) // resume position but don't autoplay
             player.closeFullscreen() // show MiniPlayer, not fullscreen
           })
@@ -128,6 +133,22 @@ onMounted(() => {
   loadCategories()
   window.addEventListener('keydown', onKeydown)
   validateFsBooks() // Non-blocking — fire and forget
+
+  // Track session start with UTM source for signup attribution
+  const params = new URLSearchParams(window.location.search)
+  const utmSource = params.get('utm_source') || params.get('ref') || ''
+  const utmMedium = params.get('utm_medium') || ''
+  const utmCampaign = params.get('utm_campaign') || ''
+  if (utmSource) {
+    sessionStorage.setItem('signup_source', utmSource)
+  }
+  const { track } = useTracking()
+  track('session_active', {
+    source: utmSource || sessionStorage.getItem('signup_source') || 'direct',
+    medium: utmMedium,
+    campaign: utmCampaign,
+    referrer: document.referrer || '',
+  })
 })
 
 onUnmounted(() => {
@@ -164,8 +185,8 @@ onUnmounted(() => {
     </div>
   </div>
 
-  <!-- Login / Welcome / Car Mode page (no sidebar/nav) -->
-  <router-view v-else-if="isLoginPage || isWelcomePage || isCarMode" />
+  <!-- Standalone pages: Login / Welcome / Landing / Car Mode (no sidebar/nav) -->
+  <router-view v-else-if="isStandalonePage" />
 
   <!-- App layout -->
   <div v-else-if="showApp" :key="appKey" class="flex min-h-dvh min-h-screen">
