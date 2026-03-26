@@ -1332,7 +1332,9 @@ def stream_audio(book_id: str, track_index: int, request: Request, user: dict | 
 
 
 @app.get("/api/books/{book_id}/playback")
-def get_playback(book_id: str, user: dict = Depends(get_current_user)):
+def get_playback(book_id: str, user: dict | None = Depends(get_optional_user)):
+    if not user:
+        return {"track_index": 0, "position": 0, "filename": "", "updated": None}
     bid = _parse_book_id(book_id)
     pos = db.get_user_playback(user["user_id"], bid)
     if pos:
