@@ -224,6 +224,14 @@ onMounted(() => {
     style="background: radial-gradient(ellipse at center top, rgba(232, 146, 58, 0.08), transparent 60%)"
   >
     <div class="w-full max-w-sm">
+      <!-- Back button -->
+      <button
+        class="mb-4 flex items-center gap-1 text-[13px] text-[--t3] transition-colors hover:text-[--t2]"
+        @click="$router.back()"
+      >
+        ← Back
+      </button>
+
       <!-- Logo -->
       <div class="mb-8 text-center">
         <img src="/logo.png" alt="Leerio" class="mx-auto h-12 w-12 rounded-xl" />

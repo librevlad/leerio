@@ -14,11 +14,9 @@ const tabs = computed(() => {
     { path: '/library', label: t('nav.catalog'), icon: IconLibrary },
   ]
   if (isLoggedIn.value) {
-    base.push(
-      { path: '/my-library', label: t('nav.myLibrary'), icon: IconMusic },
-      { path: '/settings', label: t('nav.settings'), icon: IconSettings },
-    )
+    base.push({ path: '/my-library', label: t('nav.myLibrary'), icon: IconMusic })
   }
+  base.push({ path: '/settings', label: t('nav.settings'), icon: IconSettings })
   return base
 })
 

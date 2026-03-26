@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { Capacitor } from '@capacitor/core'
 import { useAuth } from './composables/useAuth'
 import { STORAGE } from './constants/storage'
 
@@ -61,7 +62,7 @@ const router = createRouter({
       path: '/settings',
       name: 'settings',
       component: () => import('./views/SettingsView.vue'),
-      meta: { title: 'Settings' },
+      meta: { title: 'Settings', public: true },
     },
     {
       path: '/scan-results',
@@ -101,8 +102,8 @@ router.beforeEach(async (to) => {
   // Check auth in background for all routes — never block navigation
   checkAuth()
 
-  // Landing page: authenticated users go straight to /library
-  if (to.name === 'landing' && isLoggedIn.value) {
+  // Landing page: authenticated users and APK users go straight to /library
+  if (to.name === 'landing' && (isLoggedIn.value || Capacitor.isNativePlatform())) {
     return { name: 'library' }
   }
 

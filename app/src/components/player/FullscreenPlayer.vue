@@ -552,6 +552,16 @@ function closeOverlays() {
               <IconBookmark :size="16" :class="{ 'icon-pop': bookmarkPop }" />
             </button>
 
+            <!-- Go to book page (visible on all viewports) -->
+            <button
+              class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border-0 text-[--t3] transition-colors hover:text-[--t2] lg:hidden"
+              style="background: rgba(255, 255, 255, 0.04)"
+              :aria-label="t('player.bookPage')"
+              @click="goToBook"
+            >
+              <IconList :size="16" />
+            </button>
+
             <!-- Volume -->
             <div class="relative flex items-center gap-2">
               <button
