@@ -21,8 +21,14 @@ const router = useRouter()
         <li>Identification of the copyrighted work claimed to be infringed</li>
         <li>Identification of the material that is claimed to be infringing, with enough detail to locate it</li>
         <li>Your contact information (address, telephone number, email)</li>
-        <li>A statement that you have a good faith belief that the use is not authorized by the copyright owner, its agent, or the law</li>
-        <li>A statement, made under penalty of perjury, that the information in the notification is accurate and that you are authorized to act on behalf of the copyright owner</li>
+        <li>
+          A statement that you have a good faith belief that the use is not authorized by the copyright owner, its
+          agent, or the law
+        </li>
+        <li>
+          A statement, made under penalty of perjury, that the information in the notification is accurate and that you
+          are authorized to act on behalf of the copyright owner
+        </li>
       </ul>
     </section>
 
@@ -32,9 +38,7 @@ const router = useRouter()
         Send copyright infringement notifications to:
         <a href="mailto:dmca@leerio.app" class="dmca-link">dmca@leerio.app</a>
       </p>
-      <p class="dmca-text">
-        Please include "DMCA Notice" in the subject line.
-      </p>
+      <p class="dmca-text">Please include "DMCA Notice" in the subject line.</p>
     </section>
 
     <section>
@@ -45,9 +49,16 @@ const router = useRouter()
       <ul class="dmca-list">
         <li>Your physical or electronic signature</li>
         <li>Identification of the material that was removed and the location where it previously appeared</li>
-        <li>A statement under penalty of perjury that you believe the material was removed or disabled as a result of mistake or misidentification</li>
+        <li>
+          A statement under penalty of perjury that you believe the material was removed or disabled as a result of
+          mistake or misidentification
+        </li>
         <li>Your name, address, and telephone number</li>
-        <li>A statement that you consent to the jurisdiction of the federal district court for the judicial district in which your address is located, and that you will accept service of process from the person who provided the original DMCA notification</li>
+        <li>
+          A statement that you consent to the jurisdiction of the federal district court for the judicial district in
+          which your address is located, and that you will accept service of process from the person who provided the
+          original DMCA notification
+        </li>
       </ul>
     </section>
 
