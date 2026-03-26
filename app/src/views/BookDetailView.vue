@@ -212,13 +212,13 @@ async function deleteBook() {
 
 async function startListening() {
   if (!book.value) return
-  // Allow local books (fs: / lb:) without login
-  if (!isLoggedIn.value && !book.value.id.startsWith('fs:') && !book.value.id.startsWith('lb:')) {
+  // User books (ub:) require login; catalog + local books work for guests
+  if (!isLoggedIn.value && book.value.id.startsWith('ub:')) {
     toast.info(t('book.loginToListen'))
     return router.push('/login')
   }
   player.loadBook(book.value)
-  if (!book.value.book_status || book.value.book_status === 'want_to_read') {
+  if (isLoggedIn.value && (!book.value.book_status || book.value.book_status === 'want_to_read')) {
     try {
       local.setBookStatus(book.value.id, 'reading').catch(() => {})
       await api.setBookStatus(book.value.id, 'reading')
