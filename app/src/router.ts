@@ -106,12 +106,13 @@ router.beforeEach(async (to) => {
     return { name: 'library' }
   }
 
-  // Onboarding redirect: first visit → /welcome (skip for landing)
+  // Onboarding redirect: first visit → /welcome (skip for landing, login, legal pages)
   if (
     to.name !== 'welcome' &&
     to.name !== 'login' &&
     to.name !== 'landing' &&
     to.name !== 'car' &&
+    to.name !== 'dmca' &&
     localStorage.getItem(STORAGE.ONBOARDED) !== '1'
   ) {
     return { name: 'welcome' }
