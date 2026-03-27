@@ -102,16 +102,23 @@ def require_admin(user: dict) -> dict:
     return user
 
 
-def set_auth_cookie(response, user_id: str):
-    """Set the JWT cookie on a response."""
+def set_auth_cookie(response, user_id: str, request=None):
+    """Set the JWT cookie on a response.
+
+    For APK (Capacitor) requests from https://localhost, we need SameSite=None
+    so the cookie is sent in cross-origin requests back to app.leerio.app.
+    """
     token = create_jwt(user_id)
+    # Detect cross-origin APK requests by checking the Origin header
+    origin = request.headers.get("origin", "") if request else ""
+    is_cross_origin = origin in ("https://localhost", "capacitor://localhost", "http://localhost")
     response.set_cookie(
         key=COOKIE_NAME,
         value=token,
         max_age=COOKIE_MAX_AGE,
         httponly=True,
-        secure=not IS_DEV,
-        samesite="lax",
+        secure=True,  # Required for SameSite=None and for production
+        samesite="none" if is_cross_origin else "lax",
         path="/",
     )
 

@@ -451,7 +451,7 @@ def auth_google(request: Request, req: GoogleAuthRequest):
             "role": user["role"],
         }
     )
-    set_auth_cookie(response, user["user_id"])
+    set_auth_cookie(response, user["user_id"], request)
     return response
 
 
@@ -470,7 +470,7 @@ def auth_login(request: Request, req: LoginRequest):
             "role": user["role"],
         }
     )
-    set_auth_cookie(response, user["user_id"])
+    set_auth_cookie(response, user["user_id"], request)
     return response
 
 
@@ -544,7 +544,7 @@ async def auth_verify_email(request: Request, body: VerifyEmailRequest, response
     if not user:
         raise HTTPException(400, "User not found")
 
-    set_auth_cookie(response, user["user_id"])
+    set_auth_cookie(response, user["user_id"], request)
     return {k: user[k] for k in ("user_id", "email", "name", "picture", "role", "plan") if k in user}
 
 
@@ -572,7 +572,7 @@ async def auth_reset_password(request: Request, body: ResetPasswordRequest, resp
     db.update_user_password(email, body.password)
     user = db.get_user_by_email(email)
     if user:
-        set_auth_cookie(response, user["user_id"])
+        set_auth_cookie(response, user["user_id"], request)
     return {"ok": True}
 
 
