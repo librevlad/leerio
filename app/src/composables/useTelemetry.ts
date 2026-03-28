@@ -5,7 +5,9 @@
  * Falls back silently — telemetry never blocks UX.
  */
 
-const ENDPOINT = '/api/telemetry'
+import { Capacitor } from '@capacitor/core'
+
+const ENDPOINT = Capacitor.isNativePlatform() ? 'https://app.leerio.app/api/telemetry' : '/api/telemetry'
 
 type TelemetryEvent =
   | 'onboarding_started'
