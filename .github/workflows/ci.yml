@@ -140,7 +140,7 @@ jobs:
           distribution: temurin
           java-version: 21
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
       - name: Set versionCode from run number
         working-directory: app/android
         run: |
