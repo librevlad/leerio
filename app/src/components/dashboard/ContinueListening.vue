@@ -72,20 +72,20 @@ async function playBook(bookId: string) {
 
             <!-- Info -->
             <div class="min-w-0 flex-1">
-              <h3 class="line-clamp-2 text-[14px] leading-snug font-semibold text-[--t1]">
+              <h3 class="line-clamp-2 text-[14px] leading-snug font-semibold text-(--t1)">
                 <span
                   v-if="nowPlayingId === book.id"
-                  class="mr-1 inline-flex items-center gap-1 align-middle text-[10px] font-bold tracking-wide text-[--accent]"
+                  class="mr-1 inline-flex items-center gap-1 align-middle text-[10px] font-bold tracking-wide text-(--accent)"
                 >
                   <span class="now-playing-bars inline-flex items-end gap-px"> <span /><span /><span /> </span>
                 </span>
                 {{ book.title }}
               </h3>
-              <p v-if="book.author" class="mt-1 line-clamp-1 text-[12px] text-[--t3]">{{ book.author }}</p>
+              <p v-if="book.author" class="mt-1 line-clamp-1 text-[12px] text-(--t3)">{{ book.author }}</p>
               <div class="mt-2.5">
                 <div class="mb-1 flex items-center justify-between">
-                  <span class="text-[11px] text-[--t3]">{{ book.progress }}%</span>
-                  <span v-if="book.duration_hours && book.progress < 100" class="text-[10px] text-[--t3]">
+                  <span class="text-[11px] text-(--t3)">{{ book.progress }}%</span>
+                  <span v-if="book.duration_hours && book.progress < 100" class="text-[10px] text-(--t3)">
                     {{ formatRemaining(book.duration_hours, book.progress) }} {{ t('common.remaining') }}
                   </span>
                 </div>
@@ -110,6 +110,6 @@ async function playBook(bookId: string) {
         </div>
       </div>
     </div>
-    <p v-else class="text-sm text-[--t3]">{{ t('dashboard.startListening') }}</p>
+    <p v-else class="text-sm text-(--t3)">{{ t('dashboard.startListening') }}</p>
   </div>
 </template>

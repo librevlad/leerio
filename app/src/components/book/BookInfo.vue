@@ -106,15 +106,15 @@ const lastPosition = computed(() => {
           <div class="flex min-w-0 flex-col justify-end pt-16 pb-1">
             <CategoryBadge :category="book.category" class="mb-2 self-start" />
             <h1
-              class="font-display text-[20px] leading-tight font-extrabold tracking-tight text-[--t1]"
+              class="font-display text-[20px] leading-tight font-extrabold tracking-tight text-(--t1)"
               :title="book.title"
             >
               {{ book.title }}
             </h1>
-            <p v-if="book.author" class="mt-1 text-[13px] text-[--t2]" :title="book.author">{{ book.author }}</p>
+            <p v-if="book.author" class="mt-1 text-[13px] text-(--t2)" :title="book.author">{{ book.author }}</p>
             <p
               v-if="book.reader && book.reader !== book.author"
-              class="mt-0.5 flex items-center gap-1.5 text-[12px] text-[--t3]"
+              class="mt-0.5 flex items-center gap-1.5 text-[12px] text-(--t3)"
             >
               <IconHeadphones :size="12" />
               {{ book.reader }}
@@ -125,10 +125,10 @@ const lastPosition = computed(() => {
         <!-- Progress bar (mobile) -->
         <div v-if="book.progress > 0" class="mt-4">
           <div class="flex items-center justify-between text-[11px]">
-            <span class="font-semibold text-[--accent]"
+            <span class="font-semibold text-(--accent)"
               >{{ Math.round(book.progress) }}% {{ t('book.percentListened') }}</span
             >
-            <span v-if="remainingHours !== null" class="text-[--t3]">{{
+            <span v-if="remainingHours !== null" class="text-(--t3)">{{
               t('book.remainingH', { hours: remainingHours })
             }}</span>
           </div>
@@ -156,7 +156,7 @@ const lastPosition = computed(() => {
           <IconPlay :size="16" />
           {{ isCurrentBook ? t('book.continue') : t('book.listen') }}
         </button>
-        <p v-if="isCurrentBook && lastPosition" class="mt-2 text-center text-[11px] text-[--t3]">
+        <p v-if="isCurrentBook && lastPosition" class="mt-2 text-center text-[11px] text-(--t3)">
           {{ t('book.lastPosition', { pos: lastPosition }) }}
         </p>
 
@@ -164,11 +164,11 @@ const lastPosition = computed(() => {
         <div v-if="book.progress > 0" class="mt-3 flex flex-wrap items-center gap-3 text-[12px]">
           <ProgressRing :percent="book.progress" :size="48" :stroke="3" />
           <div class="flex flex-wrap gap-x-4 gap-y-1">
-            <span v-if="listenedHours !== null" class="text-[--t2]">
+            <span v-if="listenedHours !== null" class="text-(--t2)">
               {{ t('book.listenedOf', { hours: listenedHours }) }}
               {{ book.duration_hours }} {{ t('common.unitH') }}
             </span>
-            <span v-if="startDate" class="text-[--t3]"> {{ t('book.startedAt', { date: startDate }) }} </span>
+            <span v-if="startDate" class="text-(--t3)"> {{ t('book.startedAt', { date: startDate }) }} </span>
           </div>
         </div>
       </div>
@@ -196,15 +196,15 @@ const lastPosition = computed(() => {
           <div class="flex min-w-0 flex-1 flex-col justify-end pt-24 pb-1">
             <CategoryBadge :category="book.category" class="mb-2.5 self-start" />
             <h1
-              class="font-display text-[28px] leading-tight font-extrabold tracking-tight text-[--t1]"
+              class="font-display text-[28px] leading-tight font-extrabold tracking-tight text-(--t1)"
               :title="book.title"
             >
               {{ book.title }}
             </h1>
-            <p v-if="book.author" class="mt-1.5 text-[14px] text-[--t2]" :title="book.author">{{ book.author }}</p>
+            <p v-if="book.author" class="mt-1.5 text-[14px] text-(--t2)" :title="book.author">{{ book.author }}</p>
             <p
               v-if="book.reader && book.reader !== book.author"
-              class="mt-1 flex items-center gap-1.5 text-[13px] text-[--t3]"
+              class="mt-1 flex items-center gap-1.5 text-[13px] text-(--t3)"
             >
               <IconHeadphones :size="13" />
               {{ book.reader }}
@@ -214,13 +214,13 @@ const lastPosition = computed(() => {
             <div class="mt-4 flex flex-wrap items-center gap-5">
               <div v-if="book.size_mb" class="flex items-center gap-2.5">
                 <span class="stat-icon" style="background: var(--accent-bg)">
-                  <IconHardDrive :size="14" class="text-[--accent-2]" />
+                  <IconHardDrive :size="14" class="text-(--accent-2)" />
                 </span>
                 <div>
-                  <span class="text-[12px] font-semibold text-[--t1]">{{
+                  <span class="text-[12px] font-semibold text-(--t1)">{{
                     typeof book.size_mb === 'number' ? formatSizeMB(book.size_mb, t) : book.size_mb
                   }}</span>
-                  <p class="text-[11px] text-[--t3]">{{ t('book.size') }}</p>
+                  <p class="text-[11px] text-(--t3)">{{ t('book.size') }}</p>
                 </div>
               </div>
               <div v-if="book.mp3_count" class="flex items-center gap-2.5">
@@ -228,8 +228,8 @@ const lastPosition = computed(() => {
                   <IconMusic :size="14" class="text-cyan-400" />
                 </span>
                 <div>
-                  <span class="text-[12px] font-semibold text-[--t1]">{{ book.mp3_count }}</span>
-                  <p class="text-[11px] text-[--t3]">{{ t('book.files') }}</p>
+                  <span class="text-[12px] font-semibold text-(--t1)">{{ book.mp3_count }}</span>
+                  <p class="text-[11px] text-(--t3)">{{ t('book.files') }}</p>
                 </div>
               </div>
               <div v-if="book.duration_fmt" class="flex items-center gap-2.5">
@@ -237,8 +237,8 @@ const lastPosition = computed(() => {
                   <IconClock :size="14" class="text-amber-400" />
                 </span>
                 <div>
-                  <span class="text-[12px] font-semibold text-[--t1]">{{ book.duration_fmt }}</span>
-                  <p class="text-[11px] text-[--t3]">{{ t('book.duration') }}</p>
+                  <span class="text-[12px] font-semibold text-(--t1)">{{ book.duration_fmt }}</span>
+                  <p class="text-[11px] text-(--t3)">{{ t('book.duration') }}</p>
                 </div>
               </div>
               <div v-if="book.progress > 0" class="ml-1">
@@ -271,10 +271,10 @@ const lastPosition = computed(() => {
             <!-- Progress bar (desktop) -->
             <div v-if="book.progress > 0" class="mt-3">
               <div class="flex items-center justify-between text-[11px]">
-                <span class="font-semibold text-[--accent]"
+                <span class="font-semibold text-(--accent)"
                   >{{ Math.round(book.progress) }}% {{ t('book.percentListened') }}</span
                 >
-                <span v-if="remainingHours !== null" class="text-[--t3]">{{
+                <span v-if="remainingHours !== null" class="text-(--t3)">{{
                   t('book.remainingH', { hours: remainingHours })
                 }}</span>
               </div>
@@ -289,11 +289,11 @@ const lastPosition = computed(() => {
 
             <!-- Listening stats -->
             <div v-if="book.progress > 0" class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[12px]">
-              <span v-if="listenedHours !== null" class="text-[--t2]">
+              <span v-if="listenedHours !== null" class="text-(--t2)">
                 {{ t('book.listenedOf', { hours: listenedHours }) }}
                 {{ book.duration_hours }} {{ t('common.unitH') }}
               </span>
-              <span v-if="startDate" class="text-[--t3]"> {{ t('book.startedAt', { date: startDate }) }} </span>
+              <span v-if="startDate" class="text-(--t3)"> {{ t('book.startedAt', { date: startDate }) }} </span>
             </div>
 
             <!-- Listen button (desktop) -->
@@ -312,7 +312,7 @@ const lastPosition = computed(() => {
                 <IconPlay :size="16" />
                 {{ isCurrentBook ? t('book.continue') : t('book.listen') }}
               </button>
-              <span v-if="isCurrentBook && lastPosition" class="text-[12px] text-[--t3]">
+              <span v-if="isCurrentBook && lastPosition" class="text-[12px] text-(--t3)">
                 {{ t('book.lastPosition', { pos: lastPosition }) }}
               </span>
             </div>
@@ -322,12 +322,12 @@ const lastPosition = computed(() => {
 
       <!-- Description -->
       <div v-if="book.description" class="mt-4 border-t border-white/[0.04] px-1 pt-4">
-        <p class="text-[13px] leading-relaxed text-[--t2]" :class="{ 'line-clamp-3': !descExpanded }">
+        <p class="text-[13px] leading-relaxed text-(--t2)" :class="{ 'line-clamp-3': !descExpanded }">
           {{ book.description }}
         </p>
         <button
           v-if="book.description.length > 200"
-          class="mt-1 cursor-pointer border-0 bg-transparent p-0 text-[12px] text-[--accent] hover:underline"
+          class="mt-1 cursor-pointer border-0 bg-transparent p-0 text-[12px] text-(--accent) hover:underline"
           @click="descExpanded = !descExpanded"
         >
           {{ descExpanded ? t('book.collapse') : t('book.readMore') }}
@@ -341,13 +341,13 @@ const lastPosition = computed(() => {
       >
         <div v-if="book.size_mb" class="flex items-center gap-2.5">
           <span class="stat-icon" style="background: var(--accent-bg)">
-            <IconHardDrive :size="14" class="text-[--accent-2]" />
+            <IconHardDrive :size="14" class="text-(--accent-2)" />
           </span>
           <div>
-            <span class="text-[12px] font-semibold text-[--t1]">{{
+            <span class="text-[12px] font-semibold text-(--t1)">{{
               typeof book.size_mb === 'number' ? formatSizeMB(book.size_mb, t) : book.size_mb
             }}</span>
-            <p class="text-[10px] text-[--t3]">{{ t('book.size') }}</p>
+            <p class="text-[10px] text-(--t3)">{{ t('book.size') }}</p>
           </div>
         </div>
         <div v-if="book.mp3_count" class="flex items-center gap-2.5">
@@ -355,8 +355,8 @@ const lastPosition = computed(() => {
             <IconMusic :size="14" class="text-cyan-400" />
           </span>
           <div>
-            <span class="text-[12px] font-semibold text-[--t1]">{{ book.mp3_count }}</span>
-            <p class="text-[10px] text-[--t3]">{{ t('book.files') }}</p>
+            <span class="text-[12px] font-semibold text-(--t1)">{{ book.mp3_count }}</span>
+            <p class="text-[10px] text-(--t3)">{{ t('book.files') }}</p>
           </div>
         </div>
         <div v-if="book.duration_fmt" class="flex items-center gap-2.5">
@@ -364,8 +364,8 @@ const lastPosition = computed(() => {
             <IconClock :size="14" class="text-amber-400" />
           </span>
           <div>
-            <span class="text-[12px] font-semibold text-[--t1]">{{ book.duration_fmt }}</span>
-            <p class="text-[10px] text-[--t3]">{{ t('book.duration') }}</p>
+            <span class="text-[12px] font-semibold text-(--t1)">{{ book.duration_fmt }}</span>
+            <p class="text-[10px] text-(--t3)">{{ t('book.duration') }}</p>
           </div>
         </div>
         <div class="ml-auto flex items-center gap-2.5" @mouseleave="hoverStar = 0">

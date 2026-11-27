@@ -32,8 +32,8 @@ onMounted(load)
     </div>
 
     <div v-else-if="error" class="card p-8 text-center">
-      <p class="text-[16px] font-semibold text-[--t1]">{{ t('common.loadError') }}</p>
-      <p class="mt-1 text-[13px] text-[--t3]">{{ t('common.tryAgain') }}</p>
+      <p class="text-[16px] font-semibold text-(--t1)">{{ t('common.loadError') }}</p>
+      <p class="mt-1 text-[13px] text-(--t3)">{{ t('common.tryAgain') }}</p>
       <button
         class="mt-4 rounded-xl px-5 py-2.5 text-[13px] font-semibold text-white"
         style="background: var(--gradient-accent)"
@@ -65,8 +65,8 @@ onMounted(load)
             :to="`/library?q=${encodeURIComponent(a.author)}`"
             class="card card-hover rounded-2xl p-4 text-center no-underline transition-transform hover:scale-[1.03]"
           >
-            <p class="truncate text-[12px] font-medium text-[--t2]">{{ a.author }}</p>
-            <p class="mt-1 text-[20px] font-bold tracking-tight text-[--t1]">{{ a.count }}</p>
+            <p class="truncate text-[12px] font-medium text-(--t2)">{{ a.author }}</p>
+            <p class="mt-1 text-[20px] font-bold tracking-tight text-(--t1)">{{ a.count }}</p>
           </router-link>
         </div>
       </div>

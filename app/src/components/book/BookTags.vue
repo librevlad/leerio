@@ -85,12 +85,12 @@ async function save() {
       <span
         v-for="tag in currentTags"
         :key="tag"
-        class="group inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-medium text-[--accent-2] transition-all duration-200"
+        class="group inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-medium text-(--accent-2) transition-all duration-200"
         style="background: var(--accent-soft); border: 1px solid rgba(232, 146, 58, 0.15)"
       >
         {{ tag }}
         <button
-          class="flex cursor-pointer items-center border-0 bg-transparent p-0 text-[--accent-2] opacity-0 transition-all group-hover:opacity-100 hover:text-red-400"
+          class="flex cursor-pointer items-center border-0 bg-transparent p-0 text-(--accent-2) opacity-0 transition-all group-hover:opacity-100 hover:text-red-400"
           @click="removeTag(tag)"
         >
           <IconX :size="11" />
@@ -120,7 +120,7 @@ async function save() {
         <button
           v-for="s in suggestions"
           :key="s"
-          class="block w-full cursor-pointer border-0 bg-transparent px-3.5 py-2.5 text-left text-[12px] text-[--t2] transition-colors hover:bg-white/5 hover:text-[--t1]"
+          class="block w-full cursor-pointer border-0 bg-transparent px-3.5 py-2.5 text-left text-[12px] text-(--t2) transition-colors hover:bg-white/5 hover:text-(--t1)"
           @mousedown="addTag(s)"
         >
           {{ s }}

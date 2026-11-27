@@ -71,8 +71,8 @@ async function clearStatus() {
       class="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border px-3.5 py-2 text-[12px] font-medium transition-colors"
       :class="
         bookStatus === s.value
-          ? 'border-[--accent]/20 bg-[--accent-soft] text-[--accent]'
-          : 'border-white/[0.08] bg-white/[0.04] text-[--t2] hover:bg-white/[0.06] hover:text-[--t1]'
+          ? 'border-(--accent)/20 bg-(--accent-soft) text-(--accent)'
+          : 'border-white/[0.08] bg-white/[0.04] text-(--t2) hover:bg-white/[0.06] hover:text-(--t1)'
       "
       :disabled="loading"
       @click="selectStatus(s.value)"
@@ -81,7 +81,7 @@ async function clearStatus() {
     </button>
     <button
       v-if="bookStatus"
-      class="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-lg border border-transparent bg-white/[0.04] p-1.5 text-[--t3] transition-colors hover:bg-red-500/10 hover:text-red-400"
+      class="inline-flex shrink-0 cursor-pointer items-center justify-center rounded-lg border border-transparent bg-white/[0.04] p-1.5 text-(--t3) transition-colors hover:bg-red-500/10 hover:text-red-400"
       :disabled="loading"
       :title="t('book.removeStatus')"
       @click="clearStatus"

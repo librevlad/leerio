@@ -60,7 +60,7 @@ async function handleLogout() {
   >
     <div class="flex h-16 items-center gap-3 px-4">
       <button
-        class="flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-xl border-0 bg-transparent text-[--t3] transition-colors hover:text-[--t2]"
+        class="flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-xl border-0 bg-transparent text-(--t3) transition-colors hover:text-(--t2)"
         :aria-label="collapsed ? t('nav.expand') : t('nav.collapse')"
         @click="emit('update:collapsed', !collapsed)"
       >
@@ -68,7 +68,7 @@ async function handleLogout() {
       </button>
       <div v-if="!collapsed" class="flex items-center gap-2.5">
         <img src="/logo.png" alt="Leerio" class="h-7 w-7 rounded-lg" />
-        <span class="text-[14px] font-bold tracking-tight text-[--t1]">Leerio</span>
+        <span class="text-[14px] font-bold tracking-tight text-(--t1)">Leerio</span>
       </div>
     </div>
 
@@ -80,7 +80,7 @@ async function handleLogout() {
         :title="collapsed ? link.label : undefined"
         class="group relative flex min-h-[44px] items-center gap-3 rounded-xl px-3 py-2.5 no-underline transition-all duration-150"
         :class="
-          isActive(link.path) ? 'bg-[--card] text-[--accent]' : 'text-[--t3] hover:bg-[--card-hover] hover:text-[--t2]'
+          isActive(link.path) ? 'bg-(--card) text-(--accent)' : 'text-(--t3) hover:bg-(--card-hover) hover:text-(--t2)'
         "
       >
         <span class="flex w-5 flex-shrink-0 items-center justify-center">
@@ -95,7 +95,7 @@ async function handleLogout() {
     <!-- Last played / Now playing -->
     <button
       v-if="sidebarBook"
-      class="mx-2.5 mb-2 flex cursor-pointer items-center gap-2.5 rounded-xl border-0 px-3 py-2.5 text-left transition-colors hover:bg-[--card-hover]"
+      class="mx-2.5 mb-2 flex cursor-pointer items-center gap-2.5 rounded-xl border-0 px-3 py-2.5 text-left transition-colors hover:bg-(--card-hover)"
       :style="
         sidebarBook.isPlaying
           ? 'background: rgba(255, 138, 0, 0.06); border: 1px solid rgba(255, 138, 0, 0.1)'
@@ -108,8 +108,8 @@ async function handleLogout() {
       </span>
       <span v-else class="shrink-0 text-[14px]">🎧</span>
       <span v-if="!collapsed" class="min-w-0 flex-1">
-        <span class="block truncate text-[12px] font-semibold text-[--t1]">{{ sidebarBook.title }}</span>
-        <span class="block truncate text-[10px] text-[--t3]">{{ sidebarBook.author }}</span>
+        <span class="block truncate text-[12px] font-semibold text-(--t1)">{{ sidebarBook.title }}</span>
+        <span class="block truncate text-[10px] text-(--t3)">{{ sidebarBook.author }}</span>
       </span>
     </button>
 
@@ -127,19 +127,19 @@ async function handleLogout() {
           />
           <div
             v-else
-            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-[--t2]"
+            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-(--t2)"
             style="background: rgba(255, 255, 255, 0.08)"
           >
             {{ user.name?.charAt(0) || '?' }}
           </div>
           <div class="min-w-0 flex-1">
-            <p class="truncate text-[12px] font-medium text-[--t2]">{{ user.name }}</p>
-            <p v-if="user.plan !== 'premium'" class="text-[10px] text-[--t3]">Free</p>
+            <p class="truncate text-[12px] font-medium text-(--t2)">{{ user.name }}</p>
+            <p v-if="user.plan !== 'premium'" class="text-[10px] text-(--t3)">Free</p>
           </div>
         </div>
 
         <button
-          class="mt-1 flex w-full cursor-pointer items-center gap-3 rounded-xl border-0 bg-transparent px-3 py-2 text-[--t3] transition-colors hover:bg-[--card-hover] hover:text-[--t2]"
+          class="mt-1 flex w-full cursor-pointer items-center gap-3 rounded-xl border-0 bg-transparent px-3 py-2 text-(--t3) transition-colors hover:bg-(--card-hover) hover:text-(--t2)"
           :title="collapsed ? t('nav.logout') : undefined"
           :aria-label="t('nav.logout')"
           @click="handleLogout"
@@ -166,7 +166,7 @@ async function handleLogout() {
       <router-link
         v-else
         to="/login"
-        class="flex min-h-[44px] items-center gap-3 rounded-xl px-3 py-2.5 text-[--accent] no-underline transition-all duration-150 hover:bg-[--card-hover]"
+        class="flex min-h-[44px] items-center gap-3 rounded-xl px-3 py-2.5 text-(--accent) no-underline transition-all duration-150 hover:bg-(--card-hover)"
       >
         <span class="flex w-5 flex-shrink-0 items-center justify-center">
           <svg

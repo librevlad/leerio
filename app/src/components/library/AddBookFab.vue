@@ -86,8 +86,8 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
             📱
           </div>
           <div>
-            <div class="text-[13px] font-semibold text-[--t1]">{{ t('fab.scan') }}</div>
-            <div class="text-[10px] text-[--t3]">{{ t('fab.scanHint') }}</div>
+            <div class="text-[13px] font-semibold text-(--t1)">{{ t('fab.scan') }}</div>
+            <div class="text-[10px] text-(--t3)">{{ t('fab.scanHint') }}</div>
           </div>
         </button>
 
@@ -99,8 +99,8 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
         >
           <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.06] text-[16px]">📄</div>
           <div>
-            <div class="text-[13px] font-semibold text-[--t1]">{{ t('fab.files') }}</div>
-            <div class="text-[10px] text-[--t3]">MP3, M4A, M4B, ZIP</div>
+            <div class="text-[13px] font-semibold text-(--t1)">{{ t('fab.files') }}</div>
+            <div class="text-[10px] text-(--t3)">MP3, M4A, M4B, ZIP</div>
           </div>
         </button>
 
@@ -113,8 +113,8 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
         >
           <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.06] text-[16px]">📂</div>
           <div>
-            <div class="text-[13px] font-semibold text-[--t1]">{{ t('fab.local') }}</div>
-            <div class="text-[10px] text-[--t3]">{{ t('fab.localHint') }}</div>
+            <div class="text-[13px] font-semibold text-(--t1)">{{ t('fab.local') }}</div>
+            <div class="text-[10px] text-(--t3)">{{ t('fab.localHint') }}</div>
           </div>
         </button>
 
@@ -134,8 +134,8 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
             🎥
           </div>
           <div>
-            <div class="text-[13px] font-semibold text-[--t1]">YouTube</div>
-            <div class="text-[10px] text-[--t3]">{{ t('fab.youtube') }}</div>
+            <div class="text-[13px] font-semibold text-(--t1)">YouTube</div>
+            <div class="text-[10px] text-(--t3)">{{ t('fab.youtube') }}</div>
           </div>
         </button>
 
@@ -147,8 +147,8 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
         >
           <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.06] text-[16px]">🗣</div>
           <div>
-            <div class="text-[13px] font-semibold text-[--t1]">{{ t('fab.tts') }}</div>
-            <div class="text-[10px] text-[--t3]">{{ t('fab.ttsHint') }}</div>
+            <div class="text-[13px] font-semibold text-(--t1)">{{ t('fab.tts') }}</div>
+            <div class="text-[10px] text-(--t3)">{{ t('fab.ttsHint') }}</div>
           </div>
         </button>
       </div>

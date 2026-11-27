@@ -44,7 +44,7 @@ const options = {
     <div class="relative h-[200px] sm:h-[250px]">
       <Doughnut :data="chartData" :options="options" />
       <div v-if="!hasData" class="absolute inset-0 flex items-center justify-center">
-        <p class="text-[13px] text-[--t3]">{{ t('analytics.categoryEmpty') }}</p>
+        <p class="text-[13px] text-(--t3)">{{ t('analytics.categoryEmpty') }}</p>
       </div>
     </div>
   </div>

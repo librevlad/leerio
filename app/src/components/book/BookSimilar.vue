@@ -58,12 +58,12 @@ onMounted(async () => {
           />
         </div>
         <p
-          class="line-clamp-2 text-[12px] leading-tight font-semibold text-[--t2] transition-colors group-hover:text-[--t1]"
+          class="line-clamp-2 text-[12px] leading-tight font-semibold text-(--t2) transition-colors group-hover:text-(--t1)"
           :title="book.title"
         >
           {{ book.title }}
         </p>
-        <p v-if="book.author" class="mt-0.5 truncate text-[11px] text-[--t3]" :title="book.author">
+        <p v-if="book.author" class="mt-0.5 truncate text-[11px] text-(--t3)" :title="book.author">
           {{ book.author }}
         </p>
       </router-link>

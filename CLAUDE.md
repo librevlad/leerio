@@ -128,7 +128,9 @@ Error handling:
 
 * Заголовки: `text-[18px]`–`text-[20px]` font-bold
 * Основной текст: `text-[13px]`–`text-[14px]`
-* Мелкий: `text-[11px]`–`text-[12px]` text-[--t3]
+* Мелкий: `text-[11px]`–`text-[12px]` `text-(--t3)`
+
+Tailwind v4: переменные — только `text-(--t3)`, `bg-(--card)`, `border-(--border)`. Старое `text-[--t3]` v4 молча игнорирует (так 685 классов были сломаны до 2026-11-27).
 * Максимум 2–3 размера на экран
 
 ## Colors

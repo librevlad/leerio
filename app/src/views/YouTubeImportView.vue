@@ -22,17 +22,17 @@ function handleRetry() {
   <div class="min-h-dvh min-h-screen px-4 py-6" style="background: var(--bg)">
     <!-- Header -->
     <div class="mb-6 flex items-center gap-3">
-      <button class="flex items-center text-[--t3] hover:text-[--t1]" @click="router.back()">
+      <button class="flex items-center text-(--t3) hover:text-(--t1)" @click="router.back()">
         <IconArrowLeft :size="20" />
       </button>
-      <h1 class="text-[18px] font-bold text-[--t1]">YouTube</h1>
+      <h1 class="text-[18px] font-bold text-(--t1)">YouTube</h1>
     </div>
 
     <div class="mx-auto max-w-xl space-y-5">
       <!-- URL Input -->
       <div class="card space-y-4 px-5 py-5">
         <div>
-          <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">{{ t('upload.youtubeUrl') }}</label>
+          <label class="mb-1.5 block text-[12px] font-semibold text-(--t2)">{{ t('upload.youtubeUrl') }}</label>
           <div class="flex gap-2">
             <input
               v-model="youtubeUrl"
@@ -89,7 +89,7 @@ function handleRetry() {
           </div>
           <div class="min-w-0 flex-1 space-y-3">
             <div>
-              <label class="mb-1 block text-[11px] font-semibold text-[--t3]">{{ t('upload.labelTitle') }}</label>
+              <label class="mb-1 block text-[11px] font-semibold text-(--t3)">{{ t('upload.labelTitle') }}</label>
               <input
                 v-model="yt.title.value"
                 type="text"
@@ -98,7 +98,7 @@ function handleRetry() {
               />
             </div>
             <div>
-              <label class="mb-1 block text-[11px] font-semibold text-[--t3]">{{ t('upload.labelAuthor') }}</label>
+              <label class="mb-1 block text-[11px] font-semibold text-(--t3)">{{ t('upload.labelAuthor') }}</label>
               <input
                 v-model="yt.author.value"
                 type="text"
@@ -110,7 +110,7 @@ function handleRetry() {
         </div>
 
         <!-- Chapters info -->
-        <div class="text-[12px] text-[--t3]">
+        <div class="text-[12px] text-(--t3)">
           <span v-if="yt.chapters.value.length">
             {{ t('upload.youtubeChapters', { n: yt.chapters.value.length }) }}
           </span>
@@ -123,9 +123,9 @@ function handleRetry() {
 
         <!-- Chunk slider (only when no chapters) -->
         <div v-if="!yt.chapters.value.length && yt.step.value === 'resolved'" class="flex items-center gap-3">
-          <label class="text-[12px] text-[--t2]">{{ t('upload.youtubeChunkLength') }}</label>
+          <label class="text-[12px] text-(--t2)">{{ t('upload.youtubeChunkLength') }}</label>
           <input v-model.number="chunkMinutes" type="range" min="5" max="30" step="5" class="flex-1" />
-          <span class="w-10 text-right text-[12px] font-semibold text-[--t1]">{{ chunkMinutes }}</span>
+          <span class="w-10 text-right text-[12px] font-semibold text-(--t1)">{{ chunkMinutes }}</span>
         </div>
 
         <!-- Download button -->
@@ -140,7 +140,7 @@ function handleRetry() {
         <!-- Progress -->
         <div v-if="yt.step.value === 'downloading' || yt.step.value === 'splitting' || yt.step.value === 'saving'">
           <div class="mb-2 flex items-center justify-between text-[12px]">
-            <span class="text-[--t2]">
+            <span class="text-(--t2)">
               <template v-if="yt.step.value === 'downloading'">{{
                 t('upload.youtubeDownloading', { progress: yt.progress.value })
               }}</template>
@@ -149,7 +149,7 @@ function handleRetry() {
               >
               <template v-else>{{ t('upload.youtubeSaving') }}</template>
             </span>
-            <button class="cursor-pointer border-0 bg-transparent text-[--t3] hover:text-[--t1]" @click="yt.cancel()">
+            <button class="cursor-pointer border-0 bg-transparent text-(--t3) hover:text-(--t1)" @click="yt.cancel()">
               {{ t('upload.youtubeCancel') }}
             </button>
           </div>
@@ -166,8 +166,8 @@ function handleRetry() {
       <!-- Done -->
       <div v-if="yt.step.value === 'done'" class="card flex items-center gap-3 px-5 py-4">
         <IconCheck :size="20" class="text-green-400" />
-        <span class="text-[13px] font-medium text-[--t1]">{{ t('upload.youtubeDone') }}</span>
-        <router-link to="/my-library" class="ml-auto text-[12px] font-semibold text-[--accent] no-underline">
+        <span class="text-[13px] font-medium text-(--t1)">{{ t('upload.youtubeDone') }}</span>
+        <router-link to="/my-library" class="ml-auto text-[12px] font-semibold text-(--accent) no-underline">
           {{ t('nav.myLibrary') }}
         </router-link>
       </div>
@@ -176,7 +176,7 @@ function handleRetry() {
       <div v-if="yt.step.value === 'error'" class="card flex items-center gap-3 border-red-500/20 px-5 py-4">
         <span class="text-[13px] text-red-400">{{ yt.errorMessage.value }}</span>
         <button
-          class="ml-auto cursor-pointer border-0 bg-transparent text-[12px] font-semibold text-[--accent]"
+          class="ml-auto cursor-pointer border-0 bg-transparent text-[12px] font-semibold text-(--accent)"
           @click="handleRetry"
         >
           {{ t('upload.youtubeRetry') }}

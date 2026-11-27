@@ -163,7 +163,7 @@ onUnmounted(() => {
     class="flex min-h-dvh min-h-screen flex-col items-center justify-center gap-4"
     style="background: var(--bg)"
   >
-    <p class="text-[16px] font-semibold text-[--t1]">{{ t('common.errorOccurred') }}</p>
+    <p class="text-[16px] font-semibold text-(--t1)">{{ t('common.errorOccurred') }}</p>
     <button
       class="rounded-lg px-4 py-2 text-[13px] font-semibold text-white"
       style="background: var(--gradient-accent)"
@@ -180,8 +180,8 @@ onUnmounted(() => {
     style="background: var(--bg)"
   >
     <div class="text-center">
-      <div class="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-[--t3] border-t-[--accent]" />
-      <p class="text-[13px] text-[--t3]">{{ t('common.loading') }}</p>
+      <div class="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-(--t3) border-t-(--accent)" />
+      <p class="text-[13px] text-(--t3)">{{ t('common.loading') }}</p>
     </div>
   </div>
 
@@ -233,8 +233,8 @@ onUnmounted(() => {
       >
         <img src="/logo.png" alt="" class="h-8 w-8 rounded-lg" />
         <div class="min-w-0 flex-1">
-          <p class="text-[12px] font-semibold text-[--t1]">{{ t('book.installApp') }}</p>
-          <p class="text-[10px] text-[--t3]">{{ t('book.installAppHint') }}</p>
+          <p class="text-[12px] font-semibold text-(--t1)">{{ t('book.installApp') }}</p>
+          <p class="text-[10px] text-(--t3)">{{ t('book.installAppHint') }}</p>
         </div>
         <a
           href="https://github.com/librevlad/leerio/releases/download/latest-apk/leerio.apk"
@@ -244,7 +244,7 @@ onUnmounted(() => {
           APK
         </a>
         <button
-          class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-0 bg-transparent text-[--t3] hover:text-[--t1]"
+          class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-0 bg-transparent text-(--t3) hover:text-(--t1)"
           @click="dismissApkBanner"
         >
           <IconX :size="14" />

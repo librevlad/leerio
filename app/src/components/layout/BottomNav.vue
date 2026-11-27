@@ -38,7 +38,7 @@ const isActive = (path: string) => route.path.startsWith(path)
         :key="tab.path"
         :to="tab.path"
         class="relative flex flex-1 flex-col items-center justify-center gap-0.5 no-underline transition-colors duration-200"
-        :class="isActive(tab.path) ? 'text-[--accent]' : 'text-[--t3]'"
+        :class="isActive(tab.path) ? 'text-(--accent)' : 'text-(--t3)'"
       >
         <component :is="tab.icon" :size="20" />
         <span class="text-[10px] leading-none font-medium">{{ tab.label }}</span>
@@ -48,7 +48,7 @@ const isActive = (path: string) => route.path.startsWith(path)
       <router-link
         v-if="!isLoggedIn"
         to="/login"
-        class="relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[--accent] no-underline"
+        class="relative flex flex-1 flex-col items-center justify-center gap-0.5 text-(--accent) no-underline"
       >
         <svg
           width="20"

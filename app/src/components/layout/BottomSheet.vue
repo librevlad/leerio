@@ -36,7 +36,7 @@ onUnmounted(() => {
           role="dialog"
           aria-modal="true"
           tabindex="-1"
-          class="absolute right-0 bottom-0 left-0 rounded-t-2xl border-t border-[--border] outline-none"
+          class="absolute right-0 bottom-0 left-0 rounded-t-2xl border-t border-(--border) outline-none"
           style="background: var(--card-solid)"
         >
           <!-- Handle -->

@@ -41,17 +41,17 @@ const strengthLabel = computed(() =>
 const strengthTextClass = computed(
   () =>
     ({
-      weak: 'text-[--error]',
-      medium: 'text-[--warning]',
-      strong: 'text-[--success]',
+      weak: 'text-(--error)',
+      medium: 'text-(--warning)',
+      strong: 'text-(--success)',
     })[strength.value],
 )
 
 function strengthColor(index: number) {
   const s = strength.value
-  if (s === 'weak') return index === 0 ? 'bg-[--error]' : 'bg-white/[0.06]'
-  if (s === 'medium') return index <= 1 ? 'bg-[--warning]' : 'bg-white/[0.06]'
-  return 'bg-[--success]'
+  if (s === 'weak') return index === 0 ? 'bg-(--error)' : 'bg-white/[0.06]'
+  if (s === 'medium') return index <= 1 ? 'bg-(--warning)' : 'bg-white/[0.06]'
+  return 'bg-(--success)'
 }
 
 function switchTo(v: AuthView) {
@@ -234,7 +234,7 @@ onMounted(() => {
     <div class="w-full max-w-sm">
       <!-- Back button -->
       <button
-        class="mb-4 flex items-center gap-1 text-[13px] text-[--t3] transition-colors hover:text-[--t2]"
+        class="mb-4 flex items-center gap-1 text-[13px] text-(--t3) transition-colors hover:text-(--t2)"
         @click="$router.back()"
       >
         ← Back
@@ -243,7 +243,7 @@ onMounted(() => {
       <!-- Logo -->
       <div class="mb-8 text-center">
         <img src="/logo.png" alt="Leerio" class="mx-auto h-12 w-12 rounded-xl" />
-        <h1 class="mt-3 text-[22px] font-bold text-[--t1]">Leerio</h1>
+        <h1 class="mt-3 text-[22px] font-bold text-(--t1)">Leerio</h1>
       </div>
 
       <!-- Card -->
@@ -259,14 +259,14 @@ onMounted(() => {
         >
           <button
             class="flex-1 rounded-md py-2 text-[13px] font-medium transition-all"
-            :class="view === 'login' ? 'bg-white/[0.08] text-[--t1]' : 'text-[--t3]'"
+            :class="view === 'login' ? 'bg-white/[0.08] text-(--t1)' : 'text-(--t3)'"
             @click="switchTo('login')"
           >
             {{ t('login.tabLogin') }}
           </button>
           <button
             class="flex-1 rounded-md py-2 text-[13px] font-medium transition-all"
-            :class="view === 'register' ? 'bg-white/[0.08] text-[--t1]' : 'text-[--t3]'"
+            :class="view === 'register' ? 'bg-white/[0.08] text-(--t1)' : 'text-(--t3)'"
             @click="switchTo('register')"
           >
             {{ t('login.tabRegister') }}
@@ -299,7 +299,7 @@ onMounted(() => {
             />
             <button
               type="button"
-              class="mt-1.5 cursor-pointer border-0 bg-transparent p-0 text-[11px] text-[--accent]"
+              class="mt-1.5 cursor-pointer border-0 bg-transparent p-0 text-[11px] text-(--accent)"
               @click="switchTo('forgot-step1')"
             >
               {{ t('login.forgotPassword') }}
@@ -376,8 +376,8 @@ onMounted(() => {
         <div v-if="view === 'verify-email'" class="space-y-4">
           <div class="text-center">
             <div class="mb-2 text-[32px]">&#x1F4E7;</div>
-            <h2 class="text-[16px] font-bold text-[--t1]">{{ t('login.verifyTitle') }}</h2>
-            <p class="mt-1 text-[12px] text-[--t3]">{{ t('login.verifySubtitle', { email }) }}</p>
+            <h2 class="text-[16px] font-bold text-(--t1)">{{ t('login.verifyTitle') }}</h2>
+            <p class="mt-1 text-[12px] text-(--t3)">{{ t('login.verifySubtitle', { email }) }}</p>
           </div>
           <input
             v-model="verifyCode"
@@ -398,15 +398,15 @@ onMounted(() => {
           <div class="text-center">
             <button
               v-if="resendCooldown <= 0"
-              class="cursor-pointer border-0 bg-transparent text-[12px] text-[--accent]"
+              class="cursor-pointer border-0 bg-transparent text-[12px] text-(--accent)"
               @click="handleResend"
             >
               {{ t('login.resendCode') }}
             </button>
-            <span v-else class="text-[12px] text-[--t3]">{{ t('login.resendCooldown', { n: resendCooldown }) }}</span>
+            <span v-else class="text-[12px] text-(--t3)">{{ t('login.resendCooldown', { n: resendCooldown }) }}</span>
           </div>
           <button
-            class="w-full cursor-pointer border-0 bg-transparent text-center text-[12px] text-[--t3] hover:text-[--t2]"
+            class="w-full cursor-pointer border-0 bg-transparent text-center text-[12px] text-(--t3) hover:text-(--t2)"
             @click="switchTo('login')"
           >
             {{ t('login.backToLogin') }}
@@ -416,8 +416,8 @@ onMounted(() => {
         <!-- FORGOT PASSWORD STEP 1: Enter email -->
         <form v-if="view === 'forgot-step1'" class="space-y-4" @submit.prevent="handleForgotSend">
           <div class="mb-2 text-center">
-            <h2 class="text-[16px] font-bold text-[--t1]">{{ t('login.forgotTitle') }}</h2>
-            <p class="mt-1 text-[12px] text-[--t3]">{{ t('login.forgotSubtitle') }}</p>
+            <h2 class="text-[16px] font-bold text-(--t1)">{{ t('login.forgotTitle') }}</h2>
+            <p class="mt-1 text-[12px] text-(--t3)">{{ t('login.forgotSubtitle') }}</p>
           </div>
           <input
             v-model="email"
@@ -430,7 +430,7 @@ onMounted(() => {
           </button>
           <button
             type="button"
-            class="w-full cursor-pointer border-0 bg-transparent text-center text-[12px] text-[--t3] hover:text-[--t2]"
+            class="w-full cursor-pointer border-0 bg-transparent text-center text-[12px] text-(--t3) hover:text-(--t2)"
             @click="switchTo('login')"
           >
             {{ t('login.backToLogin') }}
@@ -440,8 +440,8 @@ onMounted(() => {
         <!-- FORGOT PASSWORD STEP 2: Enter code -->
         <form v-if="view === 'forgot-step2'" class="space-y-4" @submit.prevent="handleForgotVerify">
           <div class="mb-2 text-center">
-            <h2 class="text-[16px] font-bold text-[--t1]">{{ t('login.enterCode') }}</h2>
-            <p class="mt-1 text-[12px] text-[--t3]">{{ t('login.verifySubtitle', { email }) }}</p>
+            <h2 class="text-[16px] font-bold text-(--t1)">{{ t('login.enterCode') }}</h2>
+            <p class="mt-1 text-[12px] text-(--t3)">{{ t('login.verifySubtitle', { email }) }}</p>
           </div>
           <input
             v-model="forgotCode"
@@ -456,7 +456,7 @@ onMounted(() => {
           </button>
           <button
             type="button"
-            class="w-full cursor-pointer border-0 bg-transparent text-center text-[12px] text-[--t3] hover:text-[--t2]"
+            class="w-full cursor-pointer border-0 bg-transparent text-center text-[12px] text-(--t3) hover:text-(--t2)"
             @click="switchTo('forgot-step1')"
           >
             {{ t('login.backToLogin') }}
@@ -466,7 +466,7 @@ onMounted(() => {
         <!-- FORGOT PASSWORD STEP 3: New password -->
         <form v-if="view === 'forgot-step3'" class="space-y-4" @submit.prevent="handleResetPassword">
           <div class="mb-2 text-center">
-            <h2 class="text-[16px] font-bold text-[--t1]">{{ t('login.newPassword') }}</h2>
+            <h2 class="text-[16px] font-bold text-(--t1)">{{ t('login.newPassword') }}</h2>
           </div>
           <input
             v-model="newPassword"
@@ -496,19 +496,19 @@ onMounted(() => {
         <template v-if="view === 'login' || view === 'register'">
           <div class="my-5 flex items-center gap-3">
             <div class="h-px flex-1 bg-white/[0.06]" />
-            <span class="text-[11px] text-[--t3]">{{ t('login.or') }}</span>
+            <span class="text-[11px] text-(--t3)">{{ t('login.or') }}</span>
             <div class="h-px flex-1 bg-white/[0.06]" />
           </div>
           <div v-if="!googleFailed" id="google-signin-btn" ref="googleBtnRef" />
-          <p v-else class="text-center text-[12px] text-[--t3]">
+          <p v-else class="text-center text-[12px] text-(--t3)">
             {{ t('login.googleUnavailable', 'Google login unavailable in this browser. Use email/password.') }}
           </p>
           <!-- Toggle text -->
-          <p class="mt-4 text-center text-[12px] text-[--t3]">
+          <p class="mt-4 text-center text-[12px] text-(--t3)">
             <template v-if="view === 'login'">
               {{ t('login.noAccount') }}
               <button
-                class="cursor-pointer border-0 bg-transparent p-0 font-semibold text-[--accent]"
+                class="cursor-pointer border-0 bg-transparent p-0 font-semibold text-(--accent)"
                 @click="switchTo('register')"
               >
                 {{ t('login.tabRegister') }}
@@ -517,7 +517,7 @@ onMounted(() => {
             <template v-else>
               {{ t('login.hasAccount') }}
               <button
-                class="cursor-pointer border-0 bg-transparent p-0 font-semibold text-[--accent]"
+                class="cursor-pointer border-0 bg-transparent p-0 font-semibold text-(--accent)"
                 @click="switchTo('login')"
               >
                 {{ t('login.tabLogin') }}
@@ -528,7 +528,7 @@ onMounted(() => {
       </div>
 
       <!-- Version -->
-      <p class="mt-6 text-center text-[11px] text-[--t3]/50">Leerio v{{ version }}</p>
+      <p class="mt-6 text-center text-[11px] text-(--t3)/50">Leerio v{{ version }}</p>
     </div>
   </div>
 </template>

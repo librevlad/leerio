@@ -4,10 +4,10 @@ import { useToast } from '../../composables/useToast'
 const { toasts, remove } = useToast()
 
 const colorMap: Record<string, string> = {
-  success: 'border-[--success]/20',
-  error: 'border-[--error]/20',
-  info: 'border-[--info]/20',
-  warning: 'border-[--warning]/20',
+  success: 'border-(--success)/20',
+  error: 'border-(--error)/20',
+  info: 'border-(--info)/20',
+  warning: 'border-(--warning)/20',
 }
 </script>
 
@@ -29,7 +29,7 @@ const colorMap: Record<string, string> = {
         "
         @click="remove(toast.id)"
       >
-        <p class="m-0 text-[13px] font-medium text-[--t1]">{{ toast.message }}</p>
+        <p class="m-0 text-[13px] font-medium text-(--t1)">{{ toast.message }}</p>
       </div>
     </TransitionGroup>
   </div>

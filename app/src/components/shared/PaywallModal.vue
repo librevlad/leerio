@@ -115,24 +115,24 @@ function openCheckout() {
             📚
           </div>
 
-          <h2 class="text-[18px] font-extrabold text-[--t1]">{{ t('paywall.title') }}</h2>
-          <p v-if="props.bookCount" class="mt-2 text-[13px] text-[--t2]">
+          <h2 class="text-[18px] font-extrabold text-(--t1)">{{ t('paywall.title') }}</h2>
+          <p v-if="props.bookCount" class="mt-2 text-[13px] text-(--t2)">
             {{ t('paywall.subtitleDynamic', { count: props.bookCount }) }}
           </p>
-          <p v-else class="mt-2 text-[13px] text-[--t2]">{{ t('paywall.subtitle', { n: freeLimit }) }}</p>
+          <p v-else class="mt-2 text-[13px] text-(--t2)">{{ t('paywall.subtitle', { n: freeLimit }) }}</p>
 
           <div class="mt-5 space-y-2 text-left">
             <div class="flex items-center gap-2.5 rounded-lg px-3 py-2" style="background: rgba(255, 255, 255, 0.03)">
               <span class="text-[14px]">✔</span>
-              <span class="text-[13px] text-[--t2]">{{ t('paywall.benefitUnlimited') }}</span>
+              <span class="text-[13px] text-(--t2)">{{ t('paywall.benefitUnlimited') }}</span>
             </div>
             <div class="flex items-center gap-2.5 rounded-lg px-3 py-2" style="background: rgba(255, 255, 255, 0.03)">
               <span class="text-[14px]">✔</span>
-              <span class="text-[13px] text-[--t2]">{{ t('paywall.benefitSync') }}</span>
+              <span class="text-[13px] text-(--t2)">{{ t('paywall.benefitSync') }}</span>
             </div>
             <div class="flex items-center gap-2.5 rounded-lg px-3 py-2" style="background: rgba(255, 255, 255, 0.03)">
               <span class="text-[14px]">✔</span>
-              <span class="text-[13px] text-[--t2]">{{ t('paywall.benefitAccess') }}</span>
+              <span class="text-[13px] text-(--t2)">{{ t('paywall.benefitAccess') }}</span>
             </div>
           </div>
 
@@ -144,7 +144,7 @@ function openCheckout() {
           >
             {{ t('paywall.upgrade') }}
           </button>
-          <button class="mt-3 w-full py-2 text-[13px] text-[--t3] hover:text-[--t2]" @click="emit('close')">
+          <button class="mt-3 w-full py-2 text-[13px] text-(--t3) hover:text-(--t2)" @click="emit('close')">
             {{ t('paywall.notNow') }}
           </button>
         </div>

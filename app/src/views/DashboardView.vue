@@ -102,8 +102,8 @@ onMounted(loadData)
     <!-- Guest welcome -->
     <div v-else-if="isGuest" class="fade-in flex flex-col gap-5">
       <div>
-        <p class="text-[12px] font-semibold tracking-widest text-[--t3] uppercase">{{ greeting }}</p>
-        <h1 class="mt-1 text-[22px] font-extrabold text-[--t1] md:text-[26px]">Leerio</h1>
+        <p class="text-[12px] font-semibold tracking-widest text-(--t3) uppercase">{{ greeting }}</p>
+        <h1 class="mt-1 text-[22px] font-extrabold text-(--t1) md:text-[26px]">Leerio</h1>
       </div>
 
       <div
@@ -114,8 +114,8 @@ onMounted(loadData)
         "
       >
         <p class="text-[32px]">🎧</p>
-        <h2 class="mt-3 text-[16px] font-bold text-[--t1]">{{ t('dashboard.guestTitle') }}</h2>
-        <p class="mt-2 text-[13px] text-[--t2]">{{ t('dashboard.guestSubtitle') }}</p>
+        <h2 class="mt-3 text-[16px] font-bold text-(--t1)">{{ t('dashboard.guestTitle') }}</h2>
+        <p class="mt-2 text-[13px] text-(--t2)">{{ t('dashboard.guestSubtitle') }}</p>
         <div class="mt-5 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <router-link to="/library" class="btn btn-primary px-6 py-2.5 text-[13px] no-underline">
             {{ t('dashboard.guestBrowse') }}
@@ -130,8 +130,8 @@ onMounted(loadData)
     <div v-else-if="data" class="fade-in flex flex-col gap-5">
       <!-- Greeting -->
       <div>
-        <p class="text-[12px] font-semibold tracking-widest text-[--t3] uppercase">{{ greeting }}</p>
-        <h1 class="mt-1 text-[22px] font-extrabold text-[--t1] md:text-[26px]">{{ userName }}</h1>
+        <p class="text-[12px] font-semibold tracking-widest text-(--t3) uppercase">{{ greeting }}</p>
+        <h1 class="mt-1 text-[22px] font-extrabold text-(--t1) md:text-[26px]">{{ userName }}</h1>
       </div>
 
       <!-- Hero Card -->
@@ -145,7 +145,7 @@ onMounted(loadData)
           "
         >
           <div class="p-5">
-            <p class="text-[10px] font-semibold tracking-widest text-[--accent] uppercase">
+            <p class="text-[10px] font-semibold tracking-widest text-(--accent) uppercase">
               {{ t('dashboard.continueListening') }}
             </p>
             <div class="mt-3 flex gap-4 sm:gap-5">
@@ -174,11 +174,11 @@ onMounted(loadData)
               <div class="flex min-w-0 flex-1 flex-col justify-center">
                 <router-link
                   :to="`/book/${heroBook.id}`"
-                  class="line-clamp-2 text-[15px] leading-snug font-bold text-[--t1] no-underline hover:text-[--accent] sm:text-[20px]"
+                  class="line-clamp-2 text-[15px] leading-snug font-bold text-(--t1) no-underline hover:text-(--accent) sm:text-[20px]"
                 >
                   {{ heroBook.title }}
                 </router-link>
-                <p class="mt-1 text-[12px] text-[--t3] sm:text-[13px]">
+                <p class="mt-1 text-[12px] text-(--t3) sm:text-[13px]">
                   {{ heroBook.author }}
                   <template v-if="heroBook.current_chapter">
                     · {{ t('player.trackN', { n: heroBook.current_chapter, total: heroBook.total_chapters }) }}
@@ -188,7 +188,7 @@ onMounted(loadData)
                   <div class="flex-1">
                     <ProgressBar :percent="heroBook.progress" height="h-[3px]" />
                   </div>
-                  <span class="flex-shrink-0 text-[11px] text-[--t3] tabular-nums">{{ heroBook.progress }}%</span>
+                  <span class="flex-shrink-0 text-[11px] text-(--t3) tabular-nums">{{ heroBook.progress }}%</span>
                 </div>
               </div>
             </div>
@@ -222,7 +222,7 @@ onMounted(loadData)
 
       <!-- Also listening -->
       <div v-if="otherBooks.length" class="flex flex-col gap-2">
-        <p class="text-[11px] font-semibold tracking-widest text-[--t3] uppercase">
+        <p class="text-[11px] font-semibold tracking-widest text-(--t3) uppercase">
           {{ t('dashboard.alsoListening') }}
         </p>
         <div
@@ -248,8 +248,8 @@ onMounted(loadData)
             </div>
           </router-link>
           <router-link :to="`/book/${book.id}`" class="min-w-0 flex-1 no-underline">
-            <p class="truncate text-[13px] font-semibold text-[--t2]">{{ book.title }}</p>
-            <p class="text-[11px] text-[--t3]">
+            <p class="truncate text-[13px] font-semibold text-(--t2)">{{ book.title }}</p>
+            <p class="text-[11px] text-(--t3)">
               {{ book.progress }}%
               <template v-if="book.duration_hours"> · {{ fmtRemaining(book.duration_hours, book.progress) }} </template>
             </p>
@@ -263,7 +263,7 @@ onMounted(loadData)
             <component
               :is="nowPlayingId === book.id && isPlaying ? IconPause : IconPlay"
               :size="10"
-              class="text-[--t2]"
+              class="text-(--t2)"
             />
           </button>
         </div>

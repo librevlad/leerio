@@ -30,11 +30,11 @@ const pace = computed(() => {
   <div class="card p-5">
     <div class="mb-4 flex items-center justify-between">
       <span class="section-label">{{ t('dashboard.yearlyGoal') }}</span>
-      <span class="text-[12px] font-medium text-[--t3]">{{ done }}/{{ goal }}</span>
+      <span class="text-[12px] font-medium text-(--t3)">{{ done }}/{{ goal }}</span>
     </div>
     <ProgressBar :percent="percent" height="h-1.5" />
     <p class="gradient-text mt-3 text-[24px] leading-none font-bold tracking-tight">{{ animPercent }}%</p>
-    <p class="mt-1 text-[12px] text-[--t3]">
+    <p class="mt-1 text-[12px] text-(--t3)">
       <template v-if="done >= goal"> {{ t('dashboard.goalReached') }} </template>
       <template v-else>
         {{
@@ -44,7 +44,7 @@ const pace = computed(() => {
         }}
       </template>
     </p>
-    <p v-if="pace" class="mt-2 text-[11px]" :class="pace.ahead ? 'text-[--success]' : 'text-[--warning]'">
+    <p v-if="pace" class="mt-2 text-[11px]" :class="pace.ahead ? 'text-(--success)' : 'text-(--warning)'">
       <template v-if="done >= goal">
         {{ t('dashboard.paceProjected', { n: `${pace.projected} ${t('plural.book', pace.projected)}` }) }}
       </template>

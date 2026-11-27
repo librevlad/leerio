@@ -119,7 +119,7 @@ async function handleTTSConvert() {
     <div class="card space-y-4 px-5 py-5">
       <!-- Title -->
       <div>
-        <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelTitle') }}</label>
+        <label class="mb-1.5 block text-[12px] font-semibold text-(--t2)">{{ t('upload.labelTitle') }}</label>
         <input
           v-model="ttsTitle"
           type="text"
@@ -130,7 +130,7 @@ async function handleTTSConvert() {
 
       <!-- Author -->
       <div>
-        <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelAuthor') }}</label>
+        <label class="mb-1.5 block text-[12px] font-semibold text-(--t2)">{{ t('upload.labelAuthor') }}</label>
         <input
           v-model="ttsAuthor"
           type="text"
@@ -141,10 +141,10 @@ async function handleTTSConvert() {
 
       <!-- Document file -->
       <div>
-        <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelDocument') }}</label>
+        <label class="mb-1.5 block text-[12px] font-semibold text-(--t2)">{{ t('upload.labelDocument') }}</label>
         <label
-          class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-[--border] px-4 py-3 text-[13px] transition-all hover:border-white/15 hover:bg-white/[0.02]"
-          :class="ttsFile ? 'text-[--t1]' : 'text-[--t3]'"
+          class="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-(--border) px-4 py-3 text-[13px] transition-all hover:border-white/15 hover:bg-white/[0.02]"
+          :class="ttsFile ? 'text-(--t1)' : 'text-(--t3)'"
         >
           <IconUpload :size="14" />
           {{ ttsFile ? ttsFile.name : t('upload.selectFile') }}
@@ -159,7 +159,7 @@ async function handleTTSConvert() {
 
       <!-- Engine selector -->
       <div v-if="showEngineSelector">
-        <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelEngine') }}</label>
+        <label class="mb-1.5 block text-[12px] font-semibold text-(--t2)">{{ t('upload.labelEngine') }}</label>
         <div class="flex gap-2">
           <button
             v-for="eng in engines.filter((e) => e.available)"
@@ -167,8 +167,8 @@ async function handleTTSConvert() {
             class="cursor-pointer rounded-lg border px-3.5 py-1.5 text-[12px] font-medium transition-colors"
             :class="
               ttsEngine === eng.id
-                ? 'border-white/10 bg-white/[0.08] text-[--t1]'
-                : 'border-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
+                ? 'border-white/10 bg-white/[0.08] text-(--t1)'
+                : 'border-transparent text-(--t3) hover:bg-white/5 hover:text-(--t2)'
             "
             @click="selectEngine(eng.id as 'edge' | 'openai')"
           >
@@ -179,7 +179,7 @@ async function handleTTSConvert() {
 
       <!-- Voice selection -->
       <div>
-        <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelVoice') }}</label>
+        <label class="mb-1.5 block text-[12px] font-semibold text-(--t2)">{{ t('upload.labelVoice') }}</label>
         <select v-model="ttsVoice" class="input-field w-full px-3.5 py-2.5">
           <option v-for="v in voices" :key="v.id" :value="v.id">
             {{ v.name }} ({{ v.lang }},
@@ -190,7 +190,7 @@ async function handleTTSConvert() {
 
       <!-- Rate -->
       <div>
-        <label class="mb-1.5 block text-[12px] font-semibold text-[--t2]">{{ t('upload.labelSpeed') }}</label>
+        <label class="mb-1.5 block text-[12px] font-semibold text-(--t2)">{{ t('upload.labelSpeed') }}</label>
         <div class="flex gap-2">
           <button
             v-for="opt in rateOptions"
@@ -198,8 +198,8 @@ async function handleTTSConvert() {
             class="cursor-pointer rounded-lg border px-3.5 py-1.5 text-[12px] font-medium transition-colors"
             :class="
               ttsRate === opt.value
-                ? 'border-white/10 bg-white/[0.08] text-[--t1]'
-                : 'border-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
+                ? 'border-white/10 bg-white/[0.08] text-(--t1)'
+                : 'border-transparent text-(--t3) hover:bg-white/5 hover:text-(--t2)'
             "
             @click="ttsRate = opt.value"
           >
@@ -253,7 +253,7 @@ async function handleTTSConvert() {
               <IconX v-else-if="jobStatus === 'error'" :size="16" class="text-red-400" />
               <IconMicrophone v-else :size="16" class="text-violet-400" />
             </div>
-            <span class="text-[13px] font-semibold text-[--t1]">
+            <span class="text-[13px] font-semibold text-(--t1)">
               {{
                 jobStatus === 'done'
                   ? t('upload.conversionDone')
@@ -263,7 +263,7 @@ async function handleTTSConvert() {
               }}
             </span>
           </div>
-          <span class="text-[12px] font-semibold" :class="jobStatus === 'done' ? 'text-emerald-400' : 'text-[--t3]'">
+          <span class="text-[12px] font-semibold" :class="jobStatus === 'done' ? 'text-emerald-400' : 'text-(--t3)'">
             {{ jobProgress }}%
           </span>
         </div>

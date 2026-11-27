@@ -22,7 +22,7 @@ const label = computed(() => {
 
 <template>
   <span
-    class="inline-flex items-center gap-1 rounded-md bg-white/[0.06] px-2 py-0.5 text-[9px] leading-tight font-medium text-[--t3] backdrop-blur-sm"
+    class="inline-flex items-center gap-1 rounded-md bg-white/[0.06] px-2 py-0.5 text-[9px] leading-tight font-medium text-(--t3) backdrop-blur-sm"
   >
     <component :is="source === 'local' ? IconSmartphone : IconCloud" :size="10" />
     {{ label }}

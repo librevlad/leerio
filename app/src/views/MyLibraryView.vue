@@ -255,7 +255,7 @@ async function uploadToCloud(item: UnifiedItem) {
     <div class="mb-6 flex items-center justify-between">
       <div>
         <h1 class="page-title">{{ t('myLibrary.title') }}</h1>
-        <p class="mt-1 text-[13px] text-[--t3]">
+        <p class="mt-1 text-[13px] text-(--t3)">
           {{ totalCount > 0 ? `${totalCount} ${t('plural.book', totalCount)}` : t('myLibrary.noBooks') }}
         </p>
       </div>
@@ -284,9 +284,9 @@ async function uploadToCloud(item: UnifiedItem) {
         <div class="mb-1.5 flex items-center justify-between">
           <div class="flex items-center gap-2">
             <IconMicrophone :size="14" class="text-violet-400" />
-            <span class="text-[13px] font-medium text-[--t1]">{{ job.title }}</span>
+            <span class="text-[13px] font-medium text-(--t1)">{{ job.title }}</span>
           </div>
-          <span class="text-[12px] text-[--t3]">{{ job.done_chapters }}/{{ job.total_chapters }}</span>
+          <span class="text-[12px] text-(--t3)">{{ job.done_chapters }}/{{ job.total_chapters }}</span>
         </div>
         <ProgressBar :percent="job.progress" height="h-1.5" />
       </div>
@@ -300,8 +300,8 @@ async function uploadToCloud(item: UnifiedItem) {
         class="flex-shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
         :class="
           activeFilter === f.key
-            ? 'border-white/10 bg-white/[0.08] text-[--t1]'
-            : 'border-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
+            ? 'border-white/10 bg-white/[0.08] text-(--t1)'
+            : 'border-transparent text-(--t3) hover:bg-white/5 hover:text-(--t2)'
         "
         :title="f.titleKey ? t(f.titleKey) : undefined"
         @click="activeFilter = f.key"
@@ -320,11 +320,11 @@ async function uploadToCloud(item: UnifiedItem) {
 
     <!-- Empty state -->
     <div v-else-if="items.length === 0" class="flex flex-col items-center justify-center py-16 text-center">
-      <IconFolder :size="48" class="mb-4 text-[--t3]" />
-      <p class="mb-2 text-[14px] font-medium text-[--t2]">
+      <IconFolder :size="48" class="mb-4 text-(--t3)" />
+      <p class="mb-2 text-[14px] font-medium text-(--t2)">
         {{ activeFilter === 'all' ? t('myLibrary.emptyTitle') : t('myLibrary.emptyCategory') }}
       </p>
-      <p class="mb-5 text-[13px] text-[--t3]">{{ t('myLibrary.emptyDesc') }}</p>
+      <p class="mb-5 text-[13px] text-(--t3)">{{ t('myLibrary.emptyDesc') }}</p>
       <div class="flex gap-3">
         <router-link to="/library" class="btn btn-secondary flex items-center gap-2 text-[13px]">
           {{ t('myLibrary.goToCatalog') }}
@@ -363,7 +363,7 @@ async function uploadToCloud(item: UnifiedItem) {
           <div class="absolute top-2.5 right-3 flex items-center gap-1.5">
             <span
               v-if="item.source === 'catalog' && item.category"
-              class="inline-flex items-center rounded-md bg-white/[0.06] px-2 py-0.5 text-[9px] leading-tight font-medium text-[--accent] backdrop-blur-sm"
+              class="inline-flex items-center rounded-md bg-white/[0.06] px-2 py-0.5 text-[9px] leading-tight font-medium text-(--accent) backdrop-blur-sm"
               >{{ item.category }}</span
             >
             <SourceBadge v-else :source="sourceBadgeMap[item.source]" />
@@ -381,7 +381,7 @@ async function uploadToCloud(item: UnifiedItem) {
         <div class="relative px-4">
           <div class="-mt-9 mb-2.5 flex items-end gap-3">
             <div
-              class="relative h-[72px] w-[72px] flex-shrink-0 overflow-hidden rounded-lg shadow-lg ring-2 ring-[--card-solid]"
+              class="relative h-[72px] w-[72px] flex-shrink-0 overflow-hidden rounded-lg shadow-lg ring-2 ring-(--card-solid)"
             >
               <img
                 v-if="item.coverSrc && !coverErrors.has(item.id)"
@@ -404,7 +404,7 @@ async function uploadToCloud(item: UnifiedItem) {
             </div>
             <div class="min-w-0 pb-1">
               <h3
-                class="line-clamp-2 text-[13px] leading-snug font-semibold text-[--t1] transition-colors group-hover:text-white"
+                class="line-clamp-2 text-[13px] leading-snug font-semibold text-(--t1) transition-colors group-hover:text-white"
               >
                 {{ item.title }}
               </h3>
@@ -412,26 +412,26 @@ async function uploadToCloud(item: UnifiedItem) {
           </div>
 
           <div class="pb-3">
-            <p v-if="item.author" class="mb-2 truncate text-[12px] text-[--t3]">{{ item.author }}</p>
+            <p v-if="item.author" class="mb-2 truncate text-[12px] text-(--t3)">{{ item.author }}</p>
             <div class="flex items-center justify-between">
-              <span v-if="item.trackCount" class="flex items-center gap-1 text-[11px] text-[--t3]">
+              <span v-if="item.trackCount" class="flex items-center gap-1 text-[11px] text-(--t3)">
                 <IconMusic :size="12" />
                 {{ item.trackCount }} {{ t('plural.track', item.trackCount) }}
               </span>
               <div class="flex items-center gap-1">
-                <div v-if="uploadingToCloud === item.id" class="flex h-7 items-center text-[11px] text-[--accent]">
+                <div v-if="uploadingToCloud === item.id" class="flex h-7 items-center text-[11px] text-(--accent)">
                   {{ t('myLibrary.uploading') }}
                 </div>
                 <button
                   v-else-if="item.id.startsWith('lb:')"
-                  class="rounded-full p-1.5 text-[--t3] opacity-0 transition-all group-hover:opacity-100 hover:bg-white/10 hover:text-[--accent]"
+                  class="rounded-full p-1.5 text-(--t3) opacity-0 transition-all group-hover:opacity-100 hover:bg-white/10 hover:text-(--accent)"
                   :title="t('myLibrary.cloudHint')"
                   @click.prevent="uploadToCloud(item)"
                 >
                   <IconUpload :size="14" />
                 </button>
                 <button
-                  class="rounded-full p-1.5 text-[--t3] opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/15 hover:text-red-400"
+                  class="rounded-full p-1.5 text-(--t3) opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/15 hover:text-red-400"
                   :aria-label="t('myLibrary.deleteAriaLabel')"
                   @click.stop="handleDelete(item)"
                 >

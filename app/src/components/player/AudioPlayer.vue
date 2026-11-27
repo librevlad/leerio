@@ -174,10 +174,10 @@ const SLEEP_OPTIONS = computed(() => [
 
     <!-- Now playing -->
     <div class="mb-4">
-      <p class="truncate text-[14px] font-semibold text-[--t1]">
+      <p class="truncate text-[14px] font-semibold text-(--t1)">
         {{ currentTrack ? trackDisplayName(currentTrack.filename, currentTrackIndex) : '—' }}
       </p>
-      <p class="text-[12px] text-[--t3]">
+      <p class="text-[12px] text-(--t3)">
         {{ t('player.trackN', { n: currentTrackIndex + 1, total: tracks.length }) }}
       </p>
     </div>
@@ -185,7 +185,7 @@ const SLEEP_OPTIONS = computed(() => [
     <!-- Controls -->
     <div class="mb-5 flex items-center justify-center gap-3">
       <button
-        class="flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-2 text-[--t2] transition-colors hover:text-[--t1]"
+        class="flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-2 text-(--t2) transition-colors hover:text-(--t1)"
         :title="t('player.back15')"
         @click="skipBackward()"
       >
@@ -193,7 +193,7 @@ const SLEEP_OPTIONS = computed(() => [
       </button>
 
       <button
-        class="flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-2.5 text-[--t2] transition-colors hover:text-[--t1]"
+        class="flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-2.5 text-(--t2) transition-colors hover:text-(--t1)"
         :aria-label="t('player.prevTrack')"
         @click="prevTrack"
       >
@@ -210,7 +210,7 @@ const SLEEP_OPTIONS = computed(() => [
       </button>
 
       <button
-        class="flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-2.5 text-[--t2] transition-colors hover:text-[--t1]"
+        class="flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-2.5 text-(--t2) transition-colors hover:text-(--t1)"
         :aria-label="t('player.nextTrack')"
         @click="nextTrack"
       >
@@ -218,7 +218,7 @@ const SLEEP_OPTIONS = computed(() => [
       </button>
 
       <button
-        class="flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-2 text-[--t2] transition-colors hover:text-[--t1]"
+        class="flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-2 text-(--t2) transition-colors hover:text-(--t1)"
         :title="t('player.forward30')"
         @click="skipForward(30)"
       >
@@ -241,7 +241,7 @@ const SLEEP_OPTIONS = computed(() => [
           @change="onSeekChange"
         />
       </div>
-      <div class="mt-1 flex justify-between text-[11px] text-[--t3]">
+      <div class="mt-1 flex justify-between text-[11px] text-(--t3)">
         <span>{{ formatTime(currentTime) }}</span>
         <span>{{ formatTime(duration) }}</span>
       </div>
@@ -252,7 +252,7 @@ const SLEEP_OPTIONS = computed(() => [
       <!-- Volume -->
       <div class="flex items-center gap-2">
         <button
-          class="cursor-pointer border-0 bg-transparent p-1 text-[--t3] transition-colors hover:text-[--t1]"
+          class="cursor-pointer border-0 bg-transparent p-1 text-(--t3) transition-colors hover:text-(--t1)"
           :aria-label="volume > 0 ? t('player.mute') : t('player.unmute')"
           @click="setVolume(volume > 0 ? 0 : 1)"
         >
@@ -275,7 +275,7 @@ const SLEEP_OPTIONS = computed(() => [
       <!-- Speed -->
       <div class="relative">
         <button
-          class="cursor-pointer rounded-lg border border-[--border] bg-transparent px-2 py-1 text-[12px] font-semibold text-[--t2] transition-colors hover:text-[--t1]"
+          class="cursor-pointer rounded-lg border border-(--border) bg-transparent px-2 py-1 text-[12px] font-semibold text-(--t2) transition-colors hover:text-(--t1)"
           @click="cycleSpeed"
           @contextmenu.prevent="showSpeedPicker = !showSpeedPicker"
         >
@@ -283,14 +283,14 @@ const SLEEP_OPTIONS = computed(() => [
         </button>
         <div
           v-if="showSpeedPicker"
-          class="absolute right-0 bottom-full z-10 mb-1 rounded-xl border border-[--border] py-1 shadow-lg"
+          class="absolute right-0 bottom-full z-10 mb-1 rounded-xl border border-(--border) py-1 shadow-lg"
           style="background: var(--bg-card)"
         >
           <button
             v-for="s in speeds"
             :key="s"
             class="block w-full cursor-pointer border-0 bg-transparent px-4 py-1.5 text-left text-[12px] transition-colors hover:bg-white/5"
-            :class="s === playbackRate ? 'font-semibold text-[--accent]' : 'text-[--t2]'"
+            :class="s === playbackRate ? 'font-semibold text-(--accent)' : 'text-(--t2)'"
             @click="pickSpeed(s)"
           >
             {{ s }}x
@@ -301,8 +301,8 @@ const SLEEP_OPTIONS = computed(() => [
       <!-- Sleep timer -->
       <div class="relative">
         <button
-          class="relative cursor-pointer border-0 bg-transparent p-1 text-[--t3] transition-colors hover:text-[--t1]"
-          :class="sleepTimer !== null ? 'text-[--accent]' : ''"
+          class="relative cursor-pointer border-0 bg-transparent p-1 text-(--t3) transition-colors hover:text-(--t1)"
+          :class="sleepTimer !== null ? 'text-(--accent)' : ''"
           :aria-label="t('player.sleepTimer')"
           @click="showSleepMenu = !showSleepMenu"
         >
@@ -317,13 +317,13 @@ const SLEEP_OPTIONS = computed(() => [
         </button>
         <div
           v-if="showSleepMenu"
-          class="absolute right-0 bottom-full z-10 mb-1 rounded-xl border border-[--border] py-1 shadow-lg"
+          class="absolute right-0 bottom-full z-10 mb-1 rounded-xl border border-(--border) py-1 shadow-lg"
           style="background: var(--bg-card)"
         >
           <button
             v-for="opt in SLEEP_OPTIONS"
             :key="opt.value"
-            class="block w-full cursor-pointer border-0 bg-transparent px-4 py-1.5 text-left text-[12px] text-[--t2] transition-colors hover:bg-white/5"
+            class="block w-full cursor-pointer border-0 bg-transparent px-4 py-1.5 text-left text-[12px] text-(--t2) transition-colors hover:bg-white/5"
             @click="pickSleep(opt.value)"
           >
             {{ opt.label }}
@@ -340,7 +340,7 @@ const SLEEP_OPTIONS = computed(() => [
 
       <!-- Bookmark -->
       <button
-        class="cursor-pointer border-0 bg-transparent p-1 text-[--t3] transition-colors hover:text-[--t1]"
+        class="cursor-pointer border-0 bg-transparent p-1 text-(--t3) transition-colors hover:text-(--t1)"
         :title="t('player.addBookmark')"
         @click="showBookmarkInput = !showBookmarkInput"
       >
@@ -360,14 +360,14 @@ const SLEEP_OPTIONS = computed(() => [
     </div>
 
     <!-- Bookmarks list -->
-    <div v-if="bookmarks.length" class="mb-4 border-t border-[--border] pt-4">
+    <div v-if="bookmarks.length" class="mb-4 border-t border-(--border) pt-4">
       <button
         class="section-label mb-3 flex w-full cursor-pointer items-center gap-2 border-0 bg-transparent text-left"
         @click="showBookmarks = !showBookmarks"
       >
         <IconBookmark :size="14" />
         {{ t('player.bookmarksN', { n: bookmarks.length }) }}
-        <span class="text-[10px] text-[--t3]">{{ showBookmarks ? '▲' : '▼' }}</span>
+        <span class="text-[10px] text-(--t3)">{{ showBookmarks ? '▲' : '▼' }}</span>
       </button>
       <div v-if="showBookmarks" class="scrollbar-hide max-h-48 space-y-1 overflow-y-auto">
         <div
@@ -376,13 +376,13 @@ const SLEEP_OPTIONS = computed(() => [
           class="flex min-h-[40px] items-center gap-3 rounded-xl px-3 py-2 transition-colors hover:bg-white/[0.03]"
         >
           <button class="flex-1 cursor-pointer border-0 bg-transparent text-left" @click="seekToBookmark(bm)">
-            <span class="text-[12px] font-medium text-[--t2]">
+            <span class="text-[12px] font-medium text-(--t2)">
               {{ t('player.trackN', { n: bm.track + 1, total: tracks.length }) }} · {{ formatTime(bm.time) }}
             </span>
-            <span v-if="bm.note" class="ml-2 text-[11px] text-[--t3]">{{ bm.note }}</span>
+            <span v-if="bm.note" class="ml-2 text-[11px] text-(--t3)">{{ bm.note }}</span>
           </button>
           <button
-            class="shrink-0 cursor-pointer border-0 bg-transparent p-1 text-[--t3] transition-colors hover:text-red-400"
+            class="shrink-0 cursor-pointer border-0 bg-transparent p-1 text-(--t3) transition-colors hover:text-red-400"
             :aria-label="t('player.deleteBookmark')"
             @click="removeBookmark(bm.id)"
           >
@@ -393,14 +393,14 @@ const SLEEP_OPTIONS = computed(() => [
     </div>
 
     <!-- Track list -->
-    <div class="border-t border-[--border] pt-4">
+    <div class="border-t border-(--border) pt-4">
       <p class="section-label mb-3">{{ t('player.tracks') }}</p>
       <div class="scrollbar-hide max-h-64 space-y-1 overflow-y-auto">
         <button
           v-for="track in tracks"
           :key="track.index"
           class="flex min-h-[44px] w-full cursor-pointer items-center gap-3 rounded-xl border-0 px-3 py-2.5 text-left transition-all"
-          :class="track.index === currentTrackIndex ? 'text-[--accent]' : 'text-[--t2] hover:text-[--t1]'"
+          :class="track.index === currentTrackIndex ? 'text-(--accent)' : 'text-(--t2) hover:text-(--t1)'"
           :style="track.index === currentTrackIndex ? 'background: var(--accent-soft)' : 'background: transparent'"
           @click="playTrack(track.index)"
         >
@@ -410,7 +410,7 @@ const SLEEP_OPTIONS = computed(() => [
           <span class="flex-1 truncate text-[13px] font-medium">
             {{ trackDisplayName(track.filename, track.index) }}
           </span>
-          <span v-if="track.duration" class="shrink-0 text-[11px] text-[--t3]">
+          <span v-if="track.duration" class="shrink-0 text-[11px] text-(--t3)">
             {{ formatTime(track.duration) }}
           </span>
         </button>
