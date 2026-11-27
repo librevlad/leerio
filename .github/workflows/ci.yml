@@ -72,7 +72,7 @@ jobs:
           retention-days: 1
 
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # Playwright 1.58 cannot install Chromium on ubuntu-latest (26.04)
     needs: [server-lint, app-build]
     if: |
       !contains(github.event.head_commit.message, '[skip e2e]')
