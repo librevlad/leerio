@@ -17,6 +17,7 @@ import { useSync } from './composables/useSync'
 import { useFileScanner } from './composables/useFileScanner'
 import { useLocalBooks } from './composables/useLocalBooks'
 import { useTracking } from './composables/useTelemetry'
+import { usePro } from './composables/usePro'
 import { IconX } from './components/shared/icons'
 import { STORAGE } from './constants/storage'
 import type { Book } from './types'
@@ -27,6 +28,7 @@ const apkBannerDismissed = ref(localStorage.getItem(STORAGE.APK_DISMISSED) === '
 const player = usePlayer()
 const { isPlayerVisible } = player
 const downloads = useDownloads()
+const pro = usePro()
 const { loading: authLoading } = useAuth()
 const { isOnline } = useNetwork()
 const { load: loadCategories } = useCategories()
@@ -183,6 +185,13 @@ onMounted(() => {
   validateFsBooks() // Non-blocking — fire and forget
   // A book narrated while the app was closed joins the library now
   if (downloads.isNative.value) void import('./composables/useNarration').then((m) => m.useNarration().sync())
+  // Leerio Pro: ask Play now and on every return to the app (a payment may have gone through, a plan ended)
+  if (downloads.isNative.value) {
+    void pro.refresh()
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') void pro.refresh()
+    })
+  }
 
   // Track session start with UTM source for signup attribution
   const params = new URLSearchParams(window.location.search)

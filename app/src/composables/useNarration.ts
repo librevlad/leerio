@@ -176,7 +176,7 @@ export function voiceLabel(v: TtsVoice, sameLang: TtsVoice[]): string {
 
 export function useNarration() {
   attach()
-  const { isPro } = usePro()
+  const { limited } = usePro()
 
   async function loadVoices(force = false): Promise<TtsVoice[]> {
     if (voices.value && !force) return voices.value
@@ -191,7 +191,7 @@ export function useNarration() {
 
   /** Chapters this plan narrates */
   function allowedChapters(book: NarrationBook): BookChapter[] {
-    return isPro.value ? book.chapters : book.chapters.slice(0, FREE_NARRATION_CHAPTERS)
+    return limited.value ? book.chapters.slice(0, FREE_NARRATION_CHAPTERS) : book.chapters
   }
 
   async function start(book: NarrationBook, voice: TtsVoice, labels: NarrationLabels): Promise<void> {
@@ -244,7 +244,6 @@ export function useNarration() {
     voices,
     pickedFile,
     lastBookId,
-    isPro,
     loadVoices,
     allowedChapters,
     start,

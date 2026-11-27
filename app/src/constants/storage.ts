@@ -16,4 +16,6 @@ export const STORAGE = {
   CACHE_PREFIX: 'leerio_cache_',
   LAST_PLAYED: 'leerio_last_played',
   COVER_CACHE: 'leerio_cover_cache',
+  /** Leerio Pro: last answer from Google Play — { active, offers } */
+  PRO: 'leerio_pro',
 } as const

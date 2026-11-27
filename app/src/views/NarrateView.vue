@@ -8,13 +8,15 @@ import { usePlayer } from '../composables/usePlayer'
 import { useToast } from '../composables/useToast'
 import { BookParseError, estimateSeconds, parseBookFile, type ParsedBook } from '../utils/ebook'
 import ProgressBar from '../components/shared/ProgressBar.vue'
+import PaywallModal from '../components/shared/PaywallModal.vue'
 import { IconArrowLeft, IconPlay, IconCheck } from '../components/shared/icons'
 
 const router = useRouter()
 const { t, locale } = useI18n()
 const toast = useToast()
 const narration = useNarration()
-const { status, voices, pickedFile, lastBookId, isPro } = narration
+const { status, voices, pickedFile, lastBookId } = narration
+const showPaywall = ref(false)
 const { getFsBook } = useFileScanner()
 const player = usePlayer()
 
@@ -134,7 +136,7 @@ onUnmounted(() => {
 // ── Start ─────────────────────────────────────────────────────────────
 
 const chapters = computed(() => (book.value ? narration.allowedChapters(book.value) : []))
-const limited = computed(() => !isPro.value && (book.value?.chapters.length ?? 0) > chapters.value.length)
+const limited = computed(() => (book.value?.chapters.length ?? 0) > chapters.value.length)
 
 function formatDuration(sec: number): string {
   const h = Math.floor(sec / 3600)
@@ -311,7 +313,10 @@ function another() {
         >
           {{ limited ? t('narrate.startFree') : t('narrate.start') }}
         </button>
-        <p v-if="limited" class="mt-2 text-center text-[11px] text-(--t3)">{{ t('narrate.freeHint') }}</p>
+        <p v-if="limited" class="mt-2 text-center text-[11px] text-(--t3)">
+          {{ t('narrate.freeHint') }}
+          <button class="font-semibold text-(--accent)" @click="showPaywall = true">{{ t('pro.more') }}</button>
+        </p>
       </div>
     </div>
 
@@ -362,5 +367,7 @@ function another() {
       </button>
       <button class="btn btn-ghost w-full justify-center" @click="another">{{ t('narrate.another') }}</button>
     </div>
+
+    <PaywallModal :open="showPaywall" reason="narration" @close="showPaywall = false" />
   </div>
 </template>
