@@ -97,7 +97,11 @@ jobs:
         run: npm ci --legacy-peer-deps
       - name: Install Chromium
         working-directory: app
-        run: npx playwright install chromium --with-deps
+        # The runner's packages.microsoft.com source answers 403 now and then, and apt-get update
+        # (run by --with-deps) fails on it. Chromium's dependencies come from Ubuntu's own sources.
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/microsoft*
+          npx playwright install chromium --with-deps
       - name: Create data dirs
         run: mkdir -p data books
       - name: Run E2E tests
