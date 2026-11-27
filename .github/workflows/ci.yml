@@ -190,8 +190,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # Disabled 2026-11-27: the VPS is shared (car navigator, Point, JARVIS; 1 GB RAM).
+  # This job ran `docker compose up` there with its own Caddy on 80/443 and a multi-GB TTS
+  # container on every push to main. Deploy by hand, only with the owner's OK.
   deploy:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: false
     needs: [server-lint, app-build]
     runs-on: ubuntu-latest
     steps:
