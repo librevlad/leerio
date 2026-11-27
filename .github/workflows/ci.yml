@@ -13,6 +13,8 @@ on:
       - "**.md"
       - "docs/**"
       - ".gitignore"
+  # Manual run on any branch: builds the signed APK + AAB (no GitHub release) to test Play builds
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -112,7 +114,7 @@ jobs:
           retention-days: 7
 
   apk-build:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || github.event_name == 'workflow_dispatch'
     needs: [app-build]
     runs-on: ubuntu-latest
     permissions:
@@ -141,6 +143,9 @@ jobs:
           java-version: 21
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # The default "tools platform-tools" fails: the legacy "tools" package is gone from the SDK repo
+          packages: platform-tools
       - name: Set versionCode from run number
         working-directory: app/android
         run: |
@@ -188,6 +193,7 @@ jobs:
             cp app/android/app/build/outputs/apk/debug/app-debug.apk /tmp/leerio.apk
           fi
       - name: Create/update GitHub release
+        if: github.event_name == 'push'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest-apk
