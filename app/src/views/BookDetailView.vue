@@ -3,7 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { api, coverUrl } from '../api'
-import { formatSizeMB, formatRemaining as _formatRemaining } from '../utils/format'
+import { formatSizeMB, formatRemaining as _formatRemaining, titleInitial } from '../utils/format'
 import type { Book } from '../types'
 import BookActions from '../components/book/BookActions.vue'
 import BookChapters from '../components/book/BookChapters.vue'
@@ -22,7 +22,7 @@ import {
 } from '../components/shared/icons'
 import ProgressBar from '../components/shared/ProgressBar.vue'
 import PaywallModal from '../components/shared/PaywallModal.vue'
-import { usePlayer } from '../composables/usePlayer'
+import { usePlayer, savedPosition } from '../composables/usePlayer'
 import { useDownloads } from '../composables/useDownloads'
 import { useAuth } from '../composables/useAuth'
 import { useCategories } from '../composables/useCategories'
@@ -65,6 +65,16 @@ const cloudProgress = ref(0)
 
 const isCurrentBook = computed(() => player.currentBook.value?.id === book.value?.id)
 const isPlaying = computed(() => player.isPlaying.value)
+
+// Main button says where listening resumes: "Продолжить · Трек 3 из 22"
+const resumeAt = computed(() => (book.value ? savedPosition(book.value.id) : null))
+const playLabel = computed(() => {
+  if (isCurrentBook.value && isPlaying.value) return t('player.pause')
+  const pos = resumeAt.value
+  if (!pos) return t('book.listen')
+  const total = book.value?.mp3_count
+  return total ? `${t('book.continue')} · ${t('player.trackN', { n: pos.trackIndex + 1, total })}` : t('book.continue')
+})
 
 const isDownloaded = computed(() => (book.value ? dl.isBookDownloaded(book.value.id) : false))
 const isDownloading = computed(() => (book.value ? dl.isBookDownloading(book.value.id) : false))
@@ -212,6 +222,11 @@ async function deleteBook() {
 
 async function startListening() {
   if (!book.value) return
+  // This book is already in the player — the button is play/pause, not "load again"
+  if (isCurrentBook.value) {
+    player.togglePlay()
+    return
+  }
   // User books (ub:) require login; catalog + local books work for guests
   if (!isLoggedIn.value && book.value.id.startsWith('ub:')) {
     toast.info(t('book.loginToListen'))
@@ -338,11 +353,18 @@ watch(() => route.params.id, loadBook)
                 @error="coverError = true"
               />
               <div
-                v-else
+                v-else-if="book.category"
                 class="flex h-full w-full items-center justify-center"
-                :style="{ background: catGradient(book.category ?? '') }"
+                :style="{ background: catGradient(book.category) }"
               >
                 <IconMusic :size="32" class="text-white/40 lg:!h-12 lg:!w-12" />
+              </div>
+              <!-- Device / local books have no category: same letter tile as in the library -->
+              <div
+                v-else
+                class="flex h-full w-full items-center justify-center bg-(--accent-soft) text-[44px] font-bold text-(--accent)"
+              >
+                {{ titleInitial(book.title) }}
               </div>
             </router-link>
 
@@ -357,7 +379,7 @@ watch(() => route.params.id, loadBook)
 
           <!-- Progress card -->
           <div
-            v-if="book.progress > 0 || isCurrentBook"
+            v-if="book.progress > 0"
             class="mt-4 rounded-xl px-4 py-3"
             style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.04)"
           >
@@ -378,7 +400,7 @@ watch(() => route.params.id, loadBook)
             @click="startListening"
           >
             <component :is="isCurrentBook && isPlaying ? IconPause : IconPlay" :size="16" />
-            {{ isCurrentBook && isPlaying ? t('player.pause') : t('player.play') }}
+            {{ playLabel }}
           </button>
 
           <!-- Actions (desktop only, below play) -->
@@ -442,13 +464,14 @@ watch(() => route.params.id, loadBook)
             </template>
           </div>
 
-          <!-- Device badge + Cloud upload -->
-          <div v-if="isFsBook" class="mt-3 space-y-2">
+          <!-- Cloud upload: needs an account on the server — no dead button for guests/offline -->
+          <div v-if="isFsBook && isLoggedIn" class="mt-3 space-y-2">
             <div
+              v-if="isSynced"
               class="inline-flex items-center gap-1.5 rounded-md bg-white/[0.06] px-2.5 py-1 text-[11px] text-(--t3)"
             >
               <IconSmartphone :size="12" />
-              {{ isSynced ? t('book.inCloud') : t('book.onDevice') }}
+              {{ t('book.inCloud') }}
             </div>
 
             <button
@@ -499,7 +522,6 @@ watch(() => route.params.id, loadBook)
             <div v-if="book.description" class="text-[13px] leading-relaxed text-(--t2)">
               {{ book.description }}
             </div>
-            <p v-else class="text-[13px] text-(--t3)">{{ t('book.noDescription') }}</p>
 
             <!-- Meta (mobile only) -->
             <div class="mt-4 flex gap-3 text-[12px] text-(--t3) lg:hidden">

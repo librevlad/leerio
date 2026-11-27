@@ -1,8 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+const native = vi.hoisted(() => ({ isNative: false, audioGranted: true }))
+
 // Mock Capacitor
 vi.mock('@capacitor/core', () => ({
-  Capacitor: { isNativePlatform: () => false },
+  Capacitor: { isNativePlatform: () => native.isNative },
+  registerPlugin: () => ({ request: vi.fn(async () => ({ granted: native.audioGranted })) }),
 }))
 vi.mock('@capacitor/filesystem', () => ({
   Filesystem: {
@@ -10,16 +13,99 @@ vi.mock('@capacitor/filesystem', () => ({
     stat: vi.fn(),
     getUri: vi.fn(),
     mkdir: vi.fn(),
-    requestPermissions: vi.fn(),
+    requestPermissions: vi.fn(async () => ({ publicStorage: 'granted' })),
   },
   Directory: { ExternalStorage: 'EXTERNAL_STORAGE' },
 }))
 
+import { Filesystem } from '@capacitor/filesystem'
 import { useFileScanner } from '../composables/useFileScanner'
+
+type Entry = { name: string; type: 'file' | 'directory'; size?: number }
+
+/** Fake ExternalStorage tree: path → entries */
+function mockTree(tree: Record<string, Entry[]>) {
+  vi.mocked(Filesystem.readdir).mockImplementation((async ({ path }: { path: string }) => {
+    const files = tree[path]
+    if (!files) throw new Error('ENOENT')
+    return { files: files.map((f) => ({ size: 0, ...f })) }
+  }) as unknown as typeof Filesystem.readdir)
+}
 
 describe('useFileScanner', () => {
   beforeEach(() => {
     localStorage.clear()
+    native.isNative = false
+    native.audioGranted = true
+    vi.mocked(Filesystem.readdir).mockReset()
+  })
+
+  it('native scan: nested part folders become tracks in natural path order', async () => {
+    native.isNative = true
+    mockTree({
+      Audiobooks: [{ name: 'Фромм - Бегство от свободы', type: 'directory' }],
+      'Audiobooks/Фромм - Бегство от свободы': [
+        { name: '10_1', type: 'directory' },
+        { name: '2_1', type: 'directory' },
+        { name: 'cover.jpg', type: 'file', size: 5 },
+      ],
+      'Audiobooks/Фромм - Бегство от свободы/2_1': [{ name: '2_1_01.mp3', type: 'file', size: 100 }],
+      'Audiobooks/Фромм - Бегство от свободы/10_1': [
+        { name: '10_1_02.mp3', type: 'file', size: 300 },
+        { name: '10_1_01.mp3', type: 'file', size: 200 },
+      ],
+    })
+    const [book] = await useFileScanner().scan()
+    expect(book?.tracks.map((t) => t.path)).toEqual([
+      'Audiobooks/Фромм - Бегство от свободы/2_1/2_1_01.mp3',
+      'Audiobooks/Фромм - Бегство от свободы/10_1/10_1_01.mp3',
+      'Audiobooks/Фромм - Бегство от свободы/10_1/10_1_02.mp3',
+    ])
+    expect(book?.tracks.map((t) => t.index)).toEqual([0, 1, 2])
+    expect(book?.tracks[0]?.filename).toBe('2_1_01.mp3')
+    expect(book?.sizeBytes).toBe(600)
+    expect(Filesystem.stat).not.toHaveBeenCalled()
+  })
+
+  it('native scan: accepts truncated names that lost the dot before "mp3"', async () => {
+    native.isNative = true
+    mockTree({
+      Audiobooks: [{ name: 'Book', type: 'directory' }],
+      'Audiobooks/Book': [
+        { name: 'Глава 1 - где мы гmp3', type: 'file' },
+        { name: 'Глава 2.mp3', type: 'file' },
+        { name: 'notes.docx', type: 'file' },
+      ],
+    })
+    const [book] = await useFileScanner().scan()
+    expect(book?.tracks.map((t) => t.filename)).toEqual(['Глава 1 - где мы гmp3', 'Глава 2.mp3'])
+  })
+
+  it('native scan: returns nothing when audio permission is denied', async () => {
+    native.isNative = true
+    native.audioGranted = false
+    mockTree({
+      Audiobooks: [{ name: 'Book', type: 'directory' }],
+      'Audiobooks/Book': [{ name: '1.mp3', type: 'file' }],
+    })
+    expect(await useFileScanner().scan()).toEqual([])
+    expect(Filesystem.readdir).not.toHaveBeenCalled()
+  })
+
+  it('cleanTitle / extractAuthor handle real-world folder names', () => {
+    const { cleanTitle, extractAuthor } = useFileScanner()
+    const cases: [string, string, string][] = [
+      ['Брайан Трейси «Мастер времени» [чит. Алексей Мужицкий]', 'Мастер времени', 'Брайан Трейси'],
+      ['Вастикова Ольга – Парень, ты просто Космос! [Татьяна Бур]', 'Парень, ты просто Космос!', 'Вастикова Ольга'],
+      ['Брегман_П_-_Эмоциональная_смелость_(Владимир_Г)', 'Эмоциональная смелость', 'Брегман П'],
+      ['Хьюлинг, Макчесни, Кови - Как достичь цели (Курилов', 'Как достичь цели', 'Хьюлинг, Макчесни, Кови'],
+      ['Лэй Эндрю - Харизма[Даниил Крылов].mp3', 'Харизма', 'Лэй Эндрю'],
+      ['Бегство от свободы', 'Бегство от свободы', ''],
+    ]
+    for (const [folder, title, author] of cases) {
+      expect(cleanTitle(folder)).toBe(title)
+      expect(extractAuthor(folder)).toBe(author)
+    }
   })
 
   it('returns empty on web (not native)', async () => {
@@ -64,6 +150,8 @@ describe('useFileScanner', () => {
     expect(isLikelyNotBook('My Audiobook', 10)).toBe(false)
     expect(isLikelyNotBook('music_collection', 5)).toBe(true)
     expect(isLikelyNotBook('book', 1)).toBe(true) // < 2 tracks
+    expect(isLikelyNotBook('Music/Scorpions', 18)).toBe(true) // albums under Music/
+    expect(isLikelyNotBook('Audiobooks/Сенека Луций - Нравственные письма', 39)).toBe(false)
   })
 
   it('addFsBooks persists to localStorage', () => {

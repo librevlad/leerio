@@ -5,6 +5,7 @@ import { api } from '../../api'
 import { trackDisplayName as _trackDisplayName } from '../../utils/format'
 import { usePlayer } from '../../composables/usePlayer'
 import { useLocalBooks } from '../../composables/useLocalBooks'
+import { useFileScanner } from '../../composables/useFileScanner'
 import { IconChevronDown, IconChevronUp, IconPlay } from '../shared/icons'
 import type { Book, Track } from '../../types'
 
@@ -13,6 +14,7 @@ const props = defineProps<{ book: Book }>()
 
 const player = usePlayer()
 const { getLocalBook } = useLocalBooks()
+const { getFsBook } = useFileScanner()
 const tracks = ref<Track[]>([])
 const loading = ref(true)
 const loadError = ref(false)
@@ -69,6 +71,19 @@ async function loadTracks() {
           filename: t.filename || `track-${i + 1}`,
           path: '',
           duration: t.duration || 0,
+        }))
+      } else {
+        loadError.value = true
+      }
+    } else if (props.book.id.startsWith('fs:')) {
+      // Device-folder books — tracks come from the scan, no server needed
+      const fs = getFsBook(props.book.id)
+      if (fs) {
+        tracks.value = fs.tracks.map((t) => ({
+          index: t.index,
+          filename: t.filename,
+          path: t.path,
+          duration: t.duration,
         }))
       } else {
         loadError.value = true

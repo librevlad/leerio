@@ -1,4 +1,5 @@
 import { ref, computed } from 'vue'
+import { Capacitor } from '@capacitor/core'
 import type { User } from '../types'
 import { apiUrl } from '../api'
 import { STORAGE } from '../constants/storage'
@@ -6,8 +7,13 @@ import { STORAGE } from '../constants/storage'
 const user = ref<User | null>(null)
 const loading = ref(true)
 const checked = ref(false)
+// Did the server answer the auth check at all (even 401)? false = no server / offline:
+// server-only UI (catalog, sign in) is hidden in the APK instead of showing dead screens
+// APK starts as "not yet" so server tabs appear when the server answers instead of flashing away
+const serverReachable = ref(!Capacitor.isNativePlatform())
 let checkPromise: Promise<boolean> | null = null
 let checkAbort: AbortController | null = null
+const AUTH_TIMEOUT_MS = 5_000
 
 export function useAuth() {
   const isLoggedIn = computed(() => !!user.value)
@@ -18,6 +24,12 @@ export function useAuth() {
     if (checked.value) return !!user.value
     if (checkPromise) return checkPromise
     checkAbort = new AbortController()
+    const controller = checkAbort
+    // Flaky network (car, metro) must not hold the whole UI: after the timeout, act as offline
+    const timeout = setTimeout(
+      () => controller.abort(new DOMException('Auth check timed out', 'TimeoutError')),
+      AUTH_TIMEOUT_MS,
+    )
     checkPromise = (async () => {
       loading.value = true
       try {
@@ -25,6 +37,7 @@ export function useAuth() {
           credentials: 'include',
           signal: checkAbort!.signal,
         })
+        serverReachable.value = true
         if (res.ok) {
           user.value = await res.json()
           try {
@@ -44,6 +57,7 @@ export function useAuth() {
           // Login cancelled this check — return current state
           return !!user.value
         }
+        serverReachable.value = false
         // Offline — try cached user
         try {
           const cached = localStorage.getItem(STORAGE.USER)
@@ -59,6 +73,7 @@ export function useAuth() {
         }
         return false
       } finally {
+        clearTimeout(timeout)
         loading.value = false
         checked.value = true
         checkPromise = null
@@ -235,6 +250,7 @@ export function useAuth() {
   return {
     user,
     loading,
+    serverReachable,
     isLoggedIn,
     isGuest,
     isAdmin,

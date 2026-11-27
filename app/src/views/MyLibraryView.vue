@@ -6,18 +6,11 @@ import { useLocalBooks } from '@/composables/useLocalBooks'
 import { useDownloads } from '@/composables/useDownloads'
 import { useFileScanner } from '@/composables/useFileScanner'
 import { useToast } from '@/composables/useToast'
+import { usePlayer, savedPosition } from '@/composables/usePlayer'
 import { api, userBookCoverUrl, coverUrl } from '@/api'
-import {
-  IconTrash,
-  IconMusic,
-  IconMicrophone,
-  IconFolder,
-  IconPlus,
-  IconCheck,
-  IconSmartphone,
-  IconUpload,
-} from '@/components/shared/icons'
-import SourceBadge from '@/components/shared/SourceBadge.vue'
+import { STORAGE } from '@/constants/storage'
+import { titleInitial } from '@/utils/format'
+import { IconTrash, IconMicrophone, IconFolder, IconPlus, IconUpload } from '@/components/shared/icons'
 import ProgressBar from '@/components/shared/ProgressBar.vue'
 import AddBookFab from '@/components/library/AddBookFab.vue'
 import type { TTSJob, UserBook } from '@/types'
@@ -27,7 +20,7 @@ const toast = useToast()
 const { userBooks, ttsJobs, loading: ubLoading, loadUserBooks, loadTTSJobs, deleteBook, pollJob } = useUserBooks()
 const { localBooks, removeLocalBook, getLocalBook, getLocalAudioUrl } = useLocalBooks()
 const downloads = useDownloads()
-const { fsBooks, scanning, scan: scanDevice, fetchMissingCovers } = useFileScanner()
+const { fsBooks, fetchMissingCovers } = useFileScanner()
 const scannedBooks = computed(() => Object.values(fsBooks.value))
 
 const activeFilter = ref<'all' | 'downloaded' | 'local' | 'uploaded'>('all')
@@ -131,8 +124,39 @@ const totalCount = computed(() => {
   )
 })
 
+// ── List order: last played first, then started books, then the rest ──
+const player = usePlayer()
+const lastPlayedId = (() => {
+  try {
+    return (JSON.parse(localStorage.getItem(STORAGE.LAST_PLAYED) || '{}') as { id?: string }).id ?? ''
+  } catch {
+    return ''
+  }
+})()
+const currentId = computed(() => player.currentBook.value?.id ?? lastPlayedId)
+
+const listItems = computed(() =>
+  items.value.map((item) => ({ ...item, pos: savedPosition(item.id) })).sort((a, b) => rank(a) - rank(b)),
+)
+
+function rank(item: { id: string; pos: unknown }): number {
+  if (item.id === currentId.value) return 0
+  return item.pos ? 1 : 2
+}
+
+// Filter chips only when the library mixes sources (device-only library needs none)
+const sourceCounts = computed<Record<string, number>>(() => ({
+  downloaded: downloads.downloadedBooks.value.length,
+  local: localBooks.value.length + scannedBooks.value.length,
+  uploaded: userBooks.value.length,
+}))
+const visibleFilters = computed(() => {
+  const present = filters.filter((f) => f.key !== 'all' && (sourceCounts.value[f.key] ?? 0) > 0)
+  return present.length > 1 ? [filters[0]!, ...present] : []
+})
+
 onMounted(async () => {
-  await Promise.all([loadUserBooks(), loadTTSJobs(), scanDevice()])
+  await Promise.all([loadUserBooks(), loadTTSJobs()])
 
   // Fetch covers in background for scanned books without covers
   fetchMissingCovers()
@@ -173,27 +197,6 @@ const filters: { key: 'all' | 'downloaded' | 'local' | 'uploaded'; labelKey: str
   { key: 'local', labelKey: 'myLibrary.filterLocal', titleKey: 'myLibrary.filterLocalHint' },
   { key: 'uploaded', labelKey: 'myLibrary.filterUploaded', titleKey: 'myLibrary.filterUploadedHint' },
 ]
-
-const sourceBadgeMap: Record<UnifiedItem['source'], 'library' | 'librivox' | 'user' | 'local'> = {
-  downloaded: 'library',
-  local: 'local',
-  uploaded: 'user',
-  catalog: 'library',
-}
-
-const coverGradients: Record<string, string> = {
-  downloaded: 'linear-gradient(135deg, #064e3b 0%, #059669 50%, #34d399 100%)',
-  local: 'linear-gradient(135deg, #1e1b4b 0%, #4338ca 50%, #818cf8 100%)',
-  uploaded: 'linear-gradient(135deg, #134e4a 0%, #0d9488 50%, #5eead4 100%)',
-  catalog: 'linear-gradient(135deg, #92400e 0%, #d97706 50%, #fbbf24 100%)',
-}
-
-const coverPatterns: Record<string, string> = {
-  downloaded: 'radial-gradient(circle at 80% 20%, rgba(255,255,255,0.12) 0%, transparent 50%)',
-  local: 'radial-gradient(circle at 20% 80%, rgba(255,255,255,0.12) 0%, transparent 50%)',
-  uploaded: 'radial-gradient(circle at 70% 70%, rgba(255,255,255,0.12) 0%, transparent 50%)',
-  catalog: 'radial-gradient(circle at 50% 30%, rgba(255,255,255,0.1) 0%, transparent 50%)',
-}
 
 const uploadingToCloud = ref<string | null>(null)
 
@@ -251,30 +254,12 @@ async function uploadToCloud(item: UnifiedItem) {
 
 <template>
   <div>
-    <!-- Header -->
-    <div class="mb-6 flex items-center justify-between">
-      <div>
-        <h1 class="page-title">{{ t('myLibrary.title') }}</h1>
-        <p class="mt-1 text-[13px] text-(--t3)">
-          {{ totalCount > 0 ? `${totalCount} ${t('plural.book', totalCount)}` : t('myLibrary.noBooks') }}
-        </p>
-      </div>
-      <div class="flex items-center gap-2">
-        <button
-          v-if="downloads.isNative.value"
-          v-ripple
-          class="btn btn-ghost flex items-center gap-1.5 px-3 py-2 text-[12px] font-semibold"
-          :disabled="scanning"
-          @click="scanDevice"
-        >
-          <IconFolder :size="14" />
-          {{ scanning ? t('myLibrary.scanning') : t('myLibrary.scan') }}
-        </button>
-        <router-link to="/upload" class="btn btn-primary flex items-center gap-1.5 px-4 py-2 text-[12px] font-semibold">
-          <IconPlus :size="14" />
-          {{ t('myLibrary.add') }}
-        </router-link>
-      </div>
+    <!-- Header (adding books lives in the "+" button) -->
+    <div class="mb-5">
+      <h1 class="page-title">{{ t('myLibrary.title') }}</h1>
+      <p class="mt-1 text-[13px] text-(--t3)">
+        {{ totalCount > 0 ? `${totalCount} ${t('plural.book', totalCount)}` : t('myLibrary.noBooks') }}
+      </p>
     </div>
 
     <!-- Active TTS Jobs -->
@@ -292,10 +277,10 @@ async function uploadToCloud(item: UnifiedItem) {
       </div>
     </div>
 
-    <!-- Filter tabs (color-coded) -->
-    <div class="scrollbar-hide mb-5 flex gap-2 overflow-x-auto">
+    <!-- Filter tabs (only when sources are mixed) -->
+    <div v-if="visibleFilters.length" class="scrollbar-hide mb-5 flex gap-2 overflow-x-auto">
       <button
-        v-for="f in filters"
+        v-for="f in visibleFilters"
         :key="f.key"
         class="flex-shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
         :class="
@@ -310,11 +295,14 @@ async function uploadToCloud(item: UnifiedItem) {
       </button>
     </div>
 
-    <!-- Loading -->
-    <div v-if="ubLoading" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      <div v-for="i in 4" :key="i">
-        <div class="skeleton h-28 rounded-t-xl rounded-b-none" />
-        <div class="skeleton h-36 rounded-t-none rounded-b-xl border-t-0" />
+    <!-- Loading (server list only — device books render immediately) -->
+    <div v-if="ubLoading && items.length === 0" class="space-y-1">
+      <div v-for="i in 6" :key="i" class="flex items-center gap-3 px-2 py-2.5">
+        <div class="skeleton h-14 w-14 flex-shrink-0 rounded-lg" />
+        <div class="flex-1 space-y-2">
+          <div class="skeleton h-3.5 w-3/4 rounded" />
+          <div class="skeleton h-3 w-1/3 rounded" />
+        </div>
       </div>
     </div>
 
@@ -336,110 +324,66 @@ async function uploadToCloud(item: UnifiedItem) {
       </div>
     </div>
 
-    <!-- Grid -->
-    <div v-else class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <!-- Book list: one compact row per book -->
+    <div v-else class="space-y-0.5">
       <router-link
-        v-for="item in items"
+        v-for="item in listItems"
         :key="item.id"
         :to="`/book/${item.id}`"
-        class="card card-hover group cursor-pointer overflow-hidden no-underline"
+        class="group flex items-center gap-3 rounded-xl px-2 py-2.5 no-underline transition-colors hover:bg-white/[0.04]"
       >
-        <!-- Gradient backdrop with blurred cover -->
-        <div class="relative h-28 overflow-hidden" :style="{ background: coverGradients[item.source] }">
+        <!-- Cover: image or the title's first letter -->
+        <div class="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-(--accent-soft)">
           <img
             v-if="item.coverSrc && !coverErrors.has(item.id)"
             :src="item.coverSrc"
-            class="absolute inset-0 h-full w-full object-cover blur-[1px] brightness-75"
+            class="h-full w-full object-cover"
             alt=""
+            loading="lazy"
             @error="coverErrors.add(item.id)"
           />
-          <div v-else class="absolute inset-0" :style="{ background: coverPatterns[item.source] }" />
-          <div
-            class="absolute inset-0"
-            style="background: linear-gradient(to bottom, transparent 20%, rgba(0, 0, 0, 0.7) 100%)"
-          />
-
-          <!-- Top badges -->
-          <div class="absolute top-2.5 right-3 flex items-center gap-1.5">
-            <span
-              v-if="item.source === 'catalog' && item.category"
-              class="inline-flex items-center rounded-md bg-white/[0.06] px-2 py-0.5 text-[9px] leading-tight font-medium text-(--accent) backdrop-blur-sm"
-              >{{ item.category }}</span
-            >
-            <SourceBadge v-else :source="sourceBadgeMap[item.source]" />
+          <div v-else class="flex h-full w-full items-center justify-center text-[20px] font-bold text-(--accent)">
+            {{ titleInitial(item.title) }}
           </div>
-
-          <span
-            v-if="item.source === 'downloaded'"
-            class="absolute bottom-2.5 left-3 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/90 text-white shadow"
-          >
-            <IconCheck :size="12" />
-          </span>
         </div>
 
-        <!-- Floating cover + content -->
-        <div class="relative px-4">
-          <div class="-mt-9 mb-2.5 flex items-end gap-3">
-            <div
-              class="relative h-[72px] w-[72px] flex-shrink-0 overflow-hidden rounded-lg shadow-lg ring-2 ring-(--card-solid)"
-            >
-              <img
-                v-if="item.coverSrc && !coverErrors.has(item.id)"
-                :src="item.coverSrc"
-                class="h-full w-full object-cover"
-                alt=""
-                @error="coverErrors.add(item.id)"
-              />
-              <div
-                v-else
-                class="flex h-full w-full items-center justify-center"
-                :style="{ background: coverGradients[item.source], backgroundImage: coverPatterns[item.source] }"
-              >
-                <component
-                  :is="item.source === 'local' ? IconSmartphone : IconMusic"
-                  :size="24"
-                  class="text-white/50"
-                />
-              </div>
-            </div>
-            <div class="min-w-0 pb-1">
-              <h3
-                class="line-clamp-2 text-[13px] leading-snug font-semibold text-(--t1) transition-colors group-hover:text-white"
-              >
-                {{ item.title }}
-              </h3>
-            </div>
-          </div>
+        <!-- Title, author, where I am -->
+        <div class="min-w-0 flex-1">
+          <p
+            class="line-clamp-2 text-[14px] leading-snug font-semibold"
+            :class="item.id === currentId ? 'text-(--accent)' : 'text-(--t1)'"
+          >
+            {{ item.title }}
+          </p>
+          <p v-if="item.author" class="mt-0.5 truncate text-[12px] text-(--t2)">{{ item.author }}</p>
+          <p v-if="item.trackCount" class="mt-0.5 text-[11px] text-(--t3)">
+            <template v-if="item.pos">
+              {{ t('player.trackN', { n: item.pos.trackIndex + 1, total: item.trackCount }) }}
+            </template>
+            <template v-else>{{ item.trackCount }} {{ t('plural.track', item.trackCount) }}</template>
+          </p>
+        </div>
 
-          <div class="pb-3">
-            <p v-if="item.author" class="mb-2 truncate text-[12px] text-(--t3)">{{ item.author }}</p>
-            <div class="flex items-center justify-between">
-              <span v-if="item.trackCount" class="flex items-center gap-1 text-[11px] text-(--t3)">
-                <IconMusic :size="12" />
-                {{ item.trackCount }} {{ t('plural.track', item.trackCount) }}
-              </span>
-              <div class="flex items-center gap-1">
-                <div v-if="uploadingToCloud === item.id" class="flex h-7 items-center text-[11px] text-(--accent)">
-                  {{ t('myLibrary.uploading') }}
-                </div>
-                <button
-                  v-else-if="item.id.startsWith('lb:')"
-                  class="rounded-full p-1.5 text-(--t3) opacity-0 transition-all group-hover:opacity-100 hover:bg-white/10 hover:text-(--accent)"
-                  :title="t('myLibrary.cloudHint')"
-                  @click.prevent="uploadToCloud(item)"
-                >
-                  <IconUpload :size="14" />
-                </button>
-                <button
-                  class="rounded-full p-1.5 text-(--t3) opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/15 hover:text-red-400"
-                  :aria-label="t('myLibrary.deleteAriaLabel')"
-                  @click.stop="handleDelete(item)"
-                >
-                  <IconTrash :size="14" />
-                </button>
-              </div>
-            </div>
+        <!-- Actions: desktop hover only (touch has no hover — avoid invisible tap targets) -->
+        <div class="hidden flex-shrink-0 items-center gap-1 md:flex">
+          <div v-if="uploadingToCloud === item.id" class="text-[11px] text-(--accent)">
+            {{ t('myLibrary.uploading') }}
           </div>
+          <button
+            v-else-if="item.id.startsWith('lb:')"
+            class="rounded-full p-1.5 text-(--t3) opacity-0 transition-all group-hover:opacity-100 hover:bg-white/10 hover:text-(--accent)"
+            :title="t('myLibrary.cloudHint')"
+            @click.prevent="uploadToCloud(item)"
+          >
+            <IconUpload :size="14" />
+          </button>
+          <button
+            class="rounded-full p-1.5 text-(--t3) opacity-0 transition-all group-hover:opacity-100 hover:bg-red-500/15 hover:text-red-400"
+            :aria-label="t('myLibrary.deleteAriaLabel')"
+            @click.prevent.stop="handleDelete(item)"
+          >
+            <IconTrash :size="14" />
+          </button>
         </div>
       </router-link>
     </div>

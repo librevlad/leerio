@@ -66,6 +66,14 @@ function pickFolder() {
   input.click()
 }
 
+// Scanning is how APK users finish onboarding — mark it done first,
+// otherwise the router's onboarding guard bounces /scan-results back to /welcome
+function scanDevice() {
+  track('onboarding_completed', { files: 0, scan: true })
+  localStorage.setItem(STORAGE.ONBOARDED, '1')
+  router.push('/scan-results')
+}
+
 function fmtSize(bytes: number): string {
   return formatSize(bytes, t)
 }
@@ -109,7 +117,7 @@ async function finish() {
     }
   }
 
-  router.push('/library')
+  router.push(isNative ? '/my-library' : '/library')
 }
 </script>
 
@@ -161,7 +169,7 @@ async function finish() {
             v-ripple
             class="mb-2.5 flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-left text-white"
             style="background: var(--gradient-accent)"
-            @click="$router.push('/scan-results')"
+            @click="scanDevice"
           >
             <span class="text-[22px]">📱</span>
             <div>

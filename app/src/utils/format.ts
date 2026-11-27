@@ -46,3 +46,8 @@ export function trackDisplayName(
   if (/^\d+$/.test(name)) return t('book.chapterN', { n: index + 1 })
   return name
 }
+
+/** First letter or digit of a title, upper-cased — the placeholder cover for books without art. */
+export function titleInitial(title: string): string {
+  return (title.match(/[\p{L}\p{N}]/u)?.[0] ?? '?').toUpperCase()
+}

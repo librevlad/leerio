@@ -29,9 +29,8 @@ onMounted(async () => {
 
   // Select all except "not a book" heuristic
   for (const book of found) {
-    // Use folder name (last segment of path) for heuristic, not cleaned title
-    const folderName = book.folderPath.split('/').pop() || book.title
-    if (!isLikelyNotBook(folderName, book.tracks.length)) {
+    // Use the folder path, not the cleaned title: albums under Music/ are not books
+    if (!isLikelyNotBook(book.folderPath, book.tracks.length)) {
       selected.value.add(book.id)
     }
   }
@@ -71,7 +70,7 @@ function addSelected() {
   toast.success(t('scan.added', { n: books.length }))
   track('scan_books_added', { count: books.length })
   localStorage.setItem(STORAGE.ONBOARDED, '1')
-  router.push('/library')
+  router.push('/my-library')
 }
 
 function fmtSize(bytes: number): string {

@@ -15,9 +15,11 @@ import { useNetwork } from './composables/useNetwork'
 import { useCategories } from './composables/useCategories'
 import { useSync } from './composables/useSync'
 import { useFileScanner } from './composables/useFileScanner'
+import { useLocalBooks } from './composables/useLocalBooks'
 import { useTracking } from './composables/useTelemetry'
 import { IconX } from './components/shared/icons'
 import { STORAGE } from './constants/storage'
+import type { Book } from './types'
 
 const { t } = useI18n()
 const sidebarCollapsed = ref(false)
@@ -46,7 +48,9 @@ const isPublicPage = computed(() => !!route.meta.public)
 const isStandalonePage = computed(
   () => isLoginPage.value || isWelcomePage.value || isLandingPage.value || isCarMode.value,
 )
-const showApp = computed(() => !authLoading.value && !isStandalonePage.value)
+// APK: device books need no server — never hold the whole UI on the auth check (offline-first)
+const holdForAuth = computed(() => authLoading.value && !downloads.isNative.value)
+const showApp = computed(() => !holdForAuth.value && !isStandalonePage.value)
 
 function onKeydown(e: KeyboardEvent) {
   const tag = (e.target as HTMLElement)?.tagName
@@ -89,44 +93,82 @@ onErrorCaptured((err) => {
   return false
 })
 
+const { validateFsBooks, getFsBook } = useFileScanner()
+const { getLocalBook } = useLocalBooks()
+
+function resumeBook(book: Book) {
+  if (player.currentBook.value) return // user already started something
+  if (route.name === 'login' || route.name === 'landing') return // don't auto-resume on login/landing
+  player.loadBook(book, undefined, false) // resume position but don't autoplay
+  player.closeFullscreen() // show MiniPlayer, not fullscreen
+}
+
 // Auto-resume last played book (instant resume — 0 clicks)
 let autoResumed = false
+function autoResume() {
+  if (autoResumed || player.currentBook.value) return
+  autoResumed = true
+  try {
+    const raw = localStorage.getItem(STORAGE.LAST_PLAYED)
+    if (!raw) return
+    const { id } = JSON.parse(raw) as { id: string }
+    if (!id) return
+    // Device-folder / IndexedDB books resume without the network (offline-first)
+    if (id.startsWith('fs:') || id.startsWith('lb:')) {
+      const local = id.startsWith('fs:') ? getFsBook(id) : getLocalBook(id)
+      if (!local) return
+      resumeBook({
+        id: local.id,
+        title: local.title,
+        author: local.author,
+        folder: '',
+        category: '',
+        reader: '',
+        path: '',
+        progress: 0,
+        tags: [],
+        note: '',
+        mp3_count: local.tracks.length,
+      })
+      return
+    }
+    import('./api').then(({ api }) => {
+      api
+        .getBook(id)
+        .then(resumeBook)
+        .catch((e: unknown) => {
+          // Only a deleted book clears "last played" — being offline must not lose Continue Listening
+          if (!(e instanceof Error) || !e.message.startsWith('404')) return
+          try {
+            localStorage.removeItem(STORAGE.LAST_PLAYED)
+          } catch {
+            /* ignore */
+          }
+        })
+    })
+  } catch {
+    // corrupted localStorage
+  }
+}
+
+// Device-folder book: resume right away — no network involved. Others wait for the auth check.
+const lastPlayedIsDeviceBook = (() => {
+  try {
+    return ((JSON.parse(localStorage.getItem(STORAGE.LAST_PLAYED) || '{}') as { id?: string }).id ?? '').startsWith(
+      'fs:',
+    )
+  } catch {
+    return false
+  }
+})()
+if (lastPlayedIsDeviceBook) onMounted(autoResume)
 watch(
   () => authLoading.value,
   (loading) => {
-    if (loading || autoResumed || player.currentBook.value) return
-    autoResumed = true
-    try {
-      const raw = localStorage.getItem(STORAGE.LAST_PLAYED)
-      if (!raw) return
-      const { id } = JSON.parse(raw) as { id: string }
-      if (!id) return
-      import('./api').then(({ api }) => {
-        api
-          .getBook(id)
-          .then((book) => {
-            if (player.currentBook.value) return // user already started something
-            if (route.name === 'login' || route.name === 'landing') return // don't auto-resume on login/landing
-            player.loadBook(book, undefined, false) // resume position but don't autoplay
-            player.closeFullscreen() // show MiniPlayer, not fullscreen
-          })
-          .catch(() => {
-            // Book deleted or offline — clear last played so we don't retry on next load
-            try {
-              localStorage.removeItem(STORAGE.LAST_PLAYED)
-            } catch {
-              /* ignore */
-            }
-          })
-      })
-    } catch {
-      // corrupted localStorage
-    }
+    if (!loading) autoResume()
   },
   { immediate: true },
 )
-
-const { validateFsBooks } = useFileScanner()
 
 onMounted(() => {
   downloads.init()
@@ -175,7 +217,7 @@ onUnmounted(() => {
 
   <!-- Auth loading spinner (skip for public pages) -->
   <div
-    v-if="authLoading && !isLoginPage && !isPublicPage"
+    v-if="holdForAuth && !isLoginPage && !isPublicPage"
     class="flex min-h-dvh min-h-screen items-center justify-center"
     style="background: var(--bg)"
   >
@@ -252,7 +294,7 @@ onUnmounted(() => {
       </div>
 
       <div
-        class="mx-auto px-4 py-5 md:px-8 md:py-8 md:pb-8"
+        class="mobile-top-pad mx-auto px-4 py-5 md:px-8 md:py-8 md:pb-8"
         style="max-width: 1400px"
         :class="isPlayerVisible ? 'mobile-bottom-pad-player' : 'mobile-bottom-pad'"
       >

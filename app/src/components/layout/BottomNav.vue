@@ -2,18 +2,24 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { Capacitor } from '@capacitor/core'
 import { IconLibrary, IconMusic, IconSettings } from '../shared/icons'
 import { useAuth } from '../../composables/useAuth'
 
 const route = useRoute()
 const { t } = useI18n()
-const { isLoggedIn } = useAuth()
+const { isLoggedIn, serverReachable } = useAuth()
+// APK: device-folder books live in "My library" and need no account
+const isNative = Capacitor.isNativePlatform()
+// APK without a reachable server: catalog and sign-in would be dead ends
+const showServerTabs = computed(() => !isNative || serverReachable.value)
 
 const tabs = computed(() => {
-  const base: { path: string; label: string; icon: typeof IconLibrary }[] = [
-    { path: '/library', label: t('nav.catalog'), icon: IconLibrary },
-  ]
-  if (isLoggedIn.value) {
+  const base: { path: string; label: string; icon: typeof IconLibrary }[] = []
+  if (showServerTabs.value) {
+    base.push({ path: '/library', label: t('nav.catalog'), icon: IconLibrary })
+  }
+  if (isLoggedIn.value || isNative) {
     base.push({ path: '/my-library', label: t('nav.myLibrary'), icon: IconMusic })
   }
   base.push({ path: '/settings', label: t('nav.settings'), icon: IconSettings })
@@ -46,7 +52,7 @@ const isActive = (path: string) => route.path.startsWith(path)
 
       <!-- Login button (guest) -->
       <router-link
-        v-if="!isLoggedIn"
+        v-if="!isLoggedIn && showServerTabs"
         to="/login"
         class="relative flex flex-1 flex-col items-center justify-center gap-0.5 text-(--accent) no-underline"
       >

@@ -740,6 +740,10 @@ select option {
   .mobile-bottom-pad {
     padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   }
+  /* Edge-to-edge APK: keep page titles below the status bar */
+  .mobile-top-pad {
+    padding-top: calc(1.25rem + env(safe-area-inset-top, 0px));
+  }
   .mobile-bottom-pad-player {
     padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px));
   }

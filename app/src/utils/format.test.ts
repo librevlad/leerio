@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatSize, formatSizeMB, formatRemaining, trackDisplayName } from './format'
+import { formatSize, formatSizeMB, formatRemaining, trackDisplayName, titleInitial } from './format'
 
 const t = (key: string) => {
   const map: Record<string, string> = {
@@ -113,5 +113,14 @@ describe('trackDisplayName', () => {
 
   it('preserves non-numeric filenames', () => {
     expect(trackDisplayName('My Chapter.mp3', 0, tChapter)).toBe('My Chapter')
+  })
+})
+
+describe('titleInitial', () => {
+  it('takes the first letter or digit, upper-cased', () => {
+    expect(titleInitial('бегство от свободы')).toBe('Б')
+    expect(titleInitial('«Мастер времени»')).toBe('М')
+    expect(titleInitial('55 светлых идей')).toBe('5')
+    expect(titleInitial('')).toBe('?')
   })
 })

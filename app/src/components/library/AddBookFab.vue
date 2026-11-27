@@ -13,7 +13,8 @@ const { isPlayerVisible } = usePlayer()
 const isOpen = ref(false)
 const isNative = Capacitor.isNativePlatform()
 
-const bottomOffset = () => (isPlayerVisible.value ? '130px' : '80px')
+// Above the bottom nav (+ mini player) and the system navigation bar
+const bottomOffset = () => `calc(${isPlayerVisible.value ? '130px' : '80px'} + env(safe-area-inset-bottom, 0px))`
 
 function toggle() {
   isOpen.value = !isOpen.value

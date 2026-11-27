@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { Capacitor } from '@capacitor/core'
 import { useAuth } from '../../composables/useAuth'
 import { usePlayer } from '../../composables/usePlayer'
 import { STORAGE } from '../../constants/storage'
@@ -39,7 +40,10 @@ const mainLinks = computed(() => [
   { path: '/settings', label: t('nav.settings'), icon: IconSettings },
 ])
 
-const navLinks = computed(() => (isLoggedIn.value ? mainLinks.value : publicLinks.value))
+// APK: device-folder books live in "My library" and need no account
+const navLinks = computed(() =>
+  isLoggedIn.value || Capacitor.isNativePlatform() ? mainLinks.value : publicLinks.value,
+)
 
 const isActive = (path: string) => {
   if (path === '/') return route.path === '/'

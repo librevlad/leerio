@@ -13,21 +13,17 @@ import { Filesystem, Directory } from '@capacitor/filesystem'
 import { Capacitor } from '@capacitor/core'
 import { MediaSession as NativeMediaSession } from '@jofr/capacitor-media-session'
 
-// Cached i18n instance (lazy-loaded to avoid circular dependency in tests)
+// Cached i18n instance (dynamic import avoids a circular dependency in tests).
+// Start loading at module init: loading on first use returned the raw key ("player.loadError")
+// for the very first toast after app start.
 let _i18n: { global: { t: (key: string) => string } } | null = null
+void import('../i18n')
+  .then((m) => {
+    _i18n = m.default
+  })
+  .catch(() => {})
 function t(key: string): string {
-  if (!_i18n) {
-    try {
-      // Dynamic import is async, so first call returns key as fallback
-      import('../i18n').then((m) => {
-        _i18n = m.default
-      })
-      return key
-    } catch {
-      return key
-    }
-  }
-  return _i18n.global.t(key)
+  return _i18n ? _i18n.global.t(key) : key
 }
 
 // ── Singleton state (shared across all components) ──────────────────────────
@@ -346,7 +342,8 @@ function updateMediaSession() {
 
   // Native foreground service (Android notification + background playback)
   if (isNative) {
-    NativeMediaSession.setMetadata({ title, artist, album, ...(artwork && { artwork }) }).catch(() => {})
+    // Always send an array: the Android plugin calls artwork.toList() and crashes the app on null
+    NativeMediaSession.setMetadata({ title, artist, album, artwork: artwork ?? [] }).catch(() => {})
     NativeMediaSession.setPlaybackState({ playbackState: isPlaying.value ? 'playing' : 'paused' }).catch(() => {})
     NativeMediaSession.setActionHandler({ action: 'play' }, () => togglePlay()).catch(() => {})
     NativeMediaSession.setActionHandler({ action: 'pause' }, () => togglePlay()).catch(() => {})
@@ -424,23 +421,46 @@ async function resolveAudioSrc(bookId: string, trackIndex: number): Promise<stri
 
 // ── Actions ─────────────────────────────────────────────────────────────────
 
+/** Saved listening position (localStorage — instant, offline). null if the book was never started. */
+export function savedPosition(bookId: string): { trackIndex: number; seekPos: number } | null {
+  try {
+    const saved = localStorage.getItem(`${STORAGE.POSITION_PREFIX}${bookId}`)
+    if (!saved) return null
+    const pos = JSON.parse(saved)
+    return {
+      trackIndex: pos.track_index >= 0 ? pos.track_index : 0,
+      seekPos: isFinite(pos.position) && pos.position >= 0 ? pos.position : 0,
+    }
+  } catch {
+    return null // corrupted
+  }
+}
+
 function restorePosition(bookId: string, startTrackIndex?: number): { trackIndex: number; seekPos: number } {
   if (startTrackIndex !== undefined) {
     return { trackIndex: startTrackIndex, seekPos: 0 }
   }
-  try {
-    const saved = localStorage.getItem(`${STORAGE.POSITION_PREFIX}${bookId}`)
-    if (saved) {
-      const pos = JSON.parse(saved)
-      return {
-        trackIndex: pos.track_index >= 0 ? pos.track_index : 0,
-        seekPos: isFinite(pos.position) && pos.position >= 0 ? pos.position : 0,
-      }
+  return savedPosition(bookId) ?? { trackIndex: 0, seekPos: 0 }
+}
+
+/**
+ * Seek to the saved position once metadata loads, then play if requested.
+ * The seek must happen even without autoplay (resume after app restart): otherwise the
+ * player sits at 0:00 and the next savePosition() overwrites the real position with 0.
+ */
+function startAt(a: HTMLAudioElement, seekPos: number, autoplay: boolean, opId: number) {
+  if (seekPos > 0) {
+    const onLoaded = () => {
+      a.removeEventListener('loadedmetadata', onLoaded)
+      if (loadOpId !== opId) return // stale — don't seek or play
+      a.currentTime = seekPos
+      currentTime.value = seekPos
+      if (autoplay) a.play().catch((e) => console.warn('Auto-play blocked:', e))
     }
-  } catch {
-    /* corrupted */
+    a.addEventListener('loadedmetadata', onLoaded)
+  } else if (autoplay) {
+    a.play().catch((e) => console.warn('Auto-play blocked:', e))
   }
-  return { trackIndex: 0, seekPos: 0 }
 }
 
 async function loadBook(book: Book, startTrackIndex?: number, autoplay = true) {
@@ -500,21 +520,7 @@ async function loadBook(book: Book, startTrackIndex?: number, autoplay = true) {
       if (loadOpId !== opId) return
       a.src = fsUrl || ''
       a.load()
-
-      if (autoplay) {
-        if (seekPos > 0) {
-          const onLoaded = () => {
-            a.removeEventListener('loadedmetadata', onLoaded)
-            if (loadOpId !== opId) return
-            a.currentTime = seekPos
-            currentTime.value = seekPos
-            a.play().catch((e) => console.warn('Auto-play blocked:', e))
-          }
-          a.addEventListener('loadedmetadata', onLoaded)
-        } else {
-          a.play().catch((e) => console.warn('Auto-play blocked:', e))
-        }
-      }
+      startAt(a, seekPos, autoplay, opId)
 
       updateMediaSession()
       preloadNextTrack()
@@ -545,21 +551,7 @@ async function loadBook(book: Book, startTrackIndex?: number, autoplay = true) {
       if (loadOpId !== opId) return
       a.src = localUrl || ''
       a.load()
-
-      if (autoplay) {
-        if (seekPos > 0) {
-          const onLoaded = () => {
-            a.removeEventListener('loadedmetadata', onLoaded)
-            if (loadOpId !== opId) return // stale — don't seek or play
-            a.currentTime = seekPos
-            currentTime.value = seekPos
-            a.play().catch((e) => console.warn('Auto-play blocked:', e))
-          }
-          a.addEventListener('loadedmetadata', onLoaded)
-        } else {
-          a.play().catch((e) => console.warn('Auto-play blocked:', e))
-        }
-      }
+      startAt(a, seekPos, autoplay, opId)
 
       await loadCoverBlobUrl(book)
       if (loadOpId !== opId) return
@@ -643,22 +635,7 @@ async function loadBook(book: Book, startTrackIndex?: number, autoplay = true) {
     a.src = await resolveAudioSrc(book.id, boundedIdx)
     if (loadOpId !== opId) return
     a.load()
-
-    // Seek to saved position after metadata loads, THEN play
-    if (autoplay) {
-      if (seekPos > 0) {
-        const onLoaded = () => {
-          a.removeEventListener('loadedmetadata', onLoaded)
-          if (loadOpId !== opId) return // stale — don't seek or play
-          a.currentTime = seekPos
-          currentTime.value = seekPos
-          a.play().catch((e) => console.warn('Auto-play blocked:', e))
-        }
-        a.addEventListener('loadedmetadata', onLoaded)
-      } else {
-        a.play().catch((e) => console.warn('Auto-play blocked:', e))
-      }
-    }
+    startAt(a, seekPos, autoplay, opId)
 
     await loadCoverBlobUrl(book)
     if (loadOpId !== opId) return

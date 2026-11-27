@@ -1135,4 +1135,65 @@ describe('usePlayer', () => {
       expect(p.currentTime.value).toBe(50)
     })
   })
+
+  // ── Resume after app restart (loadBook without autoplay) ────────────────
+  describe('resume without autoplay', () => {
+    const book = {
+      id: '7',
+      folder: '',
+      category: '',
+      author: 'Author',
+      title: 'Title',
+      reader: '',
+      path: '',
+      progress: 0,
+      tags: [] as string[],
+      note: '',
+    }
+
+    beforeEach(async () => {
+      const { api } = await import('../api')
+      vi.mocked(api.getBookTracks).mockResolvedValue({
+        book_id: '7',
+        count: 2,
+        tracks: [
+          { index: 0, filename: '01.mp3', path: '', duration: 600 },
+          { index: 1, filename: '02.mp3', path: '', duration: 600 },
+        ],
+      })
+      vi.mocked(api.getPlaybackPosition).mockResolvedValue({ track_index: 1, position: 42 })
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }))
+      mockAudio.currentTime = 0
+    })
+
+    it('seeks to the saved position without starting playback', async () => {
+      const p = usePlayer()
+      await p.loadBook(book, undefined, false)
+      mockAudio._emit('loadedmetadata')
+
+      expect(p.currentTrackIndex.value).toBe(1)
+      expect(mockAudio.currentTime).toBe(42)
+      expect(p.currentTime.value).toBe(42)
+      expect(mockAudio.play).not.toHaveBeenCalled()
+    })
+
+    it('leaving the app before pressing play keeps the saved position', async () => {
+      const p = usePlayer()
+      await p.loadBook(book, undefined, false)
+      mockAudio._emit('loadedmetadata')
+      window.dispatchEvent(new Event('beforeunload'))
+
+      expect(JSON.parse(localStorage.getItem('leerio_pos_7') || '{}')).toEqual({ track_index: 1, position: 42 })
+    })
+
+    it('autoplay still seeks first, then plays', async () => {
+      const p = usePlayer()
+      await p.loadBook(book)
+      expect(mockAudio.play).not.toHaveBeenCalled()
+      mockAudio._emit('loadedmetadata')
+
+      expect(mockAudio.currentTime).toBe(42)
+      expect(mockAudio.play).toHaveBeenCalledTimes(1)
+    })
+  })
 })
