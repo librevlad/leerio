@@ -71,6 +71,12 @@ const router = createRouter({
       meta: { title: 'Scan Results', public: true },
     },
     {
+      path: '/cloud',
+      name: 'cloud',
+      component: () => import('./views/CloudView.vue'),
+      meta: { title: 'Cloud', public: true },
+    },
+    {
       path: '/narrate',
       name: 'narrate',
       component: () => import('./views/NarrateView.vue'),

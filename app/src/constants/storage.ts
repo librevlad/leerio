@@ -18,4 +18,6 @@ export const STORAGE = {
   COVER_CACHE: 'leerio_cover_cache',
   /** Leerio Pro: last answer from Google Play — { active, offers } */
   PRO: 'leerio_pro',
+  /** Books in the owner's cloud bucket: the last library.json, shown offline */
+  CLOUD_BOOKS: 'leerio_cloud_books',
 } as const
