@@ -49,7 +49,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
 
 <template>
   <div class="relative">
-    <span class="absolute top-1/2 left-3 flex -translate-y-1/2 items-center text-[--t3]">
+    <span class="absolute top-1/2 left-3 flex -translate-y-1/2 items-center text-(--t3)">
       <IconSearch :size="14" />
     </span>
     <input
@@ -63,7 +63,7 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
     />
     <kbd
       v-if="!focused && !local"
-      class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 rounded border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[10px] leading-none font-medium text-[--t3]"
+      class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 rounded border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[10px] leading-none font-medium text-(--t3)"
     >
       /
     </kbd>

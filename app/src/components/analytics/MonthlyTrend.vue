@@ -52,7 +52,7 @@ const options = {
     <div class="relative h-[200px] sm:h-[250px]">
       <Line :data="chartData" :options="options" />
       <div v-if="!hasData" class="absolute inset-0 flex items-center justify-center">
-        <p class="text-[13px] text-[--t3]">{{ t('analytics.monthlyEmpty') }}</p>
+        <p class="text-[13px] text-(--t3)">{{ t('analytics.monthlyEmpty') }}</p>
       </div>
     </div>
   </div>

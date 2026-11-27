@@ -5,6 +5,7 @@ import { api } from '../../api'
 import { trackDisplayName as _trackDisplayName } from '../../utils/format'
 import { usePlayer } from '../../composables/usePlayer'
 import { useLocalBooks } from '../../composables/useLocalBooks'
+import { useFileScanner } from '../../composables/useFileScanner'
 import { IconChevronDown, IconChevronUp, IconPlay } from '../shared/icons'
 import type { Book, Track } from '../../types'
 
@@ -13,6 +14,7 @@ const props = defineProps<{ book: Book }>()
 
 const player = usePlayer()
 const { getLocalBook } = useLocalBooks()
+const { getFsBook } = useFileScanner()
 const tracks = ref<Track[]>([])
 const loading = ref(true)
 const loadError = ref(false)
@@ -73,6 +75,19 @@ async function loadTracks() {
       } else {
         loadError.value = true
       }
+    } else if (props.book.id.startsWith('fs:')) {
+      // Device-folder books — tracks come from the scan, no server needed
+      const fs = getFsBook(props.book.id)
+      if (fs) {
+        tracks.value = fs.tracks.map((t) => ({
+          index: t.index,
+          filename: t.filename,
+          path: t.path,
+          duration: t.duration,
+        }))
+      } else {
+        loadError.value = true
+      }
     } else {
       const res = await api.getBookTracks(props.book.id)
       tracks.value = res.tracks
@@ -98,9 +113,9 @@ onMounted(loadTracks)
 
     <!-- Error -->
     <div v-else-if="loadError" class="flex items-center gap-3 py-2">
-      <p class="text-[13px] text-[--t3]">{{ t('player.tracksLoadError') }}</p>
+      <p class="text-[13px] text-(--t3)">{{ t('player.tracksLoadError') }}</p>
       <button
-        class="rounded-lg border-0 bg-white/10 px-3 py-1.5 text-[12px] font-semibold text-[--t1] transition-colors hover:bg-white/15"
+        class="rounded-lg border-0 bg-white/10 px-3 py-1.5 text-[12px] font-semibold text-(--t1) transition-colors hover:bg-white/15"
         @click="loadTracks"
       >
         {{ t('player.retry') }}
@@ -108,7 +123,7 @@ onMounted(loadTracks)
     </div>
 
     <!-- Empty -->
-    <p v-else-if="tracks.length === 0" class="text-[13px] text-[--t3]">{{ t('book.noTracks') }}</p>
+    <p v-else-if="tracks.length === 0" class="text-[13px] text-(--t3)">{{ t('book.noTracks') }}</p>
 
     <!-- Track list -->
     <div v-else>
@@ -122,29 +137,29 @@ onMounted(loadTracks)
           class="group flex w-full cursor-pointer flex-col gap-0 rounded-xl border-0 px-3 py-2.5 text-left transition-colors"
           :class="
             isCurrentBook && player.currentTrackIndex.value === track.index
-              ? 'bg-[--accent-soft] text-[--t1]'
-              : 'bg-transparent text-[--t2] hover:bg-white/[0.04]'
+              ? 'bg-(--accent-soft) text-(--t1)'
+              : 'bg-transparent text-(--t2) hover:bg-white/[0.04]'
           "
           :aria-label="t('player.playTrackAria', { index: track.index + 1 })"
           @click="handleTrackClick(track.index)"
         >
           <div class="flex w-full items-center gap-3">
             <!-- Track number / play icon -->
-            <span class="relative w-6 shrink-0 text-center font-mono text-[12px] text-[--t3]">
+            <span class="relative w-6 shrink-0 text-center font-mono text-[12px] text-(--t3)">
               <IconPlay
                 v-if="isCurrentBook && player.currentTrackIndex.value === track.index && player.isPlaying.value"
                 :size="12"
-                class="inline text-[--accent]"
+                class="inline text-(--accent)"
               />
               <template v-else>
                 <span class="group-hover:invisible">{{ track.index + 1 }}</span>
-                <IconPlay :size="12" class="absolute inset-0 m-auto hidden text-[--t2] group-hover:block" />
+                <IconPlay :size="12" class="absolute inset-0 m-auto hidden text-(--t2) group-hover:block" />
               </template>
             </span>
             <!-- Track name -->
             <span class="min-w-0 flex-1 truncate text-[13px]">{{ trackName(track, track.index) }}</span>
             <!-- Duration -->
-            <span v-if="track.duration" class="shrink-0 font-mono text-[12px] text-[--t3]">{{
+            <span v-if="track.duration" class="shrink-0 font-mono text-[12px] text-(--t3)">{{
               formatDuration(track.duration)
             }}</span>
           </div>
@@ -154,7 +169,7 @@ onMounted(loadTracks)
             class="mt-1.5 ml-9 h-1 overflow-hidden rounded-full bg-white/[0.08]"
           >
             <div
-              class="h-full rounded-full bg-[--accent] transition-all duration-300"
+              class="h-full rounded-full bg-(--accent) transition-all duration-300"
               :style="{ width: `${Math.min((player.currentTime.value / player.duration.value) * 100, 100)}%` }"
             />
           </div>
@@ -171,7 +186,7 @@ onMounted(loadTracks)
       <!-- Expand toggle -->
       <button
         v-if="tracks.length > COLLAPSED_LIMIT"
-        class="mt-2 flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border-0 bg-transparent py-2 text-[12px] font-semibold text-[--t3] transition-colors hover:text-[--t2]"
+        class="mt-2 flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border-0 bg-transparent py-2 text-[12px] font-semibold text-(--t3) transition-colors hover:text-(--t2)"
         @click="expanded = !expanded"
       >
         <template v-if="expanded">
@@ -185,7 +200,7 @@ onMounted(loadTracks)
       </button>
 
       <!-- Total duration -->
-      <p v-if="totalDuration" class="mt-2 border-t border-white/[0.04] pt-3 text-[12px] text-[--t3]">
+      <p v-if="totalDuration" class="mt-2 border-t border-white/[0.04] pt-3 text-[12px] text-(--t3)">
         {{ t('book.totalDuration') }} {{ totalDuration }}
       </p>
     </div>

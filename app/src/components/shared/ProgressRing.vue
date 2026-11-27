@@ -48,7 +48,7 @@ const offset = computed(() => circumference.value * (1 - Math.min(100, Math.max(
         class="transition-all duration-700 ease-out"
       />
     </svg>
-    <span class="absolute font-semibold" :class="size >= 64 ? 'text-[13px] text-[--t1]' : 'text-[10px] text-[--t3]'">
+    <span class="absolute font-semibold" :class="size >= 64 ? 'text-[13px] text-(--t1)' : 'text-[10px] text-(--t3)'">
       {{ percent }}%
     </span>
   </div>

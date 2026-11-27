@@ -79,7 +79,7 @@ function onBlur() {
 <template>
   <div class="relative w-full max-w-md">
     <div class="relative">
-      <IconSearch :size="16" class="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-[--t3]" />
+      <IconSearch :size="16" class="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-(--t3)" />
       <input
         v-model="query"
         type="text"
@@ -94,21 +94,21 @@ function onBlur() {
     <!-- Dropdown results -->
     <div
       v-if="open"
-      class="absolute top-full right-0 left-0 z-50 mt-2 overflow-hidden rounded-2xl border border-[--border] shadow-lg"
+      class="absolute top-full right-0 left-0 z-50 mt-2 overflow-hidden rounded-2xl border border-(--border) shadow-lg"
       style="background: var(--card-solid)"
     >
       <!-- No results -->
-      <div v-if="searched && !results.length" class="p-4 text-center text-[13px] text-[--t3]">
+      <div v-if="searched && !results.length" class="p-4 text-center text-[13px] text-(--t3)">
         {{ t('global.noResults') }}
       </div>
 
       <!-- Authors -->
-      <div v-else-if="authors.length" class="border-b border-[--border] px-3 py-2">
-        <p class="mb-1.5 text-[10px] font-bold tracking-wider text-[--t3] uppercase">{{ t('global.authors') }}</p>
+      <div v-else-if="authors.length" class="border-b border-(--border) px-3 py-2">
+        <p class="mb-1.5 text-[10px] font-bold tracking-wider text-(--t3) uppercase">{{ t('global.authors') }}</p>
         <button
           v-for="a in authors"
           :key="a"
-          class="block w-full cursor-pointer truncate border-0 bg-transparent px-2 py-1.5 text-left text-[13px] text-[--t2] transition-colors hover:text-[--accent]"
+          class="block w-full cursor-pointer truncate border-0 bg-transparent px-2 py-1.5 text-left text-[13px] text-(--t2) transition-colors hover:text-(--accent)"
           @mousedown.prevent="searchAuthor(a)"
         >
           {{ a }}
@@ -120,25 +120,25 @@ function onBlur() {
         <button
           v-for="book in results.slice(0, 5)"
           :key="book.id"
-          class="flex w-full cursor-pointer items-center gap-3 border-0 bg-transparent px-3 py-2 text-left transition-colors hover:bg-[--card-hover]"
+          class="flex w-full cursor-pointer items-center gap-3 border-0 bg-transparent px-3 py-2 text-left transition-colors hover:bg-(--card-hover)"
           @mousedown.prevent="goToBook(book.id)"
         >
           <div class="h-10 w-10 shrink-0 overflow-hidden rounded-lg">
             <img v-if="book.has_cover" :src="coverUrl(book.id)" :alt="book.title" class="h-full w-full object-cover" />
-            <div v-else class="flex h-full w-full items-center justify-center bg-[--card-hover]">
-              <IconMusic :size="14" class="text-[--t3]" />
+            <div v-else class="flex h-full w-full items-center justify-center bg-(--card-hover)">
+              <IconMusic :size="14" class="text-(--t3)" />
             </div>
           </div>
           <div class="min-w-0 flex-1">
-            <p class="truncate text-[13px] font-medium text-[--t1]">{{ book.title }}</p>
-            <p class="truncate text-[11px] text-[--t3]">{{ book.author }}</p>
+            <p class="truncate text-[13px] font-medium text-(--t1)">{{ book.title }}</p>
+            <p class="truncate text-[11px] text-(--t3)">{{ book.author }}</p>
           </div>
         </button>
       </div>
 
       <!-- View all -->
       <button
-        class="flex w-full cursor-pointer items-center justify-center border-t border-[--border] bg-transparent py-2.5 text-[12px] font-medium text-[--accent] transition-colors hover:bg-[--card-hover]"
+        class="flex w-full cursor-pointer items-center justify-center border-t border-(--border) bg-transparent py-2.5 text-[12px] font-medium text-(--accent) transition-colors hover:bg-(--card-hover)"
         @mousedown.prevent="goToCatalog"
       >
         {{ t('global.allResults') }}

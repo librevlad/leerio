@@ -127,7 +127,7 @@ test.describe('FAB in Library', () => {
 
     // Popup visible with menu items
     await expect(page.locator('text=Файлы')).toBeVisible({ timeout: 3_000 })
-    await expect(page.locator('text=Папка')).toBeVisible()
+    await expect(page.locator('text=С устройства')).toBeVisible()
     await expect(page.locator('text=Озвучить текст')).toBeVisible()
 
     // On web: Scan and YouTube should NOT be visible
@@ -256,8 +256,8 @@ test.describe('fs: Book Detail', () => {
     await page.goto('/book/fs:Толстой - Война и мир')
     await expect(page.locator('h1:has-text("Война и мир")')).toBeVisible({ timeout: 10_000 })
 
-    // "On device" badge
-    await expect(page.locator('text=На устройстве')).toBeVisible()
+    // Main action of the book page (no "on device" badge any more — every device book is on the device)
+    await expect(page.locator('button:has-text("Слушать")')).toBeVisible()
   })
 
   test('shows cloud upload button for fs: books', async ({ page }) => {
@@ -316,7 +316,7 @@ test.describe('fs: Book Detail', () => {
     await page.goto('/book/fs:Булгаков - Мастер и Маргарита')
     await expect(page.locator('h1:has-text("Мастер и Маргарита")')).toBeVisible({ timeout: 10_000 })
 
-    const playBtn = page.locator('button:has-text("Воспроизвести")')
+    const playBtn = page.locator('button:has-text("Слушать")')
     await expect(playBtn).toBeVisible()
     await playBtn.click()
 
@@ -445,7 +445,7 @@ test.describe('Edge cases', () => {
     await page.reload()
 
     await expect(page.locator('text=Моя библиотека')).toBeVisible({ timeout: 10_000 })
-    await page.locator('button:has-text("Локальные")').click()
+    // Filter chips appear only when sources are mixed — with no device books there is nothing to filter
 
     // No local books should be shown
     const items = page.locator('a[href*="/book/fs:"]')

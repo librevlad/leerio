@@ -56,7 +56,7 @@ function timeAgo(ts: string): string {
       <h2 class="section-label">{{ t('dashboard.recentActivity') }}</h2>
       <router-link
         to="/history"
-        class="inline-flex min-h-[44px] items-center text-[12px] font-medium text-[--accent] no-underline hover:underline"
+        class="inline-flex min-h-[44px] items-center text-[12px] font-medium text-(--accent) no-underline hover:underline"
       >
         {{ t('dashboard.allActions') }}
       </router-link>
@@ -90,7 +90,7 @@ function timeAgo(ts: string): string {
             @error="coverErrors.add(e.book_id)"
           />
           <div v-else class="flex h-full w-full items-center justify-center" style="background: var(--accent-bg)">
-            <IconMusic :size="14" class="text-[--t3]" />
+            <IconMusic :size="14" class="text-(--t3)" />
           </div>
         </div>
 
@@ -103,16 +103,16 @@ function timeAgo(ts: string): string {
             >
               {{ e.action_label }}
             </span>
-            <span class="text-[11px] text-[--t3]">{{ timeAgo(e.ts) }}</span>
+            <span class="text-[11px] text-(--t3)">{{ timeAgo(e.ts) }}</span>
           </div>
           <router-link
             v-if="e.book_id"
             :to="`/book/${e.book_id}`"
-            class="mt-0.5 block truncate py-1 text-[13px] font-medium text-[--t2] no-underline transition-colors hover:text-[--t1]"
+            class="mt-0.5 block truncate py-1 text-[13px] font-medium text-(--t2) no-underline transition-colors hover:text-(--t1)"
           >
             {{ e.book }}
           </router-link>
-          <span v-else class="mt-0.5 block truncate text-[13px] text-[--t2]">
+          <span v-else class="mt-0.5 block truncate text-[13px] text-(--t2)">
             {{ e.book }}
           </span>
         </div>

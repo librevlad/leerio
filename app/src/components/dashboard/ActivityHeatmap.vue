@@ -63,10 +63,10 @@ function intensity(count: number): string {
   <div class="card p-6">
     <div class="mb-5 flex items-center justify-between">
       <h2 class="section-label">{{ t('dashboard.activity') }}</h2>
-      <p class="text-[11px] text-[--t3]">
-        <span class="font-bold text-[--accent]">{{ stats.activeDays }}</span>
+      <p class="text-[11px] text-(--t3)">
+        <span class="font-bold text-(--accent)">{{ stats.activeDays }}</span>
         {{ t('plural.day', stats.activeDays) }}
-        · <span class="font-bold text-[--t2]">{{ stats.totalActions }}</span>
+        · <span class="font-bold text-(--t2)">{{ stats.totalActions }}</span>
         {{ t('plural.entry', stats.totalActions) }}
       </p>
     </div>
@@ -90,7 +90,7 @@ function intensity(count: number): string {
       </svg>
     </div>
     <!-- Legend -->
-    <div class="mt-3 flex items-center justify-end gap-1.5 text-[10px] text-[--t3]">
+    <div class="mt-3 flex items-center justify-end gap-1.5 text-[10px] text-(--t3)">
       <span>{{ t('dashboard.activityLess') }}</span>
       <span class="heatmap-0 inline-block h-[10px] w-[10px] rounded-sm" />
       <span class="heatmap-1 inline-block h-[10px] w-[10px] rounded-sm" />

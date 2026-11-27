@@ -102,8 +102,12 @@ router.beforeEach(async (to) => {
   // Check auth in background for all routes — never block navigation
   checkAuth()
 
-  // Landing page: authenticated users and APK users go straight to /library
-  if (to.name === 'landing' && (isLoggedIn.value || Capacitor.isNativePlatform())) {
+  // Landing page: APK users go to their own books (device folders work without the server),
+  // authenticated web users go to the catalog
+  if (to.name === 'landing' && Capacitor.isNativePlatform()) {
+    return { name: 'my-library' }
+  }
+  if (to.name === 'landing' && isLoggedIn.value) {
     return { name: 'library' }
   }
 

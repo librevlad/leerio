@@ -29,9 +29,8 @@ onMounted(async () => {
 
   // Select all except "not a book" heuristic
   for (const book of found) {
-    // Use folder name (last segment of path) for heuristic, not cleaned title
-    const folderName = book.folderPath.split('/').pop() || book.title
-    if (!isLikelyNotBook(folderName, book.tracks.length)) {
+    // Use the folder path, not the cleaned title: albums under Music/ are not books
+    if (!isLikelyNotBook(book.folderPath, book.tracks.length)) {
       selected.value.add(book.id)
     }
   }
@@ -71,7 +70,7 @@ function addSelected() {
   toast.success(t('scan.added', { n: books.length }))
   track('scan_books_added', { count: books.length })
   localStorage.setItem(STORAGE.ONBOARDED, '1')
-  router.push('/library')
+  router.push('/my-library')
 }
 
 function fmtSize(bytes: number): string {
@@ -83,18 +82,18 @@ function fmtSize(bytes: number): string {
   <div class="min-h-dvh min-h-screen px-4 py-6" style="background: var(--bg)">
     <!-- Header -->
     <div class="mb-6 flex items-center gap-3">
-      <button class="flex items-center text-[--t3] hover:text-[--t1]" @click="router.back()">
+      <button class="flex items-center text-(--t3) hover:text-(--t1)" @click="router.back()">
         <IconArrowLeft :size="20" />
       </button>
       <div class="flex-1">
-        <h1 v-if="hasScanned" class="text-[18px] font-bold text-[--t1]">
+        <h1 v-if="hasScanned" class="text-[18px] font-bold text-(--t1)">
           {{ t('scan.found', { n: scannedBooks.length }) }}
         </h1>
-        <h1 v-else class="text-[18px] font-bold text-[--t1]">{{ t('scan.scanning') }}</h1>
+        <h1 v-else class="text-[18px] font-bold text-(--t1)">{{ t('scan.scanning') }}</h1>
       </div>
       <button
         v-if="scannedBooks.length"
-        class="text-[12px] font-semibold text-[--accent]"
+        class="text-[12px] font-semibold text-(--accent)"
         @click="selectedCount === scannedBooks.length ? deselectAll() : selectAll()"
       >
         {{ selectedCount === scannedBooks.length ? t('scan.deselectAll') : t('scan.selectAll') }}
@@ -103,9 +102,9 @@ function fmtSize(bytes: number): string {
 
     <!-- Scanning progress -->
     <div v-if="scanner.scanning.value" class="mb-6 flex flex-col items-center gap-3 py-8">
-      <div class="h-8 w-8 animate-spin rounded-full border-2 border-[--accent] border-t-transparent" />
-      <p class="text-[13px] text-[--t3]">{{ t('scan.scanningDir', { dir: scanner.scanProgress.value }) }}</p>
-      <button class="text-[12px] text-[--t3] hover:text-[--t1]" @click="cancelScan">
+      <div class="h-8 w-8 animate-spin rounded-full border-2 border-(--accent) border-t-transparent" />
+      <p class="text-[13px] text-(--t3)">{{ t('scan.scanningDir', { dir: scanner.scanProgress.value }) }}</p>
+      <button class="text-[12px] text-(--t3) hover:text-(--t1)" @click="cancelScan">
         {{ t('scan.cancel') }}
       </button>
     </div>
@@ -113,13 +112,13 @@ function fmtSize(bytes: number): string {
     <!-- No results -->
     <div v-else-if="hasScanned && !scannedBooks.length" class="py-12 text-center">
       <div class="mb-4 text-[40px]">📂</div>
-      <p class="text-[14px] text-[--t2]">{{ t('scan.nothingFound') }}</p>
-      <p class="mt-2 text-[12px] text-[--t3]">{{ t('scan.tryFolder') }}</p>
+      <p class="text-[14px] text-(--t2)">{{ t('scan.nothingFound') }}</p>
+      <p class="mt-2 text-[12px] text-(--t3)">{{ t('scan.tryFolder') }}</p>
     </div>
 
     <!-- Book list -->
     <div v-else class="space-y-2">
-      <p v-if="scannedBooks.length" class="mb-4 text-[12px] text-[--t3]">{{ t('scan.uncheckHint') }}</p>
+      <p v-if="scannedBooks.length" class="mb-4 text-[12px] text-(--t3)">{{ t('scan.uncheckHint') }}</p>
 
       <div
         v-for="book in scannedBooks"
@@ -127,7 +126,7 @@ function fmtSize(bytes: number): string {
         class="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-3 transition-all"
         :class="
           selected.has(book.id)
-            ? 'border border-[--accent]/30 bg-white/[0.05]'
+            ? 'border border-(--accent)/30 bg-white/[0.05]'
             : 'border border-white/[0.06] bg-white/[0.03] opacity-60'
         "
         @click="toggle(book.id)"
@@ -135,15 +134,15 @@ function fmtSize(bytes: number): string {
         <!-- Checkbox -->
         <div
           class="flex h-5 w-5 shrink-0 items-center justify-center rounded-md transition-colors"
-          :class="selected.has(book.id) ? 'bg-[--accent]' : 'border-2 border-[--border]'"
+          :class="selected.has(book.id) ? 'bg-(--accent)' : 'border-2 border-(--border)'"
         >
           <IconCheck v-if="selected.has(book.id)" :size="12" class="text-white" />
         </div>
 
         <!-- Info -->
         <div class="min-w-0 flex-1">
-          <div class="truncate text-[13px] font-semibold text-[--t1]">{{ book.title }}</div>
-          <div class="mt-0.5 text-[11px] text-[--t3]">
+          <div class="truncate text-[13px] font-semibold text-(--t1)">{{ book.title }}</div>
+          <div class="mt-0.5 text-[11px] text-(--t3)">
             <span v-if="book.author">{{ book.author }} · </span>
             {{ book.tracks.length }} {{ t('scan.tracks', { n: book.tracks.length }) }}
             <span v-if="book.sizeBytes"> · {{ fmtSize(book.sizeBytes) }}</span>
@@ -166,7 +165,7 @@ function fmtSize(bytes: number): string {
       >
         {{ t('scan.addN', { n: selectedCount }) }}
       </button>
-      <p class="mt-2 text-center text-[11px] text-[--t3]">{{ t('scan.stayOnDevice') }}</p>
+      <p class="mt-2 text-center text-[11px] text-(--t3)">{{ t('scan.stayOnDevice') }}</p>
     </div>
   </div>
 </template>

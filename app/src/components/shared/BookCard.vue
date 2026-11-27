@@ -69,7 +69,7 @@ const coverPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0
       <div class="-mt-10 mb-3 flex items-end gap-3">
         <div
           class="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg shadow-lg ring-2"
-          :class="isPlaying ? 'now-playing-ring ring-[--accent]' : 'ring-[--card-solid]'"
+          :class="isPlaying ? 'now-playing-ring ring-(--accent)' : 'ring-(--card-solid)'"
         >
           <img
             v-if="hasCover"
@@ -90,14 +90,14 @@ const coverPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0
           </div>
           <span
             v-if="downloaded"
-            class="absolute right-1 bottom-1 flex h-4 w-4 items-center justify-center rounded-full bg-[--success] text-white shadow"
+            class="absolute right-1 bottom-1 flex h-4 w-4 items-center justify-center rounded-full bg-(--success) text-white shadow"
           >
             <IconCheck :size="10" />
           </span>
         </div>
         <div class="min-w-0 pb-1">
           <h3
-            class="line-clamp-2 text-[14px] leading-snug font-semibold text-[--t1] transition-colors group-hover:text-white"
+            class="line-clamp-2 text-[14px] leading-snug font-semibold text-(--t1) transition-colors group-hover:text-white"
             :title="book.title"
           >
             {{ book.title }}
@@ -108,11 +108,11 @@ const coverPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0
       <!-- Author / Reader -->
       <p
         v-if="book.author || book.reader"
-        class="mb-3 line-clamp-1 text-[12px] text-[--t2]"
+        class="mb-3 line-clamp-1 text-[12px] text-(--t2)"
         :title="book.author || book.reader"
       >
         {{ book.author
-        }}<span v-if="book.reader && book.reader !== book.author" class="text-[--t3]"
+        }}<span v-if="book.reader && book.reader !== book.author" class="text-(--t3)"
           >{{ book.author ? ' · ' : '' }}{{ book.reader }}</span
         >
       </p>
@@ -120,8 +120,8 @@ const coverPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0
       <!-- Progress bar -->
       <div v-if="book.progress > 0" class="mb-2.5">
         <div class="mb-1 flex items-center justify-between">
-          <span class="text-[11px] font-medium text-[--t3]">{{ t('library.sortProgress') }}</span>
-          <span class="text-[11px] font-bold text-[--accent]">{{ book.progress }}%</span>
+          <span class="text-[11px] font-medium text-(--t3)">{{ t('library.sortProgress') }}</span>
+          <span class="text-[11px] font-bold text-(--accent)">{{ book.progress }}%</span>
         </div>
         <ProgressBar :percent="book.progress" height="h-1.5" />
       </div>
@@ -132,17 +132,17 @@ const coverPattern = 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0
           <span
             v-for="tag in book.tags.slice(0, 2)"
             :key="tag"
-            class="max-w-[80px] flex-shrink-0 truncate rounded-md px-2 py-0.5 text-[11px] font-medium text-[--t3]"
+            class="max-w-[80px] flex-shrink-0 truncate rounded-md px-2 py-0.5 text-[11px] font-medium text-(--t3)"
             style="background: rgba(255, 255, 255, 0.05)"
           >
             {{ tag }}
           </span>
-          <span v-if="book.tags.length > 2" class="flex-shrink-0 text-[11px] text-[--t3]">
+          <span v-if="book.tags.length > 2" class="flex-shrink-0 text-[11px] text-(--t3)">
             +{{ book.tags.length - 2 }}
           </span>
         </div>
 
-        <div v-if="book.rating" class="ml-2 flex flex-shrink-0 gap-0.5 text-[--warning]/70">
+        <div v-if="book.rating" class="ml-2 flex flex-shrink-0 gap-0.5 text-(--warning)/70">
           <template v-for="s in 5" :key="s">
             <component :is="s <= book.rating ? IconStar : IconStarOutline" :size="11" />
           </template>

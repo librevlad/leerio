@@ -3,7 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { api, coverUrl } from '../api'
-import { formatSizeMB, formatRemaining as _formatRemaining } from '../utils/format'
+import { formatSizeMB, formatRemaining as _formatRemaining, titleInitial } from '../utils/format'
 import type { Book } from '../types'
 import BookActions from '../components/book/BookActions.vue'
 import BookChapters from '../components/book/BookChapters.vue'
@@ -22,7 +22,7 @@ import {
 } from '../components/shared/icons'
 import ProgressBar from '../components/shared/ProgressBar.vue'
 import PaywallModal from '../components/shared/PaywallModal.vue'
-import { usePlayer } from '../composables/usePlayer'
+import { usePlayer, savedPosition } from '../composables/usePlayer'
 import { useDownloads } from '../composables/useDownloads'
 import { useAuth } from '../composables/useAuth'
 import { useCategories } from '../composables/useCategories'
@@ -65,6 +65,16 @@ const cloudProgress = ref(0)
 
 const isCurrentBook = computed(() => player.currentBook.value?.id === book.value?.id)
 const isPlaying = computed(() => player.isPlaying.value)
+
+// Main button says where listening resumes: "Продолжить · Трек 3 из 22"
+const resumeAt = computed(() => (book.value ? savedPosition(book.value.id) : null))
+const playLabel = computed(() => {
+  if (isCurrentBook.value && isPlaying.value) return t('player.pause')
+  const pos = resumeAt.value
+  if (!pos) return t('book.listen')
+  const total = book.value?.mp3_count
+  return total ? `${t('book.continue')} · ${t('player.trackN', { n: pos.trackIndex + 1, total })}` : t('book.continue')
+})
 
 const isDownloaded = computed(() => (book.value ? dl.isBookDownloaded(book.value.id) : false))
 const isDownloading = computed(() => (book.value ? dl.isBookDownloading(book.value.id) : false))
@@ -212,6 +222,11 @@ async function deleteBook() {
 
 async function startListening() {
   if (!book.value) return
+  // This book is already in the player — the button is play/pause, not "load again"
+  if (isCurrentBook.value) {
+    player.togglePlay()
+    return
+  }
   // User books (ub:) require login; catalog + local books work for guests
   if (!isLoggedIn.value && book.value.id.startsWith('ub:')) {
     toast.info(t('book.loginToListen'))
@@ -297,7 +312,7 @@ watch(() => route.params.id, loadBook)
     <!-- Back -->
     <div class="mb-4 flex items-center lg:mb-6">
       <button
-        class="-ml-3 flex min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border-0 bg-transparent px-3 py-2.5 text-[13px] text-[--t3] transition-all hover:bg-white/5 hover:text-[--t1]"
+        class="-ml-3 flex min-h-[44px] cursor-pointer items-center gap-2 rounded-xl border-0 bg-transparent px-3 py-2.5 text-[13px] text-(--t3) transition-all hover:bg-white/5 hover:text-(--t1)"
         @click="router.back()"
       >
         <IconArrowLeft :size="15" />
@@ -338,32 +353,39 @@ watch(() => route.params.id, loadBook)
                 @error="coverError = true"
               />
               <div
-                v-else
+                v-else-if="book.category"
                 class="flex h-full w-full items-center justify-center"
-                :style="{ background: catGradient(book.category ?? '') }"
+                :style="{ background: catGradient(book.category) }"
               >
                 <IconMusic :size="32" class="text-white/40 lg:!h-12 lg:!w-12" />
+              </div>
+              <!-- Device / local books have no category: same letter tile as in the library -->
+              <div
+                v-else
+                class="flex h-full w-full items-center justify-center bg-(--accent-soft) text-[44px] font-bold text-(--accent)"
+              >
+                {{ titleInitial(book.title) }}
               </div>
             </router-link>
 
             <!-- Mobile: info next to cover -->
             <div class="flex min-w-0 flex-1 flex-col justify-center lg:mt-4 lg:text-center">
-              <h1 class="font-display line-clamp-3 text-[18px] leading-tight font-bold text-[--t1] lg:text-[20px]">
+              <h1 class="font-display line-clamp-3 text-[18px] leading-tight font-bold text-(--t1) lg:text-[20px]">
                 {{ book.title }}
               </h1>
-              <p class="mt-1 text-[13px] text-[--t3]">{{ book.author }}</p>
+              <p class="mt-1 text-[13px] text-(--t3)">{{ book.author }}</p>
             </div>
           </div>
 
           <!-- Progress card -->
           <div
-            v-if="book.progress > 0 || isCurrentBook"
+            v-if="book.progress > 0"
             class="mt-4 rounded-xl px-4 py-3"
             style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.04)"
           >
             <div class="flex items-center justify-between text-[12px]">
-              <span class="font-semibold text-[--t1]">{{ book.progress }}%</span>
-              <span v-if="book.duration_hours" class="text-[--t3]">
+              <span class="font-semibold text-(--t1)">{{ book.progress }}%</span>
+              <span v-if="book.duration_hours" class="text-(--t3)">
                 {{ formatRemaining(book.duration_hours, book.progress) }} {{ t('common.remaining') }}
               </span>
             </div>
@@ -378,7 +400,7 @@ watch(() => route.params.id, loadBook)
             @click="startListening"
           >
             <component :is="isCurrentBook && isPlaying ? IconPause : IconPlay" :size="16" />
-            {{ isCurrentBook && isPlaying ? t('player.pause') : t('player.play') }}
+            {{ playLabel }}
           </button>
 
           <!-- Actions (desktop only, below play) -->
@@ -386,7 +408,7 @@ watch(() => route.params.id, loadBook)
             <!-- Add to library -->
             <button
               v-if="isLoggedIn && !isInLibrary"
-              class="flex w-full cursor-pointer items-center gap-2 rounded-lg border-0 px-3 py-2 text-[12px] text-[--t2] transition-colors hover:bg-white/5"
+              class="flex w-full cursor-pointer items-center gap-2 rounded-lg border-0 px-3 py-2 text-[12px] text-(--t2) transition-colors hover:bg-white/5"
               style="background: rgba(255, 255, 255, 0.03)"
               @click="addToLibrary"
             >
@@ -410,7 +432,7 @@ watch(() => route.params.id, loadBook)
               <button
                 v-if="!isDownloaded && !isDownloading"
                 v-ripple
-                class="flex w-full cursor-pointer items-center gap-2 rounded-lg border-0 px-3 py-2 text-[12px] text-[--t2] transition-colors hover:bg-white/5"
+                class="flex w-full cursor-pointer items-center gap-2 rounded-lg border-0 px-3 py-2 text-[12px] text-(--t2) transition-colors hover:bg-white/5"
                 style="background: rgba(255, 255, 255, 0.03)"
                 @click="startDownload"
               >
@@ -419,10 +441,10 @@ watch(() => route.params.id, loadBook)
               </button>
               <div v-else-if="isDownloading" class="px-3 py-2">
                 <ProgressBar :percent="dlPercent" height="h-1" />
-                <div class="mt-1 flex items-center justify-between text-[11px] text-[--t3]">
+                <div class="mt-1 flex items-center justify-between text-[11px] text-(--t3)">
                   <span>{{ dlPercent }}%</span>
                   <button
-                    class="cursor-pointer border-0 bg-transparent text-[--t3] hover:text-red-400"
+                    class="cursor-pointer border-0 bg-transparent text-(--t3) hover:text-red-400"
                     @click="cancelDl"
                   >
                     <IconX :size="12" />
@@ -433,7 +455,7 @@ watch(() => route.params.id, loadBook)
                 <IconCheck :size="14" />
                 {{ t('book.downloaded') }}
                 <button
-                  class="ml-auto cursor-pointer border-0 bg-transparent text-[--t3] hover:text-red-400"
+                  class="ml-auto cursor-pointer border-0 bg-transparent text-(--t3) hover:text-red-400"
                   @click="removeDl"
                 >
                   <IconTrash :size="12" />
@@ -442,24 +464,25 @@ watch(() => route.params.id, loadBook)
             </template>
           </div>
 
-          <!-- Device badge + Cloud upload -->
-          <div v-if="isFsBook" class="mt-3 space-y-2">
+          <!-- Cloud upload: needs an account on the server — no dead button for guests/offline -->
+          <div v-if="isFsBook && isLoggedIn" class="mt-3 space-y-2">
             <div
-              class="inline-flex items-center gap-1.5 rounded-md bg-white/[0.06] px-2.5 py-1 text-[11px] text-[--t3]"
+              v-if="isSynced"
+              class="inline-flex items-center gap-1.5 rounded-md bg-white/[0.06] px-2.5 py-1 text-[11px] text-(--t3)"
             >
               <IconSmartphone :size="12" />
-              {{ isSynced ? t('book.inCloud') : t('book.onDevice') }}
+              {{ t('book.inCloud') }}
             </div>
 
             <button
               v-if="!isSynced"
               v-ripple
-              class="flex w-full items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.05] px-4 py-3 text-[13px] font-semibold text-[--t1]"
+              class="flex w-full items-center justify-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.05] px-4 py-3 text-[13px] font-semibold text-(--t1)"
               :disabled="cloudUploading"
               @click="cloudUpload"
             >
               <template v-if="cloudUploading">
-                <div class="h-4 w-4 animate-spin rounded-full border-2 border-[--accent] border-t-transparent" />
+                <div class="h-4 w-4 animate-spin rounded-full border-2 border-(--accent) border-t-transparent" />
                 {{ cloudProgress }}%
               </template>
               <template v-else>
@@ -467,7 +490,7 @@ watch(() => route.params.id, loadBook)
                 {{ t('book.uploadToCloud') }}
               </template>
             </button>
-            <p v-if="!isSynced" class="text-center text-[10px] text-[--t3]">
+            <p v-if="!isSynced" class="text-center text-[10px] text-(--t3)">
               {{ t('book.cloudHint') }}
             </p>
           </div>
@@ -475,7 +498,7 @@ watch(() => route.params.id, loadBook)
           <PaywallModal :open="showPaywall" @close="showPaywall = false" />
 
           <!-- Meta (desktop) -->
-          <div class="mt-4 hidden space-y-2 border-t border-white/[0.04] pt-4 text-[12px] text-[--t3] lg:block">
+          <div class="mt-4 hidden space-y-2 border-t border-white/[0.04] pt-4 text-[12px] text-(--t3) lg:block">
             <p v-if="book.duration_hours">{{ formatDuration(book.duration_hours) }}</p>
             <p v-if="book.mp3_count">{{ book.mp3_count }} {{ t('book.tracks') }}</p>
             <p v-if="book.size_mb">{{ formatSizeMB(book.size_mb, t) }}</p>
@@ -496,13 +519,12 @@ watch(() => route.params.id, loadBook)
 
           <!-- Description -->
           <div class="mt-6">
-            <div v-if="book.description" class="text-[13px] leading-relaxed text-[--t2]">
+            <div v-if="book.description" class="text-[13px] leading-relaxed text-(--t2)">
               {{ book.description }}
             </div>
-            <p v-else class="text-[13px] text-[--t3]">{{ t('book.noDescription') }}</p>
 
             <!-- Meta (mobile only) -->
-            <div class="mt-4 flex gap-3 text-[12px] text-[--t3] lg:hidden">
+            <div class="mt-4 flex gap-3 text-[12px] text-(--t3) lg:hidden">
               <span v-if="book.duration_hours">{{ formatDuration(book.duration_hours) }}</span>
               <span v-if="book.mp3_count">{{ book.mp3_count }} {{ t('book.tracks') }}</span>
               <span v-if="book.size_mb">{{ formatSizeMB(book.size_mb, t) }}</span>

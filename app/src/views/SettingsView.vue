@@ -123,8 +123,8 @@ async function handleLogout() {
           👤
         </div>
         <div class="min-w-0 flex-1">
-          <p class="text-[14px] font-semibold text-[--t1]">{{ t('settings.guest') }}</p>
-          <router-link to="/login" class="text-[12px] font-medium text-[--accent] no-underline hover:text-[--accent-2]">
+          <p class="text-[14px] font-semibold text-(--t1)">{{ t('settings.guest') }}</p>
+          <router-link to="/login" class="text-[12px] font-medium text-(--accent) no-underline hover:text-(--accent-2)">
             {{ t('settings.loginForSync') }}
           </router-link>
         </div>
@@ -140,19 +140,19 @@ async function handleLogout() {
         />
         <div
           v-else
-          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] text-[18px] font-bold text-[--card]"
+          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-[14px] text-[18px] font-bold text-(--card)"
           style="background: var(--gradient-accent)"
         >
           {{ user.name?.charAt(0) || '?' }}
         </div>
         <div class="min-w-0 flex-1">
           <div class="flex items-center gap-2">
-            <p class="text-[16px] font-bold text-[--t1]">{{ user.name }}</p>
-            <span v-if="isAdmin" class="rounded bg-[--accent] px-1.5 py-0.5 text-[9px] font-bold text-[--bg]">
+            <p class="text-[16px] font-bold text-(--t1)">{{ user.name }}</p>
+            <span v-if="isAdmin" class="rounded bg-(--accent) px-1.5 py-0.5 text-[9px] font-bold text-(--bg)">
               ADMIN
             </span>
           </div>
-          <p class="text-[12px] text-[--t2]">{{ user.email }}</p>
+          <p class="text-[12px] text-(--t2)">{{ user.email }}</p>
         </div>
       </div>
 
@@ -165,18 +165,18 @@ async function handleLogout() {
       </div>
       <div v-else-if="sessionStats" class="settings-stat-bar mt-4">
         <div class="settings-stat-cell">
-          <p class="settings-stat-num text-[--accent]">{{ animHours }}</p>
+          <p class="settings-stat-num text-(--accent)">{{ animHours }}</p>
           <p class="settings-stat-label">{{ t('settings.unitH') }}</p>
         </div>
         <div class="settings-stat-cell">
           <p class="settings-stat-num">
-            {{ animToday }}<span class="text-[11px] text-[--t3]">{{ t('settings.unitMin') }}</span>
+            {{ animToday }}<span class="text-[11px] text-(--t3)">{{ t('settings.unitMin') }}</span>
           </p>
           <p class="settings-stat-label">{{ t('settings.statToday') }}</p>
         </div>
         <div class="settings-stat-cell">
           <p class="settings-stat-num">
-            {{ totalDone }}<span class="text-[12px] text-[--t3]">/{{ yearlyGoal }}</span>
+            {{ totalDone }}<span class="text-[12px] text-(--t3)">/{{ yearlyGoal }}</span>
           </p>
           <p class="settings-stat-label">{{ t('settings.yearlyGoal') }}</p>
         </div>
@@ -184,7 +184,7 @@ async function handleLogout() {
           <p class="settings-stat-num">🔥 {{ animStreak }}</p>
           <p class="settings-stat-label">
             {{ t('plural.day', streak.current) }}
-            <span v-if="streak.best > 0" class="hidden text-[--t3] sm:inline">
+            <span v-if="streak.best > 0" class="hidden text-(--t3) sm:inline">
               · {{ t('settings.streakBest') }} {{ streak.best }}</span
             >
           </p>
@@ -226,10 +226,10 @@ async function handleLogout() {
                   type="range"
                   min="1"
                   max="100"
-                  class="w-36 accent-[--accent]"
+                  class="w-36 accent-(--accent)"
                   @change="saveGoal"
                 />
-                <span class="text-[14px] font-bold text-[--accent]">{{ yearlyGoal }}</span>
+                <span class="text-[14px] font-bold text-(--accent)">{{ yearlyGoal }}</span>
               </div>
             </div>
           </div>
@@ -266,13 +266,13 @@ async function handleLogout() {
             <div v-if="dl.downloadedBooks.value.length" class="space-y-0">
               <div v-for="b in dl.downloadedBooks.value" :key="b.bookId" class="settings-row">
                 <div class="min-w-0 flex-1">
-                  <p class="truncate text-[13px] font-medium text-[--t1]">{{ b.title }}</p>
-                  <p class="text-[11px] text-[--t3]">
+                  <p class="truncate text-[13px] font-medium text-(--t1)">{{ b.title }}</p>
+                  <p class="text-[11px] text-(--t3)">
                     {{ b.tracks.length }} {{ t('plural.track', b.tracks.length) }} · {{ fmtSize(b.totalSize) }}
                   </p>
                 </div>
                 <button
-                  class="shrink-0 rounded-full p-2 text-[--t3] transition-colors hover:bg-red-500/15 hover:text-red-400"
+                  class="shrink-0 rounded-full p-2 text-(--t3) transition-colors hover:bg-red-500/15 hover:text-red-400"
                   @click="dl.deleteBook(b.bookId)"
                 >
                   <IconTrash :size="14" />
@@ -280,7 +280,7 @@ async function handleLogout() {
               </div>
             </div>
             <div v-else class="settings-row">
-              <span class="text-[12px] text-[--t3]">{{ t('settings.noDownloads') }}</span>
+              <span class="text-[12px] text-(--t3)">{{ t('settings.noDownloads') }}</span>
             </div>
           </div>
         </div>
@@ -295,10 +295,10 @@ async function handleLogout() {
             <div class="settings-row">
               <span class="settings-row-label">{{ t('settings.storageCache') }}</span>
               <div class="flex items-center gap-2.5">
-                <span class="text-[12px] text-[--t3]">{{ fmtSize(cacheBytes) }}</span>
+                <span class="text-[12px] text-(--t3)">{{ fmtSize(cacheBytes) }}</span>
                 <button
                   v-if="cacheBytes > 0"
-                  class="text-[12px] font-medium text-[--accent] transition-colors hover:text-[--accent-2]"
+                  class="text-[12px] font-medium text-(--accent) transition-colors hover:text-(--accent-2)"
                   @click="clearCache"
                 >
                   {{ t('settings.clearCache') }}
@@ -307,7 +307,7 @@ async function handleLogout() {
             </div>
             <div class="settings-row">
               <span class="settings-row-label">{{ t('settings.storageLocal') }}</span>
-              <span class="text-[12px] text-[--t3]">{{ localBooks.length }}</span>
+              <span class="text-[12px] text-(--t3)">{{ localBooks.length }}</span>
             </div>
           </div>
         </div>
@@ -318,29 +318,29 @@ async function handleLogout() {
           <div class="settings-group">
             <button v-ripple class="settings-row w-full" @click="showShortcuts = !showShortcuts">
               <span class="settings-row-label">{{ t('settings.shortcuts') }}</span>
-              <span class="text-[12px] text-[--t3] transition-transform" :class="showShortcuts ? 'rotate-90' : ''"
+              <span class="text-[12px] text-(--t3) transition-transform" :class="showShortcuts ? 'rotate-90' : ''"
                 >▸</span
               >
             </button>
             <template v-if="showShortcuts">
               <div class="settings-row">
-                <span class="text-[12px] text-[--t3]">{{ t('settings.shortcutPlayPause') }}</span>
+                <span class="text-[12px] text-(--t3)">{{ t('settings.shortcutPlayPause') }}</span>
                 <kbd class="settings-kbd">Space</kbd>
               </div>
               <div class="settings-row">
-                <span class="text-[12px] text-[--t3]">{{ t('settings.shortcutForward') }}</span>
+                <span class="text-[12px] text-(--t3)">{{ t('settings.shortcutForward') }}</span>
                 <kbd class="settings-kbd">&rarr;</kbd>
               </div>
               <div class="settings-row">
-                <span class="text-[12px] text-[--t3]">{{ t('settings.shortcutBack') }}</span>
+                <span class="text-[12px] text-(--t3)">{{ t('settings.shortcutBack') }}</span>
                 <kbd class="settings-kbd">&larr;</kbd>
               </div>
               <div class="settings-row">
-                <span class="text-[12px] text-[--t3]">{{ t('settings.shortcutNext') }}</span>
+                <span class="text-[12px] text-(--t3)">{{ t('settings.shortcutNext') }}</span>
                 <kbd class="settings-kbd">Shift + &rarr;</kbd>
               </div>
               <div class="settings-row">
-                <span class="text-[12px] text-[--t3]">{{ t('settings.shortcutPrev') }}</span>
+                <span class="text-[12px] text-(--t3)">{{ t('settings.shortcutPrev') }}</span>
                 <kbd class="settings-kbd">Shift + &larr;</kbd>
               </div>
             </template>
@@ -355,14 +355,14 @@ async function handleLogout() {
               <span class="settings-row-label">{{ t('settings.currentPlan') }}</span>
               <span
                 class="rounded px-2 py-0.5 text-[11px] font-bold"
-                :class="user.plan === 'premium' ? 'bg-[--accent] text-[--bg]' : 'bg-white/[0.06] text-[--t2]'"
+                :class="user.plan === 'premium' ? 'bg-(--accent) text-(--bg)' : 'bg-white/[0.06] text-(--t2)'"
               >
                 {{ user.plan === 'premium' ? 'Premium' : 'Free' }}
               </span>
             </div>
             <div v-if="user.plan !== 'premium'" class="settings-row">
               <span class="settings-row-label">{{ t('settings.booksCount') }}</span>
-              <span class="text-[12px]" :class="userBooks.length >= 10 ? 'font-bold text-[--accent]' : 'text-[--t3]'"
+              <span class="text-[12px]" :class="userBooks.length >= 10 ? 'font-bold text-(--accent)' : 'text-(--t3)'"
                 >{{ userBooks.length }} / 10</span
               >
             </div>
@@ -388,15 +388,15 @@ async function handleLogout() {
           <div class="settings-group">
             <div class="settings-row">
               <span class="settings-row-label">{{ t('settings.aboutVersion') }}</span>
-              <span class="text-[12px] text-[--t3]">{{ version }}</span>
+              <span class="text-[12px] text-(--t3)">{{ version }}</span>
             </div>
             <div class="settings-row">
               <span class="settings-row-label">{{ t('settings.aboutBooks') }}</span>
-              <span class="text-[12px] text-[--t3]">{{ totalBooks ?? '—' }}</span>
+              <span class="text-[12px] text-(--t3)">{{ totalBooks ?? '—' }}</span>
             </div>
-            <router-link to="/legal/dmca" class="settings-row no-underline hover:bg-[--card-hover]">
+            <router-link to="/legal/dmca" class="settings-row no-underline hover:bg-(--card-hover)">
               <span class="settings-row-label">DMCA Policy</span>
-              <span class="text-[12px] text-[--t3]">&#x203A;</span>
+              <span class="text-[12px] text-(--t3)">&#x203A;</span>
             </router-link>
           </div>
         </div>

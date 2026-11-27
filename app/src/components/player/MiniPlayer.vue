@@ -55,10 +55,10 @@ const {
       >
         <!-- Info (clickable) -->
         <button class="min-w-0 flex-1 cursor-pointer border-0 bg-transparent p-0 text-left" @click="openFullscreen">
-          <p class="truncate text-[13px] leading-tight font-semibold text-[--t1]">
+          <p class="truncate text-[13px] leading-tight font-semibold text-(--t1)">
             {{ currentBook.title }}
           </p>
-          <p class="mt-0.5 text-[11px] text-[--t3] tabular-nums">
+          <p class="mt-0.5 text-[11px] text-(--t3) tabular-nums">
             {{ formatTime(totalDuration > 0 ? totalElapsed : currentTime) }} /
             {{ formatTime(totalDuration > 0 ? totalDuration : duration) }}
           </p>
@@ -66,7 +66,7 @@ const {
 
         <!-- -15s skip -->
         <button
-          class="hidden shrink-0 cursor-pointer border-0 bg-transparent p-1.5 text-[--t3] transition-colors hover:text-[--t1] sm:block"
+          class="hidden shrink-0 cursor-pointer border-0 bg-transparent p-1.5 text-(--t3) transition-colors hover:text-(--t1) sm:block"
           :aria-label="t('player.back15Aria')"
           @click="skipBackward()"
         >
@@ -97,7 +97,7 @@ const {
 
         <!-- +30s skip -->
         <button
-          class="shrink-0 cursor-pointer border-0 bg-transparent p-1.5 text-[--t3] transition-colors hover:text-[--t1]"
+          class="shrink-0 cursor-pointer border-0 bg-transparent p-1.5 text-(--t3) transition-colors hover:text-(--t1)"
           :aria-label="t('player.forward30Aria')"
           @click="skipForward(30)"
         >

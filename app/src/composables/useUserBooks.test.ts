@@ -51,6 +51,18 @@ describe('useUserBooks', () => {
     expect(ub.loading.value).toBe(false)
   })
 
+  it('loadUserBooks() offline: keeps the last list and does not throw', async () => {
+    const ub = useUserBooks()
+    ub.userBooks.value = [mockUserBook('a')] as never
+    vi.mocked(api.getUserBooks).mockRejectedValue(new TypeError('Failed to fetch'))
+    vi.mocked(api.getTTSJobs).mockRejectedValue(new TypeError('Failed to fetch'))
+
+    await expect(ub.loadUserBooks()).resolves.toBeUndefined()
+    await expect(ub.loadTTSJobs()).resolves.toBeUndefined()
+    expect(ub.userBooks.value).toHaveLength(1)
+    expect(ub.loading.value).toBe(false)
+  })
+
   it('deleteBook() filters out by slug and calls API', async () => {
     vi.mocked(api.deleteUserBook).mockResolvedValue(undefined as never)
     const ub = useUserBooks()

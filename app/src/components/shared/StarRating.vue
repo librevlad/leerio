@@ -23,7 +23,7 @@ function onClick(star: number) {
       v-for="star in 5"
       :key="star"
       class="flex items-center transition-colors duration-150"
-      :class="(hoverValue || modelValue) >= star ? 'text-amber-500/70' : 'text-[--t3]'"
+      :class="(hoverValue || modelValue) >= star ? 'text-amber-500/70' : 'text-(--t3)'"
       @click="onClick(star)"
       @mouseenter="!readonly && (hoverValue = star)"
       @mouseleave="hoverValue = 0"

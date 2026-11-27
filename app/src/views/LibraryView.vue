@@ -163,8 +163,8 @@ watch(loadMoreRef, (el) => {
         class="flex min-h-[44px] flex-shrink-0 cursor-pointer items-center rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
         :class="
           category === ''
-            ? 'border-white/10 bg-white/[0.08] text-[--t1]'
-            : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
+            ? 'border-white/10 bg-white/[0.08] text-(--t1)'
+            : 'border-transparent bg-transparent text-(--t3) hover:bg-white/5 hover:text-(--t2)'
         "
         @click="category = ''"
       >
@@ -176,8 +176,8 @@ watch(loadMoreRef, (el) => {
         class="flex min-h-[44px] flex-shrink-0 cursor-pointer items-center gap-1 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
         :class="
           category === cat
-            ? 'border-white/10 bg-white/[0.08] text-[--t1]'
-            : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
+            ? 'border-white/10 bg-white/[0.08] text-(--t1)'
+            : 'border-transparent bg-transparent text-(--t3) hover:bg-white/5 hover:text-(--t2)'
         "
         @click="category = cat"
       >
@@ -192,8 +192,8 @@ watch(loadMoreRef, (el) => {
         class="flex min-h-[44px] cursor-pointer items-center gap-1 rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
         :class="
           statusFilter
-            ? 'border-white/10 bg-white/[0.08] text-[--t1]'
-            : 'border-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
+            ? 'border-white/10 bg-white/[0.08] text-(--t1)'
+            : 'border-transparent text-(--t3) hover:bg-white/5 hover:text-(--t2)'
         "
         @click="showStatusMenu = !showStatusMenu"
       >
@@ -202,14 +202,14 @@ watch(loadMoreRef, (el) => {
       </button>
       <div
         v-if="showStatusMenu"
-        class="absolute top-full left-0 z-20 mt-1 rounded-xl border border-[--border] p-1"
+        class="absolute top-full left-0 z-20 mt-1 rounded-xl border border-(--border) p-1"
         style="background: var(--card-solid)"
       >
         <button
           v-for="sp in statusPills"
           :key="sp.value"
           class="block w-full cursor-pointer rounded-lg border-0 bg-transparent px-3 py-2 text-left text-[12px] whitespace-nowrap transition-colors"
-          :class="statusFilter === sp.value ? 'text-[--accent]' : 'text-[--t2] hover:bg-white/5'"
+          :class="statusFilter === sp.value ? 'text-(--accent)' : 'text-(--t2) hover:bg-white/5'"
           @click="selectStatus(sp.value)"
         >
           {{ sp.label }}
@@ -222,9 +222,9 @@ watch(loadMoreRef, (el) => {
     <div v-if="showStatusMenu" class="fixed inset-0 z-10" @click="showStatusMenu = false" />
 
     <!-- Active filter summary -->
-    <div v-if="hasActiveFilters && !loading" class="mb-4 flex items-center gap-2 text-[12px] text-[--t3]">
+    <div v-if="hasActiveFilters && !loading" class="mb-4 flex items-center gap-2 text-[12px] text-(--t3)">
       <span>
-        {{ t('library.found') }} <span class="font-bold text-[--t1]">{{ filtered.length }}</span>
+        {{ t('library.found') }} <span class="font-bold text-(--t1)">{{ filtered.length }}</span>
         {{ t('plural.book', filtered.length) }}
       </span>
       <span v-if="category" class="rounded-full bg-white/[0.06] px-2 py-0.5">{{ category }}</span>
@@ -232,7 +232,7 @@ watch(loadMoreRef, (el) => {
         {{ statusPills.find((p) => p.value === statusFilter)?.label }}
       </span>
       <span v-if="search" class="rounded-full bg-white/[0.06] px-2 py-0.5">&laquo;{{ search }}&raquo;</span>
-      <button class="ml-1 cursor-pointer text-[--accent] hover:underline" @click="resetFilters">
+      <button class="ml-1 cursor-pointer text-(--accent) hover:underline" @click="resetFilters">
         {{ t('library.reset') }}
       </button>
     </div>
@@ -258,10 +258,10 @@ watch(loadMoreRef, (el) => {
       </div>
       <!-- Infinite scroll trigger -->
       <div v-if="hasMore" ref="loadMoreRef" class="mt-6 flex justify-center py-4">
-        <div class="flex items-center gap-3 text-[12px] text-[--t3]">
+        <div class="flex items-center gap-3 text-[12px] text-(--t3)">
           <div class="h-1 w-20 overflow-hidden rounded-full bg-white/[0.06]">
             <div
-              class="h-full rounded-full bg-[--accent] transition-all duration-300"
+              class="h-full rounded-full bg-(--accent) transition-all duration-300"
               :style="{ width: `${(visibleCount / filtered.length) * 100}%` }"
             />
           </div>

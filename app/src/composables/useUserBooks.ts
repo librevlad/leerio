@@ -7,17 +7,25 @@ const ttsJobs = ref<TTSJob[]>([])
 const loading = ref(false)
 
 export function useUserBooks() {
+  // Server lists are best-effort: offline, as a guest or with the server down,
+  // keep what we have — device-folder and local books must still render
   async function loadUserBooks() {
     loading.value = true
     try {
       userBooks.value = await api.getUserBooks()
+    } catch {
+      /* offline / guest — keep the last known list */
     } finally {
       loading.value = false
     }
   }
 
   async function loadTTSJobs() {
-    ttsJobs.value = await api.getTTSJobs()
+    try {
+      ttsJobs.value = await api.getTTSJobs()
+    } catch {
+      /* offline / guest */
+    }
   }
 
   async function deleteBook(slug: string) {

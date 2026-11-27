@@ -131,8 +131,8 @@ function formatTime(ts: string): string {
     <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
       <div>
         <h1 class="page-title">{{ t('history.title') }}</h1>
-        <p v-if="!loading" class="mt-1 text-[13px] text-[--t3]">
-          <span class="font-bold text-[--accent]">{{ entries.length }}</span>
+        <p v-if="!loading" class="mt-1 text-[13px] text-(--t3)">
+          <span class="font-bold text-(--accent)">{{ entries.length }}</span>
           {{ t('plural.entry', entries.length) }}
         </p>
       </div>
@@ -147,8 +147,8 @@ function formatTime(ts: string): string {
         class="flex-shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[12px] font-medium transition-colors"
         :class="
           actionFilter === a.value
-            ? 'border-white/10 bg-white/[0.08] text-[--t1]'
-            : 'border-transparent bg-transparent text-[--t3] hover:bg-white/5 hover:text-[--t2]'
+            ? 'border-white/10 bg-white/[0.08] text-(--t1)'
+            : 'border-transparent bg-transparent text-(--t3) hover:bg-white/5 hover:text-(--t2)'
         "
         @click="actionFilter = a.value"
       >
@@ -164,7 +164,7 @@ function formatTime(ts: string): string {
     <!-- Grouped timeline -->
     <div v-else-if="grouped.length" class="fade-in space-y-8">
       <div v-for="group in grouped" :key="group.date">
-        <h3 class="mb-3 text-[12px] font-bold text-[--t3]">{{ group.date }}</h3>
+        <h3 class="mb-3 text-[12px] font-bold text-(--t3)">{{ group.date }}</h3>
         <div class="space-y-2">
           <div
             v-for="(e, i) in group.entries"
@@ -194,7 +194,7 @@ function formatTime(ts: string): string {
                 @error="coverErrors.add(e.book_id)"
               />
               <div v-else class="flex h-full w-full items-center justify-center" style="background: var(--accent-bg)">
-                <IconMusic :size="14" class="text-[--t3]" />
+                <IconMusic :size="14" class="text-(--t3)" />
               </div>
             </div>
 
@@ -211,18 +211,18 @@ function formatTime(ts: string): string {
               <router-link
                 v-if="e.book_id"
                 :to="`/book/${e.book_id}`"
-                class="block truncate py-1 text-[13px] font-medium text-[--t2] no-underline transition-colors hover:text-[--t1]"
+                class="block truncate py-1 text-[13px] font-medium text-(--t2) no-underline transition-colors hover:text-(--t1)"
               >
                 {{ e.book }}
               </router-link>
-              <p v-else class="truncate text-[13px] font-medium text-[--t2]">{{ e.book }}</p>
-              <p v-if="e.detail && e.detail !== e.action_label" class="mt-0.5 truncate text-[11px] text-[--t3]">
+              <p v-else class="truncate text-[13px] font-medium text-(--t2)">{{ e.book }}</p>
+              <p v-if="e.detail && e.detail !== e.action_label" class="mt-0.5 truncate text-[11px] text-(--t3)">
                 {{ e.detail }}
               </p>
             </div>
 
             <!-- Time -->
-            <span class="flex-shrink-0 text-[11px] whitespace-nowrap text-[--t3]">
+            <span class="flex-shrink-0 text-[11px] whitespace-nowrap text-(--t3)">
               {{ formatTime(e.ts) }}
             </span>
           </div>

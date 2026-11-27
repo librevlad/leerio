@@ -90,18 +90,18 @@ async function removeQuote(quoteId: number) {
         <div
           v-for="q in quotes"
           :key="q.id"
-          class="group relative rounded-xl px-4 py-3 text-[13px] leading-relaxed text-[--t2] italic"
+          class="group relative rounded-xl px-4 py-3 text-[13px] leading-relaxed text-(--t2) italic"
           style="background: rgba(232, 146, 58, 0.05); border-left: 2px solid var(--accent)"
         >
           <button
-            class="absolute top-2 right-2 cursor-pointer border-0 bg-transparent p-0.5 text-[--t3] opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
+            class="absolute top-2 right-2 cursor-pointer border-0 bg-transparent p-0.5 text-(--t3) opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
             :aria-label="t('book.deleteQuoteAria')"
             @click="removeQuote(q.id)"
           >
             <IconX :size="12" />
           </button>
           "{{ q.text }}"
-          <p v-if="q.ts" class="mt-1 text-[10px] text-[--t3] not-italic">
+          <p v-if="q.ts" class="mt-1 text-[10px] text-(--t3) not-italic">
             {{ new Date(q.ts).toLocaleDateString('ru', { day: 'numeric', month: 'short' }) }}
           </p>
         </div>

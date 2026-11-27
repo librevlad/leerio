@@ -2,7 +2,7 @@
  * Scans device storage for audiobook folders (Capacitor native only).
  *
  * Convention: each subfolder = one book. Folder name = book title.
- * Audio files inside = tracks (sorted by name).
+ * Audio files inside (including nested "CD1/", "Part 2/" folders) = tracks, sorted by path.
  *
  * Scans: /Audiobooks/, /Download/, /Music/ (ExternalStorage).
  * On web: no-op (returns empty).
@@ -10,15 +10,20 @@
  * Persistent storage: localStorage "leerio_fs_books" (Record<string, FsBookMeta>).
  */
 import { ref } from 'vue'
-import { Capacitor } from '@capacitor/core'
+import { Capacitor, registerPlugin } from '@capacitor/core'
 import { Filesystem, Directory } from '@capacitor/filesystem'
 import { STORAGE } from '../constants/storage'
 import { fetchCoversForBooks } from './useBookCovers'
 import type { FsBookMeta, FsTrack } from '../types'
 
 const SCAN_DIRS = ['Audiobooks', 'Download', 'Music']
-const AUDIO_EXT = /\.(mp3|m4a|m4b|ogg|opus|flac|wav)$/i
+// "mp3" without the dot: long names truncated by some downloaders ("…где мы гmp3")
+const AUDIO_EXT = /(\.(m4a|m4b|ogg|opus|flac|wav)|mp3)$/i
+const MAX_DEPTH = 3 // book folder → nested part folders
 const NOT_BOOK_KEYWORDS = /podcast|music|ringtone|notification|alarm|recording/i
+
+// Native (android/.../AudioPermissionPlugin.java): READ_MEDIA_AUDIO on Android 13+
+const AudioPermission = registerPlugin<{ request(): Promise<{ granted: boolean }> }>('AudioPermission')
 
 // ── Singleton state ────────────────────────────────────────────────────
 
@@ -55,7 +60,10 @@ export function useFileScanner() {
   async function requestPermissions(): Promise<boolean> {
     try {
       const status = await Filesystem.requestPermissions()
-      return status.publicStorage === 'granted'
+      if (status.publicStorage !== 'granted') return false
+      // Filesystem says "granted" on Android 13+ without asking — other apps' audio stays hidden
+      const audio = await AudioPermission.request()
+      return audio.granted
     } catch {
       return false
     }
@@ -89,25 +97,12 @@ export function useFileScanner() {
             if (entry.type !== 'directory') continue
 
             const bookPath = `${dir}/${entry.name}`
-            const tracks = await scanFolder(bookPath)
+            const { tracks, sizeBytes } = await scanFolder(bookPath)
 
             if (tracks.length > 0) {
               const id = `fs:${entry.name}`
               // Skip duplicates already in persistent store
               if (fsBooks.value[id]) continue
-
-              let sizeBytes = 0
-              for (const track of tracks) {
-                try {
-                  const stat = await Filesystem.stat({
-                    path: track.path,
-                    directory: Directory.ExternalStorage,
-                  })
-                  sizeBytes += stat.size || 0
-                } catch {
-                  /* stat can fail on some devices */
-                }
-              }
 
               found.push({
                 id,
@@ -163,25 +158,45 @@ export function useFileScanner() {
     if (toRemove.length > 0) persist()
   }
 
-  async function scanFolder(path: string): Promise<FsTrack[]> {
-    try {
-      const result = await Filesystem.readdir({
-        path,
-        directory: Directory.ExternalStorage,
-      })
+  async function scanFolder(path: string): Promise<{ tracks: FsTrack[]; sizeBytes: number }> {
+    const files: { rel: string; name: string; size: number }[] = []
+    await collectAudio(path, '', 0, files)
+    files.sort((a, b) => a.rel.localeCompare(b.rel, undefined, { numeric: true }))
 
-      const audioFiles = result.files
-        .filter((f) => f.type === 'file' && AUDIO_EXT.test(f.name))
-        .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
-
-      return audioFiles.map((f, i) => ({
+    return {
+      tracks: files.map((f, i) => ({
         index: i,
         filename: f.name,
-        path: `${path}/${f.name}`,
+        path: `${path}/${f.rel}`,
         duration: 0,
-      }))
+      })),
+      sizeBytes: files.reduce((sum, f) => sum + f.size, 0),
+    }
+  }
+
+  async function collectAudio(
+    root: string,
+    rel: string,
+    depth: number,
+    out: { rel: string; name: string; size: number }[],
+  ): Promise<void> {
+    let entries
+    try {
+      const result = await Filesystem.readdir({
+        path: rel ? `${root}/${rel}` : root,
+        directory: Directory.ExternalStorage,
+      })
+      entries = result.files
     } catch {
-      return []
+      return
+    }
+    for (const entry of entries) {
+      const childRel = rel ? `${rel}/${entry.name}` : entry.name
+      if (entry.type === 'directory') {
+        if (depth < MAX_DEPTH) await collectAudio(root, childRel, depth + 1, out)
+      } else if (AUDIO_EXT.test(entry.name)) {
+        out.push({ rel: childRel, name: entry.name, size: entry.size || 0 })
+      }
     }
   }
 
@@ -247,27 +262,41 @@ export function useFileScanner() {
 
 // ── Helpers (exported for testing) ──────────────────────────────────────
 
-/** "Author - Title [Reader]" → "Title" */
-export function cleanTitle(folderName: string): string {
-  let name = folderName.replace(/\s*\[.*?\]\s*$/, '')
-  if (name.includes(' - ')) {
-    name = name.split(' - ').slice(1).join(' - ')
-  }
-  return name.trim() || folderName
+const AUTHOR_SEP = / [-–—] /
+
+/** "Author_-_Title_(Reader)" → "Author - Title": underscores, trailing [Reader]/(Reader), stray ".mp3" */
+function normalizeFolderName(folderName: string): string {
+  return folderName
+    .replace(/_/g, ' ')
+    .replace(/\.mp3$/i, '')
+    .replace(/\s*[[(][^\])]*[\])]?\s*$/, '')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
-/** "Author - Title [Reader]" → "Author" */
+/** "Author - Title [Reader]" / "Author «Title» [Reader]" → "Title" */
+export function cleanTitle(folderName: string): string {
+  const name = normalizeFolderName(folderName)
+  const parts = name.split(AUTHOR_SEP)
+  if (parts.length > 1) return parts.slice(1).join(' - ').trim() || folderName
+  const quoted = name.match(/«(.+?)»/)
+  if (quoted?.[1]) return quoted[1].trim()
+  return name || folderName
+}
+
+/** "Author - Title [Reader]" / "Author «Title» [Reader]" → "Author" */
 export function extractAuthor(folderName: string): string {
-  const clean = folderName.replace(/\s*\[.*?\]\s*$/, '')
-  if (clean.includes(' - ')) {
-    return clean.split(' - ')[0]?.trim() ?? ''
-  }
+  const name = normalizeFolderName(folderName)
+  const parts = name.split(AUTHOR_SEP)
+  if (parts.length > 1) return parts[0]?.trim() ?? ''
+  const quoteStart = name.indexOf('«')
+  if (quoteStart > 0) return name.slice(0, quoteStart).trim()
   return ''
 }
 
-/** Heuristic: folder is probably not an audiobook */
-export function isLikelyNotBook(folderName: string, trackCount: number): boolean {
+/** Heuristic: folder is probably not an audiobook. Pass the full path ("Music/Scorpions") — Music/ means music */
+export function isLikelyNotBook(folderPath: string, trackCount: number): boolean {
   if (trackCount < 2) return true
-  if (NOT_BOOK_KEYWORDS.test(folderName)) return true
+  if (NOT_BOOK_KEYWORDS.test(folderPath)) return true
   return false
 }

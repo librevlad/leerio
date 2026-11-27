@@ -37,7 +37,7 @@ onUnmounted(() => {
   <transition name="toast">
     <button
       v-if="visible"
-      class="fixed right-4 bottom-20 z-40 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-white/10 bg-[--card-solid] text-[--t2] shadow-lg transition-colors hover:bg-white/[0.12] hover:text-[--t1] md:bottom-6"
+      class="fixed right-4 bottom-20 z-40 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-white/10 bg-(--card-solid) text-(--t2) shadow-lg transition-colors hover:bg-white/[0.12] hover:text-(--t1) md:bottom-6"
       :title="t('common.toTop')"
       @click="scrollToTop"
     >

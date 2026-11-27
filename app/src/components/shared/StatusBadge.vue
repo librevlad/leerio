@@ -16,14 +16,14 @@ const bookStatusLabel: Record<string, () => string> = {
 }
 
 const colorByStatus: Record<string, { bg: string; text: string }> = {
-  want_to_read: { bg: 'bg-[--info]/10', text: 'text-[--info]' },
-  reading: { bg: 'bg-[--accent-soft]', text: 'text-[--accent]' },
-  paused: { bg: 'bg-[--warning]/10', text: 'text-[--warning]' },
-  done: { bg: 'bg-[--success]/10', text: 'text-[--success]' },
-  rejected: { bg: 'bg-[--error]/10', text: 'text-[--error]' },
+  want_to_read: { bg: 'bg-(--info)/10', text: 'text-(--info)' },
+  reading: { bg: 'bg-(--accent-soft)', text: 'text-(--accent)' },
+  paused: { bg: 'bg-(--warning)/10', text: 'text-(--warning)' },
+  done: { bg: 'bg-(--success)/10', text: 'text-(--success)' },
+  rejected: { bg: 'bg-(--error)/10', text: 'text-(--error)' },
 }
 
-const fallback = { bg: 'bg-white/[0.06]', text: 'text-[--t2]' }
+const fallback = { bg: 'bg-white/[0.06]', text: 'text-(--t2)' }
 
 const displayStatus = computed(() => {
   if (props.status) return props.status

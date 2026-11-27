@@ -66,6 +66,14 @@ function pickFolder() {
   input.click()
 }
 
+// Scanning is how APK users finish onboarding — mark it done first,
+// otherwise the router's onboarding guard bounces /scan-results back to /welcome
+function scanDevice() {
+  track('onboarding_completed', { files: 0, scan: true })
+  localStorage.setItem(STORAGE.ONBOARDED, '1')
+  router.push('/scan-results')
+}
+
 function fmtSize(bytes: number): string {
   return formatSize(bytes, t)
 }
@@ -109,7 +117,7 @@ async function finish() {
     }
   }
 
-  router.push('/library')
+  router.push(isNative ? '/my-library' : '/library')
 }
 </script>
 
@@ -128,7 +136,7 @@ async function finish() {
           v-for="i in 3"
           :key="i"
           class="h-1.5 rounded-full transition-all duration-300"
-          :class="i === step ? 'w-6 bg-[--accent]' : i < step ? 'w-1.5 bg-[--accent]' : 'w-1.5 bg-white/10'"
+          :class="i === step ? 'w-6 bg-(--accent)' : i < step ? 'w-1.5 bg-(--accent)' : 'w-1.5 bg-white/10'"
         />
       </div>
 
@@ -141,8 +149,8 @@ async function finish() {
           >
             🎧
           </div>
-          <h1 class="text-[22px] font-extrabold tracking-tight text-[--t1]">{{ t('welcome.title') }}</h1>
-          <p class="mt-3 text-[14px] leading-relaxed text-[--t2]">{{ t('welcome.subtitle') }}</p>
+          <h1 class="text-[22px] font-extrabold tracking-tight text-(--t1)">{{ t('welcome.title') }}</h1>
+          <p class="mt-3 text-[14px] leading-relaxed text-(--t2)">{{ t('welcome.subtitle') }}</p>
           <button v-ripple class="btn btn-primary mt-8 w-full justify-center py-3 text-[15px]" @click="next">
             {{ t('welcome.continue') }}
           </button>
@@ -150,10 +158,10 @@ async function finish() {
 
         <!-- Step 2: Add books -->
         <div v-else-if="step === 2" key="step2">
-          <h1 class="font-display mb-1 text-center text-[20px] font-extrabold tracking-tight text-[--t1]">
+          <h1 class="font-display mb-1 text-center text-[20px] font-extrabold tracking-tight text-(--t1)">
             {{ t('welcome.addBooksTitle') }}
           </h1>
-          <p class="mb-6 text-center text-[13px] text-[--t3]">{{ t('welcome.addBooksSubtitle') }}</p>
+          <p class="mb-6 text-center text-[13px] text-(--t3)">{{ t('welcome.addBooksSubtitle') }}</p>
 
           <!-- Scan device (APK only) -->
           <button
@@ -161,7 +169,7 @@ async function finish() {
             v-ripple
             class="mb-2.5 flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-left text-white"
             style="background: var(--gradient-accent)"
-            @click="$router.push('/scan-results')"
+            @click="scanDevice"
           >
             <span class="text-[22px]">📱</span>
             <div>
@@ -188,10 +196,10 @@ async function finish() {
             />
             <span class="text-[22px]">📄</span>
             <div>
-              <div class="text-[14px] font-semibold" :class="isNative ? 'text-[--t1]' : ''">
+              <div class="text-[14px] font-semibold" :class="isNative ? 'text-(--t1)' : ''">
                 {{ t('welcome.chooseFiles') }}
               </div>
-              <div class="mt-0.5 text-[11px]" :class="isNative ? 'text-[--t3]' : 'opacity-80'">
+              <div class="mt-0.5 text-[11px]" :class="isNative ? 'text-(--t3)' : 'opacity-80'">
                 MP3, M4A, M4B, OGG, FLAC, ZIP
               </div>
             </div>
@@ -206,8 +214,8 @@ async function finish() {
           >
             <span class="text-[22px]">📂</span>
             <div>
-              <div class="text-[14px] font-semibold text-[--t1]">{{ t('welcome.chooseFolder') }}</div>
-              <div class="mt-0.5 text-[11px] text-[--t3]">{{ t('welcome.chooseFolderHint') }}</div>
+              <div class="text-[14px] font-semibold text-(--t1)">{{ t('welcome.chooseFolder') }}</div>
+              <div class="mt-0.5 text-[11px] text-(--t3)">{{ t('welcome.chooseFolderHint') }}</div>
             </div>
           </button>
 
@@ -221,9 +229,9 @@ async function finish() {
               :style="{ animationDelay: `${i * 40}ms` }"
             >
               <span class="text-[14px]">🎵</span>
-              <span class="min-w-0 flex-1 truncate text-[--t2]">{{ f.name }}</span>
-              <span class="shrink-0 text-[--t3]">{{ fmtSize(f.size) }}</span>
-              <button class="shrink-0 text-[--t3] hover:text-red-400" @click.stop="removeFile(i)">✕</button>
+              <span class="min-w-0 flex-1 truncate text-(--t2)">{{ f.name }}</span>
+              <span class="shrink-0 text-(--t3)">{{ fmtSize(f.size) }}</span>
+              <button class="shrink-0 text-(--t3) hover:text-red-400" @click.stop="removeFile(i)">✕</button>
             </div>
           </div>
 
@@ -237,10 +245,10 @@ async function finish() {
           </button>
 
           <div class="mt-3 flex justify-center gap-4">
-            <button class="py-2 text-[12px] text-[--t3] hover:text-[--t2]" @click="prev">
+            <button class="py-2 text-[12px] text-(--t3) hover:text-(--t2)" @click="prev">
               {{ t('common.back') }}
             </button>
-            <button class="py-2 text-[12px] text-[--t3] hover:text-[--t2]" @click="next">
+            <button class="py-2 text-[12px] text-(--t3) hover:text-(--t2)" @click="next">
               {{ t('welcome.skip') }} →
             </button>
           </div>
@@ -254,9 +262,9 @@ async function finish() {
           >
             ✨
           </div>
-          <h1 class="text-[22px] font-extrabold tracking-tight text-[--t1]">{{ t('welcome.doneTitle') }}</h1>
-          <p class="mt-3 text-[14px] leading-relaxed text-[--t2]">{{ t('welcome.doneSubtitle') }}</p>
-          <p v-if="files.length" class="mt-2 text-[13px] text-[--accent]">
+          <h1 class="text-[22px] font-extrabold tracking-tight text-(--t1)">{{ t('welcome.doneTitle') }}</h1>
+          <p class="mt-3 text-[14px] leading-relaxed text-(--t2)">{{ t('welcome.doneSubtitle') }}</p>
+          <p v-if="files.length" class="mt-2 text-[13px] text-(--accent)">
             {{ t('welcome.filesReady', { n: files.length }) }}
           </p>
           <button
@@ -267,7 +275,7 @@ async function finish() {
           >
             {{ uploading ? t('welcome.uploading') : t('welcome.start') }}
           </button>
-          <button class="mt-2 w-full py-2 text-center text-[12px] text-[--t3] hover:text-[--t2]" @click="prev">
+          <button class="mt-2 w-full py-2 text-center text-[12px] text-(--t3) hover:text-(--t2)" @click="prev">
             {{ t('common.back') }}
           </button>
         </div>

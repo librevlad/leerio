@@ -17,10 +17,10 @@ defineProps<{ achievements: Achievement[] }>()
         style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border)"
       >
         <span class="mb-2 block text-2xl">{{ a.icon }}</span>
-        <p class="text-[12px] font-semibold text-[--t1]">{{ a.name }}</p>
-        <p class="mt-0.5 text-[11px] text-[--t3]">{{ a.desc }}</p>
+        <p class="text-[12px] font-semibold text-(--t1)">{{ a.name }}</p>
+        <p class="mt-0.5 text-[11px] text-(--t3)">{{ a.desc }}</p>
       </div>
     </div>
-    <p v-else class="py-8 text-center text-[12px] text-[--t3]">{{ t('analytics.achievementsEmpty') }}</p>
+    <p v-else class="py-8 text-center text-[12px] text-(--t3)">{{ t('analytics.achievementsEmpty') }}</p>
   </div>
 </template>

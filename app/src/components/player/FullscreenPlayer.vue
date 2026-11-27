@@ -292,7 +292,7 @@ function closeOverlays() {
 
           <!-- Close button -->
           <button
-            class="absolute top-5 left-5 z-[2] flex h-9 w-9 items-center justify-center rounded-full border-0 bg-transparent text-[--t3] transition-colors hover:text-[--t1]"
+            class="absolute top-5 left-5 z-[2] flex h-9 w-9 items-center justify-center rounded-full border-0 bg-transparent text-(--t3) transition-colors hover:text-(--t1)"
             :aria-label="t('player.minimizePlayer')"
             @click="closeFullscreen"
           >
@@ -321,7 +321,7 @@ function closeOverlays() {
                 class="flex h-full w-full items-center justify-center"
                 style="background: linear-gradient(135deg, rgba(232, 146, 58, 0.15), rgba(232, 146, 58, 0.05))"
               >
-                <IconMusic :size="56" class="text-[--t3]" />
+                <IconMusic :size="56" class="text-(--t3)" />
               </div>
             </div>
             <!-- Progress ring -->
@@ -362,7 +362,7 @@ function closeOverlays() {
             <!-- Progress badge -->
             <div
               v-if="overallProgress > 0"
-              class="absolute -right-2 -bottom-2 rounded-full border border-[--border] px-2.5 py-0.5 text-[11px] font-semibold text-[--accent]"
+              class="absolute -right-2 -bottom-2 rounded-full border border-(--border) px-2.5 py-0.5 text-[11px] font-semibold text-(--accent)"
               style="background: var(--card-solid)"
             >
               {{ Math.round(overallProgress) }}%
@@ -371,8 +371,8 @@ function closeOverlays() {
 
           <!-- Book info -->
           <div class="z-[1] w-full max-w-[420px] text-center">
-            <p class="font-display truncate text-[20px] font-bold text-[--t1]">{{ currentBook.title }}</p>
-            <p class="mt-1 text-[13px] text-[--t3]">
+            <p class="font-display truncate text-[20px] font-bold text-(--t1)">{{ currentBook.title }}</p>
+            <p class="mt-1 text-[13px] text-(--t3)">
               <span class="truncate">{{ currentBook.author }}</span>
               <span
                 v-if="playingOffline"
@@ -380,7 +380,7 @@ function closeOverlays() {
                 style="box-shadow: 0 0 6px rgba(52, 211, 153, 0.5)"
               />
             </p>
-            <p class="mt-1.5 text-[11px] text-[--t3]">
+            <p class="mt-1.5 text-[11px] text-(--t3)">
               <template v-if="totalElapsed > 60">
                 {{ trackLabel }} · {{ formatDuration(totalElapsed) }} {{ t('player.listened') }} ·
                 {{ formatDuration(Math.max(0, totalDuration - totalElapsed)) }}
@@ -398,14 +398,14 @@ function closeOverlays() {
             <span class="text-[13px] text-red-400">{{ t('player.loadError') }}</span>
             <div class="ml-auto flex gap-2">
               <button
-                class="rounded-lg border-0 bg-white/10 px-3 py-1.5 text-[12px] font-semibold text-[--t1] transition-colors hover:bg-white/15"
+                class="rounded-lg border-0 bg-white/10 px-3 py-1.5 text-[12px] font-semibold text-(--t1) transition-colors hover:bg-white/15"
                 @click="retryAudio"
               >
                 {{ t('player.retry') }}
               </button>
               <button
                 v-if="tracks.length > 1"
-                class="rounded-lg border-0 bg-white/10 px-3 py-1.5 text-[12px] font-semibold text-[--t1] transition-colors hover:bg-white/15"
+                class="rounded-lg border-0 bg-white/10 px-3 py-1.5 text-[12px] font-semibold text-(--t1) transition-colors hover:bg-white/15"
                 @click="skipErrorTrack"
               >
                 {{ t('player.skipChapter') }}
@@ -430,24 +430,24 @@ function closeOverlays() {
               />
             </div>
             <div class="mt-1 flex justify-between text-[12px]">
-              <span class="text-[--t2] tabular-nums">{{
+              <span class="text-(--t2) tabular-nums">{{
                 formatTime(seekPreview !== null ? seekPreview : currentTime)
               }}</span>
-              <span class="text-[--t3] tabular-nums">{{ remainingTime }}</span>
+              <span class="text-(--t3) tabular-nums">{{ remainingTime }}</span>
             </div>
           </div>
 
           <!-- Main controls -->
           <div class="z-[1] mt-5 flex items-center gap-5">
             <button
-              class="flex h-10 w-10 items-center justify-center rounded-full border-0 bg-transparent text-[--t2] transition-colors hover:text-[--t1]"
+              class="flex h-10 w-10 items-center justify-center rounded-full border-0 bg-transparent text-(--t2) transition-colors hover:text-(--t1)"
               :aria-label="t('player.prevTrack')"
               @click="prevTrack"
             >
               <IconSkipBack :size="20" />
             </button>
             <button
-              class="flex h-11 w-11 items-center justify-center rounded-full border-0 text-[--t2] transition-colors hover:text-[--t1]"
+              class="flex h-11 w-11 items-center justify-center rounded-full border-0 text-(--t2) transition-colors hover:text-(--t1)"
               style="background: rgba(255, 255, 255, 0.06)"
               :aria-label="t('player.back15')"
               @click="skipBackward()"
@@ -465,7 +465,7 @@ function closeOverlays() {
               <component :is="isPlaying ? IconPause : IconPlay" v-else :size="22" style="color: #fff" />
             </button>
             <button
-              class="flex h-11 w-11 items-center justify-center rounded-full border-0 text-[--t2] transition-colors hover:text-[--t1]"
+              class="flex h-11 w-11 items-center justify-center rounded-full border-0 text-(--t2) transition-colors hover:text-(--t1)"
               style="background: rgba(255, 255, 255, 0.06)"
               :aria-label="t('player.forward30')"
               @click="skipForward(30)"
@@ -473,7 +473,7 @@ function closeOverlays() {
               <IconForward30 :size="22" />
             </button>
             <button
-              class="flex h-10 w-10 items-center justify-center rounded-full border-0 bg-transparent text-[--t2] transition-colors hover:text-[--t1]"
+              class="flex h-10 w-10 items-center justify-center rounded-full border-0 bg-transparent text-(--t2) transition-colors hover:text-(--t1)"
               :aria-label="t('player.nextTrack')"
               @click="nextTrack"
             >
@@ -487,7 +487,7 @@ function closeOverlays() {
             <div class="relative">
               <button
                 class="cursor-pointer rounded-lg border-0 px-3 py-1.5 text-[12px] font-bold transition-colors"
-                :class="playbackRate !== 1 ? 'text-[--accent]' : 'text-[--t3] hover:text-[--t2]'"
+                :class="playbackRate !== 1 ? 'text-(--accent)' : 'text-(--t3) hover:text-(--t2)'"
                 style="background: rgba(255, 255, 255, 0.04)"
                 :aria-expanded="showSpeedMenu"
                 @click="showSpeedMenu = !showSpeedMenu"
@@ -496,14 +496,14 @@ function closeOverlays() {
               </button>
               <div
                 v-if="showSpeedMenu"
-                class="absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 rounded-xl border border-[--border] p-1"
+                class="absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 rounded-xl border border-(--border) p-1"
                 style="background: var(--card-solid)"
               >
                 <button
                   v-for="s in speeds"
                   :key="s"
                   class="block w-full cursor-pointer rounded-lg border-0 bg-transparent px-4 py-2 text-left text-[12px] transition-colors"
-                  :class="playbackRate === s ? 'text-[--accent]' : 'text-[--t2] hover:bg-white/5'"
+                  :class="playbackRate === s ? 'text-(--accent)' : 'text-(--t2) hover:bg-white/5'"
                   @click="selectSpeed(s)"
                 >
                   {{ s }}x
@@ -515,7 +515,7 @@ function closeOverlays() {
             <div class="relative">
               <button
                 class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border-0 transition-colors"
-                :class="sleepTimer !== null ? 'text-[--accent]' : 'text-[--t3] hover:text-[--t2]'"
+                :class="sleepTimer !== null ? 'text-(--accent)' : 'text-(--t3) hover:text-(--t2)'"
                 style="background: rgba(255, 255, 255, 0.04)"
                 :aria-expanded="showSleepMenu"
                 @click="showSleepMenu = !showSleepMenu"
@@ -524,7 +524,7 @@ function closeOverlays() {
               </button>
               <div
                 v-if="showSleepMenu"
-                class="absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 rounded-xl border border-[--border] p-1"
+                class="absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 rounded-xl border border-(--border) p-1"
                 style="background: var(--card-solid)"
               >
                 <button
@@ -533,8 +533,8 @@ function closeOverlays() {
                   class="block w-full cursor-pointer rounded-lg border-0 bg-transparent px-4 py-2 text-left text-[12px] whitespace-nowrap transition-colors"
                   :class="
                     (opt.value === null && sleepTimer === null) || sleepTimer === opt.value
-                      ? 'text-[--accent]'
-                      : 'text-[--t2] hover:bg-white/5'
+                      ? 'text-(--accent)'
+                      : 'text-(--t2) hover:bg-white/5'
                   "
                   @click="selectSleep(opt.value)"
                 >
@@ -545,7 +545,7 @@ function closeOverlays() {
 
             <!-- Bookmark -->
             <button
-              class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border-0 text-[--t3] transition-colors hover:text-[--t2]"
+              class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border-0 text-(--t3) transition-colors hover:text-(--t2)"
               style="background: rgba(255, 255, 255, 0.04)"
               @click="addBookmark"
             >
@@ -554,7 +554,7 @@ function closeOverlays() {
 
             <!-- Go to book page (visible on all viewports) -->
             <button
-              class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border-0 text-[--t3] transition-colors hover:text-[--t2] lg:hidden"
+              class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border-0 text-(--t3) transition-colors hover:text-(--t2) lg:hidden"
               style="background: rgba(255, 255, 255, 0.04)"
               :aria-label="t('player.bookPage')"
               @click="goToBook"
@@ -565,7 +565,7 @@ function closeOverlays() {
             <!-- Volume -->
             <div class="relative flex items-center gap-2">
               <button
-                class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border-0 text-[--t3] transition-colors hover:text-[--t2]"
+                class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border-0 text-(--t3) transition-colors hover:text-(--t2)"
                 style="background: rgba(255, 255, 255, 0.04)"
                 @click="showVolumeSlider = !showVolumeSlider"
               >
@@ -573,7 +573,7 @@ function closeOverlays() {
               </button>
               <div
                 v-if="showVolumeSlider"
-                class="absolute bottom-full left-1/2 z-10 mb-2 flex -translate-x-1/2 items-center gap-2 rounded-xl border border-[--border] px-3 py-2"
+                class="absolute bottom-full left-1/2 z-10 mb-2 flex -translate-x-1/2 items-center gap-2 rounded-xl border border-(--border) px-3 py-2"
                 style="background: var(--card-solid)"
               >
                 <input
@@ -590,7 +590,7 @@ function closeOverlays() {
 
             <!-- Go to book -->
             <button
-              class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border-0 text-[--t3] transition-colors hover:text-[--t2]"
+              class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border-0 text-(--t3) transition-colors hover:text-(--t2)"
               style="background: rgba(255, 255, 255, 0.04)"
               :aria-label="t('player.bookPage')"
               @click="goToBook"
@@ -600,7 +600,7 @@ function closeOverlays() {
 
             <!-- Car mode -->
             <button
-              class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border-0 text-[--t3] transition-colors hover:text-[--t2]"
+              class="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border-0 text-(--t3) transition-colors hover:text-(--t2)"
               style="background: rgba(255, 255, 255, 0.04)"
               :aria-label="t('player.carMode')"
               @click="openCarMode"
@@ -619,24 +619,24 @@ function closeOverlays() {
           <div class="relative flex shrink-0 px-4" style="border-bottom: 1px solid rgba(255, 255, 255, 0.04)">
             <button
               class="relative border-0 bg-transparent px-4 py-3 text-[12px] font-semibold tracking-wider transition-colors"
-              :class="desktopTab === 'chapters' ? 'text-[--accent]' : 'text-[--t3] hover:text-[--t2]'"
+              :class="desktopTab === 'chapters' ? 'text-(--accent)' : 'text-(--t3) hover:text-(--t2)'"
               @click="desktopTab = 'chapters'"
             >
               {{ t('player.tracks') }}
               <span
                 v-if="desktopTab === 'chapters'"
-                class="absolute right-2 bottom-0 left-2 h-[2px] rounded-full bg-[--accent]"
+                class="absolute right-2 bottom-0 left-2 h-[2px] rounded-full bg-(--accent)"
               />
             </button>
             <button
               class="relative border-0 bg-transparent px-4 py-3 text-[12px] font-semibold tracking-wider transition-colors"
-              :class="desktopTab === 'bookmarks' ? 'text-[--accent]' : 'text-[--t3] hover:text-[--t2]'"
+              :class="desktopTab === 'bookmarks' ? 'text-(--accent)' : 'text-(--t3) hover:text-(--t2)'"
               @click="desktopTab = 'bookmarks'"
             >
               {{ t('player.bookmarksTab') }}
               <span
                 v-if="desktopTab === 'bookmarks'"
-                class="absolute right-2 bottom-0 left-2 h-[2px] rounded-full bg-[--accent]"
+                class="absolute right-2 bottom-0 left-2 h-[2px] rounded-full bg-(--accent)"
               />
             </button>
           </div>
@@ -644,8 +644,8 @@ function closeOverlays() {
           <!-- Book progress bar -->
           <div class="shrink-0 border-b border-white/[0.04] px-5 py-3">
             <div class="mb-1.5 flex items-center justify-between">
-              <span class="text-[11px] text-[--t3]">{{ t('player.bookProgress') }}</span>
-              <span class="text-[11px] font-semibold text-[--accent]">{{ Math.round(overallProgress) }}%</span>
+              <span class="text-[11px] text-(--t3)">{{ t('player.bookProgress') }}</span>
+              <span class="text-[11px] font-semibold text-(--accent)">{{ Math.round(overallProgress) }}%</span>
             </div>
             <div class="h-[3px] w-full rounded-full" style="background: rgba(255, 255, 255, 0.04)">
               <div
@@ -667,14 +667,14 @@ function closeOverlays() {
             >
               <span
                 class="w-6 shrink-0 text-right text-[11px]"
-                :class="i === currentTrackIndex ? 'font-semibold text-[--accent]' : 'text-[--t3]'"
+                :class="i === currentTrackIndex ? 'font-semibold text-(--accent)' : 'text-(--t3)'"
               >
                 {{ i + 1 }}
               </span>
               <div class="min-w-0 flex-1">
                 <p
                   class="truncate text-[13px]"
-                  :class="i === currentTrackIndex ? 'font-semibold text-[--t1]' : 'text-[--t2]'"
+                  :class="i === currentTrackIndex ? 'font-semibold text-(--t1)' : 'text-(--t2)'"
                 >
                   {{ trackDisplayName(track.filename, i) }}
                 </p>
@@ -691,7 +691,7 @@ function closeOverlays() {
                   />
                 </div>
               </div>
-              <span v-if="i === currentTrackIndex" class="shrink-0 text-[10px] text-[--accent]">▶</span>
+              <span v-if="i === currentTrackIndex" class="shrink-0 text-[10px] text-(--accent)">▶</span>
               <span
                 v-if="isTrackDownloaded(i)"
                 class="h-2 w-2 shrink-0 rounded-full bg-emerald-400"
@@ -700,7 +700,7 @@ function closeOverlays() {
               <span
                 v-if="track.duration"
                 class="shrink-0 text-[11px]"
-                :class="i === currentTrackIndex ? 'text-[--t2]' : 'text-[--t3]'"
+                :class="i === currentTrackIndex ? 'text-(--t2)' : 'text-(--t3)'"
               >
                 {{ formatTime(track.duration) }}
               </span>
@@ -711,9 +711,9 @@ function closeOverlays() {
           <div v-else class="flex-1 overflow-y-auto">
             <div v-if="bookmarks.length === 0" class="flex h-full items-center justify-center p-6">
               <div class="text-center">
-                <IconBookmark :size="32" class="mx-auto mb-3 text-[--t3] opacity-30" />
-                <p class="text-[13px] text-[--t3]">{{ t('player.noBookmarks') }}</p>
-                <p class="mt-1 text-[11px] text-[--t3] opacity-60">{{ t('player.addBookmarkHint') }}</p>
+                <IconBookmark :size="32" class="mx-auto mb-3 text-(--t3) opacity-30" />
+                <p class="text-[13px] text-(--t3)">{{ t('player.noBookmarks') }}</p>
+                <p class="mt-1 text-[11px] text-(--t3) opacity-60">{{ t('player.addBookmarkHint') }}</p>
               </div>
             </div>
             <div v-else class="p-2">
@@ -723,16 +723,16 @@ function closeOverlays() {
                 class="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-white/[0.03]"
                 @click="seekToBookmark(bm)"
               >
-                <IconBookmark :size="14" class="shrink-0 text-[--accent]" />
+                <IconBookmark :size="14" class="shrink-0 text-(--accent)" />
                 <div class="min-w-0 flex-1">
-                  <p class="text-[13px] text-[--t2]">
+                  <p class="text-[13px] text-(--t2)">
                     {{ trackDisplayName(tracks[bm.track]?.filename ?? '', bm.track) }}
                     · {{ formatTime(bm.time) }}
                   </p>
-                  <p v-if="bm.note" class="mt-0.5 truncate text-[11px] text-[--t3]">{{ bm.note }}</p>
+                  <p v-if="bm.note" class="mt-0.5 truncate text-[11px] text-(--t3)">{{ bm.note }}</p>
                 </div>
                 <button
-                  class="shrink-0 rounded-md border-0 bg-transparent p-1 text-[--t3] opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
+                  class="shrink-0 rounded-md border-0 bg-transparent p-1 text-(--t3) opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
                   style="opacity: 0.4"
                   @click.stop="deleteBookmark(bm)"
                 >
@@ -751,14 +751,14 @@ function closeOverlays() {
         <!-- Mobile header -->
         <div class="safe-top flex items-center justify-between px-4 py-3">
           <button
-            class="flex h-10 w-10 items-center justify-center rounded-full border-0 bg-transparent text-[--t2] transition-colors hover:text-[--t1]"
+            class="flex h-10 w-10 items-center justify-center rounded-full border-0 bg-transparent text-(--t2) transition-colors hover:text-(--t1)"
             :aria-label="t('player.minimizePlayer')"
             @click="closeFullscreen"
           >
             <IconChevronDown :size="24" />
           </button>
           <div class="min-w-0 flex-1 px-3 text-center">
-            <p class="text-[10px] font-semibold tracking-widest text-[--t3] uppercase">
+            <p class="text-[10px] font-semibold tracking-widest text-(--t3) uppercase">
               {{ t('nav.nowPlaying') }}
             </p>
           </div>
@@ -787,7 +787,7 @@ function closeOverlays() {
                 class="flex h-full w-full items-center justify-center"
                 style="background: linear-gradient(135deg, rgba(232, 146, 58, 0.15), rgba(232, 146, 58, 0.05))"
               >
-                <IconMusic :size="48" class="text-[--t3]" />
+                <IconMusic :size="48" class="text-(--t3)" />
               </div>
             </div>
             <!-- Playing indicator dot -->
@@ -804,10 +804,10 @@ function closeOverlays() {
 
           <!-- Title + author -->
           <div class="z-[1] mt-7 w-full max-w-[400px] text-center">
-            <p class="truncate text-[18px] font-bold text-[--t1]">
+            <p class="truncate text-[18px] font-bold text-(--t1)">
               {{ currentBook.title }}
             </p>
-            <p class="mt-1 flex items-center justify-center gap-2 text-[13px] text-[--t3]">
+            <p class="mt-1 flex items-center justify-center gap-2 text-[13px] text-(--t3)">
               <span class="truncate">{{ currentBook.author }}</span>
               <span v-if="tracks.length > 1" class="shrink-0">· {{ trackLabel }}</span>
               <span
@@ -826,14 +826,14 @@ function closeOverlays() {
             <span class="text-[13px] text-red-400">{{ t('player.loadError') }}</span>
             <div class="ml-auto flex gap-2">
               <button
-                class="rounded-lg border-0 bg-white/10 px-3 py-1.5 text-[12px] font-semibold text-[--t1] transition-colors hover:bg-white/15"
+                class="rounded-lg border-0 bg-white/10 px-3 py-1.5 text-[12px] font-semibold text-(--t1) transition-colors hover:bg-white/15"
                 @click="retryAudio"
               >
                 {{ t('player.retry') }}
               </button>
               <button
                 v-if="tracks.length > 1"
-                class="rounded-lg border-0 bg-white/10 px-3 py-1.5 text-[12px] font-semibold text-[--t1] transition-colors hover:bg-white/15"
+                class="rounded-lg border-0 bg-white/10 px-3 py-1.5 text-[12px] font-semibold text-(--t1) transition-colors hover:bg-white/15"
                 @click="skipErrorTrack"
               >
                 {{ t('player.skipChapter') }}
@@ -862,7 +862,7 @@ function closeOverlays() {
                 @change="onSeekChange"
               />
             </div>
-            <div class="mt-1 flex justify-between text-[11px] text-[--t3]">
+            <div class="mt-1 flex justify-between text-[11px] text-(--t3)">
               <span>{{ formatTime(seekPreview !== null ? seekPreview : currentTime) }}</span>
               <span>{{ remainingTime }}</span>
             </div>
@@ -871,14 +871,14 @@ function closeOverlays() {
           <!-- Main controls -->
           <div class="flex items-center justify-center gap-5 px-6 py-4">
             <button
-              class="flex h-11 w-11 items-center justify-center rounded-full border-0 bg-transparent text-[--t2] transition-colors hover:text-[--t1]"
+              class="flex h-11 w-11 items-center justify-center rounded-full border-0 bg-transparent text-(--t2) transition-colors hover:text-(--t1)"
               :aria-label="t('player.prevTrack')"
               @click="prevTrack"
             >
               <IconSkipBack :size="22" />
             </button>
             <button
-              class="flex h-10 w-10 items-center justify-center rounded-full border-0 text-[--t2] transition-colors hover:text-[--t1]"
+              class="flex h-10 w-10 items-center justify-center rounded-full border-0 text-(--t2) transition-colors hover:text-(--t1)"
               style="background: rgba(255, 255, 255, 0.06)"
               :aria-label="t('player.back15')"
               @click="skipBackward()"
@@ -896,7 +896,7 @@ function closeOverlays() {
               <component :is="isPlaying ? IconPause : IconPlay" v-else :size="24" style="color: #fff" />
             </button>
             <button
-              class="flex h-10 w-10 items-center justify-center rounded-full border-0 text-[--t2] transition-colors hover:text-[--t1]"
+              class="flex h-10 w-10 items-center justify-center rounded-full border-0 text-(--t2) transition-colors hover:text-(--t1)"
               style="background: rgba(255, 255, 255, 0.06)"
               :aria-label="t('player.forward30')"
               @click="skipForward(30)"
@@ -904,7 +904,7 @@ function closeOverlays() {
               <IconForward30 :size="22" />
             </button>
             <button
-              class="flex h-11 w-11 items-center justify-center rounded-full border-0 bg-transparent text-[--t2] transition-colors hover:text-[--t1]"
+              class="flex h-11 w-11 items-center justify-center rounded-full border-0 bg-transparent text-(--t2) transition-colors hover:text-(--t1)"
               :aria-label="t('player.nextTrack')"
               @click="nextTrack"
             >
@@ -918,7 +918,7 @@ function closeOverlays() {
             <div class="relative">
               <button
                 class="flex flex-col items-center gap-0.5 border-0 bg-transparent px-3 py-1 transition-colors"
-                :class="playbackRate !== 1 ? 'text-[--accent]' : 'text-[--t3] hover:text-[--t2]'"
+                :class="playbackRate !== 1 ? 'text-(--accent)' : 'text-(--t3) hover:text-(--t2)'"
                 :aria-expanded="showSpeedMenu"
                 @click="showSpeedMenu = !showSpeedMenu"
               >
@@ -927,14 +927,14 @@ function closeOverlays() {
               </button>
               <div
                 v-if="showSpeedMenu"
-                class="absolute bottom-12 left-1/2 z-10 -translate-x-1/2 rounded-xl border border-[--border] p-1"
+                class="absolute bottom-12 left-1/2 z-10 -translate-x-1/2 rounded-xl border border-(--border) p-1"
                 style="background: var(--card-solid)"
               >
                 <button
                   v-for="s in speeds"
                   :key="s"
                   class="block w-full cursor-pointer rounded-lg border-0 bg-transparent px-4 py-2 text-left text-[12px] transition-colors"
-                  :class="playbackRate === s ? 'text-[--accent]' : 'text-[--t2] hover:bg-white/5'"
+                  :class="playbackRate === s ? 'text-(--accent)' : 'text-(--t2) hover:bg-white/5'"
                   @click="selectSpeed(s)"
                 >
                   {{ s }}x
@@ -944,7 +944,7 @@ function closeOverlays() {
 
             <!-- Car mode -->
             <button
-              class="flex flex-col items-center gap-0.5 border-0 bg-transparent px-3 py-1 text-[--t3] transition-colors hover:text-[--t2]"
+              class="flex flex-col items-center gap-0.5 border-0 bg-transparent px-3 py-1 text-(--t3) transition-colors hover:text-(--t2)"
               :aria-label="t('player.carMode')"
               @click="openCarMode"
             >
@@ -954,9 +954,9 @@ function closeOverlays() {
           </div>
 
           <!-- Track list (collapsible) — mobile only -->
-          <div class="safe-bottom border-t border-[--border]">
+          <div class="safe-bottom border-t border-(--border)">
             <button
-              class="flex w-full cursor-pointer items-center justify-center gap-1 border-0 bg-transparent py-2.5 text-[11px] font-medium text-[--t3] transition-colors hover:text-[--t2]"
+              class="flex w-full cursor-pointer items-center justify-center gap-1 border-0 bg-transparent py-2.5 text-[11px] font-medium text-(--t3) transition-colors hover:text-(--t2)"
               @click="showTrackList = !showTrackList"
             >
               <IconChevronUp :size="14" :class="showTrackList ? 'rotate-180' : ''" class="transition-transform" />
@@ -968,17 +968,17 @@ function closeOverlays() {
                 v-for="(track, i) in tracks"
                 :key="i"
                 class="flex w-full cursor-pointer items-center gap-3 rounded-lg border-0 bg-transparent px-3 py-2.5 text-left transition-colors hover:bg-white/5"
-                :class="i === currentTrackIndex ? 'text-[--accent]' : 'text-[--t2]'"
+                :class="i === currentTrackIndex ? 'text-(--accent)' : 'text-(--t2)'"
                 @click="playTrack(i)"
               >
-                <span class="w-6 text-right text-[11px] text-[--t3]">{{ i + 1 }}</span>
+                <span class="w-6 text-right text-[11px] text-(--t3)">{{ i + 1 }}</span>
                 <span class="min-w-0 flex-1 truncate text-[12px]">{{ trackDisplayName(track.filename, i) }}</span>
                 <span
                   v-if="isTrackDownloaded(i)"
                   class="h-2 w-2 flex-shrink-0 rounded-full bg-emerald-400"
                   :title="t('player.downloaded')"
                 />
-                <span v-if="track.duration" class="flex-shrink-0 text-[11px] text-[--t3]">{{
+                <span v-if="track.duration" class="flex-shrink-0 text-[11px] text-(--t3)">{{
                   formatTime(track.duration)
                 }}</span>
               </button>

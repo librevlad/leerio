@@ -174,7 +174,7 @@ onMounted(async () => {
     <div class="mb-6 flex items-center justify-between">
       <div>
         <h1 class="page-title">{{ t('collections.title') }}</h1>
-        <p class="mt-1 text-[13px] text-[--t3]">
+        <p class="mt-1 text-[13px] text-(--t3)">
           {{
             collections.length > 0
               ? `${collections.length} ${t('plural.collection', collections.length)}`
@@ -250,35 +250,35 @@ onMounted(async () => {
               class="flex h-14 w-14 items-center justify-center rounded-xl"
               style="background: rgba(255, 255, 255, 0.04)"
             >
-              <IconBookmark :size="20" class="text-[--t3]" />
+              <IconBookmark :size="20" class="text-(--t3)" />
             </div>
           </div>
 
           <!-- Info -->
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-2">
-              <h3 class="truncate text-[14px] font-semibold text-[--t1]">{{ col.name }}</h3>
+              <h3 class="truncate text-[14px] font-semibold text-(--t1)">{{ col.name }}</h3>
               <span
-                class="flex-shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-medium text-[--t3]"
+                class="flex-shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-medium text-(--t3)"
                 style="background: rgba(255, 255, 255, 0.05)"
               >
                 {{ col.books.length }}
               </span>
             </div>
-            <p v-if="col.description" class="mt-0.5 line-clamp-1 text-[12px] text-[--t3]">{{ col.description }}</p>
+            <p v-if="col.description" class="mt-0.5 line-clamp-1 text-[12px] text-(--t3)">{{ col.description }}</p>
           </div>
 
           <!-- Actions -->
           <div class="ml-2 flex flex-shrink-0 gap-1" @click.stop>
             <button
-              class="rounded-lg p-2 text-[--t3] transition-colors hover:bg-white/5 hover:text-[--t2]"
+              class="rounded-lg p-2 text-(--t3) transition-colors hover:bg-white/5 hover:text-(--t2)"
               :aria-label="t('collections.editAriaLabel')"
               @click="openEdit(col)"
             >
               <IconEdit :size="14" />
             </button>
             <button
-              class="rounded-lg p-2 text-[--t3] transition-colors hover:bg-red-500/15 hover:text-red-400"
+              class="rounded-lg p-2 text-(--t3) transition-colors hover:bg-red-500/15 hover:text-red-400"
               :aria-label="t('collections.deleteAriaLabel')"
               @click="remove(col)"
             >
@@ -296,7 +296,7 @@ onMounted(async () => {
             stroke-width="2"
             stroke-linecap="round"
             stroke-linejoin="round"
-            class="flex-shrink-0 text-[--t3] transition-transform duration-200"
+            class="flex-shrink-0 text-(--t3) transition-transform duration-200"
             :class="expandedIdx === idx ? 'rotate-180' : ''"
           >
             <polyline points="6 9 12 15 18 9" />
@@ -329,16 +329,16 @@ onMounted(async () => {
                 </div>
               </div>
               <div class="min-w-0">
-                <p class="line-clamp-2 text-[12px] font-medium text-[--t2] transition-colors group-hover:text-[--t1]">
+                <p class="line-clamp-2 text-[12px] font-medium text-(--t2) transition-colors group-hover:text-(--t1)">
                   {{ bookById(bookId)?.title ?? t('book.unknownBook') }}
                 </p>
-                <p v-if="bookById(bookId)" class="mt-0.5 line-clamp-1 text-[11px] text-[--t3]">
+                <p v-if="bookById(bookId)" class="mt-0.5 line-clamp-1 text-[11px] text-(--t3)">
                   {{ bookById(bookId)!.author }}
                 </p>
               </div>
             </router-link>
           </div>
-          <p v-else class="py-4 text-center text-[13px] text-[--t3]">{{ t('collections.noBooksInCollection') }}</p>
+          <p v-else class="py-4 text-center text-[13px] text-(--t3)">{{ t('collections.noBooksInCollection') }}</p>
         </div>
       </div>
     </div>
@@ -357,11 +357,11 @@ onMounted(async () => {
           >
             <!-- Sticky header -->
             <div class="flex items-center justify-between px-6 pt-6 pb-4 sm:px-6 sm:pt-6">
-              <h2 class="text-[18px] font-bold text-[--t1]">
+              <h2 class="text-[18px] font-bold text-(--t1)">
                 {{ editId !== null ? t('collections.editCollection') : t('collections.newCollection') }}
               </h2>
               <button
-                class="rounded-lg p-1.5 text-[--t3] transition-colors hover:bg-white/5 hover:text-[--t2]"
+                class="rounded-lg p-1.5 text-(--t3) transition-colors hover:bg-white/5 hover:text-(--t2)"
                 @click="closeForm"
               >
                 <IconX :size="18" />
@@ -371,7 +371,7 @@ onMounted(async () => {
             <!-- Scrollable body -->
             <div class="flex-1 overflow-y-auto px-6">
               <div class="mb-4">
-                <label class="mb-1.5 block text-[12px] font-medium text-[--t2]">{{ t('collections.labelName') }}</label>
+                <label class="mb-1.5 block text-[12px] font-medium text-(--t2)">{{ t('collections.labelName') }}</label>
                 <input
                   v-model="formName"
                   class="input-field w-full px-3.5 py-2.5"
@@ -381,7 +381,7 @@ onMounted(async () => {
               </div>
 
               <div class="mb-4">
-                <label class="mb-1.5 block text-[12px] font-medium text-[--t2]">{{ t('collections.labelDesc') }}</label>
+                <label class="mb-1.5 block text-[12px] font-medium text-(--t2)">{{ t('collections.labelDesc') }}</label>
                 <input
                   v-model="formDesc"
                   class="input-field w-full px-3.5 py-2.5"
@@ -390,16 +390,16 @@ onMounted(async () => {
               </div>
 
               <div class="mb-2">
-                <label class="mb-2 block text-[12px] font-medium text-[--t2]">
+                <label class="mb-2 block text-[12px] font-medium text-(--t2)">
                   {{ t('collections.books') }}
-                  <span v-if="formBooks.length" class="text-[--accent]">({{ formBooks.length }})</span>
+                  <span v-if="formBooks.length" class="text-(--accent)">({{ formBooks.length }})</span>
                 </label>
 
                 <!-- Search -->
                 <div class="relative mb-2">
                   <IconSearch
                     :size="14"
-                    class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-[--t3]"
+                    class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-(--t3)"
                   />
                   <input
                     v-model="bookSearch"
@@ -413,7 +413,7 @@ onMounted(async () => {
                   <span
                     v-for="bookId in formBooks"
                     :key="bookId"
-                    class="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-[--accent]"
+                    class="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-(--accent)"
                     style="background: var(--accent-soft)"
                   >
                     {{
@@ -423,7 +423,7 @@ onMounted(async () => {
                       })()
                     }}
                     <button
-                      class="ml-0.5 cursor-pointer border-0 bg-transparent p-0 text-[--accent] hover:text-white"
+                      class="ml-0.5 cursor-pointer border-0 bg-transparent p-0 text-(--accent) hover:text-white"
                       @click="toggleBook(bookId)"
                     >
                       <IconX :size="10" />
@@ -440,15 +440,15 @@ onMounted(async () => {
                     v-for="book in filteredBooks"
                     :key="book.id"
                     class="flex w-full cursor-pointer items-center gap-2.5 rounded-lg border-0 bg-transparent px-2.5 py-2 text-left transition-colors hover:bg-white/[0.04]"
-                    :class="formBooks.includes(safeBookId(book.id)) ? 'text-[--accent]' : 'text-[--t2]'"
+                    :class="formBooks.includes(safeBookId(book.id)) ? 'text-(--accent)' : 'text-(--t2)'"
                     @click="toggleBook(safeBookId(book.id))"
                   >
                     <span
                       class="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded border"
                       :class="
                         formBooks.includes(safeBookId(book.id))
-                          ? 'border-[--accent] bg-[--accent]'
-                          : 'border-[--border] bg-transparent'
+                          ? 'border-(--accent) bg-(--accent)'
+                          : 'border-(--border) bg-transparent'
                       "
                     >
                       <IconCheck v-if="formBooks.includes(safeBookId(book.id))" :size="10" class="text-black" />
@@ -470,11 +470,11 @@ onMounted(async () => {
                       </div>
                     </div>
                     <span class="min-w-0 flex-1 truncate text-[13px]">{{ book.title }}</span>
-                    <span v-if="book.author" class="ml-auto hidden flex-shrink-0 text-[11px] text-[--t3] sm:inline">{{
+                    <span v-if="book.author" class="ml-auto hidden flex-shrink-0 text-[11px] text-(--t3) sm:inline">{{
                       book.author
                     }}</span>
                   </button>
-                  <p v-if="!filteredBooks.length" class="py-4 text-center text-[12px] text-[--t3]">
+                  <p v-if="!filteredBooks.length" class="py-4 text-center text-[12px] text-(--t3)">
                     {{ t('collections.notFoundBooks') }}
                   </p>
                 </div>
