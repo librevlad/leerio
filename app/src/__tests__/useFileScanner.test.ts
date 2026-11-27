@@ -146,12 +146,21 @@ describe('useFileScanner', () => {
 
   it('isLikelyNotBook returns true for short or keyword folders', () => {
     const { isLikelyNotBook } = useFileScanner()
-    expect(isLikelyNotBook('podcast_episodes', 1)).toBe(true)
-    expect(isLikelyNotBook('My Audiobook', 10)).toBe(false)
-    expect(isLikelyNotBook('music_collection', 5)).toBe(true)
-    expect(isLikelyNotBook('book', 1)).toBe(true) // < 2 tracks
-    expect(isLikelyNotBook('Music/Scorpions', 18)).toBe(true) // albums under Music/
-    expect(isLikelyNotBook('Audiobooks/Сенека Луций - Нравственные письма', 39)).toBe(false)
+    const mp3s = (n: number) => Array.from({ length: n }, (_, i) => ({ filename: `${i + 1}.mp3` }))
+    expect(isLikelyNotBook('podcast_episodes', mp3s(1))).toBe(true)
+    expect(isLikelyNotBook('My Audiobook', mp3s(10))).toBe(false)
+    expect(isLikelyNotBook('music_collection', mp3s(5))).toBe(true)
+    expect(isLikelyNotBook('book', mp3s(1))).toBe(true) // one MP3 is a single
+    expect(isLikelyNotBook('Music/Scorpions', mp3s(18))).toBe(true) // albums under Music/
+    expect(isLikelyNotBook('Audiobooks/Сенека Луций - Нравственные письма', mp3s(39))).toBe(false)
+  })
+
+  it('isLikelyNotBook keeps a one-file M4B audiobook', () => {
+    const { isLikelyNotBook } = useFileScanner()
+    expect(isLikelyNotBook('Audiobooks/Толстой - Война и мир', [{ filename: 'Война и мир.m4b' }])).toBe(false)
+    expect(isLikelyNotBook('Audiobooks/Book', [{ filename: 'BOOK.M4B' }])).toBe(false)
+    expect(isLikelyNotBook('Music/Podcast', [{ filename: 'episode.m4b' }])).toBe(true) // Music/ still means music
+    expect(isLikelyNotBook('Audiobooks/Single', [{ filename: 'track.m4a' }])).toBe(true)
   })
 
   it('addFsBooks persists to localStorage', () => {
