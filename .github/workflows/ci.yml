@@ -160,10 +160,18 @@ jobs:
         run: |
           chmod +x gradlew
           if [ -f app/release.keystore ]; then
-            ./gradlew assembleRelease
+            # bundleRelease: the AAB for Google Play, signed with the same key (Play upload key)
+            ./gradlew assembleRelease bundleRelease
           else
             ./gradlew assembleDebug
           fi
+      - name: Upload AAB artifact (Google Play)
+        uses: actions/upload-artifact@v4
+        with:
+          name: leerio-aab
+          path: app/android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: ignore
+          retention-days: 30
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:

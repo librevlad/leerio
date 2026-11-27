@@ -326,7 +326,7 @@ E2E стресс-тесты (`player-stress.spec.ts`):
 
 # GSTACK
 
-For all web browsing, use the `/browse` skill from gstack. Never use `mcp__claude-in-chrome__*` tools.
+For all web browsing, use the `/browse` skill from gstack. Exception (owner, 2026-11-27): sites that need the owner's own sign-in — Google Play Console first of all — go through Claude in Chrome (`mcp__claude-in-chrome__*`), where he is already signed in. Passwords, payment details and the payments profile stay with the owner.
 
 Available skills:
 `/office-hours`, `/plan-ceo-review`, `/plan-eng-review`, `/plan-design-review`, `/design-consultation`, `/review`, `/ship`, `/land-and-deploy`, `/canary`, `/benchmark`, `/browse`, `/qa`, `/qa-only`, `/design-review`, `/setup-browser-cookies`, `/setup-deploy`, `/retro`, `/investigate`, `/document-release`, `/codex`, `/cso`, `/autoplan`, `/careful`, `/freeze`, `/guard`, `/unfreeze`, `/gstack-upgrade`

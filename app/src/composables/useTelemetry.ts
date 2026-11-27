@@ -6,8 +6,20 @@
  */
 
 import { Capacitor } from '@capacitor/core'
+import { STORAGE } from '../constants/storage'
 
 const ENDPOINT = Capacitor.isNativePlatform() ? 'https://app.leerio.app/api/telemetry' : '/api/telemetry'
+
+// The privacy policy (and the Google Play data-safety form) promise that the APK sends
+// nothing without an account: device-only users are never tracked.
+function trackingAllowed(): boolean {
+  if (!Capacitor.isNativePlatform()) return true
+  try {
+    return !!localStorage.getItem(STORAGE.USER)
+  } catch {
+    return false
+  }
+}
 
 type TelemetryEvent =
   | 'onboarding_started'
@@ -34,6 +46,7 @@ let firstAudioTracked = false
 
 export function useTracking() {
   function track(event: TelemetryEvent, data?: Record<string, unknown>) {
+    if (!trackingAllowed()) return
     try {
       const payload = {
         event,

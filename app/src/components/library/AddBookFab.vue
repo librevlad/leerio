@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { Capacitor } from '@capacitor/core'
 import { usePlayer } from '../../composables/usePlayer'
+import { useAuth } from '../../composables/useAuth'
 import { IconPlus } from '../shared/icons'
 
 const router = useRouter()
@@ -12,11 +13,16 @@ const { isPlayerVisible } = usePlayer()
 
 const isOpen = ref(false)
 const isNative = Capacitor.isNativePlatform()
+const { serverReachable } = useAuth()
+// Upload and server TTS need the server: hidden in the APK while it is unreachable
+const serverItems = computed(() => !isNative || serverReachable.value)
 
 // Above the bottom nav (+ mini player) and the system navigation bar
 const bottomOffset = () => `calc(${isPlayerVisible.value ? '130px' : '80px'} + env(safe-area-inset-bottom, 0px))`
 
 function toggle() {
+  // APK without a server: scanning is the only way to add books — no one-item menu
+  if (!serverItems.value) return scanDevice()
   isOpen.value = !isOpen.value
 }
 
@@ -92,8 +98,9 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
           </div>
         </button>
 
-        <!-- Files -->
+        <!-- Files (server upload) -->
         <button
+          v-if="serverItems"
           role="menuitem"
           class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-white/[0.06]"
           @click="pickFiles"
@@ -120,10 +127,11 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
         </button>
 
         <!-- Divider -->
-        <div class="mx-3 my-1 h-px bg-white/[0.06]" />
+        <div v-if="serverItems" class="mx-3 my-1 h-px bg-white/[0.06]" />
 
-        <!-- YouTube -->
+        <!-- YouTube (web only: downloading from YouTube is against Google Play policy) -->
         <button
+          v-if="!isNative"
           role="menuitem"
           class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-white/[0.06]"
           @click="openYouTube"
@@ -140,8 +148,9 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
           </div>
         </button>
 
-        <!-- TTS -->
+        <!-- TTS (server) -->
         <button
+          v-if="serverItems"
           role="menuitem"
           class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-white/[0.06]"
           @click="openTTS"
