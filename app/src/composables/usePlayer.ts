@@ -102,10 +102,14 @@ function ensureAudio(): HTMLAudioElement {
     audio.playbackRate = playbackRate.value
 
     audio.addEventListener('timeupdate', () => {
+      if (pendingPosition && Math.abs(audio!.currentTime - pendingPosition.position) < 1.5) settlePosition()
       if (!isSeeking) {
         currentTime.value = audio!.currentTime
       }
     })
+
+    // Playing means the switch is over, even if the seek fell short (track shorter than saved)
+    audio.addEventListener('playing', () => settlePosition())
 
     audio.addEventListener('loadedmetadata', () => {
       duration.value = audio!.duration
@@ -205,15 +209,30 @@ function ensureAudio(): HTMLAudioElement {
 
 // ── Save position (debounced) ───────────────────────────────────────────────
 
+/**
+ * Where the player is heading while a book or track switches. Until the audio gets there,
+ * currentTime still belongs to the previous book/track (or reads 0 before the seek), so a save
+ * in that moment (page hidden, app closed, save timer) writes this target instead.
+ */
+let pendingPosition: { bookId: string; trackIndex: number; position: number } | null = null
+
+/** The audio reached the new track: its own time is the truth again */
+function settlePosition() {
+  if (!pendingPosition) return
+  pendingPosition = null
+  if (audio) currentTime.value = audio.currentTime
+}
+
 function savePosition() {
   if (!currentBook.value || !currentTrack.value) return
+  const pending = pendingPosition?.bookId === currentBook.value.id ? pendingPosition : null
   // Don't save position 0 during loading — seek hasn't happened yet
-  if (isLoading.value && currentTime.value === 0) return
+  if (!pending && isLoading.value && currentTime.value === 0) return
 
   // Save to IndexedDB (primary offline store)
   const bookId = currentBook.value.id
-  const trackIdx = currentTrackIndex.value
-  const pos = currentTime.value
+  const trackIdx = pending ? pending.trackIndex : currentTrackIndex.value
+  const pos = pending ? pending.position : currentTime.value
   localData.setPosition(bookId, { track_index: trackIdx, position: pos }).catch(() => {})
 
   const pct = Math.round(overallProgress.value)
@@ -233,6 +252,8 @@ function savePosition() {
 
   // For local-only books (lb: or fs:), don't call API
   if (currentBook.value.id.startsWith('lb:') || currentBook.value.id.startsWith('fs:')) return
+  // Mid-switch the track list may still be the previous book's: the server gets the next save
+  if (pending) return
 
   // Debounce API saves — prevent storm during rapid navigation
   // Skip API save for guests (no auth cookie) — localStorage is enough
@@ -436,6 +457,16 @@ export function savedPosition(bookId: string): { trackIndex: number; seekPos: nu
   }
 }
 
+/**
+ * Where listening resumes, for labels on screen: live for the book in the player (reactive —
+ * a computed over it follows track changes), saved for every other book. localStorage alone is
+ * not reactive: a label built on it freezes at the moment the page opened.
+ */
+export function resumePosition(bookId: string): { trackIndex: number; seekPos: number } | null {
+  if (currentBook.value?.id === bookId) return { trackIndex: currentTrackIndex.value, seekPos: currentTime.value }
+  return savedPosition(bookId)
+}
+
 function restorePosition(bookId: string, startTrackIndex?: number): { trackIndex: number; seekPos: number } {
   if (startTrackIndex !== undefined) {
     return { trackIndex: startTrackIndex, seekPos: 0 }
@@ -483,6 +514,9 @@ async function loadBook(book: Book, startTrackIndex?: number, autoplay = true) {
   isLoading.value = true
   audioError.value = false
   currentBook.value = book
+  // Until the audio gets there, a save writes where this book resumes — never the previous book's time
+  const resume = restorePosition(book.id, startTrackIndex)
+  pendingPosition = { bookId: book.id, trackIndex: resume.trackIndex, position: resume.seekPos }
   isPlayerVisible.value = true
   try {
     localStorage.setItem(STORAGE.LAST_PLAYED, JSON.stringify({ id: book.id, title: book.title, author: book.author }))
@@ -514,6 +548,7 @@ async function loadBook(book: Book, startTrackIndex?: number, autoplay = true) {
       const { trackIndex: rawIdx, seekPos } = restorePosition(book.id, startTrackIndex)
       const boundedIdx = rawIdx >= 0 && rawIdx < tracks.value.length ? rawIdx : 0
       currentTrackIndex.value = boundedIdx
+      pendingPosition = { bookId: book.id, trackIndex: boundedIdx, position: seekPos }
 
       const a = ensureAudio()
       const fsUrl = await resolveAudioSrc(book.id, boundedIdx)
@@ -545,6 +580,7 @@ async function loadBook(book: Book, startTrackIndex?: number, autoplay = true) {
       const { trackIndex: rawIdx, seekPos } = restorePosition(book.id, startTrackIndex)
       const boundedIdx = rawIdx >= 0 && rawIdx < tracks.value.length ? rawIdx : 0
       currentTrackIndex.value = boundedIdx
+      pendingPosition = { bookId: book.id, trackIndex: boundedIdx, position: seekPos }
 
       const a = ensureAudio()
       const localUrl = await getLocalUrl(book.id, boundedIdx)
@@ -630,6 +666,7 @@ async function loadBook(book: Book, startTrackIndex?: number, autoplay = true) {
     }
     const boundedIdx = rawIdx >= 0 && rawIdx < tracks.value.length ? rawIdx : 0
     currentTrackIndex.value = boundedIdx
+    pendingPosition = { bookId: book.id, trackIndex: boundedIdx, position: seekPos }
 
     const a = ensureAudio()
     a.src = await resolveAudioSrc(book.id, boundedIdx)
@@ -660,6 +697,8 @@ async function playTrack(index: number, seekTo?: number) {
   const a = ensureAudio()
   a.pause()
 
+  // The old track's time stays on screen until the new one loads, but is never saved for it
+  pendingPosition = { bookId: currentBook.value.id, trackIndex: index, position: seekTo ?? 0 }
   currentTrackIndex.value = index
   // Don't reset currentTime visually — keep old position until new track loads (AIMP-style)
   audioError.value = false
@@ -840,6 +879,7 @@ function closePlayer() {
   // Cancel all in-flight async operations
   loadOpId++
   playOpId++
+  pendingPosition = null
 
   if (coverBlobUrl) {
     URL.revokeObjectURL(coverBlobUrl)

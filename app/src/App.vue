@@ -254,10 +254,11 @@ onUnmounted(() => {
       class="flex-1 overflow-y-auto scroll-smooth transition-all duration-300"
       :class="[sidebarCollapsed ? 'md:ml-16' : 'md:ml-60']"
     >
-      <!-- Offline banner -->
+      <!-- Offline banner (web: the library comes from the server). The app plays books from the phone
+           and narrates offline — "only downloaded books" would be false there -->
       <transition name="offline-bar">
         <div
-          v-if="!isOnline"
+          v-if="!isOnline && !downloads.isNative.value"
           class="fixed top-0 right-0 left-0 z-50 flex items-center justify-center gap-2 py-1.5 text-[11px] font-medium"
           :class="[sidebarCollapsed ? 'md:left-16' : 'md:left-60']"
           style="background: rgba(220, 38, 38, 0.9); color: white; backdrop-filter: blur(8px)"
