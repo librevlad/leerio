@@ -396,7 +396,7 @@ export default {
     aboutBook: 'Про книгу',
     noDescription: 'Опис відсутній',
     tagsLabel: 'Теги',
-    tracks: 'треків',
+    tracks: '{n} трек | {n} треки | {n} треків',
     chapterN: 'Розділ {n}',
     showAllTracks: 'Показати всі ({count})',
     totalDuration: 'Всього:',

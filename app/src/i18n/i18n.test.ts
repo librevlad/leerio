@@ -53,5 +53,8 @@ describe('plural forms', () => {
     expect(t('en', 'scan.found', 1)).toBe('Found 1 book')
     expect(t('en', 'scan.addN', 2)).toBe('Add 2 books')
     expect(t('ru', 'narrate.chapters', 2)).toBe('2 главы')
+    expect(t('ru', 'book.tracks', 2)).toBe('2 трека')
+    expect(t('uk', 'book.tracks', 5)).toBe('5 треків')
+    expect(t('en', 'book.tracks', 1)).toBe('1 track')
   })
 })
