@@ -6,7 +6,10 @@
       READ_MEDIA_AUDIO / READ_EXTERNAL_STORAGE: User-initiated audiobook folder scanning (MP3, M4A, M4B, OGG, FLAC, WAV).
         Only runs when user explicitly taps "Scan device". No background scanning.
       WRITE_EXTERNAL_STORAGE: YouTube import saves downloaded audiobook chapters to Audiobooks/ folder.
-        Only triggered when user imports from YouTube.
+        Only triggered when user imports from YouTube. Narration saves its chapters there on Android 9 and older.
+      FOREGROUND_SERVICE_MEDIA_PROCESSING / DATA_SYNC, WAKE_LOCK, POST_NOTIFICATIONS: user-started narration
+        of the user's own ebook with the phone's TTS engine, encoded to AAC (NarrationService).
+        Progress notification with Cancel; stops when the book is done.
     -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
                      android:maxSdkVersion="32" />
@@ -38,6 +41,11 @@
 
         </activity>
 
+        <service
+            android:name=".NarrationService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync|mediaProcessing" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -54,4 +62,15 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROCESSING" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Android 11+: TTS engines are invisible without this (narration) -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
 </manifest>

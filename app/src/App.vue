@@ -175,6 +175,8 @@ onMounted(() => {
   loadCategories()
   window.addEventListener('keydown', onKeydown)
   validateFsBooks() // Non-blocking — fire and forget
+  // A book narrated while the app was closed joins the library now
+  if (downloads.isNative.value) void import('./composables/useNarration').then((m) => m.useNarration().sync())
 
   // Track session start with UTM source for signup attribution
   const params = new URLSearchParams(window.location.search)

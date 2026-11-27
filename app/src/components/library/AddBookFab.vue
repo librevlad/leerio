@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { Capacitor } from '@capacitor/core'
 import { usePlayer } from '../../composables/usePlayer'
 import { useAuth } from '../../composables/useAuth'
+import { useNarration } from '../../composables/useNarration'
 import { IconPlus } from '../shared/icons'
 
 const router = useRouter()
@@ -16,13 +17,13 @@ const isNative = Capacitor.isNativePlatform()
 const { serverReachable } = useAuth()
 // Upload and server TTS need the server: hidden in the APK while it is unreachable
 const serverItems = computed(() => !isNative || serverReachable.value)
+const narration = useNarration()
+const bookInput = ref<HTMLInputElement | null>(null)
 
 // Above the bottom nav (+ mini player) and the system navigation bar
 const bottomOffset = () => `calc(${isPlayerVisible.value ? '130px' : '80px'} + env(safe-area-inset-bottom, 0px))`
 
 function toggle() {
-  // APK without a server: scanning is the only way to add books — no one-item menu
-  if (!serverItems.value) return scanDevice()
   isOpen.value = !isOpen.value
 }
 
@@ -53,6 +54,22 @@ function openYouTube() {
 function openTTS() {
   close()
   router.push('/upload?tab=tts')
+}
+
+// On-device narration: straight to the file picker; a running job shows its progress instead
+function narrateBook() {
+  close()
+  if (narration.status.value.state === 'running') router.push('/narrate')
+  else bookInput.value?.click()
+}
+
+function onBookPicked(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file) return
+  narration.pickedFile.value = file
+  router.push('/narrate')
 }
 
 function onKeydown(e: KeyboardEvent) {
@@ -148,9 +165,23 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
           </div>
         </button>
 
-        <!-- TTS (server) -->
+        <!-- Narration on the phone (APK) -->
         <button
-          v-if="serverItems"
+          v-if="isNative"
+          role="menuitem"
+          class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-white/[0.06]"
+          @click="narrateBook"
+        >
+          <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.06] text-[16px]">🎙</div>
+          <div>
+            <div class="text-[13px] font-semibold text-(--t1)">{{ t('fab.narrate') }}</div>
+            <div class="text-[10px] text-(--t3)">{{ t('fab.narrateHint') }}</div>
+          </div>
+        </button>
+
+        <!-- TTS (server; the APK narrates on the phone instead) -->
+        <button
+          v-if="serverItems && !isNative"
           role="menuitem"
           class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-white/[0.06]"
           @click="openTTS"
@@ -163,6 +194,9 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
         </button>
       </div>
     </transition>
+
+    <!-- Ebook for narration: any type — Android hides .fb2 behind a MIME filter -->
+    <input v-if="isNative" ref="bookInput" type="file" class="hidden" @change="onBookPicked" />
 
     <!-- FAB button -->
     <button
