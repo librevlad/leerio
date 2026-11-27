@@ -190,4 +190,31 @@ describe('useFileScanner', () => {
     removeFsBook('fs:x')
     expect(fsBooks.value['fs:x']).toBeUndefined()
   })
+
+  it('checkFsBook keeps a book whose folder is there and drops a vanished one', async () => {
+    native.isNative = true
+    const { addFsBooks, checkFsBook, fsBooks } = useFileScanner()
+    const book = (name: string) => ({
+      id: `fs:${name}`,
+      title: name,
+      author: '',
+      folderPath: `Audiobooks/${name}`,
+      tracks: [],
+      sizeBytes: 0,
+      synced: false,
+      addedAt: '',
+    })
+    addFsBooks([book('here'), book('gone')])
+    vi.mocked(Filesystem.stat).mockImplementation((async ({ path }: { path: string }) => {
+      if (path !== 'Audiobooks/here') throw new Error('ENOENT')
+      return {}
+    }) as unknown as typeof Filesystem.stat)
+
+    expect(await checkFsBook('fs:here')).toBe(true)
+    expect(await checkFsBook('fs:gone')).toBe(false)
+    expect(await checkFsBook('fs:unknown')).toBe(false)
+    expect(Object.keys(fsBooks.value)).toContain('fs:here')
+    expect(fsBooks.value['fs:gone']).toBeUndefined()
+    expect(JSON.parse(localStorage.getItem('leerio_fs_books') || '{}')['fs:gone']).toBeUndefined()
+  })
 })
