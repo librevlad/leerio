@@ -396,7 +396,7 @@ export default {
     aboutBook: 'About',
     noDescription: 'No description available',
     tagsLabel: 'Tags',
-    tracks: 'tracks',
+    tracks: '{n} track | {n} tracks',
     chapterN: 'Chapter {n}',
     showAllTracks: 'Show all ({count})',
     totalDuration: 'Total:',
