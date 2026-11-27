@@ -18,7 +18,7 @@ test.describe('Story: Browse and Play', () => {
     await expect(page).toHaveURL(/\/book\//, { timeout: 10_000 })
     await expect(page.locator('h1')).toBeVisible({ timeout: 10_000 })
 
-    const playBtn = page.locator('button:has-text("Воспроизвести"), button:has-text("Продолжить")')
+    const playBtn = page.locator('button:has-text("Слушать"), button:has-text("Продолжить")')
     await expect(playBtn.first()).toBeVisible({ timeout: 5_000 })
     await playBtn.first().click()
 

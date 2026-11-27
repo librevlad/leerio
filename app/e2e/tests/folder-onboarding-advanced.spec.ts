@@ -85,7 +85,7 @@ test.describe('Real audio upload and playback', () => {
     await expect(page).toHaveURL(/\/book\//, { timeout: 10_000 })
 
     // Click play
-    const playBtn = page.locator('button:has-text("Воспроизвести"), button:has-text("Продолжить")')
+    const playBtn = page.locator('button:has-text("Слушать"), button:has-text("Продолжить")')
     await expect(playBtn.first()).toBeVisible({ timeout: 5_000 })
     await playBtn.first().click()
 
@@ -195,7 +195,7 @@ test.describe('FAB position', () => {
     await page.locator('a[href*="/book/"]').first().click()
     await expect(page).toHaveURL(/\/book\//, { timeout: 10_000 })
 
-    const playBtn = page.locator('button:has-text("Воспроизвести"), button:has-text("Продолжить")')
+    const playBtn = page.locator('button:has-text("Слушать"), button:has-text("Продолжить")')
     await expect(playBtn.first()).toBeVisible({ timeout: 5_000 })
     await playBtn.first().click()
 
