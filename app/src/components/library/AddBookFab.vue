@@ -6,6 +6,7 @@ import { Capacitor } from '@capacitor/core'
 import { usePlayer } from '../../composables/usePlayer'
 import { useAuth } from '../../composables/useAuth'
 import { useNarration } from '../../composables/useNarration'
+import { useCloud } from '../../composables/useCloud'
 import { IconPlus } from '../shared/icons'
 
 const router = useRouter()
@@ -18,6 +19,8 @@ const { serverReachable } = useAuth()
 // Upload and server TTS need the server: hidden in the APK while it is unreachable
 const serverItems = computed(() => !isNative || serverReachable.value)
 const narration = useNarration()
+// The owner's bucket: shown only where its key is on the device
+const cloud = useCloud()
 const bookInput = ref<HTMLInputElement | null>(null)
 
 // Above the bottom nav (+ mini player) and the system navigation bar
@@ -34,6 +37,11 @@ function close() {
 function scanDevice() {
   close()
   router.push('/scan-results')
+}
+
+function openCloud() {
+  close()
+  router.push('/cloud')
 }
 
 function pickFiles() {
@@ -75,7 +83,10 @@ function onBookPicked(e: Event) {
 function onKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape' && isOpen.value) close()
 }
-onMounted(() => document.addEventListener('keydown', onKeydown))
+onMounted(() => {
+  document.addEventListener('keydown', onKeydown)
+  void cloud.init()
+})
 onUnmounted(() => document.removeEventListener('keydown', onKeydown))
 </script>
 
@@ -112,6 +123,20 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
           <div>
             <div class="text-[13px] font-semibold text-(--t1)">{{ t('fab.scan') }}</div>
             <div class="text-[10px] text-(--t3)">{{ t('fab.scanHint') }}</div>
+          </div>
+        </button>
+
+        <!-- The owner's cloud bucket (APK with cloud.json) -->
+        <button
+          v-if="cloud.available.value"
+          role="menuitem"
+          class="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-white/[0.06]"
+          @click="openCloud"
+        >
+          <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.06] text-[16px]">☁️</div>
+          <div>
+            <div class="text-[13px] font-semibold text-(--t1)">{{ t('fab.cloud') }}</div>
+            <div class="text-[10px] text-(--t3)">{{ t('fab.cloudHint') }}</div>
           </div>
         </button>
 
