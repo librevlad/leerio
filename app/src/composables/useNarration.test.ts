@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
 import { narrationToFsBook, sortVoices, voiceLabel, voiceLanguages, type TtsVoice } from './useNarration'
-import { usePro, FREE_NARRATION_CHAPTERS } from './usePro'
 
 const voice = (over: Partial<TtsVoice>): TtsVoice => ({
   id: `${over.engine ?? 'g'}/${over.name ?? 'v'}`,
@@ -97,12 +96,5 @@ describe('voices', () => {
     const ru = [g1, g2, samsung]
     expect(voiceLabel(g2, ru)).toBe('Google · ru-RU · 2')
     expect(voiceLabel(samsung, ru)).toBe('Samsung · ru-RU')
-  })
-})
-
-describe('usePro', () => {
-  it('is the free plan until Play Billing is wired', () => {
-    expect(usePro().isPro.value).toBe(false)
-    expect(FREE_NARRATION_CHAPTERS).toBe(1)
   })
 })

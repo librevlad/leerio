@@ -16,6 +16,7 @@ import { formatSize } from '../utils/format'
 import { useCountUp } from '../composables/useCountUp'
 import PaywallModal from '../components/shared/PaywallModal.vue'
 import { PLAYBACK_SPEEDS } from '../composables/usePlayer'
+import { usePro } from '../composables/usePro'
 import { version } from '../../package.json'
 
 const router = useRouter()
@@ -37,6 +38,7 @@ const totalBooks = ref<number | null>(null)
 const totalDone = ref(0)
 const showShortcuts = ref(false)
 const showPaywall = ref(false)
+const pro = usePro()
 
 const speeds = PLAYBACK_SPEEDS
 
@@ -347,8 +349,43 @@ async function handleLogout() {
           </div>
         </div>
 
-        <!-- Plan -->
-        <div v-if="user">
+        <!-- Leerio Pro (app: Google Play) -->
+        <div v-if="dl.isNative.value && (pro.isPro.value || pro.canBuy.value)">
+          <p class="settings-group-label">{{ t('pro.title') }}</p>
+          <div class="settings-group">
+            <div class="settings-row">
+              <span class="settings-row-label">{{ t('settings.currentPlan') }}</span>
+              <span
+                class="rounded px-2 py-0.5 text-[11px] font-bold"
+                :class="pro.isPro.value ? 'bg-(--accent) text-(--bg)' : 'bg-white/[0.06] text-(--t2)'"
+              >
+                {{ pro.isPro.value ? t('pro.active') : t('pro.free') }}
+              </span>
+            </div>
+            <div class="settings-row">
+              <button
+                v-if="pro.isPro.value"
+                class="w-full rounded-lg py-2 text-[13px] font-semibold text-(--t2)"
+                style="background: var(--card-hover)"
+                @click="pro.manage()"
+              >
+                {{ t('pro.manage') }}
+              </button>
+              <button
+                v-else
+                v-ripple
+                class="w-full rounded-lg py-2 text-[13px] font-semibold text-white"
+                style="background: var(--gradient-accent)"
+                @click="showPaywall = true"
+              >
+                {{ t('pro.upgrade') }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Plan (web: server account) -->
+        <div v-if="user && !dl.isNative.value">
           <p class="settings-group-label">{{ t('settings.plan') }}</p>
           <div class="settings-group">
             <div class="settings-row">

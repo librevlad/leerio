@@ -8,7 +8,9 @@ import { useTracking } from '../composables/useTelemetry'
 import { usePlayer } from '../composables/usePlayer'
 import { formatSize } from '../utils/format'
 import { IconCheck, IconArrowLeft } from '../components/shared/icons'
+import PaywallModal from '../components/shared/PaywallModal.vue'
 import { STORAGE } from '../constants/storage'
+import { usePro, FREE_BOOKS } from '../composables/usePro'
 import type { FsBookMeta } from '../types'
 
 const router = useRouter()
@@ -17,6 +19,13 @@ const toast = useToast()
 const { track } = useTracking()
 const scanner = useFileScanner()
 const { isPlayerVisible } = usePlayer()
+const pro = usePro()
+const showPaywall = ref(false)
+
+/** How many more books the free plan lets into My Library (books already there stay) */
+const room = computed(() =>
+  pro.limited.value ? Math.max(0, FREE_BOOKS - Object.keys(scanner.fsBooks.value).length) : Infinity,
+)
 
 // Above the bottom nav (+ mini player): at bottom 0 they cover the Add button
 const barBottom = computed(() => `calc(${isPlayerVisible.value ? '120px' : '56px'} + env(safe-area-inset-bottom, 0px))`)
@@ -32,8 +41,9 @@ onMounted(async () => {
   scannedBooks.value = found
   hasScanned.value = true
 
-  // Select all except "not a book" heuristic
+  // Select all except "not a book" heuristic, as many as the plan allows
   for (const book of found) {
+    if (selected.value.size >= room.value) break
     // Use the folder path, not the cleaned title: albums under Music/ are not books
     if (!isLikelyNotBook(book.folderPath, book.tracks.length)) {
       selected.value.add(book.id)
@@ -46,6 +56,9 @@ onMounted(async () => {
 function toggle(id: string) {
   if (selected.value.has(id)) {
     selected.value.delete(id)
+  } else if (selected.value.size >= room.value) {
+    showPaywall.value = true
+    return
   } else {
     selected.value.add(id)
   }
@@ -54,6 +67,10 @@ function toggle(id: string) {
 }
 
 function selectAll() {
+  if (scannedBooks.value.length > room.value) {
+    showPaywall.value = true
+    return
+  }
   for (const b of scannedBooks.value) selected.value.add(b.id)
   selected.value = new Set(selected.value)
 }
@@ -123,7 +140,9 @@ function fmtSize(bytes: number): string {
 
     <!-- Book list -->
     <div v-else class="space-y-2 pb-28">
-      <p v-if="scannedBooks.length" class="mb-4 text-[12px] text-(--t3)">{{ t('scan.uncheckHint') }}</p>
+      <p v-if="scannedBooks.length" class="mb-4 text-[12px] text-(--t3)">
+        {{ pro.limited.value ? t('pro.freeBooks', { n: FREE_BOOKS }) : t('scan.uncheckHint') }}
+      </p>
 
       <div
         v-for="book in scannedBooks"
@@ -172,5 +191,7 @@ function fmtSize(bytes: number): string {
       </button>
       <p class="mt-2 text-center text-[11px] text-(--t3)">{{ t('scan.stayOnDevice') }}</p>
     </div>
+
+    <PaywallModal :open="showPaywall" reason="books" @close="showPaywall = false" />
   </div>
 </template>
