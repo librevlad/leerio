@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { Capacitor } from '@capacitor/core'
 import { useTracking } from './useTelemetry'
 
 let sendBeaconMock: ReturnType<typeof vi.fn>
@@ -91,5 +92,28 @@ describe('useTelemetry', () => {
 
     const { track: track2 } = useTracking()
     expect(() => track2('upgrade_clicked')).not.toThrow()
+  })
+})
+
+describe('useTelemetry in the APK', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+    localStorage.clear()
+  })
+
+  it('sends nothing for a device-only user (no account) — matches the privacy policy', () => {
+    vi.spyOn(Capacitor, 'isNativePlatform').mockReturnValue(true)
+    useTracking().track('book_played')
+
+    expect(sendBeaconMock).not.toHaveBeenCalled()
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('sends events once the user has an account', () => {
+    vi.spyOn(Capacitor, 'isNativePlatform').mockReturnValue(true)
+    localStorage.setItem('leerio_user', JSON.stringify({ user_id: 'u1' }))
+    useTracking().track('book_played')
+
+    expect(sendBeaconMock).toHaveBeenCalledOnce()
   })
 })
