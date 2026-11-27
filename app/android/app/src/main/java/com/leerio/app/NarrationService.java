@@ -18,6 +18,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
@@ -25,6 +26,7 @@ import android.speech.tts.Voice;
 import android.util.Log;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.ServiceCompat;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -32,7 +34,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -137,14 +138,26 @@ public class NarrationService extends Service {
         if (!statusFile(c).delete()) Log.d(TAG, "No status to clear");
     }
 
+    /** Plain streams, not java.nio.file: that only exists from Android 8, the app runs from Android 7 */
     static String readText(File f) throws IOException {
-        return new String(Files.readAllBytes(f.toPath()), StandardCharsets.UTF_8);
+        try (InputStream in = new FileInputStream(f); ByteArrayOutputStream buf = new ByteArrayOutputStream()) {
+            byte[] chunk = new byte[8192];
+            for (int n; (n = in.read(chunk)) != -1; ) buf.write(chunk, 0, n);
+            return new String(buf.toByteArray(), StandardCharsets.UTF_8);
+        }
     }
 
+    /**
+     * Writes the whole file or nothing: a temp file renamed over the old one. A process killed
+     * mid-write leaves the previous status, not a cut JSON that reads as "idle" (job lost).
+     */
     static void writeText(File f, String text) throws IOException {
-        try (OutputStream out = new FileOutputStream(f)) {
+        File tmp = new File(f.getPath() + ".tmp");
+        try (OutputStream out = new FileOutputStream(tmp)) {
             out.write(text.getBytes(StandardCharsets.UTF_8));
         }
+        // rename(2) on the same disk replaces the old file in one step
+        if (!tmp.renameTo(f)) throw new IOException("Cannot replace " + f.getName());
     }
 
     /** "Audiobooks/A - T" → "Audiobooks/A - T (2)" when the folder is already there. */
@@ -371,11 +384,13 @@ public class NarrationService extends Service {
             if (tts.synthesizeToFile(text, new Bundle(), out, id) != TextToSpeech.SUCCESS) {
                 throw new NarrationException("synthesis");
             }
-            long deadline = System.currentTimeMillis() + CHUNK_TIMEOUT_MS;
+            // Monotonic clock: a wall-clock change (time zone, manual time, network sync) must not
+            // cut synthesis short or stretch the wait
+            long deadline = SystemClock.elapsedRealtime() + CHUNK_TIMEOUT_MS;
             while (!latch.await(500, TimeUnit.MILLISECONDS)) {
                 if (cancelRequested || stopCode != null) tts.stop();
                 checkStop();
-                if (System.currentTimeMillis() > deadline) throw new NarrationException("synthesis");
+                if (SystemClock.elapsedRealtime() > deadline) throw new NarrationException("synthesis");
             }
             if (failed) throw new NarrationException("synthesis");
         }

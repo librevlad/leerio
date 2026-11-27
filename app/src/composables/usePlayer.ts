@@ -221,6 +221,8 @@ function settlePosition() {
   if (!pendingPosition) return
   pendingPosition = null
   if (audio) currentTime.value = audio.currentTime
+  // Persist the new place at once: a chapter jump must survive a crash in the next 5 s
+  savePosition()
 }
 
 function savePosition() {

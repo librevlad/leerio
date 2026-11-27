@@ -192,6 +192,8 @@ public class NarrationPlugin extends Plugin implements NarrationService.Listener
 
     @PluginMethod
     public void stopPreview(PluginCall call) {
+        // A preview still waiting for the engine must not start talking after the screen is gone
+        pendingPreview = null;
         if (previewTts != null && previewReady) previewTts.stop();
         call.resolve();
     }

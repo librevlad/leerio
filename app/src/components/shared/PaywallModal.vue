@@ -80,9 +80,13 @@ async function buy() {
 }
 
 async function restore() {
-  if (await pro.restore()) {
+  const result = await pro.restore()
+  if (result === 'active') {
     toast.success(t('pro.restored'))
     emit('close')
+  } else if (result === 'unavailable') {
+    // Offline or no Play Store: not "no purchase" — Play simply could not be asked
+    toast.error(t('pro.unavailable'))
   } else {
     toast.info(t('pro.notFound'))
   }

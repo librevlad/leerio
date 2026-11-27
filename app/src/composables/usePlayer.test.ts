@@ -1284,6 +1284,21 @@ describe('position across switches', () => {
     expect(saved('a')).toEqual({ track_index: 2, position: 7 })
   })
 
+  it('a chapter jump is saved as soon as the new chapter plays — no 5-second gap', async () => {
+    const p = usePlayer()
+    p.currentBook.value = book('a', 'A')
+    p.tracks.value = threeTracks
+    p.currentTrackIndex.value = 0
+    p.currentTime.value = 40
+    p.isLoading.value = false
+
+    await p.playTrack(2)
+    mockAudio.currentTime = 0.4
+    mockAudio._emit('playing')
+
+    expect(saved('a')).toEqual({ track_index: 2, position: 0.4 })
+  })
+
   it('labels follow the book in the player; other books show where they were left', () => {
     const p = usePlayer()
     localStorage.setItem('leerio_pos_b', JSON.stringify({ track_index: 1, position: 12 }))
