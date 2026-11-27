@@ -45,7 +45,7 @@ onMounted(async () => {
   for (const book of found) {
     if (selected.value.size >= room.value) break
     // Use the folder path, not the cleaned title: albums under Music/ are not books
-    if (!isLikelyNotBook(book.folderPath, book.tracks.length)) {
+    if (!isLikelyNotBook(book.folderPath, book.tracks)) {
       selected.value.add(book.id)
     }
   }

@@ -305,9 +305,12 @@ export function extractAuthor(folderName: string): string {
   return ''
 }
 
-/** Heuristic: folder is probably not an audiobook. Pass the full path ("Music/Scorpions") — Music/ means music */
-export function isLikelyNotBook(folderPath: string, trackCount: number): boolean {
-  if (trackCount < 2) return true
+/**
+ * Heuristic: folder is probably not an audiobook. Pass the full path ("Music/Scorpions") — Music/ means music.
+ * One file is a single, unless it is an M4B: that container is a whole audiobook in one file.
+ */
+export function isLikelyNotBook(folderPath: string, tracks: Pick<FsTrack, 'filename'>[]): boolean {
+  if (tracks.length < 2 && !tracks.some((t) => /\.m4b$/i.test(t.filename))) return true
   if (NOT_BOOK_KEYWORDS.test(folderPath)) return true
   return false
 }
