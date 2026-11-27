@@ -598,7 +598,7 @@ export default {
     notNow: 'Not now',
   },
   scan: {
-    found: 'Found {n} books',
+    found: 'Found {n} book | Found {n} books',
     scanning: 'Scanning...',
     scanningDir: 'Scanning {dir}...',
     nothingFound: 'No audiobooks found',
@@ -606,10 +606,10 @@ export default {
     uncheckHint: "Uncheck books you don't need",
     selectAll: 'Select all',
     deselectAll: 'Deselect all',
-    tracks: '{n} tracks',
-    addN: 'Add {n} books',
+    tracks: '{n} track | {n} tracks',
+    addN: 'Add {n} book | Add {n} books',
     stayOnDevice: 'Books stay on your device',
-    added: '{n} books added',
+    added: '{n} book added | {n} books added',
     cancel: 'Cancel',
   },
   fab: {
