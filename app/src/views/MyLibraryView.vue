@@ -6,7 +6,7 @@ import { useLocalBooks } from '@/composables/useLocalBooks'
 import { useDownloads } from '@/composables/useDownloads'
 import { useFileScanner } from '@/composables/useFileScanner'
 import { useToast } from '@/composables/useToast'
-import { usePlayer, savedPosition } from '@/composables/usePlayer'
+import { usePlayer, resumePosition } from '@/composables/usePlayer'
 import { api, userBookCoverUrl, coverUrl } from '@/api'
 import { STORAGE } from '@/constants/storage'
 import { titleInitial } from '@/utils/format'
@@ -136,7 +136,7 @@ const lastPlayedId = (() => {
 const currentId = computed(() => player.currentBook.value?.id ?? lastPlayedId)
 
 const listItems = computed(() =>
-  items.value.map((item) => ({ ...item, pos: savedPosition(item.id) })).sort((a, b) => rank(a) - rank(b)),
+  items.value.map((item) => ({ ...item, pos: resumePosition(item.id) })).sort((a, b) => rank(a) - rank(b)),
 )
 
 function rank(item: { id: string; pos: unknown }): number {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '../../api'
 import { trackDisplayName as _trackDisplayName } from '../../utils/format'
@@ -58,9 +58,15 @@ async function handleTrackClick(index: number) {
   player.openFullscreen()
 }
 
+// The page reuses this component when it moves from one book to another: a late answer for
+// the previous book must not land in the new book's list
+let loadOp = 0
+
 async function loadTracks() {
+  const op = ++loadOp
   loading.value = true
   loadError.value = false
+  tracks.value = []
   try {
     // Local books (lb:) — tracks stored in IndexedDB, not on server
     if (props.book.id.startsWith('lb:')) {
@@ -90,16 +96,25 @@ async function loadTracks() {
       }
     } else {
       const res = await api.getBookTracks(props.book.id)
+      if (op !== loadOp) return
       tracks.value = res.tracks
     }
   } catch {
-    loadError.value = true
+    if (op === loadOp) loadError.value = true
   } finally {
-    loading.value = false
+    if (op === loadOp) loading.value = false
   }
 }
 
 onMounted(loadTracks)
+// Book page → another book's page (search, "Book page" in the player): same component, new book
+watch(
+  () => props.book.id,
+  () => {
+    expanded.value = false
+    void loadTracks()
+  },
+)
 </script>
 
 <template>

@@ -22,7 +22,7 @@ import {
 } from '../components/shared/icons'
 import ProgressBar from '../components/shared/ProgressBar.vue'
 import PaywallModal from '../components/shared/PaywallModal.vue'
-import { usePlayer, savedPosition } from '../composables/usePlayer'
+import { usePlayer, resumePosition } from '../composables/usePlayer'
 import { useDownloads } from '../composables/useDownloads'
 import { useAuth } from '../composables/useAuth'
 import { useCategories } from '../composables/useCategories'
@@ -67,7 +67,7 @@ const isCurrentBook = computed(() => player.currentBook.value?.id === book.value
 const isPlaying = computed(() => player.isPlaying.value)
 
 // Main button says where listening resumes: "Продолжить · Трек 3 из 22"
-const resumeAt = computed(() => (book.value ? savedPosition(book.value.id) : null))
+const resumeAt = computed(() => (book.value ? resumePosition(book.value.id) : null))
 const playLabel = computed(() => {
   if (isCurrentBook.value && isPlaying.value) return t('player.pause')
   const pos = resumeAt.value

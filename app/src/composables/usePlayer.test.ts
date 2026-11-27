@@ -158,7 +158,9 @@ vi.stubGlobal('Audio', function () {
   return mockAudio
 })
 
-import { usePlayer } from './usePlayer'
+import { computed } from 'vue'
+import { api } from '../api'
+import { usePlayer, resumePosition } from './usePlayer'
 
 describe('usePlayer', () => {
   beforeEach(() => {
@@ -1195,5 +1197,104 @@ describe('usePlayer', () => {
       expect(mockAudio.currentTime).toBe(42)
       expect(mockAudio.play).toHaveBeenCalledTimes(1)
     })
+  })
+})
+
+// ── Position across book and track switches (live hunt 27.11.2026) ──────────
+// Promise to the listener: a new book never gets the previous book's time, a new chapter never gets
+// the old chapter's time — even if the app is closed in the very moment of the switch.
+describe('position across switches', () => {
+  const book = (id: string, title: string) => ({
+    id,
+    folder: '',
+    category: '',
+    author: '',
+    title,
+    reader: '',
+    path: '',
+    progress: 0,
+    tags: [],
+    note: '',
+  })
+  const threeTracks = [
+    { index: 0, filename: '01.mp3', path: '', duration: 90 },
+    { index: 1, filename: '02.mp3', path: '', duration: 90 },
+    { index: 2, filename: '03.mp3', path: '', duration: 90 },
+  ]
+  /** The page is hidden / the app closes: the player saves where it is */
+  const appCloses = () => window.dispatchEvent(new Event('beforeunload'))
+  const saved = (id: string) => JSON.parse(localStorage.getItem(`leerio_pos_${id}`) || 'null')
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+    localStorage.clear()
+    usePlayer().closePlayer()
+    mockAudio.currentTime = 0
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it("a new book never gets the previous book's time", async () => {
+    const p = usePlayer()
+    p.currentBook.value = book('a', 'A')
+    p.tracks.value = threeTracks
+    p.currentTrackIndex.value = 1
+    p.currentTime.value = 63.9
+    p.isLoading.value = false
+    vi.mocked(api.getBookTracks).mockResolvedValue({ tracks: threeTracks } as never)
+    vi.mocked(api.getPlaybackPosition).mockRejectedValue(new Error('offline'))
+
+    const loading = p.loadBook(book('b', 'B'))
+    appCloses()
+
+    expect(saved('b')).toEqual({ track_index: 0, position: 0 })
+    await loading
+  })
+
+  it("a new chapter never gets the old chapter's time", async () => {
+    const p = usePlayer()
+    p.currentBook.value = book('a', 'A')
+    p.tracks.value = threeTracks
+    p.currentTrackIndex.value = 0
+    p.currentTime.value = 40
+    p.isLoading.value = false
+
+    const switching = p.playTrack(2)
+    appCloses()
+
+    expect(saved('a')).toEqual({ track_index: 2, position: 0 })
+    await switching
+  })
+
+  it('follows playback again once the audio is in the new chapter', async () => {
+    const p = usePlayer()
+    p.currentBook.value = book('a', 'A')
+    p.tracks.value = threeTracks
+    p.currentTrackIndex.value = 0
+    p.currentTime.value = 40
+    p.isLoading.value = false
+
+    await p.playTrack(2)
+    mockAudio.currentTime = 7
+    mockAudio._emit('playing')
+    appCloses()
+
+    expect(saved('a')).toEqual({ track_index: 2, position: 7 })
+  })
+
+  it('labels follow the book in the player; other books show where they were left', () => {
+    const p = usePlayer()
+    localStorage.setItem('leerio_pos_b', JSON.stringify({ track_index: 1, position: 12 }))
+    p.currentBook.value = book('a', 'A')
+    p.tracks.value = threeTracks
+    p.currentTrackIndex.value = 0
+    const label = computed(() => resumePosition('a')?.trackIndex)
+
+    expect(label.value).toBe(0)
+    p.currentTrackIndex.value = 2
+    expect(label.value).toBe(2)
+    expect(resumePosition('b')).toEqual({ trackIndex: 1, seekPos: 12 })
   })
 })
