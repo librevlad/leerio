@@ -93,7 +93,7 @@ onErrorCaptured((err) => {
   return false
 })
 
-const { validateFsBooks, getFsBook } = useFileScanner()
+const { validateFsBooks, getFsBook, checkFsBook } = useFileScanner()
 const { getLocalBook } = useLocalBooks()
 
 function resumeBook(book: Book) {
@@ -101,6 +101,14 @@ function resumeBook(book: Book) {
   if (route.name === 'login' || route.name === 'landing') return // don't auto-resume on login/landing
   player.loadBook(book, undefined, false) // resume position but don't autoplay
   player.closeFullscreen() // show MiniPlayer, not fullscreen
+}
+
+function forgetLastPlayed() {
+  try {
+    localStorage.removeItem(STORAGE.LAST_PLAYED)
+  } catch {
+    /* ignore */
+  }
 }
 
 // Auto-resume last played book (instant resume — 0 clicks)
@@ -117,7 +125,7 @@ function autoResume() {
     if (id.startsWith('fs:') || id.startsWith('lb:')) {
       const local = id.startsWith('fs:') ? getFsBook(id) : getLocalBook(id)
       if (!local) return
-      resumeBook({
+      const book: Book = {
         id: local.id,
         title: local.title,
         author: local.author,
@@ -129,7 +137,10 @@ function autoResume() {
         tags: [],
         note: '',
         mp3_count: local.tracks.length,
-      })
+      }
+      // The folder may have been deleted in a file manager: no dead "Retry" for a book that is gone
+      if (id.startsWith('fs:')) void checkFsBook(id).then((exists) => (exists ? resumeBook(book) : forgetLastPlayed()))
+      else resumeBook(book)
       return
     }
     import('./api').then(({ api }) => {
@@ -138,12 +149,7 @@ function autoResume() {
         .then(resumeBook)
         .catch((e: unknown) => {
           // Only a deleted book clears "last played" — being offline must not lose Continue Listening
-          if (!(e instanceof Error) || !e.message.startsWith('404')) return
-          try {
-            localStorage.removeItem(STORAGE.LAST_PLAYED)
-          } catch {
-            /* ignore */
-          }
+          if (e instanceof Error && e.message.startsWith('404')) forgetLastPlayed()
         })
     })
   } catch {
@@ -175,6 +181,8 @@ onMounted(() => {
   loadCategories()
   window.addEventListener('keydown', onKeydown)
   validateFsBooks() // Non-blocking — fire and forget
+  // A book narrated while the app was closed joins the library now
+  if (downloads.isNative.value) void import('./composables/useNarration').then((m) => m.useNarration().sync())
 
   // Track session start with UTM source for signup attribution
   const params = new URLSearchParams(window.location.search)

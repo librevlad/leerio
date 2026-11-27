@@ -500,7 +500,7 @@ watch(() => route.params.id, loadBook)
           <!-- Meta (desktop) -->
           <div class="mt-4 hidden space-y-2 border-t border-white/[0.04] pt-4 text-[12px] text-(--t3) lg:block">
             <p v-if="book.duration_hours">{{ formatDuration(book.duration_hours) }}</p>
-            <p v-if="book.mp3_count">{{ book.mp3_count }} {{ t('book.tracks') }}</p>
+            <p v-if="book.mp3_count">{{ t('book.tracks', book.mp3_count) }}</p>
             <p v-if="book.size_mb">{{ formatSizeMB(book.size_mb, t) }}</p>
           </div>
         </div>
@@ -526,7 +526,7 @@ watch(() => route.params.id, loadBook)
             <!-- Meta (mobile only) -->
             <div class="mt-4 flex gap-3 text-[12px] text-(--t3) lg:hidden">
               <span v-if="book.duration_hours">{{ formatDuration(book.duration_hours) }}</span>
-              <span v-if="book.mp3_count">{{ book.mp3_count }} {{ t('book.tracks') }}</span>
+              <span v-if="book.mp3_count">{{ t('book.tracks', book.mp3_count) }}</span>
               <span v-if="book.size_mb">{{ formatSizeMB(book.size_mb, t) }}</span>
             </div>
           </div>

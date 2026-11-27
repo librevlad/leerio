@@ -71,6 +71,12 @@ const router = createRouter({
       meta: { title: 'Scan Results', public: true },
     },
     {
+      path: '/narrate',
+      name: 'narrate',
+      component: () => import('./views/NarrateView.vue'),
+      meta: { title: 'Narrate', public: true },
+    },
+    {
       path: '/youtube-import',
       name: 'youtube-import',
       component: () => import('./views/YouTubeImportView.vue'),

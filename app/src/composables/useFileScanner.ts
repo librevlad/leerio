@@ -142,20 +142,21 @@ export function useFileScanner() {
     if (!isNative) return
     const toRemove: string[] = []
     for (const [id, book] of Object.entries(fsBooks.value)) {
-      try {
-        await Filesystem.stat({
-          path: book.folderPath,
-          directory: Directory.ExternalStorage,
-        })
-      } catch {
-        // Folder no longer exists
-        toRemove.push(id)
-      }
+      if (!(await folderExists(book.folderPath))) toRemove.push(id)
     }
     for (const id of toRemove) {
       delete fsBooks.value[id]
     }
     if (toRemove.length > 0) persist()
+  }
+
+  /** One book's folder is still on the device; a vanished book leaves the library. Startup resume checks this. */
+  async function checkFsBook(id: string): Promise<boolean> {
+    const book = fsBooks.value[id]
+    if (!book) return false
+    if (!isNative || (await folderExists(book.folderPath))) return true
+    removeFsBook(id)
+    return false
   }
 
   async function scanFolder(path: string): Promise<{ tracks: FsTrack[]; sizeBytes: number }> {
@@ -249,6 +250,7 @@ export function useFileScanner() {
     scan,
     abortScan,
     validateFsBooks,
+    checkFsBook,
     addFsBooks,
     removeFsBook,
     markSynced,
@@ -261,6 +263,15 @@ export function useFileScanner() {
 }
 
 // ── Helpers (exported for testing) ──────────────────────────────────────
+
+async function folderExists(path: string): Promise<boolean> {
+  try {
+    await Filesystem.stat({ path, directory: Directory.ExternalStorage })
+    return true
+  } catch {
+    return false
+  }
+}
 
 const AUTHOR_SEP = / [-–—] /
 

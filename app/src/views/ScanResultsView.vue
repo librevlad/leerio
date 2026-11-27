@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { useFileScanner, isLikelyNotBook } from '../composables/useFileScanner'
 import { useToast } from '../composables/useToast'
 import { useTracking } from '../composables/useTelemetry'
+import { usePlayer } from '../composables/usePlayer'
 import { formatSize } from '../utils/format'
 import { IconCheck, IconArrowLeft } from '../components/shared/icons'
 import { STORAGE } from '../constants/storage'
@@ -15,6 +16,10 @@ const { t } = useI18n()
 const toast = useToast()
 const { track } = useTracking()
 const scanner = useFileScanner()
+const { isPlayerVisible } = usePlayer()
+
+// Above the bottom nav (+ mini player): at bottom 0 they cover the Add button
+const barBottom = computed(() => `calc(${isPlayerVisible.value ? '120px' : '56px'} + env(safe-area-inset-bottom, 0px))`)
 
 const scannedBooks = ref<FsBookMeta[]>([])
 const selected = ref<Set<string>>(new Set())
@@ -67,7 +72,7 @@ function addSelected() {
   if (!books.length) return
 
   scanner.addFsBooks(books)
-  toast.success(t('scan.added', { n: books.length }))
+  toast.success(t('scan.added', books.length))
   track('scan_books_added', { count: books.length })
   localStorage.setItem(STORAGE.ONBOARDED, '1')
   router.push('/my-library')
@@ -87,7 +92,7 @@ function fmtSize(bytes: number): string {
       </button>
       <div class="flex-1">
         <h1 v-if="hasScanned" class="text-[18px] font-bold text-(--t1)">
-          {{ t('scan.found', { n: scannedBooks.length }) }}
+          {{ t('scan.found', scannedBooks.length) }}
         </h1>
         <h1 v-else class="text-[18px] font-bold text-(--t1)">{{ t('scan.scanning') }}</h1>
       </div>
@@ -117,7 +122,7 @@ function fmtSize(bytes: number): string {
     </div>
 
     <!-- Book list -->
-    <div v-else class="space-y-2">
+    <div v-else class="space-y-2 pb-28">
       <p v-if="scannedBooks.length" class="mb-4 text-[12px] text-(--t3)">{{ t('scan.uncheckHint') }}</p>
 
       <div
@@ -144,7 +149,7 @@ function fmtSize(bytes: number): string {
           <div class="truncate text-[13px] font-semibold text-(--t1)">{{ book.title }}</div>
           <div class="mt-0.5 text-[11px] text-(--t3)">
             <span v-if="book.author">{{ book.author }} · </span>
-            {{ book.tracks.length }} {{ t('scan.tracks', { n: book.tracks.length }) }}
+            {{ t('scan.tracks', book.tracks.length) }}
             <span v-if="book.sizeBytes"> · {{ fmtSize(book.sizeBytes) }}</span>
           </div>
         </div>
@@ -154,8 +159,8 @@ function fmtSize(bytes: number): string {
     <!-- Add button (sticky bottom) -->
     <div
       v-if="scannedBooks.length"
-      class="fixed right-0 bottom-0 left-0 px-4 pt-3 pb-6"
-      style="background: linear-gradient(transparent, var(--bg) 20%)"
+      class="fixed right-0 left-0 z-30 px-4 pt-3 pb-3"
+      :style="{ bottom: barBottom, background: 'linear-gradient(transparent, var(--bg) 20%)' }"
     >
       <button
         v-ripple
@@ -163,7 +168,7 @@ function fmtSize(bytes: number): string {
         :disabled="!selectedCount"
         @click="addSelected"
       >
-        {{ t('scan.addN', { n: selectedCount }) }}
+        {{ t('scan.addN', selectedCount) }}
       </button>
       <p class="mt-2 text-center text-[11px] text-(--t3)">{{ t('scan.stayOnDevice') }}</p>
     </div>
