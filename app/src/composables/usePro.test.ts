@@ -159,3 +159,38 @@ describe('purchase', () => {
     expect(pro.isPro.value).toBe(false)
   })
 })
+
+describe('Pro state against late answers (Codex review 27.11.2026)', () => {
+  it('a late Play answer never undoes a purchase', async () => {
+    let answerLate: (v: unknown) => void = () => {}
+    play.getEntitlement.mockReturnValue(new Promise((r) => (answerLate = r)))
+    play.getOffers.mockResolvedValue({ available: true, offers: [monthly] })
+    play.purchase.mockResolvedValue({ status: 'purchased', active: true })
+    const { usePro, proPlans } = await load()
+    const pro = usePro()
+
+    const askedBeforePurchase = pro.refresh()
+    expect(await pro.purchase(proPlans([monthly])[0]!)).toBe('purchased')
+    answerLate({ available: true, active: false })
+    await askedBeforePurchase
+
+    expect(pro.isPro.value).toBe(true)
+  })
+
+  it('restore offline says Play is unavailable — not "no purchase"', async () => {
+    play.getEntitlement.mockResolvedValue({ available: false })
+    play.getOffers.mockResolvedValue({ available: false })
+    const { usePro } = await load()
+    expect(await usePro().restore()).toBe('unavailable')
+  })
+
+  it('restore tells an active purchase from none', async () => {
+    play.getOffers.mockResolvedValue({ available: true, offers: [monthly] })
+    play.getEntitlement.mockResolvedValue({ available: true, active: true })
+    let m = await load()
+    expect(await m.usePro().restore()).toBe('active')
+    play.getEntitlement.mockResolvedValue({ available: true, active: false })
+    m = await load()
+    expect(await m.usePro().restore()).toBe('none')
+  })
+})

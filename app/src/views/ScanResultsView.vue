@@ -87,6 +87,11 @@ function cancelScan() {
 function addSelected() {
   const books = scannedBooks.value.filter((b) => selected.value.has(b.id))
   if (!books.length) return
+  // Play may have answered after the books were ticked: the free plan's limit holds here too
+  if (books.length > room.value) {
+    showPaywall.value = true
+    return
+  }
 
   scanner.addFsBooks(books)
   toast.success(t('scan.added', books.length))

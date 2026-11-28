@@ -118,22 +118,30 @@ function save() {
   }
 }
 
+let refreshOp = 0
+
+/** Play confirmed a purchase: Pro is on, and an answer asked before the purchase must not undo it */
+function grant() {
+  refreshOp++
+  isPro.value = true
+  save()
+}
+
 let listening = false
 function listen() {
   if (listening) return
   listening = true
   void PlayBilling.addListener('entitlement', (e) => {
-    if (!e.active) return
-    isPro.value = true
-    save()
+    if (e.active) grant()
   })
 }
 
-let refreshOp = 0
-
-/** Asks Play whether Pro is active and what it costs. Offline or no Play: the cached answer stays */
-async function refresh(): Promise<void> {
-  if (!Capacitor.isNativePlatform()) return
+/**
+ * Asks Play whether Pro is active and what it costs. Offline or no Play: the cached answer stays.
+ * Resolves true when Play answered about the purchase, false when it could not be asked.
+ */
+async function refresh(): Promise<boolean> {
+  if (!Capacitor.isNativePlatform()) return false
   listen()
   const op = ++refreshOp
   const productId = PRO_PRODUCT_ID
@@ -141,10 +149,12 @@ async function refresh(): Promise<void> {
     PlayBilling.getEntitlement({ productId }).catch(() => null),
     PlayBilling.getOffers({ productId }).catch(() => null),
   ])
-  if (op !== refreshOp) return
-  if (ent?.available) isPro.value = ent.active === true
+  const answered = ent?.available === true
+  if (op !== refreshOp) return answered
+  if (answered) isPro.value = ent.active === true
   if (off?.available) offers.value = off.offers ?? []
   save()
+  return answered
 }
 
 async function purchase(plan: ProPlan): Promise<PurchaseStatus> {
@@ -156,10 +166,7 @@ async function purchase(plan: ProPlan): Promise<PurchaseStatus> {
       basePlanId: plan.offer.basePlanId,
       offerId: plan.offer.offerId,
     })
-    if (r.active) {
-      isPro.value = true
-      save()
-    }
+    if (r.active) grant()
     // Already bought on this Google account (e.g. after reinstall): restore it
     if (r.status === 'owned') {
       await refresh()
@@ -173,10 +180,10 @@ async function purchase(plan: ProPlan): Promise<PurchaseStatus> {
   }
 }
 
-/** "Restore purchases": true when Play says Pro is active */
-async function restore(): Promise<boolean> {
-  await refresh()
-  return isPro.value
+/** "Restore purchase": what Play says — or that Play could not be asked (offline, no Play Store) */
+async function restore(): Promise<'active' | 'none' | 'unavailable'> {
+  if (!(await refresh())) return 'unavailable'
+  return isPro.value ? 'active' : 'none'
 }
 
 async function manage(): Promise<void> {
