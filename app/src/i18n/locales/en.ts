@@ -19,7 +19,9 @@ export default {
   },
   login: {
     subtitle: 'Sign in to start listening',
-    noAccount: 'No account? Sign in with Google to register',
+    noAccount: 'No account?',
+    noServer: "Can't reach the Leerio server. Your own books play without signing in",
+    googleUnavailable: "Google sign-in isn't available here — use email and password",
     email: 'Email',
     password: 'Password',
     signIn: 'Sign In',

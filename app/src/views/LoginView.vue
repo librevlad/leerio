@@ -54,6 +54,15 @@ function strengthColor(index: number) {
   return 'bg-(--success)'
 }
 
+/** What the person reads when a request fails: never a raw "Failed to fetch" or a proxy's error page */
+function errorText(e: unknown): string {
+  // fetch rejects with a TypeError when there is no network or the server does not answer
+  if (e instanceof TypeError) return t('login.noServer')
+  const msg = e instanceof Error ? e.message : String(e)
+  if (Number(/^(\d{3}):/.exec(msg)?.[1]) >= 500) return t('login.noServer')
+  return msg.replace(/^\d+:\s*/, '')
+}
+
 function switchTo(v: AuthView) {
   view.value = v
   error.value = ''
@@ -79,7 +88,7 @@ async function handleLogin() {
     await auth.loginWithPassword(email.value, password.value)
     router.push('/library')
   } catch (e) {
-    error.value = e instanceof Error ? e.message.replace(/^\d+:\s*/, '') : String(e)
+    error.value = errorText(e)
   } finally {
     loading.value = false
   }
@@ -93,7 +102,7 @@ async function handleRegister() {
     view.value = 'verify-email'
     startResendCooldown()
   } catch (e) {
-    error.value = e instanceof Error ? e.message.replace(/^\d+:\s*/, '') : String(e)
+    error.value = errorText(e)
   } finally {
     loading.value = false
   }
@@ -106,7 +115,7 @@ async function handleVerify() {
     await auth.verifyEmail(email.value, verifyCode.value)
     router.push('/library')
   } catch (e) {
-    error.value = e instanceof Error ? e.message.replace(/^\d+:\s*/, '') : String(e)
+    error.value = errorText(e)
   } finally {
     loading.value = false
   }
@@ -118,7 +127,7 @@ async function handleResend() {
     startResendCooldown()
     error.value = ''
   } catch (e) {
-    error.value = e instanceof Error ? e.message.replace(/^\d+:\s*/, '') : String(e)
+    error.value = errorText(e)
   }
 }
 
@@ -129,7 +138,7 @@ async function handleForgotSend() {
     await auth.forgotPassword(email.value)
     view.value = 'forgot-step2'
   } catch (e) {
-    error.value = e instanceof Error ? e.message.replace(/^\d+:\s*/, '') : String(e)
+    error.value = errorText(e)
   } finally {
     loading.value = false
   }
@@ -146,7 +155,7 @@ async function handleResetPassword() {
     await auth.resetPassword(email.value, forgotCode.value, newPassword.value)
     router.push('/library')
   } catch (e) {
-    error.value = e instanceof Error ? e.message.replace(/^\d+:\s*/, '') : String(e)
+    error.value = errorText(e)
   } finally {
     loading.value = false
   }
@@ -195,7 +204,7 @@ async function handleCredentialResponse(response: { credential: string }) {
     await auth.loginWithGoogle(response.credential)
     router.push('/library')
   } catch (e) {
-    error.value = e instanceof Error ? e.message.replace(/^\d+:\s*/, '') : String(e)
+    error.value = errorText(e)
   } finally {
     loading.value = false
   }
@@ -237,7 +246,7 @@ onMounted(() => {
         class="mb-4 flex items-center gap-1 text-[13px] text-(--t3) transition-colors hover:text-(--t2)"
         @click="$router.back()"
       >
-        ← Back
+        ← {{ t('common.back') }}
       </button>
 
       <!-- Logo -->
@@ -501,7 +510,7 @@ onMounted(() => {
           </div>
           <div v-if="!googleFailed" id="google-signin-btn" ref="googleBtnRef" />
           <p v-else class="text-center text-[12px] text-(--t3)">
-            {{ t('login.googleUnavailable', 'Google login unavailable in this browser. Use email/password.') }}
+            {{ t('login.googleUnavailable') }}
           </p>
           <!-- Toggle text -->
           <p class="mt-4 text-center text-[12px] text-(--t3)">

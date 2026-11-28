@@ -19,7 +19,9 @@ export default {
   },
   login: {
     subtitle: 'Увійдіть, щоб почати слухати',
-    noAccount: 'Немає акаунту? Увійдіть через Google для реєстрації',
+    noAccount: 'Немає акаунту?',
+    noServer: "Немає зв'язку з сервером Leerio. Свої книги можна слухати й без входу",
+    googleUnavailable: 'Вхід через Google тут недоступний — увійдіть за email і паролем',
     email: 'Email',
     password: 'Пароль',
     signIn: 'Увійти',
