@@ -202,6 +202,7 @@ export default {
     emptyCategory: 'No books in this category',
     emptyDesc: 'Add books from the catalog or upload your own',
     goToCatalog: 'Go to Catalog',
+    emptyDescDevice: 'Add your audiobooks — they play without internet',
     filterDownloadedHint: 'Books downloaded from the catalog for offline listening',
     filterLocalHint: 'Books added from your device',
     filterUploadedHint: 'Books uploaded to the server or created via TTS',

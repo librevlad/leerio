@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { Capacitor } from '@capacitor/core'
+import { useAuth } from '@/composables/useAuth'
+import { useCloud } from '@/composables/useCloud'
 import { useUserBooks } from '@/composables/useUserBooks'
 import { useLocalBooks } from '@/composables/useLocalBooks'
 import { useDownloads } from '@/composables/useDownloads'
@@ -22,6 +25,11 @@ const { localBooks, removeLocalBook, getLocalBook, getLocalAudioUrl } = useLocal
 const downloads = useDownloads()
 const { fsBooks, fetchMissingCovers } = useFileScanner()
 const scannedBooks = computed(() => Object.values(fsBooks.value))
+
+// Catalog and upload need the server: the APK without it offers what works on the device (as the "+" menu does)
+const { serverReachable } = useAuth()
+const serverActions = computed(() => !Capacitor.isNativePlatform() || serverReachable.value)
+const cloud = useCloud()
 
 const activeFilter = ref<'all' | 'downloaded' | 'local' | 'uploaded'>('all')
 const coverErrors = ref(new Set<string>())
@@ -312,14 +320,29 @@ async function uploadToCloud(item: UnifiedItem) {
       <p class="mb-2 text-[14px] font-medium text-(--t2)">
         {{ activeFilter === 'all' ? t('myLibrary.emptyTitle') : t('myLibrary.emptyCategory') }}
       </p>
-      <p class="mb-5 text-[13px] text-(--t3)">{{ t('myLibrary.emptyDesc') }}</p>
-      <div class="flex gap-3">
+      <p class="mb-5 text-[13px] text-(--t3)">
+        {{ serverActions ? t('myLibrary.emptyDesc') : t('myLibrary.emptyDescDevice') }}
+      </p>
+      <div v-if="serverActions" class="flex gap-3">
         <router-link to="/library" class="btn btn-secondary flex items-center gap-2 text-[13px]">
           {{ t('myLibrary.goToCatalog') }}
         </router-link>
         <router-link to="/upload" class="btn btn-primary flex items-center gap-2 text-[13px]">
           <IconPlus :size="16" />
           {{ t('upload.uploadBtn') }}
+        </router-link>
+      </div>
+      <!-- APK without the server: the owner's cloud first when its key is here, then the device's own folders -->
+      <div v-else class="flex gap-3">
+        <router-link v-if="cloud.available.value" to="/cloud" class="btn btn-primary text-[13px]">
+          {{ t('fab.cloud') }}
+        </router-link>
+        <router-link
+          to="/scan-results"
+          class="btn text-[13px]"
+          :class="cloud.available.value ? 'btn-secondary' : 'btn-primary'"
+        >
+          {{ t('fab.scanHint') }}
         </router-link>
       </div>
     </div>
