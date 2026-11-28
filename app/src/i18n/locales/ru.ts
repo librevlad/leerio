@@ -208,6 +208,8 @@ export default {
     filterUploadedHint: 'Книги, загруженные на сервер или озвученные через TTS',
     deleteAriaLabel: 'Удалить книгу',
     deleteConfirm: 'Удалить "{title}"?',
+    removeFsConfirm: 'Убрать «{title}» из библиотеки? Файлы останутся на устройстве',
+    removedFs: 'Убрано из библиотеки',
     nBooksOne: '{n} книга | {n} книги | {n} книг',
     nBooks: '{n} книга | {n} книги | {n} книг',
     noBooks: 'Пока нет книг',
