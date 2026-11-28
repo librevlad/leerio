@@ -28,7 +28,7 @@ const room = computed(() =>
 )
 
 // Above the bottom nav (+ mini player): at bottom 0 they cover the Add button
-const barBottom = computed(() => `calc(${isPlayerVisible.value ? '120px' : '56px'} + env(safe-area-inset-bottom, 0px))`)
+const barBottom = computed(() => `calc(${isPlayerVisible.value ? '120px' : '56px'} + var(--safe-bottom))`)
 
 const scannedBooks = ref<FsBookMeta[]>([])
 const selected = ref<Set<string>>(new Set())

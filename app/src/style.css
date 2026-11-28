@@ -8,6 +8,10 @@
 /* ── Tokens ───────────────────────────────────────────────────────────── */
 
 :root {
+  /* System bars. On Android 15+ Capacitor sets --safe-area-inset-* from the native insets: the WebView's own env()
+     can stay 0 after a cold start (WebView 139 and older) and put page titles under the status bar. */
+  --safe-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --safe-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
   --bg: #0b0b0f;
   --bg-glow: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(255, 138, 0, 0.06) 0%, transparent 70%);
   --card: #121218;
@@ -658,10 +662,10 @@ select option {
 }
 
 .safe-bottom {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: var(--safe-bottom);
 }
 .safe-top {
-  padding-top: env(safe-area-inset-top, 0px);
+  padding-top: var(--safe-top);
 }
 
 /* ── Mini-player transition ─────────────────────────────────────────── */
@@ -727,7 +731,7 @@ select option {
 
 /* Mini-player positioning — above bottom nav + safe area on mobile */
 .mini-player-position {
-  bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+  bottom: calc(3.5rem + var(--safe-bottom));
 }
 @media (min-width: 768px) {
   .mini-player-position {
@@ -738,14 +742,14 @@ select option {
 /* Bottom nav spacing — pages get extra bottom padding on mobile */
 @media (max-width: 767px) {
   .mobile-bottom-pad {
-    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(80px + var(--safe-bottom));
   }
   /* Edge-to-edge APK: keep page titles below the status bar */
   .mobile-top-pad {
-    padding-top: calc(1.25rem + env(safe-area-inset-top, 0px));
+    padding-top: calc(1.25rem + var(--safe-top));
   }
   .mobile-bottom-pad-player {
-    padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(140px + var(--safe-bottom));
   }
   .card {
     border-radius: 10px;

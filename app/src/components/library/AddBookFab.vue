@@ -24,7 +24,7 @@ const cloud = useCloud()
 const bookInput = ref<HTMLInputElement | null>(null)
 
 // Above the bottom nav (+ mini player) and the system navigation bar
-const bottomOffset = () => `calc(${isPlayerVisible.value ? '130px' : '80px'} + env(safe-area-inset-bottom, 0px))`
+const bottomOffset = () => `calc(${isPlayerVisible.value ? '130px' : '80px'} + var(--safe-bottom))`
 
 function toggle() {
   isOpen.value = !isOpen.value
