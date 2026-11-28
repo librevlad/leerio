@@ -208,6 +208,8 @@ export default {
     filterUploadedHint: 'Books uploaded to the server or created via TTS',
     deleteAriaLabel: 'Delete book',
     deleteConfirm: 'Delete "{title}"?',
+    removeFsConfirm: 'Remove "{title}" from the library? The files stay on the device',
+    removedFs: 'Removed from the library',
     nBooksOne: '{n} book | {n} books',
     nBooks: '{n} book | {n} books',
     noBooks: 'No books yet',

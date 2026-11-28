@@ -23,7 +23,7 @@ const toast = useToast()
 const { userBooks, ttsJobs, loading: ubLoading, loadUserBooks, loadTTSJobs, deleteBook, pollJob } = useUserBooks()
 const { localBooks, removeLocalBook, getLocalBook, getLocalAudioUrl } = useLocalBooks()
 const downloads = useDownloads()
-const { fsBooks, fetchMissingCovers } = useFileScanner()
+const { fsBooks, fetchMissingCovers, removeFsBook } = useFileScanner()
 const scannedBooks = computed(() => Object.values(fsBooks.value))
 
 // Catalog and upload need the server: the APK without it offers what works on the device (as the "+" menu does)
@@ -182,6 +182,13 @@ onMounted(async () => {
 })
 
 async function handleDelete(item: UnifiedItem) {
+  // A book from the device's own folders leaves the library only: its files stay, a scan brings it back
+  if (item.id.startsWith('fs:')) {
+    if (!confirm(t('myLibrary.removeFsConfirm', { title: item.title }))) return
+    removeFsBook(item.id)
+    toast.success(t('myLibrary.removedFs'))
+    return
+  }
   if (!confirm(t('myLibrary.deleteConfirm', { title: item.title }))) return
   try {
     if (item.source === 'local') {
